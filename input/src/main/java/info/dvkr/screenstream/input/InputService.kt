@@ -294,6 +294,10 @@ public class InputService : AccessibilityService() {
         // Single key actions (on key down)
         if (down) {
             when (keysym) {
+                0xFF08L -> {  // Backspace
+                    Log.i(TAG, "Backspace key")
+                    deleteLastChar()
+                }
                 0xFF50L -> {  // Home
                     Log.i(TAG, "Home key")
                     performGlobalAction(GLOBAL_ACTION_HOME)
@@ -305,6 +309,22 @@ public class InputService : AccessibilityService() {
                 0xFF1BL -> {  // Escape -> Back
                     Log.i(TAG, "Escape -> Back")
                     performGlobalAction(GLOBAL_ACTION_BACK)
+                }
+                0xFF6AL -> {  // XK_Select -> Select All
+                    Log.i(TAG, "Select All")
+                    selectAll()
+                }
+                0xFF63L -> {  // XK_Insert -> Copy
+                    Log.i(TAG, "Copy")
+                    copy()
+                }
+                0xFF6BL -> {  // XK_Cut
+                    Log.i(TAG, "Cut")
+                    cut()
+                }
+                0xFFFFL -> {  // Delete
+                    Log.i(TAG, "Delete key")
+                    deleteNextChar()
                 }
             }
         }
@@ -337,6 +357,7 @@ public class InputService : AccessibilityService() {
 
     /**
      * Input text into the currently focused field
+     * Uses clipboard + paste to avoid interfering with autocomplete suggestions
      */
     public fun inputText(text: String) {
         if (!isInputEnabled) return
@@ -347,18 +368,24 @@ public class InputService : AccessibilityService() {
                 return
             }
 
-            if (!focusNode.isEditable) {
-                Log.w(TAG, "inputText: Focused node is not editable")
-                return
-            }
-
-            val currentText = focusNode.text?.toString() ?: ""
-            val newText = currentText + text
-
-            val arguments = Bundle().apply {
-                putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, newText)
-            }
-            focusNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+            // Use clipboard + paste method to insert text without affecting autocomplete
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val originalClip = clipboard.primaryClip  // Save original clipboard
+            
+            // Set new text to clipboard and paste
+            clipboard.setPrimaryClip(ClipData.newPlainText("input", text))
+            focusNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+            
+            // Restore original clipboard after a delay
+            android.os.Handler(mainLooper).postDelayed({
+                try {
+                    if (originalClip != null) {
+                        clipboard.setPrimaryClip(originalClip)
+                    }
+                } catch (e: Exception) {
+                    // Ignore restore errors
+                }
+            }, 100)
             
         } catch (e: Exception) {
             Log.e(TAG, "inputText failed: ${e.message}")
@@ -382,6 +409,102 @@ public class InputService : AccessibilityService() {
             rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
         } catch (e: Exception) {
             null
+        }
+    }
+
+    // ==================== Text Editing Actions ====================
+
+    /**
+     * Delete the last character (Backspace)
+     * When text becomes empty, explicitly clears the field to avoid autocomplete triggers
+     */
+    public fun deleteLastChar() {
+        try {
+            val focusNode = findFocusedNode() ?: return
+            if (!focusNode.isEditable) return
+            
+            val currentText = focusNode.text?.toString() ?: ""
+            
+            if (currentText.isEmpty()) {
+                // Text already empty - don't do anything that might trigger autocomplete
+                // Just set empty text again to clear any pending suggestions
+                val arguments = Bundle().apply {
+                    putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "")
+                }
+                focusNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+                return
+            }
+            
+            val newText = currentText.dropLast(1)
+            val arguments = Bundle().apply {
+                putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, newText)
+            }
+            focusNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+        } catch (e: Exception) {
+            Log.e(TAG, "deleteLastChar failed: ${e.message}")
+        }
+    }
+
+    /**
+     * Delete the next character (Delete key)
+     */
+    public fun deleteNextChar() {
+        // For simplicity, treat like backspace for now
+        deleteLastChar()
+    }
+
+    /**
+     * Select all text in the focused field
+     */
+    public fun selectAll() {
+        try {
+            val focusNode = findFocusedNode() ?: return
+            val text = focusNode.text?.toString() ?: return
+            if (text.isEmpty()) return
+            
+            val arguments = Bundle().apply {
+                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0)
+                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length)
+            }
+            focusNode.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, arguments)
+        } catch (e: Exception) {
+            Log.e(TAG, "selectAll failed: ${e.message}")
+        }
+    }
+
+    /**
+     * Copy selected text to clipboard
+     */
+    public fun copy() {
+        try {
+            val focusNode = findFocusedNode() ?: return
+            focusNode.performAction(AccessibilityNodeInfo.ACTION_COPY)
+        } catch (e: Exception) {
+            Log.e(TAG, "copy failed: ${e.message}")
+        }
+    }
+
+    /**
+     * Paste text from clipboard
+     */
+    public fun paste() {
+        try {
+            val focusNode = findFocusedNode() ?: return
+            focusNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+        } catch (e: Exception) {
+            Log.e(TAG, "paste failed: ${e.message}")
+        }
+    }
+
+    /**
+     * Cut selected text
+     */
+    public fun cut() {
+        try {
+            val focusNode = findFocusedNode() ?: return
+            focusNode.performAction(AccessibilityNodeInfo.ACTION_CUT)
+        } catch (e: Exception) {
+            Log.e(TAG, "cut failed: ${e.message}")
         }
     }
 }

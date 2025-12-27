@@ -25,7 +25,7 @@ import kotlinx.serialization.Serializable
  * Provides REST endpoints for tap, swipe, key, and text input
  */
 public class InputHttpServer(
-    private val port: Int = 8081
+    private val port: Int = 8086
 ) {
     private var server: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>? = null
     private val scope = CoroutineScope(Dispatchers.IO)

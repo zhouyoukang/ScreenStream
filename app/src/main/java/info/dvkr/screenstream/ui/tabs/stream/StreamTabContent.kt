@@ -1,5 +1,6 @@
 package info.dvkr.screenstream.ui.tabs.stream
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.materialIcon
 import androidx.compose.material.icons.materialPath
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -64,6 +68,11 @@ internal fun StreamTabContent( //TODO Add foldable support
                             .padding(top = 8.dp, start = 16.dp, end = 8.dp, bottom = 8.dp)
                             .fillMaxWidth()
                     )
+                    AccessibilityShortcutCard(
+                        modifier = Modifier
+                            .padding(start = 16.dp, end = 8.dp, bottom = 8.dp)
+                            .fillMaxWidth()
+                    )
                 }
                 Column(modifier = Modifier.weight(1F)) {
                     AdaptiveBanner(modifier = Modifier.fillMaxWidth())
@@ -77,10 +86,45 @@ internal fun StreamTabContent( //TODO Add foldable support
                         .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
                         .fillMaxWidth()
                 )
+                AccessibilityShortcutCard(
+                    modifier = Modifier
+                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                        .fillMaxWidth()
+                )
                 AdaptiveBanner(modifier = Modifier.fillMaxWidth())
             }
         }
         activeModule.value?.StreamUIContent(modifier = Modifier.fillMaxSize())
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AccessibilityShortcutCard(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    Card(
+        modifier = modifier,
+        onClick = {
+            try {
+                context.startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+             Icon(
+                imageVector = Icon_Accessibility,
+                contentDescription = null
+            )
+            Column(modifier = Modifier.padding(start = 16.dp)) {
+                Text("快速打开无障碍设置", style = MaterialTheme.typography.titleMedium)
+                Text("点击此处去开启辅助功能权限", style = MaterialTheme.typography.bodySmall)
+            }
+        }
     }
 }
 
@@ -214,6 +258,31 @@ private val Icon_HelpOutline: ImageVector = materialIcon(name = "AutoMirrored.Ou
         horizontalLineToRelative(2.0f)
         curveToRelative(0.0f, -2.25f, 3.0f, -2.5f, 3.0f, -5.0f)
         curveToRelative(0.0f, -2.21f, -1.79f, -4.0f, -4.0f, -4.0f)
+        close()
+    }
+}
+
+private val Icon_Accessibility: ImageVector = materialIcon(name = "Filled.Accessibility") {
+    materialPath {
+        moveTo(12.0f, 2.0f)
+        curveToRelative(1.1f, 0.0f, 2.0f, 0.9f, 2.0f, 2.0f)
+        reflectiveCurveToRelative(-0.9f, 2.0f, -2.0f, 2.0f)
+        reflectiveCurveToRelative(-2.0f, -0.9f, -2.0f, -2.0f)
+        reflectiveCurveToRelative(0.9f, -2.0f, 2.0f, -2.0f)
+        close()
+        moveTo(21.0f, 9.0f)
+        horizontalLineToRelative(-6.0f)
+        verticalLineToRelative(13.0f)
+        horizontalLineToRelative(-2.0f)
+        verticalLineToRelative(-6.0f)
+        horizontalLineToRelative(-2.0f)
+        verticalLineToRelative(6.0f)
+        horizontalLineTo(9.0f)
+        verticalLineTo(9.0f)
+        horizontalLineTo(3.0f)
+        verticalLineTo(7.0f)
+        horizontalLineToRelative(18.0f)
+        verticalLineToRelative(2.0f)
         close()
     }
 }

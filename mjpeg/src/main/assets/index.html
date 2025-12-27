@@ -590,9 +590,10 @@
             return false;
         });
 
-        // 鼠标事件
+        // 鼠标事件 (仅左键)
         stream.addEventListener("mousedown", function (e) {
             if (!enableButtons) return;
+            if (e.button !== 0) return; // 只处理左键
             var p = getStreamImagePoint(e.clientX, e.clientY);
             if (!p) return;
             isTouching = true;
@@ -603,6 +604,7 @@
 
         window.addEventListener("mouseup", function (e) {
             if (!enableButtons) return;
+            if (e.button !== 0) return; // 只处理左键
             if (!isTouching) return;
             isTouching = false;
 
@@ -671,16 +673,211 @@
             e.preventDefault();
         }, { passive: false });
 
-        // 滚轮事件
+        // 滚轮事件 (Throttled)
+        var vScrollAccumulator = 0.0;
+        var vScrollTimer = null;
+        var hScrollAccumulator = 0.0;
+        var hScrollTimer = null;
+
+        // Right Click Interaction State
+        var rightClickDownTime = 0;
+        var hasScrolledDuringRightHold = false;
+
+        // Prevent context menu
+        stream.addEventListener("contextmenu", function (e) { e.preventDefault(); }, false);
+
+        stream.addEventListener("mousedown", function (e) {
+            if (e.button === 2) {
+                rightClickDownTime = Date.now();
+                hasScrolledDuringRightHold = false;
+            }
+        });
+
+        stream.addEventListener("mouseup", function (e) {
+            if (e.button === 2) {
+                var duration = Date.now() - rightClickDownTime;
+                // If short click (< 300ms) AND no scroll happened, treat as BACK
+                if (duration < 300 && !hasScrolledDuringRightHold) {
+                    sendInputJson("/back", {});
+                }
+            }
+        });
+
         stream.addEventListener("wheel", function (e) {
             if (!enableButtons) return;
             var p = getStreamImagePoint(e.clientX, e.clientY);
             if (!p) return;
-            // 滚轮模拟为短距离滑动 (向下/向上滑动 10% 屏幕高度)
-            var nScrollAmount = e.deltaY > 0 ? 0.1 : -0.1;
-            sendSwipe(p.nx, p.ny, p.nx, p.ny + nScrollAmount, 100);
+
             e.preventDefault();
+
+            // 检查是否按住右键 (buttons 属性: bit 2 is right button)
+            var isRightHold = (e.buttons & 2) === 2;
+
+            if (isRightHold) {
+                hasScrolledDuringRightHold = true; // Mark that we are scrolling
+
+                // Horizontal Scroll - send immediately
+                var delta = e.deltaY > 0 ? -0.15 : 0.15;
+                var targetNx = Math.max(0.0, Math.min(1.0, p.nx + delta));
+                sendSwipe(p.nx, p.ny, targetNx, p.ny, 100); // Longer duration for smoothness
+            } else {
+                // Vertical Scroll - send immediately
+                var delta = e.deltaY > 0 ? -0.04 : 0.04;
+                var targetNy = Math.max(0.0, Math.min(1.0, p.ny + delta));
+                sendSwipe(p.nx, p.ny, p.nx, targetNy, 100); // Longer duration for smoothness
+            }
         }, { passive: false });
+
+        // ========== 键盘输入处理 ==========
+        // 创建隐藏的输入框用于捕获中文输入
+        var hiddenInput = document.createElement('textarea');
+        hiddenInput.id = 'hiddenKeyboardInput';
+        hiddenInput.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
+        hiddenInput.setAttribute('autocomplete', 'off');
+        hiddenInput.setAttribute('autocorrect', 'off');
+        hiddenInput.setAttribute('autocapitalize', 'off');
+        document.body.appendChild(hiddenInput);
+
+        var isComposing = false; // IME 输入法组合状态
+
+        // 点击画面时聚焦隐藏输入框
+        stream.addEventListener('click', function () {
+            if (enableButtons) {
+                hiddenInput.focus();
+            }
+        });
+
+        // IME 开始组合（中文输入开始）
+        hiddenInput.addEventListener('compositionstart', function () {
+            isComposing = true;
+        });
+
+        // IME 组合结束（中文输入完成）
+        hiddenInput.addEventListener('compositionend', function (e) {
+            isComposing = false;
+            if (e.data && e.data.length > 0) {
+                sendInputJson("/text", { text: e.data });
+            }
+            hiddenInput.value = ''; // 清空
+        });
+
+        // 普通输入事件（英文字符直接输入）
+        hiddenInput.addEventListener('input', function (e) {
+            if (isComposing) return; // IME 组合中，等待 compositionend
+            if (e.data && e.data.length > 0) {
+                sendInputJson("/text", { text: e.data });
+            }
+            hiddenInput.value = ''; // 清空
+        });
+
+        // 特殊按键处理
+        hiddenInput.addEventListener('keydown', function (e) {
+            // Ctrl 组合键处理
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key.toLowerCase()) {
+                    case 'a': // Ctrl+A 全选
+                        sendInputJson("/key", { keysym: 0xFF6A, down: true }); // XK_Select
+                        e.preventDefault();
+                        return;
+                    case 'c': // Ctrl+C 复制
+                        sendInputJson("/key", { keysym: 0xFF63, down: true }); // XK_Insert (copy)
+                        e.preventDefault();
+                        return;
+                    case 'v': // Ctrl+V 粘贴
+                        // 尝试从剪贴板读取并发送文本
+                        navigator.clipboard.readText().then(function (text) {
+                            if (text && text.length > 0) {
+                                sendInputJson("/text", { text: text });
+                            }
+                        }).catch(function () {
+                            // 剪贴板访问失败，发送粘贴按键
+                            sendInputJson("/key", { keysym: 0xFFFF, down: true });
+                        });
+                        e.preventDefault();
+                        return;
+                    case 'x': // Ctrl+X 剪切
+                        sendInputJson("/key", { keysym: 0xFF6B, down: true }); // XK_Cut
+                        e.preventDefault();
+                        return;
+                    case 'z': // Ctrl+Z 撤销
+                        sendInputJson("/key", { keysym: 0xFF65, down: true }); // XK_Undo
+                        e.preventDefault();
+                        return;
+                }
+            }
+
+            // 特殊按键处理
+            switch (e.key) {
+                case 'Backspace':
+                    sendInputJson("/key", { keysym: 0xFF08, down: true });
+                    e.preventDefault();
+                    return;
+                case 'Enter':
+                    sendInputJson("/key", { keysym: 0xFF0D, down: true });
+                    e.preventDefault();
+                    return;
+                case 'Escape':
+                    // 同时发送 Escape keysym 和 back 操作
+                    sendInputJson("/key", { keysym: 0xFF1B, down: true });
+                    sendNavAction('/back');
+                    e.preventDefault();
+                    return;
+                case 'Tab':
+                    sendInputJson("/key", { keysym: 0xFF09, down: true });
+                    e.preventDefault();
+                    return;
+                case 'ArrowUp':
+                    sendInputJson("/key", { keysym: 0xFF52, down: true });
+                    e.preventDefault();
+                    return;
+                case 'ArrowDown':
+                    sendInputJson("/key", { keysym: 0xFF54, down: true });
+                    e.preventDefault();
+                    return;
+                case 'ArrowLeft':
+                    sendInputJson("/key", { keysym: 0xFF51, down: true });
+                    e.preventDefault();
+                    return;
+                case 'ArrowRight':
+                    sendInputJson("/key", { keysym: 0xFF53, down: true });
+                    e.preventDefault();
+                    return;
+                case 'Delete':
+                    sendInputJson("/key", { keysym: 0xFFFF, down: true });
+                    e.preventDefault();
+                    return;
+                case 'Home':
+                    sendInputJson("/key", { keysym: 0xFF50, down: true });
+                    e.preventDefault();
+                    return;
+                case 'End':
+                    sendInputJson("/key", { keysym: 0xFF57, down: true });
+                    e.preventDefault();
+                    return;
+            }
+        });
+
+        // 全局键盘监听（当隐藏输入框未聚焦时）
+        document.addEventListener("keydown", function (e) {
+            if (!enableButtons) return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                // 允许隐藏输入框的事件，阻止其他输入框
+                if (e.target.id !== 'hiddenKeyboardInput') return;
+            }
+
+            // Escape 全局可用
+            if (e.key === 'Escape') {
+                sendNavAction('/back');
+                e.preventDefault();
+                return;
+            }
+
+            // 如果不是在隐藏输入框内，聚焦它
+            if (e.target.id !== 'hiddenKeyboardInput') {
+                hiddenInput.focus();
+            }
+        });
+
 
         var enableButtons = false;
         var buttonsHideFunction = function buttonsHideFunction() {

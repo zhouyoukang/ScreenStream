@@ -62,6 +62,7 @@ For optimal performance, a fast and stable network connection is recommended due
 In Local mode, the app processes each frame independently, one-by-one, enabling additional image transformations such as cropping, resizing, rotating, and more before sending the image to the client's web browser.
 
 The Local mode offers the following functionality:
+
 * Powered by MJPEG standard.
 * Utilizes PIN for security (no encryption).
 * Sends video as a series of independent images (no audio).
@@ -86,6 +87,7 @@ Global mode in the ScreenStream application is built on WebRTC technology and re
 Both the signaling server and the web client for ScreenStream are open-source and available in the [ScreenStreamWeb](https://github.com/dkrivoruchko/ScreenStreamWeb) repository. These components can be accessed publicly at <https://screenstream.io>. The system is designed to function seamlessly with any desktop or mobile browser that supports WebRTC, such as Chrome, Safari, EDGE, Firefox, and others.
 
 The Global mode was introduced in app version 4 and offers the following functionality:
+
 * Powered by WebRTC technology.
 * End-to-end encrypted communication.
 * Stream protection with password.
@@ -153,10 +155,26 @@ This fork includes several enhancements optimized for remote control and reverse
 * **Coordinate Fix**: Implemented aspect-ratio aware coordinate mapping. Clicks are now pixel-perfect even when the stream has black bars (letterboxing/pillarboxing).
 * **Normalized Coordinates**: Updated input service to use normalized coordinates (0.0-1.0) for better compatibility across different screen resolutions.
 
+### ⌨️ Keyboard Input Support
+
+* **Full Keyboard Control**: Type directly from your computer keyboard to the phone.
+* **Chinese IME Support**: Full support for Chinese input via composition events.
+* **Special Keys**: Backspace, Enter, Tab, Arrow keys, Delete, Home, End.
+* **Escape = Back**: Press Escape to trigger Android back action.
+* **Shortcuts**: Ctrl+A (select all), Ctrl+C (copy), Ctrl+V (paste from PC clipboard), Ctrl+X (cut).
+
+### 🖱️ Mouse & Scroll Control
+
+* **Inverted Scroll**: Scroll direction matches standard computer behavior.
+* **Horizontal Scroll**: Hold right-click + scroll wheel for horizontal scrolling.
+* **Right-Click = Back**: Right-click triggers Android back action.
+* **Adjustable Sensitivity**: Fine-tuned scroll speeds (vertical: 0.04, horizontal: 0.15).
+
 ### 🎨 UI/UX Improvements
 
 * **Status Indicator**: Added a visual "Control Active" / "View Only" status indicator to the web interface.
 * **Selection Fix**: Removed the annoying blue selection box and disabled text selection interference.
+* **Accessibility Settings Button**: Quick access button to open accessibility settings on the main page.
 
 ## Fork Maintainer
 
