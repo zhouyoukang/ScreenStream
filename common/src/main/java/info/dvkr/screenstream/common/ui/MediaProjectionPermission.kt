@@ -56,7 +56,16 @@ public fun MediaProjectionPermission(
             SideEffect {
                 // TODO media projection for multi-display devices
                 val mediaProjectionManager = context.getSystemService(MediaProjectionManager::class.java)
-                mediaProjectionPermissionLauncher.launch(mediaProjectionManager.createScreenCaptureIntent())
+                // Android 14+ (API 34+): Use createConfigForDefaultDisplay to force full-screen capture
+                // Without this, Android 14+ defaults to single-app capture which doesn't work in VR
+                val captureIntent = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    mediaProjectionManager.createScreenCaptureIntent(
+                        android.media.projection.MediaProjectionConfig.createConfigForDefaultDisplay()
+                    )
+                } else {
+                    mediaProjectionManager.createScreenCaptureIntent()
+                }
+                mediaProjectionPermissionLauncher.launch(captureIntent)
 
                 showMediaProjectionPermissionErrorDialog.value = false
                 mediaProjectionRequested.value = true

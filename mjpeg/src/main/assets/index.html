@@ -66,6 +66,23 @@
             touch-action: none;
         }
 
+        /* VR Fullscreen Mode - hides navbar and fills entire screen */
+        body.vr-fullscreen #streamDiv {
+            bottom: 0 !important;
+        }
+
+        body.vr-fullscreen #navBar {
+            display: none !important;
+        }
+
+        body.vr-fullscreen #streamDiv img {
+            max-width: none !important;
+            max-height: none !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: fill !important;
+        }
+
         #streamDiv img {
             /* 移除 absolute 定位 */
             display: block;
@@ -447,6 +464,20 @@
         var urlParams = new URLSearchParams(window.location.search);
         var inputApiPort = urlParams.get('input_port') || 8085;
         var inputApiBase = null;
+
+        // VR fullscreen mode: add ?vr=1 to URL or press F11 to toggle
+        var vrFullscreen = urlParams.get('vr') === '1' || urlParams.get('fullscreen') === '1';
+        if (vrFullscreen) {
+            document.body.classList.add('vr-fullscreen');
+        }
+        // F11 toggles VR fullscreen mode
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                document.body.classList.toggle('vr-fullscreen');
+            }
+        });
+
         var isPointerDown = false;
         var pointerMoved = false;
         var suppressClickOnce = false;
