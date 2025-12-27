@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_title">錯誤</string>
+    <string name="error_port_in_use">該連接埠正被使用中。請換一個試試</string>
+    <string name="error_invalid_media_projection">安全性錯誤：無效的螢幕投射。請重試</string>
+    <string name="error_ip_address_not_found">找不到IP位址</string>
+    <string name="error_wrong_image_format">系統回傳無效的影像格式。無可用解決方案</string>
+    <string name="error_exit">離開</string>
+
+    <string name="bottom_menu_stream">主畫面</string>
+    <string name="bottom_menu_settings">設定</string>
+    <string name="bottom_menu_start">開始</string>
+    <string name="bottom_menu_stop">停止</string>
+    <string name="bottom_menu_about">關於</string>
+    <string name="bottom_menu_exit">離開</string>
+
+    <string name="stream_fragment_current_traffic">流量：%1$,.2f Mbit/s</string>
+    <string name="stream_fragment_connected_clients">已連接用戶端數：%1$d</string>
+    <string name="stream_fragment_no_address">找不到位址</string>
+    <string name="stream_fragment_interface">Interface: %1$s</string>
+    <string name="stream_fragment_copied">已複製</string>
+    <string name="stream_fragment_pin">PIN: %1$s</string>
+    <string name="stream_fragment_pin_disabled">停用PIN</string>
+    <string name="stream_fragment_client_disconnected">已斷線</string>
+    <string name="stream_fragment_client_slow_network">網路不佳</string>
+    <string name="stream_fragment_client_connected">已連接</string>
+
+    <string name="item_device_address">本機位址：</string>
+
+    <string name="permission_activity_error_title_activity_not_found">取得權限錯誤</string>
+    <string name="permission_activity_error_activity_not_found">此為Android漏洞。在提示對話窗中請勿勾選\"不要再顯示\"選項。如果已勾選，請移除本程式後重新安裝。</string>
+    <string name="permission_activity_cast_permission_required_title">權限被拒</string>
+    <string name="permission_activity_cast_permission_required">需要螢幕錄製的權限以捕捉畫面。</string>
+    <string name="permission_activity_error_title">錯誤</string>
+    <string name="permission_activity_error_unknown">Unknown error</string>
+
+    <string name="notification_ready_to_stream">已準備好串流</string>
+    <string name="notification_press_start">請按下開始</string>
+    <string name="notification_start">開始</string>
+    <string name="notification_exit">離開</string>
+    <string name="notification_stream">串流…</string>
+    <string name="notification_press_stop">按下停止以結束串流</string>
+    <string name="notification_stop">停止</string>
+
+    <string name="toast_slow_client_connection">偵測到用戶端網路速度不佳</string>
+
+    <string name="pref_settings_interface">界面</string>
+    <string name="pref_stop_on_sleep">睡眠時停止</string>
+    <string name="pref_stop_on_sleep_summary">當螢幕待機關閉時停止串流</string>
+    <string name="pref_start_on_boot">開機時啟動</string>
+    <string name="pref_start_on_boot_summary">開機後自動開始串流</string>
+    <string name="pref_html_back_color">背景色</string>
+    <string name="pref_html_back_color_summary">設定串流頁面背景色</string>
+    <string name="pref_html_back_color_title">選擇背景色</string>
+    <string name="pref_settings_image">畫面</string>
+    <string name="pref_resize">縮放畫面</string>
+    <string name="pref_resize_summary">傳送縮放過的畫面到用戶端</string>
+    <string name="pref_resize_dialog_text">設置縮放百分比。\n範圍： 10–150 (預設： 50)\n螢幕解析度： %1$dx%2$d</string>
+    <string name="pref_resize_dialog_result">畫面大小 size： %1$dx%2$d</string>
+    <string name="pref_jpeg_quality">JPEG壓縮品質</string>
+    <string name="pref_jpeg_quality_summary">設定JPEG壓縮品質</string>
+    <string name="pref_jpeg_quality_dialog">設定JPEG壓縮品質。\n範圍： 10–100 (Default： 80)</string>
+    <string name="pref_settings_security">安全性</string>
+    <string name="pref_enable_pin">使用pin</string>
+    <string name="pref_enable_pin_summary">需輸入pin以進入被保護的串流</string>
+    <string name="pref_hide_pin">串流開始後隱藏pin</string>
+    <string name="pref_hide_pin_summary">串流開始後顯示星號代替pin</string>
+    <string name="pref_new_pin_on_start">產生新的pin</string>
+    <string name="pref_new_pin_on_start_summary">每當程式開啟就產生一組新的pin</string>
+    <string name="pref_auto_change_pin">自動更換pin</string>
+    <string name="pref_auto_change_pin_summary">每次開啟串流就產生一組新的pin</string>
+    <string name="pref_set_pin">設定pin</string>
+    <string name="pref_set_pin_summary">手動輸入pin</string>
+    <string name="pref_set_pin_dialog">輸入pin。\n預設： 0000</string>
+    <string name="pref_settings_advanced">進階</string>
+    <string name="pref_wifi_only">僅使用WiFi</string>
+    <string name="pref_wifi_only_summary">串流伺服器僅使用WiFi傳輸</string>
+    <string name="pref_server_port">伺服器連接埠</string>
+    <string name="pref_server_port_summary">設定連接埠</string>
+    <string name="pref_server_port_dialog">設定連入使用的連接埠號。\n範圍： 1025–65535 (預設： 8080)</string>
+
+    <string name="about_fragment_app_version">版本：%1$s</string>
+    <string name="about_fragment_developer_name">由Dmitriy Krivoruchko開發</string>
+    <string name="about_fragment_rate_app">給評分</string>
+    <string name="about_fragment_write_email">寄信給開發者</string>
+    <string name="about_fragment_email_chooser_header">發送郵件…</string>
+    <string name="about_fragment_app_sources">應用程式原始碼</string>
+</resources>

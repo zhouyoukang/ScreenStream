@@ -135,7 +135,7 @@ internal class BitmapCapture(
                 currentWidth,
                 currentHeight,
                 serviceContext.resources.configuration.densityDpi,
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION,
                 imageReader!!.surface,
                 null,
                 imageThreadHandler
