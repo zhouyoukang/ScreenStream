@@ -1,4 +1,5 @@
 ![](screenshots/about_image_full.png)
+
 # ScreenStream
 
 ScreenStream is a user-friendly Android application that allows users to easily share their device screen and audio and view it directly in a web browser. No additional software is required other than the ScreenStream itself, a web browser, and an internet connection (for Global mode).
@@ -8,16 +9,16 @@ Versions from F-Droid are ad-free and support only **Local mode (MJPEG)** and **
 
 <a href='https://play.google.com/store/apps/details?id=info.dvkr.screenstream'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png' height="100"/></a> <a href="https://f-droid.org/packages/info.dvkr.screenstream/" target="_blank"><img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="100"/></a>
 
- * [Project support](#project-support)
- * [Stream modes](#stream-modes)
-   + [Local mode (MJPEG)](#local-mode-mjpeg)
-   + [Global mode (WebRTC)](#global-mode-webrtc)
-   + [RTSP mode](#rtsp-mode)
- * [Screenshots](#screenshots)
- * [Contribution](#contribution)
- * [Developer](#developed-by)
- * [Privacy Policy and Terms & Conditions](#privacy-policy-and-terms--conditions)
- * [License](#license)
+* [Project support](#project-support)
+* [Stream modes](#stream-modes)
+  * [Local mode (MJPEG)](#local-mode-mjpeg)
+  * [Global mode (WebRTC)](#global-mode-webrtc)
+  * [RTSP mode](#rtsp-mode)
+* [Screenshots](#screenshots)
+* [Contribution](#contribution)
+* [Developer](#developed-by)
+* [Privacy Policy and Terms & Conditions](#privacy-policy-and-terms--conditions)
+* [License](#license)
 
 ## Project support
 
@@ -46,11 +47,11 @@ The application uses Android [MediaProjection](https://developer.android.com/ref
 
 > [!WARNING]
 >
-> - **High Traffic on Mobile Networks**: Use caution when streaming via mobile 3G/4G/5G/LTE networks to avoid excessive data usage.
-> 
-> - **Delay in Streaming**: Expect a delay of at least 0.5-1 second or more in certain conditions: slow device, poor internet or network connection, or when the device is under heavy CPU load due to other applications.
-> 
-> - **Video Streaming Limitation**: ScreenStream is not designed for streaming video, particularly HD video. While it will function, the stream quality may not meet your expectations.
+> * **High Traffic on Mobile Networks**: Use caution when streaming via mobile 3G/4G/5G/LTE networks to avoid excessive data usage.
+>
+> * **Delay in Streaming**: Expect a delay of at least 0.5-1 second or more in certain conditions: slow device, poor internet or network connection, or when the device is under heavy CPU load due to other applications.
+>
+> * **Video Streaming Limitation**: ScreenStream is not designed for streaming video, particularly HD video. While it will function, the stream quality may not meet your expectations.
 
 ### Local mode (MJPEG)
 
@@ -58,40 +59,40 @@ Local mode in the ScreenStream application is built on the MJPEG standard and ut
 
 For optimal performance, a fast and stable network connection is recommended due to high traffic and low network delay requirements.
 
-In Local mode, the app processes each frame independently, one-by-one, enabling additional image transformations such as cropping, resizing, rotating, and more before sending the image to the client's web browser. 
+In Local mode, the app processes each frame independently, one-by-one, enabling additional image transformations such as cropping, resizing, rotating, and more before sending the image to the client's web browser.
 
 The Local mode offers the following functionality:
-- Powered by MJPEG standard.
-- Utilizes PIN for security (no encryption).
-- Sends video as a series of independent images (no audio).
-- Works without an internet connection within your local network.
-- Embedded HTTP server.
-- Allows resizing by percentage or specifying an exact resolution.
-- Works with WiFi and/or mobile networks, supporting IPv4 and IPv6.
-- Clients connect via web browser using the app's provided IP address.
-- Highly customizable.
-- Individual data transmission for each client, with more clients requiring increased internet bandwidth to maintain optimal performance.
+* Powered by MJPEG standard.
+* Utilizes PIN for security (no encryption).
+* Sends video as a series of independent images (no audio).
+* Works without an internet connection within your local network.
+* Embedded HTTP server.
+* Allows resizing by percentage or specifying an exact resolution.
+* Works with WiFi and/or mobile networks, supporting IPv4 and IPv6.
+* Clients connect via web browser using the app's provided IP address.
+* Highly customizable.
+* Individual data transmission for each client, with more clients requiring increased internet bandwidth to maintain optimal performance.
 
 > [!NOTE]
 >
-> - Please be aware that certain cell operators may block incoming connections to your device for security reasons. Consequently, even if your device has an IP address from a cell operator, connecting to the device using this IP address may not be possible.
+> * Please be aware that certain cell operators may block incoming connections to your device for security reasons. Consequently, even if your device has an IP address from a cell operator, connecting to the device using this IP address may not be possible.
 >
-> - Some WiFi networks, particularly public or guest networks, may block connections between its clients for security reasons. In such cases, connecting to the device via WiFi might not be feasible. For instance, a laptop and a phone within such a WiFi network will not be able to connect to each other.
+> * Some WiFi networks, particularly public or guest networks, may block connections between its clients for security reasons. In such cases, connecting to the device via WiFi might not be feasible. For instance, a laptop and a phone within such a WiFi network will not be able to connect to each other.
 
 ### Global mode (WebRTC)
 
 Global mode in the ScreenStream application is built on WebRTC technology and relies on an external signaling server to facilitate communication between the streaming host (the app) and the streaming client, which is a web browser equipped with the ScreenStream [Web Client](https://screenstream.io).
 
-Both the signaling server and the web client for ScreenStream are open-source and available in the [ScreenStreamWeb](https://github.com/dkrivoruchko/ScreenStreamWeb) repository. These components can be accessed publicly at https://screenstream.io. The system is designed to function seamlessly with any desktop or mobile browser that supports WebRTC, such as Chrome, Safari, EDGE, Firefox, and others.
+Both the signaling server and the web client for ScreenStream are open-source and available in the [ScreenStreamWeb](https://github.com/dkrivoruchko/ScreenStreamWeb) repository. These components can be accessed publicly at <https://screenstream.io>. The system is designed to function seamlessly with any desktop or mobile browser that supports WebRTC, such as Chrome, Safari, EDGE, Firefox, and others.
 
 The Global mode was introduced in app version 4 and offers the following functionality:
-- Powered by WebRTC technology.
-- End-to-end encrypted communication.
-- Stream protection with password.
-- Supports both video and audio streaming.
-- Connect using unique stream ID and password.
-- Requires an internet connection for streaming.
-- Individual data transmission for each client, with more clients requiring increased internet bandwidth to maintain optimal performance.
+* Powered by WebRTC technology.
+* End-to-end encrypted communication.
+* Stream protection with password.
+* Supports both video and audio streaming.
+* Connect using unique stream ID and password.
+* Requires an internet connection for streaming.
+* Individual data transmission for each client, with more clients requiring increased internet bandwidth to maintain optimal performance.
 
 > [!NOTE]
 > Global mode (WebRTC) only available in Google Play version
@@ -102,13 +103,13 @@ RTSP mode in ScreenStream streams your Android device screen to an external RTSP
 
 For optimal performance, a fast and stable network connection is recommended due to high traffic and low network delay requirements.
 
-- Powered by RTSP protocol.
-- Requires an RTSP-capable media server (tested with MediaMTX).
-- Supports both video (H.265, H.264, AV1) and audio (OPUS, AAC, G.711).
-- Can be protected by username/password.
-- Optional control channel encryption (RTSPS using TLS).
-- Compatible with WiFi, mobile networks, and both IPv4/IPv6.
-- Requires an RTSP client or player for viewing (tested with VLC).
+* Powered by RTSP protocol.
+* Requires an RTSP-capable media server (tested with MediaMTX).
+* Supports both video (H.265, H.264, AV1) and audio (OPUS, AAC, G.711).
+* Can be protected by username/password.
+* Optional control channel encryption (RTSPS using TLS).
+* Compatible with WiFi, mobile networks, and both IPv4/IPv6.
+* Requires an RTSP client or player for viewing (tested with VLC).
 
 > [!NOTE]
 > You need an RTSP‑capable media server (e.g., [MediaMTX](https://github.com/aler9/mediamtx)) to stream to.
@@ -129,14 +130,37 @@ For optimal performance, a fast and stable network connection is recommended due
 
 To contribute with translation, kindly translate the following four files:
 
-1. https://github.com/dkrivoruchko/ScreenStream/blob/master/app/src/main/res/values/strings.xml
-1. https://github.com/dkrivoruchko/ScreenStream/blob/master/mjpeg/src/main/res/values/strings.xml
-1. https://github.com/dkrivoruchko/ScreenStream/blob/master/webrtc/src/main/res/values/strings.xml
-1. https://github.com/dkrivoruchko/ScreenStream/blob/master/rtsp/src/main/res/values/strings.xml
+1. <https://github.com/dkrivoruchko/ScreenStream/blob/master/app/src/main/res/values/strings.xml>
+1. <https://github.com/dkrivoruchko/ScreenStream/blob/master/mjpeg/src/main/res/values/strings.xml>
+1. <https://github.com/dkrivoruchko/ScreenStream/blob/master/webrtc/src/main/res/values/strings.xml>
+1. <https://github.com/dkrivoruchko/ScreenStream/blob/master/rtsp/src/main/res/values/strings.xml>
 
 Then, please, [make a pull request](https://help.github.com/en/articles/creating-a-pull-request) or send those translated files to the developer via e-mail <dkrivoruchko@gmail.com> as an attachment.
 
 Your contribution is valuable and will help improve the accessibility of the application. Thank you for your efforts!
+
+## Fork Features (by zhouyoukang)
+
+This fork includes several enhancements optimized for remote control and reverse proxy (FRP) scenarios:
+
+### 🚀 Network Connectivity
+
+* **Localhost Binding**: Changed server binding to `0.0.0.0`, allowing access via `localhost` and simplifying `frp` configuration.
+* **FRP Port Support**: Added `?input_port=` URL parameter (e.g., `http://ip:8080/?input_port=9000`) to support custom input ports when using reverse proxies.
+
+### 🎯 Input Precision
+
+* **Coordinate Fix**: Implemented aspect-ratio aware coordinate mapping. Clicks are now pixel-perfect even when the stream has black bars (letterboxing/pillarboxing).
+* **Normalized Coordinates**: Updated input service to use normalized coordinates (0.0-1.0) for better compatibility across different screen resolutions.
+
+### 🎨 UI/UX Improvements
+
+* **Status Indicator**: Added a visual "Control Active" / "View Only" status indicator to the web interface.
+* **Selection Fix**: Removed the annoying blue selection box and disabled text selection interference.
+
+## Fork Maintainer
+
+Maintained by **[zhouyoukang](https://github.com/zhouyoukang)**.
 
 ## Developed By
 
