@@ -45,6 +45,7 @@ internal class BitmapCapture(
 
     private class ImageOptions(
         val vrMode: Int = MjpegSettings.Default.VR_MODE_DISABLE,
+        val vrIpd: Int = MjpegSettings.Default.VR_IPD, // Inter-Pupillary Distance in mm
         val grayscale: Boolean = MjpegSettings.Default.IMAGE_GRAYSCALE,
         val resizeFactor: Int = MjpegSettings.Values.RESIZE_DISABLED,
         val targetWidth: Int = MjpegSettings.Default.RESOLUTION_WIDTH,
@@ -89,6 +90,7 @@ internal class BitmapCapture(
         mjpegSettings.data.listenForChange(coroutineScope) { data ->
             imageOptions = ImageOptions(
                 vrMode = data.vrMode,
+                vrIpd = data.vrIpd,
                 grayscale = data.imageGrayscale,
                 resizeFactor = data.resizeFactor,
                 targetWidth = data.resolutionWidth,
@@ -117,9 +119,9 @@ internal class BitmapCapture(
         XLog.d(getLog("start"))
         requireState(State.INIT)
 
-        val bounds = WindowMetricsCalculator.getOrCreate().computeMaximumWindowMetrics(serviceContext).bounds
-        currentWidth = bounds.width()
-        currentHeight = bounds.height()
+        val metrics = getDisplayMetrics()
+        currentWidth = metrics.widthPixels
+        currentHeight = metrics.heightPixels
 
         val newImageListener = ImageListener()
         imageListener = newImageListener
@@ -173,8 +175,8 @@ internal class BitmapCapture(
 
     @Synchronized
     internal fun resize() {
-        val bounds = WindowMetricsCalculator.getOrCreate().computeMaximumWindowMetrics(serviceContext).bounds
-        resize(bounds.width(), bounds.height())
+        val metrics = getDisplayMetrics()
+        resize(metrics.widthPixels, metrics.heightPixels)
     }
 
     @Synchronized
@@ -284,16 +286,46 @@ internal class BitmapCapture(
             reusableBitmap!!
         }
 
-        val vrLeft = if (imageOptions.vrMode == MjpegSettings.Default.VR_MODE_RIGHT) fullWidth / 2 else 0
-        val vrRight = if (imageOptions.vrMode == MjpegSettings.Default.VR_MODE_LEFT) fullWidth / 2 else fullWidth
+        // VR Mode handling with IPD (Inter-Pupillary Distance) support
+        // IPD offset in pixels: convert mm to approximate pixel offset based on screen density
+        // Typical VR screen has ~10 pixels per mm at standard DPI
+        val ipdOffsetPixels = (imageOptions.vrIpd - 64) * 10 / 2 // Offset from center based on IPD difference from default
 
-        var cropLeft = (vrLeft + imageOptions.cropLeft).coerceIn(vrLeft, vrRight)
-        var cropRight = (vrRight - imageOptions.cropRight).coerceIn(cropLeft, vrRight)
+        val vrLeft: Int
+        val vrRight: Int
+        when (imageOptions.vrMode) {
+            MjpegSettings.Default.VR_MODE_LEFT -> {
+                // Capture left half for left eye viewing
+                vrLeft = 0
+                vrRight = fullWidth / 2 + ipdOffsetPixels
+            }
+            MjpegSettings.Default.VR_MODE_RIGHT -> {
+                // Capture right half for right eye viewing
+                vrLeft = fullWidth / 2 - ipdOffsetPixels
+                vrRight = fullWidth
+            }
+            MjpegSettings.Default.VR_MODE_STEREO -> {
+                // Full stereo mode: output both eyes side-by-side (no crop, full width)
+                vrLeft = 0
+                vrRight = fullWidth
+            }
+            else -> {
+                // VR_MODE_DISABLE: full screen
+                vrLeft = 0
+                vrRight = fullWidth
+            }
+        }
+
+        var cropLeft = (vrLeft + imageOptions.cropLeft).coerceIn(0, fullWidth)
+        var cropRight = (vrRight - imageOptions.cropRight).coerceIn(cropLeft, fullWidth)
         var cropTop = imageOptions.cropTop.coerceIn(0, fullHeight)
         var cropBottom = (fullHeight - imageOptions.cropBottom).coerceIn(cropTop, fullHeight)
 
         if (cropLeft >= cropRight || cropTop >= cropBottom) {
-            cropLeft = vrLeft; cropTop = 0; cropRight = vrRight; cropBottom = fullHeight // Fallback
+            cropLeft = vrLeft.coerceIn(0, fullWidth)
+            cropTop = 0
+            cropRight = vrRight.coerceIn(0, fullWidth)
+            cropBottom = fullHeight // Fallback
         }
 
         val cropWidth = cropRight - cropLeft
@@ -352,5 +384,13 @@ internal class BitmapCapture(
         canvas.drawBitmap(tmpBitmap, transformMatrix, paint)
 
         return outputBitmap!!.copy(outputBitmap!!.config ?: Bitmap.Config.ARGB_8888, false)
+    }
+
+    private fun getDisplayMetrics(): android.util.DisplayMetrics {
+        val displayManager = serviceContext.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        val display = displayManager.getDisplay(android.view.Display.DEFAULT_DISPLAY)
+        val metrics = android.util.DisplayMetrics()
+        display.getRealMetrics(metrics)
+        return metrics
     }
 }

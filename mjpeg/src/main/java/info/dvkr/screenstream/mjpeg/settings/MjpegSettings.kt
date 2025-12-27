@@ -22,6 +22,7 @@ public interface MjpegSettings {
         public val HTML_FIT_WINDOW: Preferences.Key<Boolean> = booleanPreferencesKey("HTML_FIT_WINDOW")
 
         public val VR_MODE: Preferences.Key<Int> = intPreferencesKey("VR_MODE")
+        public val VR_IPD: Preferences.Key<Int> = intPreferencesKey("VR_IPD") // Inter-Pupillary Distance in mm
         public val IMAGE_CROP: Preferences.Key<Boolean> = booleanPreferencesKey("IMAGE_CROP")
         public val IMAGE_CROP_TOP: Preferences.Key<Int> = intPreferencesKey("IMAGE_CROP_TOP")
         public val IMAGE_CROP_BOTTOM: Preferences.Key<Int> = intPreferencesKey("IMAGE_CROP_BOTTOM")
@@ -56,7 +57,7 @@ public interface MjpegSettings {
         public const val STOP_ON_CONFIGURATION_CHANGE: Boolean = false
         public const val NOTIFY_SLOW_CONNECTIONS: Boolean = false
 
-        public const val HTML_ENABLE_BUTTONS: Boolean = false
+        public const val HTML_ENABLE_BUTTONS: Boolean = true
         public const val HTML_SHOW_PRESS_START: Boolean = true
         public const val HTML_BACK_COLOR: Int = -15723496// "FF101418".toLong(radix = 16).toInt()
         public const val HTML_FIT_WINDOW: Boolean = true
@@ -64,6 +65,8 @@ public interface MjpegSettings {
         public const val VR_MODE_DISABLE: Int = 0
         public const val VR_MODE_LEFT: Int = 1
         public const val VR_MODE_RIGHT: Int = 2
+        public const val VR_MODE_STEREO: Int = 3 // Full stereo mode for VR headsets
+        public const val VR_IPD: Int = 64 // Default IPD in mm (average human IPD)
         public const val IMAGE_CROP: Boolean = false
         public const val IMAGE_CROP_TOP: Int = 0
         public const val IMAGE_CROP_BOTTOM: Int = 0
@@ -76,7 +79,7 @@ public interface MjpegSettings {
         public const val RESOLUTION_HEIGHT: Int = 0
         public const val RESOLUTION_STRETCH: Boolean = true
         public const val ROTATION: Int = Values.ROTATION_0
-        public const val MAX_FPS: Int = 30
+        public const val MAX_FPS: Int = 90 // Increased for VR (was 30)
 
         public const val ENABLE_PIN: Boolean = false
         public const val HIDE_PIN_ON_START: Boolean = true
@@ -133,6 +136,7 @@ public interface MjpegSettings {
         public val htmlFitWindow: Boolean = Default.HTML_FIT_WINDOW,
 
         public val vrMode: Int = Default.VR_MODE_DISABLE,
+        public val vrIpd: Int = Default.VR_IPD,
         public val imageCrop: Boolean = Default.IMAGE_CROP,
         public val imageCropTop: Int = Default.IMAGE_CROP_TOP,
         public val imageCropBottom: Int = Default.IMAGE_CROP_BOTTOM,

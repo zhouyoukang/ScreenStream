@@ -202,11 +202,10 @@ internal class HttpServer(
                 reuseAddress = true
                 shutdownGracePeriod = 0
                 shutdownTimeout = 500
-                serverAddresses.forEach { netInterface ->
-                    connector {
-                        host = netInterface.address.hostAddress!!
-                        port = serverPort
-                    }
+                // Bind to 0.0.0.0 to allow localhost and all interfaces
+                connector {
+                    host = "0.0.0.0"
+                    port = serverPort
                 }
             }
         )

@@ -116,6 +116,7 @@ dependencies {
 
     implementation(projects.mjpeg)
     implementation(projects.rtsp)
+    implementation(projects.input)
 
     "PlayStoreImplementation"(projects.webrtc)
     "PlayStoreImplementation"(libs.play.services.tasks)

@@ -76,6 +76,9 @@ internal class MjpegSettingsImpl(context: Context) : MjpegSettings {
                 if (newSettings.vrMode != MjpegSettings.Default.VR_MODE_DISABLE)
                     set(MjpegSettings.Key.VR_MODE, newSettings.vrMode)
 
+                if (newSettings.vrIpd != MjpegSettings.Default.VR_IPD)
+                    set(MjpegSettings.Key.VR_IPD, newSettings.vrIpd)
+
                 if (newSettings.imageCrop != MjpegSettings.Default.IMAGE_CROP)
                     set(MjpegSettings.Key.IMAGE_CROP, newSettings.imageCrop)
 
@@ -165,6 +168,7 @@ internal class MjpegSettingsImpl(context: Context) : MjpegSettings {
         htmlFitWindow = this[MjpegSettings.Key.HTML_FIT_WINDOW] ?: MjpegSettings.Default.HTML_FIT_WINDOW,
 
         vrMode = this[MjpegSettings.Key.VR_MODE] ?: MjpegSettings.Default.VR_MODE_DISABLE,
+        vrIpd = this[MjpegSettings.Key.VR_IPD] ?: MjpegSettings.Default.VR_IPD,
         imageCrop = this[MjpegSettings.Key.IMAGE_CROP] ?: MjpegSettings.Default.IMAGE_CROP,
         imageCropTop = this[MjpegSettings.Key.IMAGE_CROP_TOP] ?: MjpegSettings.Default.IMAGE_CROP_TOP,
         imageCropBottom = this[MjpegSettings.Key.IMAGE_CROP_BOTTOM] ?: MjpegSettings.Default.IMAGE_CROP_BOTTOM,
