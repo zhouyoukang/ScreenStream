@@ -154,18 +154,11 @@ internal class BitmapCapture(
         @Suppress("DEPRECATION")
         display.getRealSize(screenSize)
         
-        // Cap resolution to prevent integer overflow in ByteBuffer allocation
-        // Quest 3 has extremely high resolution that causes overflow
-        val maxWidth = 1920
-        val maxHeight = 1080
-        val scale = min(
-            maxWidth.toFloat() / screenSize.x,
-            maxHeight.toFloat() / screenSize.y
-        ).coerceAtMost(1f)
-        
-        currentWidth = (screenSize.x * scale).toInt()
-        currentHeight = (screenSize.y * scale).toInt()
-        XLog.d(getLog("start", "Resolution: ${screenSize.x}x${screenSize.y} -> ${currentWidth}x${currentHeight}"))
+        // Use original resolution for normal phones
+        // Resolution cap only applied in switchToFallback() for VR devices with very high resolution
+        currentWidth = screenSize.x
+        currentHeight = screenSize.y
+        XLog.d(getLog("start", "Resolution: ${currentWidth}x${currentHeight}"))
         
         // Get densityDpi from Display like v3.6.4
         val displayMetrics = android.util.DisplayMetrics()
@@ -361,7 +354,8 @@ internal class BitmapCapture(
         imageReader = null
         
         // Ensure resolution is capped to prevent overflow (Quest 3 has very high resolution)
-        val maxRes = 1920
+        // Use 1:1 aspect ratio with higher resolution for better VR quality
+        val maxRes = 2560
         val cappedWidth = min(currentWidth, maxRes)
         val cappedHeight = min(currentHeight, maxRes)
         
