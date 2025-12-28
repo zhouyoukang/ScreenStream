@@ -10,16 +10,23 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.PorterDuff
+import android.graphics.SurfaceTexture
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.Image
 import android.media.ImageReader
 import android.media.projection.MediaProjection
+import android.opengl.GLES20
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Process
+import android.view.Surface
 import androidx.core.graphics.createBitmap
 import androidx.window.layout.WindowMetricsCalculator
+import com.android.grafika.gles.EglCore
+import com.android.grafika.gles.FullFrameRect
+import com.android.grafika.gles.OffscreenSurface
+import com.android.grafika.gles.Texture2dProgram
 import com.elvishew.xlog.XLog
 import info.dvkr.screenstream.common.getLog
 import info.dvkr.screenstream.mjpeg.settings.MjpegSettings
@@ -29,9 +36,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+
 
 // https://developer.android.com/media/grow/media-projection
 internal class BitmapCapture(
@@ -72,6 +82,19 @@ internal class BitmapCapture(
     private var imageReader: ImageReader? = null
     private var virtualDisplay: VirtualDisplay? = null
 
+    // OpenGL ES fallback fields (from v3.6.4 for VR compatibility)
+    @Volatile
+    private var fallback: Boolean = false
+    @Volatile
+    private var fallbackFrameListener: FallbackFrameListener? = null
+    private var mEglCore: EglCore? = null
+    private var mProducerSide: Surface? = null
+    private var mTexture: SurfaceTexture? = null
+    private var mTextureId = 0
+    private var mConsumerSide: OffscreenSurface? = null
+    private var mScreen: FullFrameRect? = null
+    private var mBuf: ByteBuffer? = null
+
     private var reusableBitmap: Bitmap? = null
     private var outputBitmap: Bitmap? = null
 
@@ -83,6 +106,7 @@ internal class BitmapCapture(
     private var transformMatrix = Matrix()
     private var transformMatrixDirty = true
     private var paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.DITHER_FLAG or Paint.FILTER_BITMAP_FLAG)
+
 
     init {
         XLog.d(getLog("init"))
@@ -116,17 +140,77 @@ internal class BitmapCapture(
 
     @Synchronized
     internal fun start(): Boolean {
-        XLog.d(getLog("start"))
+        XLog.d(getLog("start", "fallback=$fallback"))
         requireState(State.INIT)
 
-        val metrics = getDisplayMetrics()
-        currentWidth = metrics.widthPixels
-        currentHeight = metrics.heightPixels
+        // Use WindowManager.defaultDisplay like v3.6.4 for better VR compatibility
+        @Suppress("DEPRECATION")
+        val windowManager = serviceContext.getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager
+        @Suppress("DEPRECATION")
+        val display = windowManager.defaultDisplay
+        
+        // Get screen size using Display.getRealSize like v3.6.4
+        val screenSize = android.graphics.Point()
+        @Suppress("DEPRECATION")
+        display.getRealSize(screenSize)
+        
+        // Cap resolution to prevent integer overflow in ByteBuffer allocation
+        // Quest 3 has extremely high resolution that causes overflow
+        val maxWidth = 1920
+        val maxHeight = 1080
+        val scale = min(
+            maxWidth.toFloat() / screenSize.x,
+            maxHeight.toFloat() / screenSize.y
+        ).coerceAtMost(1f)
+        
+        currentWidth = (screenSize.x * scale).toInt()
+        currentHeight = (screenSize.y * scale).toInt()
+        XLog.d(getLog("start", "Resolution: ${screenSize.x}x${screenSize.y} -> ${currentWidth}x${currentHeight}"))
+        
+        // Get densityDpi from Display like v3.6.4
+        val displayMetrics = android.util.DisplayMetrics()
+        @Suppress("DEPRECATION")
+        display.getMetrics(displayMetrics)
+        val densityDpi = displayMetrics.densityDpi
 
-        val newImageListener = ImageListener()
-        imageListener = newImageListener
-        imageReader = ImageReader.newInstance(currentWidth, currentHeight, PixelFormat.RGBA_8888, 2).apply {
-            setOnImageAvailableListener(newImageListener, imageThreadHandler)
+        val captureSurface: Surface
+
+        if (fallback.not()) {
+            // Standard ImageReader path
+            val newImageListener = ImageListener()
+            imageListener = newImageListener
+            imageReader = ImageReader.newInstance(currentWidth, currentHeight, PixelFormat.RGBA_8888, 2).apply {
+                setOnImageAvailableListener(newImageListener, imageThreadHandler)
+            }
+            captureSurface = imageReader!!.surface
+        } else {
+            // OpenGL ES fallback path (for VR devices like Quest 3)
+            XLog.d(getLog("start", "Using OpenGL ES fallback for VR compatibility"))
+            try {
+                mEglCore = EglCore(null, EglCore.FLAG_TRY_GLES3 or EglCore.FLAG_RECORDABLE)
+                mConsumerSide = OffscreenSurface(mEglCore, currentWidth, currentHeight)
+                mConsumerSide!!.makeCurrent()
+
+                val newFallbackListener = FallbackFrameListener(currentWidth, currentHeight)
+                fallbackFrameListener = newFallbackListener
+                mBuf = ByteBuffer.allocate(currentWidth * currentHeight * 4).apply { order(ByteOrder.nativeOrder()) }
+                mScreen = FullFrameRect(Texture2dProgram(Texture2dProgram.ProgramType.TEXTURE_EXT))
+                mTextureId = mScreen!!.createTextureObject()
+                mTexture = SurfaceTexture(mTextureId, false).apply {
+                    setDefaultBufferSize(currentWidth, currentHeight)
+                    setOnFrameAvailableListener(newFallbackListener, imageThreadHandler)
+                }
+                mProducerSide = Surface(mTexture)
+                captureSurface = mProducerSide!!
+
+                mEglCore!!.makeNothingCurrent()
+            } catch (cause: Throwable) {
+                XLog.w(getLog("start", "OpenGL ES fallback failed: ${cause.message}"), cause)
+                state = State.ERROR
+                onError(MjpegError.UnknownError(cause))
+                safeRelease()
+                return false
+            }
         }
 
         try {
@@ -134,25 +218,41 @@ internal class BitmapCapture(
                 "BitmapCaptureVirtualDisplay",
                 currentWidth,
                 currentHeight,
-                serviceContext.resources.configuration.densityDpi,
+                densityDpi,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION,
-                imageReader!!.surface,
+                captureSurface,
                 null,
                 imageThreadHandler
             )
             if (virtualDisplay == null) {
-                XLog.w(getLog("startDisplayCapture", "virtualDisplay is null"))
+                XLog.w(getLog("start", "virtualDisplay is null"))
                 state = State.ERROR
                 onError(MjpegError.UnknownError(RuntimeException("virtualDisplay is null")))
                 safeRelease()
             } else {
                 state = State.STARTED
+                XLog.d(getLog("start", "VirtualDisplay created: ${currentWidth}x${currentHeight}, fallback=$fallback"))
             }
         } catch (ex: SecurityException) {
-            XLog.w(getLog("startDisplayCapture", ex.toString()), ex)
+            XLog.w(getLog("start", ex.toString()), ex)
             state = State.ERROR
             onError(MjpegError.CastSecurityException)
             safeRelease()
+        }
+
+        // Start timeout check for fallback (Quest 3 VR may not call onImageAvailable at all)
+        if (state == State.STARTED && fallback.not()) {
+            val startTime = System.currentTimeMillis()
+            imageThreadHandler.postDelayed({
+                synchronized(this@BitmapCapture) {
+                    // If no frames received within 3 seconds and not yet in fallback mode, switch to fallback
+                    if (state == State.STARTED && fallback.not() && lastImageMillis < startTime) {
+                        XLog.d(getLog("start", "No frames received in 3s, switching to OpenGL ES fallback"))
+                        fallback = true
+                        restart()
+                    }
+                }
+            }, 3000)
         }
 
         return state == State.STARTED
@@ -224,19 +324,109 @@ internal class BitmapCapture(
 
     private fun safeRelease() {
         imageListener = null
+        fallbackFrameListener = null
         virtualDisplay?.release()
         virtualDisplay = null
-        imageReader?.surface?.release() // For some reason imageReader.close() does not release surface
+        imageReader?.surface?.release()
         imageReader?.close()
         imageReader = null
+        
+        // OpenGL ES resource cleanup
+        mProducerSide?.release()
+        mProducerSide = null
+        mTexture?.release()
+        mTexture = null
+        mConsumerSide?.release()
+        mConsumerSide = null
+        mScreen = null
+        mEglCore?.release()
+        mEglCore = null
+        mBuf = null
+        
         reusableBitmap = null
         outputBitmap = null
+    }
+    @Synchronized
+    private fun switchToFallback() {
+        XLog.d(getLog("switchToFallback", "Switching to OpenGL ES fallback, size: ${currentWidth}x${currentHeight}"))
+        if (state != State.STARTED) {
+            XLog.d(getLog("switchToFallback", "Ignored, state=$state"))
+            return
+        }
+        
+        // Release ImageReader resources (but keep VirtualDisplay!)
+        imageListener = null
+        imageReader?.surface?.release()
+        imageReader?.close()
+        imageReader = null
+        
+        // Ensure resolution is capped to prevent overflow (Quest 3 has very high resolution)
+        val maxRes = 1920
+        val cappedWidth = min(currentWidth, maxRes)
+        val cappedHeight = min(currentHeight, maxRes)
+        
+        // Calculate buffer size safely
+        val bufferSize = cappedWidth.toLong() * cappedHeight.toLong() * 4
+        if (bufferSize > Int.MAX_VALUE || bufferSize <= 0) {
+            XLog.e(getLog("switchToFallback", "Buffer size overflow: $bufferSize"))
+            state = State.ERROR
+            onError(MjpegError.UnknownError(RuntimeException("Buffer size overflow: $bufferSize")))
+            return
+        }
+        
+        // Initialize OpenGL ES fallback with capped dimensions
+        try {
+            mEglCore = EglCore(null, EglCore.FLAG_TRY_GLES3 or EglCore.FLAG_RECORDABLE)
+            mConsumerSide = OffscreenSurface(mEglCore, cappedWidth, cappedHeight)
+            mConsumerSide!!.makeCurrent()
+
+            val newFallbackListener = FallbackFrameListener(cappedWidth, cappedHeight)
+            fallbackFrameListener = newFallbackListener
+            mBuf = ByteBuffer.allocate(bufferSize.toInt()).apply { order(ByteOrder.nativeOrder()) }
+            mScreen = FullFrameRect(Texture2dProgram(Texture2dProgram.ProgramType.TEXTURE_EXT))
+            mTextureId = mScreen!!.createTextureObject()
+            mTexture = SurfaceTexture(mTextureId, false).apply {
+                setDefaultBufferSize(cappedWidth, cappedHeight)
+                setOnFrameAvailableListener(newFallbackListener, imageThreadHandler)
+            }
+            mProducerSide = Surface(mTexture)
+            
+            mEglCore!!.makeNothingCurrent()
+            
+            // Swap the VirtualDisplay surface to OpenGL (Android 14+ compatible - no recreate!)
+            virtualDisplay?.surface = mProducerSide
+            
+            XLog.d(getLog("switchToFallback", "Successfully switched to OpenGL ES surface"))
+        } catch (cause: Throwable) {
+            XLog.w(getLog("switchToFallback", "OpenGL ES fallback failed: ${cause.message}"), cause)
+            state = State.ERROR
+            onError(MjpegError.UnknownError(cause))
+            safeRelease()
+        }
+    }
+    
+    @Synchronized
+    private fun restart() {
+        XLog.d(getLog("restart", "Start"))
+        if (state != State.STARTED) {
+            XLog.d(getLog("restart", "Ignored, state=$state"))
+            return
+        }
+        // For fallback switching, use switchToFallback() instead
+        if (fallback) {
+            switchToFallback()
+            return
+        }
+        safeRelease()
+        state = State.INIT
+        start()
+        XLog.d(getLog("restart", "End"))
     }
 
     private inner class ImageListener : ImageReader.OnImageAvailableListener {
         override fun onImageAvailable(reader: ImageReader) {
             synchronized(this@BitmapCapture) {
-                if (state != State.STARTED || this != imageListener) return
+                if (state != State.STARTED || this != imageListener || fallback) return
 
                 var image: Image? = null
                 try {
@@ -257,6 +447,12 @@ internal class BitmapCapture(
                     val bitmap = transformImageToBitmap(image)
                     bitmapStateFlow.tryEmit(bitmap)
 
+                } catch (ex: UnsupportedOperationException) {
+                    // VR devices like Quest 3 may not support ImageReader format
+                    // Switch to OpenGL ES fallback
+                    XLog.d(this@BitmapCapture.getLog("onImageAvailable", "Unsupported format, switching to OpenGL ES fallback"))
+                    fallback = true
+                    restart()
                 } catch (throwable: Throwable) {
                     XLog.e(this@BitmapCapture.getLog("onImageAvailable"), throwable)
                     state = State.ERROR
@@ -392,5 +588,71 @@ internal class BitmapCapture(
         val metrics = android.util.DisplayMetrics()
         display.getRealMetrics(metrics)
         return metrics
+    }
+
+    /** OpenGL ES fallback frame listener for VR devices (from v3.6.4)
+     *  https://stackoverflow.com/a/34741581 **/
+    private inner class FallbackFrameListener(
+        private val width: Int, 
+        private val height: Int
+    ) : SurfaceTexture.OnFrameAvailableListener {
+        override fun onFrameAvailable(surfaceTexture: SurfaceTexture?) {
+            synchronized(this@BitmapCapture) {
+                if (state != State.STARTED || this != fallbackFrameListener) return
+
+                try {
+                    mConsumerSide!!.makeCurrent()
+                    mTexture!!.updateTexImage()
+
+                    val minTimeBetweenFramesMillis = when {
+                        imageOptions.maxFPS > 0 -> 1000 / imageOptions.maxFPS.toLong()
+                        imageOptions.maxFPS < 0 -> 1000 * abs(imageOptions.maxFPS.toLong())
+                        else -> 0
+                    }
+                    val now = System.currentTimeMillis()
+                    if (minTimeBetweenFramesMillis > 0 && now < lastImageMillis + minTimeBetweenFramesMillis) {
+                        return
+                    }
+                    lastImageMillis = now
+
+                    FloatArray(16).let { matrix ->
+                        mTexture!!.getTransformMatrix(matrix)
+                        mScreen!!.drawFrame(mTextureId, matrix)
+                    }
+
+                    mConsumerSide!!.swapBuffers()
+
+                    val buf = mBuf!!
+                    buf.rewind()
+                    GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf)
+                    buf.rewind()
+                    
+                    val cleanBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                    cleanBitmap.copyPixelsFromBuffer(buf)
+
+                    // Apply transformations similar to ImageListener
+                    val bitmap = applyTransformations(cleanBitmap)
+                    bitmapStateFlow.tryEmit(bitmap)
+
+                } catch (throwable: Throwable) {
+                    XLog.e(this@BitmapCapture.getLog("FallbackFrameListener"), throwable)
+                    state = State.ERROR
+                    onError(MjpegError.BitmapCaptureException(throwable))
+                    safeRelease()
+                }
+            }
+        }
+
+        private fun applyTransformations(bitmap: Bitmap): Bitmap {
+            // Simple transformation for fallback - just resize if needed
+            val resizeFactor = imageOptions.resizeFactor
+            if (resizeFactor < MjpegSettings.Values.RESIZE_DISABLED) {
+                val scale = resizeFactor / 100f
+                val newWidth = (bitmap.width * scale).toInt()
+                val newHeight = (bitmap.height * scale).toInt()
+                return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+            }
+            return bitmap
+        }
     }
 }
