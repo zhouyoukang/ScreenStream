@@ -25,6 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessStarted
 import info.dvkr.screenstream.common.ui.DoubleClickProtection
@@ -47,6 +50,21 @@ internal fun MjpegMainScreenUI(
     modifier: Modifier = Modifier
 ) {
     val mjpegState = mjpegStateFlow.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted || androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.RECORD_AUDIO
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            // Permission granted or already granted
+        }
+        // Always start stream, even if audio permission denied (audio will just be silent)
+        sendEvent(MjpegStreamingService.InternalEvent.StartStream)
+    }
 
     BoxWithConstraints(modifier = modifier) {
         MediaProjectionPermission(
@@ -96,8 +114,23 @@ internal fun MjpegMainScreenUI(
         Button(
             onClick = dropUnlessStarted {
                 doubleClickProtection.processClick {
-                    if (mjpegState.value.isStreaming) sendEvent(MjpegEvent.Intentable.StopStream("User action: Button"))
-                    else sendEvent(MjpegStreamingService.InternalEvent.StartStream)
+                    if (mjpegState.value.isStreaming) {
+                        sendEvent(MjpegEvent.Intentable.StopStream("User action: Button"))
+                    } else {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                                    context,
+                                    android.Manifest.permission.RECORD_AUDIO
+                                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                            ) {
+                                permissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+                            } else {
+                                sendEvent(MjpegStreamingService.InternalEvent.StartStream)
+                            }
+                        } else {
+                            sendEvent(MjpegStreamingService.InternalEvent.StartStream)
+                        }
+                    }
                 }
             },
             modifier = Modifier

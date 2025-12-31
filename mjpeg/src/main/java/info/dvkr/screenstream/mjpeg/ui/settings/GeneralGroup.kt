@@ -15,12 +15,14 @@ import info.dvkr.screenstream.mjpeg.ui.settings.general.KeepAwake
 import info.dvkr.screenstream.mjpeg.ui.settings.general.NotifySlowConnections
 import info.dvkr.screenstream.mjpeg.ui.settings.general.StopOnConfigurationChange
 import info.dvkr.screenstream.mjpeg.ui.settings.general.StopOnSleep
+import info.dvkr.screenstream.mjpeg.ui.settings.general.StreamCodec
 
 public object GeneralGroup : ModuleSettings.Group {
     override val id: String = "GENERAL"
     override val position: Int = 0
     override val items: List<ModuleSettings.Item> =
         listOf(
+            StreamCodec,
             KeepAwake,
             StopOnSleep,
             StopOnConfigurationChange,

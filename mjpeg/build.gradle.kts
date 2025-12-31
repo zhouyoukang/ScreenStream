@@ -30,6 +30,7 @@ android {
 
 dependencies {
     implementation(projects.common)
+    implementation(projects.input)
 
     implementation(libs.ktor.server.cio)
     implementation(libs.ktor.server.compression)

@@ -57,6 +57,13 @@
     <string name="mjpeg_pref_stop_on_configuration_summary">Stop streaming when streaming configuration changes</string>
     <string name="mjpeg_pref_detect_slow_connections">Notify for slow connections</string>
     <string name="mjpeg_pref_detect_slow_connections_summary">Detect and notify for slow client connections</string>
+    <string name="mjpeg_pref_stream_codec">Stream codec</string>
+    <string name="mjpeg_pref_stream_codec_summary">Select MJPEG (compatibility) or H.264/H.265 (low bandwidth) for the web player</string>
+    <string-array name="mjpeg_pref_stream_codec_options" translatable="false">
+        <item>MJPEG</item>
+        <item>H.264 (Web)</item>
+        <item>H.265 (Web)</item>
+    </string-array>
     <string name="mjpeg_pref_html_buttons">Enable web page buttons</string>
     <string name="mjpeg_pref_html_buttons_summary">Show control buttons on web page</string>
     <string name="mjpeg_pref_html_show_press_start">Show \"Start stream on device\"</string>

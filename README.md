@@ -163,6 +163,22 @@ This fork includes several enhancements optimized for remote control and reverse
 * **Escape = Back**: Press Escape to trigger Android back action.
 * **Shortcuts**: Ctrl+A (select all), Ctrl+C (copy), Ctrl+V (paste from PC clipboard), Ctrl+X (cut).
 
+### 🥽 VR / Quest Usage Notes
+
+* **Recommended**: Use **Local mode (MJPEG)** for maximum compatibility.
+* **Audio autoplay policy**: Quest/OculusBrowser may block audio until a user gesture.
+  If you see a hint like **"VR：请点击底部导航栏（三大金刚键区域）以开启音频"**, follow it once and audio will start.
+* **VR keyboard**: For Quest browsers, the web client suppresses auto-focusing hidden inputs by default to avoid popping up the VR keyboard.
+  If you really want VR keyboard focus, open the web client with `?vr_kb=1`.
+* **Controller buttons**:
+  - WebXR can expose many controller inputs via `XRInputSource.gamepad`, but **platform reserved/system buttons must not be exposed** (for example the system Home/Meta button).
+  - Plan to map actions to trigger/squeeze/thumbstick/A/B/X/Y instead of relying on reserved buttons.
+
+### 🎤 Microphone / Audio Permission Shortcut
+
+* The app shows a quick card on the Stream tab to request **RECORD_AUDIO**.
+* This permission is required for audio capture/streaming features.
+
 ### 🖱️ Mouse & Scroll Control
 
 * **Inverted Scroll**: Scroll direction matches standard computer behavior.

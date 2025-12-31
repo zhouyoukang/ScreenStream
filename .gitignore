@@ -28,6 +28,24 @@ proguard/
 # Log Files
 *.log
 
+# Local build/debug logs
+build_log.txt
+build_error.txt
+logcat_*.txt
+crash_extract.txt
+guard_output.txt
+log.txt
+
+# Temp files
+temp_gh_*
+
+# Local-only folders
+AudioCenter/
+backups/
+
+# Sensitive local assets
+mjpeg/src/main/assets/server.p12
+
 # Android Studio Navigation editor temp files
 .navigation/
 

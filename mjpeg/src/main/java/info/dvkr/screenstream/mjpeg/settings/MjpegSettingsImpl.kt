@@ -60,6 +60,9 @@ internal class MjpegSettingsImpl(context: Context) : MjpegSettings {
                 if (newSettings.notifySlowConnections != MjpegSettings.Default.NOTIFY_SLOW_CONNECTIONS)
                     set(MjpegSettings.Key.NOTIFY_SLOW_CONNECTIONS, newSettings.notifySlowConnections)
 
+                if (newSettings.streamCodec != MjpegSettings.Default.STREAM_CODEC)
+                    set(MjpegSettings.Key.STREAM_CODEC, newSettings.streamCodec)
+
                 if (newSettings.htmlEnableButtons != MjpegSettings.Default.HTML_ENABLE_BUTTONS)
                     set(MjpegSettings.Key.HTML_ENABLE_BUTTONS, newSettings.htmlEnableButtons)
 
@@ -162,6 +165,7 @@ internal class MjpegSettingsImpl(context: Context) : MjpegSettings {
         stopOnSleep = this[MjpegSettings.Key.STOP_ON_SLEEP] ?: MjpegSettings.Default.STOP_ON_SLEEP,
         stopOnConfigurationChange = this[MjpegSettings.Key.STOP_ON_CONFIGURATION_CHANGE] ?: MjpegSettings.Default.STOP_ON_CONFIGURATION_CHANGE,
         notifySlowConnections = this[MjpegSettings.Key.NOTIFY_SLOW_CONNECTIONS] ?: MjpegSettings.Default.NOTIFY_SLOW_CONNECTIONS,
+        streamCodec = this[MjpegSettings.Key.STREAM_CODEC] ?: MjpegSettings.Default.STREAM_CODEC,
         htmlEnableButtons = this[MjpegSettings.Key.HTML_ENABLE_BUTTONS] ?: MjpegSettings.Default.HTML_ENABLE_BUTTONS,
         htmlShowPressStart = this[MjpegSettings.Key.HTML_SHOW_PRESS_START] ?: MjpegSettings.Default.HTML_SHOW_PRESS_START,
         htmlBackColor = this[MjpegSettings.Key.HTML_BACK_COLOR] ?: MjpegSettings.Default.HTML_BACK_COLOR,

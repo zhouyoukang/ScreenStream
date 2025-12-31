@@ -322,7 +322,11 @@ public class InputService : AccessibilityService() {
                     Log.i(TAG, "Cut")
                     cut()
                 }
-                0xFFFFL -> {  // Delete
+                0xFF6DL -> {  // XK_Paste (Custom mapping for robust Paste)
+                    Log.i(TAG, "Paste command received")
+                    paste()
+                }
+                0xFFFFL -> {  // Delete (restored)
                     Log.i(TAG, "Delete key")
                     deleteNextChar()
                 }

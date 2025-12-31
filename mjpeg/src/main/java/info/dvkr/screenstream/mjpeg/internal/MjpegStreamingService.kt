@@ -17,6 +17,7 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.media.MediaFormat
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -41,12 +42,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.android.asCoroutineDispatcher
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.delay
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -69,8 +74,21 @@ internal class MjpegStreamingService(
     private val supervisorJob = SupervisorJob()
     private val coroutineScope by lazy(LazyThreadSafetyMode.NONE) { CoroutineScope(supervisorJob + coroutineDispatcher) }
     private val bitmapStateFlow = MutableStateFlow(createBitmap(1, 1))
+    private val h264SharedFlow = MutableSharedFlow<H264Frame>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val h265SharedFlow = MutableSharedFlow<H264Frame>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val audioStreamer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) AudioStreamer(service) else null
+
     private val httpServer by lazy(mode = LazyThreadSafetyMode.NONE) {
-        HttpServer(service, mjpegSettings, bitmapStateFlow.asStateFlow(), ::sendEvent)
+        HttpServer(
+            service,
+            mjpegSettings,
+            bitmapStateFlow.asStateFlow(),
+            h264SharedFlow.onSubscription { lastH264ConfigFrame?.let { emit(it) } },
+            h265SharedFlow.onSubscription { lastH265ConfigFrame?.let { emit(it) } },
+            audioStreamer?.audioFlow,
+            ::sendEvent,
+            { sendEvent(InternalEvent.RequestKeyFrame) }
+        )
     }
 
     // All Volatiles vars must be write on this (WebRTC-HT) thread
@@ -90,6 +108,10 @@ internal class MjpegStreamingService(
     private var mediaProjectionIntent: Intent? = null
     private var mediaProjection: MediaProjection? = null
     private var bitmapCapture: BitmapCapture? = null
+    private var h264Encoder: H264Encoder? = null
+    private var h264VirtualDisplay: android.hardware.display.VirtualDisplay? = null
+    @Volatile private var lastH264ConfigFrame: H264Frame? = null
+    @Volatile private var lastH265ConfigFrame: H264Frame? = null
     private var currentError: MjpegError? = null
     private var previousError: MjpegError? = null
     // All vars must be read/write on this (WebRTC-HT) thread
@@ -108,6 +130,8 @@ internal class MjpegStreamingService(
         data class Clients(val clients: List<MjpegState.Client>) : InternalEvent(Priority.RESTART_IGNORE)
         data class RestartServer(val reason: RestartReason) : InternalEvent(Priority.RESTART_IGNORE)
         data object UpdateStartBitmap : InternalEvent(Priority.RESTART_IGNORE)
+        data object RequestKeyFrame : InternalEvent(Priority.RESTART_IGNORE)
+        data class UpdateBitrate(val latency: Long) : InternalEvent(Priority.RESTART_IGNORE)
 
         data class Error(val error: MjpegError) : InternalEvent(Priority.RECOVER_IGNORE)
 
@@ -332,8 +356,11 @@ internal class MjpegStreamingService(
 
             is InternalEvent.StartStream -> {
                 mediaProjectionIntent?.let {
-                    check(Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) { "MjpegEvent.StartStream: UPSIDE_DOWN_CAKE" }
-                    sendEvent(MjpegEvent.StartProjection(it))
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        sendEvent(MjpegEvent.StartProjection(it))
+                    } else {
+                        waitingForPermission = true
+                    }
                 } ?: run {
                     waitingForPermission = true
                 }
@@ -359,14 +386,66 @@ internal class MjpegStreamingService(
                         registerCallback(projectionCallback, Handler(Looper.getMainLooper()))
                     }
 
-                    val bitmapCapture = BitmapCapture(service, mjpegSettings, mediaProjection, bitmapStateFlow) { error ->
-                        sendEvent(InternalEvent.Error(error))
-                    }
-                    val captureStarted = bitmapCapture.start()
-                    if (captureStarted && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.S || !Build.MANUFACTURER.equals("Xiaomi", ignoreCase = true)) {
-                            mediaProjectionIntent = event.intent
-                            service.registerComponentCallbacks(componentCallback)
+                    val streamCodec = mjpegSettings.data.value.streamCodec
+                    val isMjpeg = streamCodec == MjpegSettings.Values.STREAM_CODEC_MJPEG
+
+                    if (isMjpeg) {
+                        val bitmapCapture = BitmapCapture(service, mjpegSettings, mediaProjection, bitmapStateFlow) { error ->
+                            sendEvent(InternalEvent.Error(error))
+                        }
+                        val captureStarted = bitmapCapture.start()
+                        if (captureStarted && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            if (Build.VERSION.SDK_INT != Build.VERSION_CODES.S || !Build.MANUFACTURER.equals("Xiaomi", ignoreCase = true)) {
+                                mediaProjectionIntent = event.intent
+                                service.registerComponentCallbacks(componentCallback)
+                            }
+                        }
+                        this@MjpegStreamingService.bitmapCapture = bitmapCapture
+                    } else {
+                        // H.264 / H.265 Web mode: use a single VirtualDisplay with MediaCodec surface.
+                        // Avoid running BitmapCapture in parallel to prevent MediaProjection invalidation on Android 14+/15.
+                        val bounds = WindowMetricsCalculator.getOrCreate().computeMaximumWindowMetrics(service).bounds
+                        var width = bounds.width()
+                        var height = bounds.height()
+                        if (width % 2 != 0) width--
+                        if (height % 2 != 0) height--
+
+                        val mimeType = if (streamCodec == MjpegSettings.Values.STREAM_CODEC_H265)
+                            MediaFormat.MIMETYPE_VIDEO_HEVC
+                        else
+                            MediaFormat.MIMETYPE_VIDEO_AVC
+
+                        val encoder = H264Encoder(
+                            width = width,
+                            height = height,
+                            densityDpi = service.resources.configuration.densityDpi,
+                            bitRate = 4000000, // 4Mbps / 30FPS (Stability Baseline)
+                            frameRate = 30
+                        ) { frame ->
+                            if (frame.type == H264Frame.TYPE_CONFIG) {
+                                if (streamCodec == MjpegSettings.Values.STREAM_CODEC_H265) {
+                                    lastH265ConfigFrame = frame
+                                } else {
+                                    lastH264ConfigFrame = frame
+                                }
+                            }
+                            val targetFlow = if (streamCodec == MjpegSettings.Values.STREAM_CODEC_H265) h265SharedFlow else h264SharedFlow
+                            coroutineScope.launch { targetFlow.emit(frame) }
+                        }
+
+                        val surface = encoder.getInputSurface()
+                        if (surface != null) {
+                            h264VirtualDisplay = mediaProjection.createVirtualDisplay(
+                                "ScreenStream-Video",
+                                width,
+                                height,
+                                service.resources.configuration.densityDpi,
+                                android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                                surface,
+                                null,
+                                handler
+                            )
+                            h264Encoder = encoder
                         }
                     }
 
@@ -379,7 +458,10 @@ internal class MjpegStreamingService(
 
                     this@MjpegStreamingService.isStreaming = true
                     this@MjpegStreamingService.mediaProjection = mediaProjection
-                    this@MjpegStreamingService.bitmapCapture = bitmapCapture
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        audioStreamer?.start(mediaProjection)
+                    }
                 }
 
             is MjpegEvent.Intentable.StopStream -> {
@@ -446,6 +528,15 @@ internal class MjpegStreamingService(
                 if (isStreaming.not() && mjpegSettings.data.value.htmlShowPressStart) bitmapStateFlow.value = getStartBitmap()
             }
 
+            InternalEvent.RequestKeyFrame -> {
+                coroutineScope.launch {
+                    repeat(5) {
+                        h264Encoder?.forceKeyFrame()
+                        delay(200)
+                    }
+                }
+            }
+
             is MjpegEvent.Intentable.RecoverError -> {
                 stopStream()
                 httpServer.stop(true)
@@ -488,6 +579,8 @@ internal class MjpegStreamingService(
                 mjpegSettings.data.value.enablePin -> mjpegSettings.updateData { copy(pin = randomPin()) } // will restart server
             }
 
+            is InternalEvent.UpdateBitrate -> handleBitrateUpdate(event.latency)
+
             else -> throw IllegalArgumentException("Unknown MjpegEvent: ${event::class.java}")
         }
     }
@@ -506,8 +599,19 @@ internal class MjpegStreamingService(
             mediaProjection = null
 
             isStreaming = false
+            
+            audioStreamer?.stop()
         } else {
             XLog.d(getLog("stopStream", "Not streaming. Ignoring."))
+        }
+
+        try {
+            h264VirtualDisplay?.release()
+            h264VirtualDisplay = null
+            h264Encoder?.stop()
+            h264Encoder = null
+        } catch (e: Exception) {
+            XLog.e(getLog("stopStream", "H264 Stop Error"), e)
         }
 
         wakeLock?.apply { if (isHeld) release() }
@@ -586,5 +690,33 @@ internal class MjpegStreamingService(
 
         startBitmap = bitmap
         return bitmap
+    }
+    private var currentBitrate = 4000000
+    private var lastBitrateUpdate = 0L
+
+    private fun handleBitrateUpdate(latency: Long) {
+        val now = System.currentTimeMillis()
+        if (now - lastBitrateUpdate < 500) return // Limit updates to 2x per second
+
+        var newBitrate = currentBitrate
+        
+        if (latency > 50) { // Congestion detected (send took > 50ms)
+            // Rapid backoff: Drop 1Mbps or 20%, whichever is larger
+            val drop = max(1000000, (currentBitrate * 0.2).toInt())
+            newBitrate = max(1000000, currentBitrate - drop)
+            XLog.i(getLog("ABR", "Congestion! Latency=${latency}ms. Drop to ${newBitrate/1000}kbps"))
+        } else if (latency < 10) { // Network is free
+            // Slow start / Linear increase: Add 500kbps
+            if (currentBitrate < 16000000) {
+                 newBitrate = min(16000000, currentBitrate + 500000)
+                 // Quiet log for increase
+            }
+        }
+
+        if (newBitrate != currentBitrate) {
+            currentBitrate = newBitrate
+            lastBitrateUpdate = now
+            h264Encoder?.setBitrate(currentBitrate)
+        }
     }
 }

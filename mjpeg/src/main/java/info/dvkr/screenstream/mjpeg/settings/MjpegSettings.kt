@@ -16,6 +16,8 @@ public interface MjpegSettings {
         public val STOP_ON_CONFIGURATION_CHANGE: Preferences.Key<Boolean> = booleanPreferencesKey("STOP_ON_CONFIGURATION_CHANGE")
         public val NOTIFY_SLOW_CONNECTIONS: Preferences.Key<Boolean> = booleanPreferencesKey("NOTIFY_SLOW_CONNECTIONS")
 
+        public val STREAM_CODEC: Preferences.Key<Int> = intPreferencesKey("STREAM_CODEC")
+
         public val HTML_ENABLE_BUTTONS: Preferences.Key<Boolean> = booleanPreferencesKey("HTML_ENABLE_BUTTONS")
         public val HTML_SHOW_PRESS_START: Preferences.Key<Boolean> = booleanPreferencesKey("HTML_SHOW_PRESS_START")
         public val HTML_BACK_COLOR: Preferences.Key<Int> = intPreferencesKey("HTML_BACK_COLOR")
@@ -56,6 +58,8 @@ public interface MjpegSettings {
         public const val STOP_ON_SLEEP: Boolean = false
         public const val STOP_ON_CONFIGURATION_CHANGE: Boolean = false
         public const val NOTIFY_SLOW_CONNECTIONS: Boolean = false
+
+        public const val STREAM_CODEC: Int = Values.STREAM_CODEC_MJPEG
 
         public const val HTML_ENABLE_BUTTONS: Boolean = true
         public const val HTML_SHOW_PRESS_START: Boolean = true
@@ -98,11 +102,14 @@ public interface MjpegSettings {
     public object Values {
         public const val RESIZE_DISABLED: Int = 100
 
+        public const val STREAM_CODEC_MJPEG: Int = 0
+        public const val STREAM_CODEC_H264: Int = 1
+        public const val STREAM_CODEC_H265: Int = 2
+
         public const val ROTATION_0: Int = 0
         public const val ROTATION_90: Int = 90
         public const val ROTATION_180: Int = 180
         public const val ROTATION_270: Int = 270
-
 
         @IntDef(flag = true, value = [INTERFACE_WIFI, INTERFACE_MOBILE, INTERFACE_ETHERNET, INTERFACE_VPN])
         @Retention(AnnotationRetention.SOURCE)
@@ -130,6 +137,8 @@ public interface MjpegSettings {
         public val stopOnSleep: Boolean = Default.STOP_ON_SLEEP,
         public val stopOnConfigurationChange: Boolean = Default.STOP_ON_CONFIGURATION_CHANGE,
         public val notifySlowConnections: Boolean = Default.NOTIFY_SLOW_CONNECTIONS,
+
+        public val streamCodec: Int = Default.STREAM_CODEC,
         public val htmlEnableButtons: Boolean = Default.HTML_ENABLE_BUTTONS,
         public val htmlShowPressStart: Boolean = Default.HTML_SHOW_PRESS_START,
         public val htmlBackColor: Int = Default.HTML_BACK_COLOR,

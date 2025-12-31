@@ -23,6 +23,8 @@ import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.application.install
 import io.ktor.server.application.serverConfig
+import io.ktor.server.websocket.webSocket
+import io.ktor.server.routing.routing
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.connector
@@ -40,7 +42,10 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.request.receiveText
 import io.ktor.server.routing.routing
+import info.dvkr.screenstream.input.InputService
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.webSocket
 import io.ktor.utils.io.ByteWriteChannel
@@ -59,9 +64,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import java.nio.ByteBuffer
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -99,11 +107,23 @@ internal class HttpServer(
     context: Context,
     private val mjpegSettings: MjpegSettings,
     private val bitmapStateFlow: StateFlow<Bitmap>,
-    private val sendEvent: (MjpegEvent) -> Unit
+    private val h264SharedFlow: Flow<H264Frame>?,
+    private val h265SharedFlow: Flow<H264Frame>?,
+    private val audioFlow: Flow<ByteArray>?,
+    private val sendEvent: (MjpegEvent) -> Unit,
+    private val requestKeyFrame: () -> Unit
 ) {
+    private data class SettingsSnapshot(
+        val enableButtons: Boolean,
+        val backColor: String,
+        val fitWindow: Boolean,
+        val streamCodec: Int,
+    )
+
     private val debuggable = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     private val favicon: ByteArray = context.getFileFromAssets("favicon.ico")
     private val logoSvg: ByteArray = context.getFileFromAssets("logo.svg")
+    private val jmuxerJs: ByteArray = context.getFileFromAssets("jmuxer.min.js")
     private val baseIndexHtml = String(context.getFileFromAssets("index.html"), StandardCharsets.UTF_8)
         .replace("%CONNECTING%", context.getString(R.string.mjpeg_html_stream_connecting))
         .replace("%STREAM_REQUIRE_PIN%", context.getString(R.string.mjpeg_html_stream_require_pin))
@@ -146,10 +166,24 @@ internal class HttpServer(
             .launchIn(coroutineScope)
 
         mjpegSettings.data
-            .map { Triple(it.htmlEnableButtons && serverData.enablePin.not(), it.htmlBackColor.toColorHexString(), it.htmlFitWindow) }
+            .map {
+                SettingsSnapshot(
+                    enableButtons = it.htmlEnableButtons && serverData.enablePin.not(),
+                    backColor = it.htmlBackColor.toColorHexString(),
+                    fitWindow = it.htmlFitWindow,
+                    streamCodec = it.streamCodec
+                )
+            }
             .distinctUntilChanged()
-            .onEach { (enableButtons, backColor, fitWindow) ->
-                val data = JSONObject(mapOf("enableButtons" to enableButtons, "backColor" to backColor, "fitWindow" to fitWindow))
+            .onEach { (enableButtons, backColor, fitWindow, streamCodec) ->
+                val data = JSONObject(
+                    mapOf(
+                        "enableButtons" to enableButtons,
+                        "backColor" to backColor,
+                        "fitWindow" to fitWindow,
+                        "streamCodec" to streamCodec
+                    )
+                )
                 serverData.notifyClients("SETTINGS", data)
             }
             .launchIn(coroutineScope)
@@ -202,7 +236,7 @@ internal class HttpServer(
                 reuseAddress = true
                 shutdownGracePeriod = 0
                 shutdownTimeout = 500
-                // Bind to 0.0.0.0 to allow localhost and all interfaces
+                // HTTP connector
                 connector {
                     host = "0.0.0.0"
                     port = serverPort
@@ -281,6 +315,10 @@ internal class HttpServer(
             gzip()
             deflate()
         }
+        install(WebSockets) {
+            pingPeriodMillis = 45000
+            timeoutMillis = 45000 // 45 seconds for FRP
+        }
         install(CachingHeaders) { options { _, _ -> CachingOptions(CacheControl.NoStore(CacheControl.Visibility.Private)) } }
         install(DefaultHeaders)
         install(ForwardedHeaders)
@@ -296,8 +334,8 @@ internal class HttpServer(
             exposeHeader(HttpHeaders.ContentLength)
             exposeHeader(HttpHeaders.ContentRange)
             exposeHeader(HttpHeaders.ContentType)
+            exposeHeader(HttpHeaders.ContentType)
         }
-        install(WebSockets)
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 if (cause is IOException || cause is IllegalArgumentException || cause is IllegalStateException) return@exception
@@ -308,13 +346,88 @@ internal class HttpServer(
         }
 
         routing {
-            get("/") { call.respondText(indexHtml.get(), ContentType.Text.Html) }
+            get("/") {
+                call.response.headers.append(HttpHeaders.CacheControl, "no-store, no-cache, must-revalidate, max-age=0")
+                call.respondText(indexHtml.get(), ContentType.Text.Html)
+            }
             get("favicon.ico") { call.respondBytes(favicon, ContentType.Image.XIcon) }
             get("logo.svg") { call.respondBytes(logoSvg, ContentType.Image.SVG) }
+            get("jmuxer.min.js") { call.respondBytes(jmuxerJs, ContentType.parse("application/javascript")) }
             get("start-stop") {
                 if (mjpegSettings.data.value.htmlEnableButtons && serverData.enablePin.not())
                     sendEvent(MjpegStreamingService.InternalEvent.StartStopFromWebPage)
                 call.respond(HttpStatusCode.NoContent)
+            }
+
+            post("/tap") {
+                val text = call.receiveText()
+                val json = JSONObject(text)
+                val nx = json.optDouble("nx").toFloat()
+                val ny = json.optDouble("ny").toFloat()
+                InputService.instance?.tapNormalized(nx, ny)
+                call.respond(HttpStatusCode.OK)
+            }
+
+            post("/swipe") {
+                val text = call.receiveText()
+                val json = JSONObject(text)
+                val nx1 = json.optDouble("nx1").toFloat()
+                val ny1 = json.optDouble("ny1").toFloat()
+                val nx2 = json.optDouble("nx2").toFloat()
+                val ny2 = json.optDouble("ny2").toFloat()
+                val duration = json.optLong("duration", 300)
+                InputService.instance?.swipeNormalized(nx1, ny1, nx2, ny2, duration)
+                call.respond(HttpStatusCode.OK)
+            }
+
+            post("/pointer") {
+                val text = call.receiveText()
+                val json = JSONObject(text)
+                val buttonMask = json.optInt("buttonMask")
+                val x = json.optInt("x")
+                val y = json.optInt("y")
+                InputService.instance?.onPointerEvent(buttonMask, x, y)
+                call.respond(HttpStatusCode.OK)
+            }
+
+            post("/key") {
+                val text = call.receiveText()
+                val json = JSONObject(text)
+                val keysym = json.optLong("keysym")
+                val down = json.optBoolean("down", true)
+                InputService.instance?.onKeyEvent(down, keysym)
+                call.respond(HttpStatusCode.OK)
+            }
+
+            post("/text") {
+                 val text = call.receiveText()
+                 val json = JSONObject(text)
+                 val input = json.optString("text")
+                 InputService.instance?.inputText(input)
+                 call.respond(HttpStatusCode.OK)
+            }
+
+            post("/back") {
+                InputService.instance?.goBack()
+                call.respond(HttpStatusCode.OK)
+            }
+
+            post("/home") {
+                InputService.instance?.goHome()
+                call.respond(HttpStatusCode.OK)
+            }
+
+            post("/recents") {
+                InputService.instance?.showRecents()
+                call.respond(HttpStatusCode.OK)
+            }
+
+            get("/status") {
+                val isConnected = InputService.isConnected()
+                call.respondText(
+                    """{"connected": $isConnected}""",
+                    ContentType.Application.Json
+                )
             }
             get(serverData.jpegFallbackAddress) {
                 if (serverData.isAddressBlocked(call.request.origin.remoteAddress)) call.respond(HttpStatusCode.Forbidden)
@@ -341,7 +454,10 @@ internal class HttpServer(
                         val msg = runCatching { JSONObject(frame.readText()) }.getOrNull() ?: continue
 
                         val enableButtons = mjpegSettings.data.value.htmlEnableButtons && serverData.enablePin.not()
-                        val streamData = JSONObject().put("enableButtons", enableButtons).put("streamAddress", serverData.streamAddress)
+                        val streamData = JSONObject()
+                            .put("enableButtons", enableButtons)
+                            .put("streamAddress", serverData.streamAddress)
+                            .put("streamCodec", mjpegSettings.data.value.streamCodec)
 
                         when (val type = msg.optString("type").uppercase()) {
                             "HEARTBEAT" -> send("HEARTBEAT", msg.optString("data"))
@@ -445,6 +561,70 @@ internal class HttpServer(
                             .collect()
                     }
                 })
+            }
+
+            webSocket("/stream/h264") {
+                val clientId = call.request.getClientId()
+                XLog.d(this@appModule.getLog("H264", "Connected: $clientId"))
+                requestKeyFrame()
+                var lastReport = 0L
+                try {
+                    h264SharedFlow?.collect { frame ->
+                        val buffer = ByteBuffer.allocate(9 + frame.data.size)
+                        buffer.put(frame.type.toByte())
+                        buffer.putLong(frame.timestamp)
+                        buffer.put(frame.data)
+                        buffer.flip()
+
+                        val start = System.currentTimeMillis()
+                        send(Frame.Binary(true, buffer))
+                        val end = System.currentTimeMillis()
+                        val latency = end - start
+
+                        if (latency > 30 || (end - lastReport > 500)) {
+                            sendEvent(MjpegStreamingService.InternalEvent.UpdateBitrate(latency))
+                            lastReport = end
+                        }
+                    }
+                } catch (e: ClosedReceiveChannelException) {
+                    XLog.d(this@appModule.getLog("H264", "Disconnected: $clientId"))
+                } catch (e: Exception) {
+                    XLog.e(this@appModule.getLog("H264", "Error"), e)
+                }
+            }
+
+            webSocket("/stream/h265") {
+                val clientId = call.request.getClientId()
+                XLog.d(this@appModule.getLog("H265", "Connected: $clientId"))
+                requestKeyFrame()
+                try {
+                    h265SharedFlow?.collect { frame ->
+                        val buffer = ByteBuffer.allocate(9 + frame.data.size)
+                        buffer.put(frame.type.toByte())
+                        buffer.putLong(frame.timestamp)
+                        buffer.put(frame.data)
+                        buffer.flip()
+                        send(Frame.Binary(true, buffer))
+                    }
+                } catch (e: ClosedReceiveChannelException) {
+                    XLog.d(this@appModule.getLog("H265", "Disconnected: $clientId"))
+                } catch (e: Exception) {
+                    XLog.e(this@appModule.getLog("H265", "Error"), e)
+                }
+            }
+
+            webSocket("/stream/audio") {
+                val clientId = call.request.getClientId()
+                XLog.d(this@appModule.getLog("Audio", "Connected: $clientId"))
+                try {
+                    audioFlow?.collect { chunk ->
+                        send(Frame.Binary(true, chunk))
+                    }
+                } catch (e: ClosedReceiveChannelException) {
+                    XLog.d(this@appModule.getLog("Audio", "Disconnected: $clientId"))
+                } catch (e: Exception) {
+                    XLog.e(this@appModule.getLog("Audio", "Error"), e)
+                }
             }
         }
     }
