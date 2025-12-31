@@ -452,9 +452,7 @@
         <p style=color:red;font-weight:600>%ERROR%</p>
     </div>
 
-    <div id="pipStreamDiv" style="display: none;">
-        <video id="pipStream" autoplay muted playsinline></video>
-    </div>
+    <div id="pipStreamDiv"></div>
 
     <div id="controlStatus"><span style="color:gray">●</span> Connecting...</div>
 
@@ -942,7 +940,7 @@
         // Version Indicator (User Verification)
         var verDiv = document.createElement('div');
         verDiv.style.cssText = "position:fixed;bottom:5px;right:5px;color:rgba(255,255,255,0.3);font-size:10px;pointer-events:none;z-index:9999;";
-        verDiv.innerText = "v16 (Joy Direction Fix)";
+        verDiv.innerText = "v17 (PiP Display Fix)";
         document.body.appendChild(verDiv);
 
         // Debug Status for Input
