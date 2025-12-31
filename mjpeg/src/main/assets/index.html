@@ -940,7 +940,7 @@
         // Version Indicator (User Verification)
         var verDiv = document.createElement('div');
         verDiv.style.cssText = "position:fixed;bottom:5px;right:5px;color:rgba(255,255,255,0.3);font-size:10px;pointer-events:none;z-index:9999;";
-        verDiv.innerText = "v17 (PiP Display Fix)";
+        verDiv.innerText = "v18 (Mouse Wheel Invert)";
         document.body.appendChild(verDiv);
 
         // Debug Status for Input
@@ -1076,18 +1076,14 @@
                 // For Horizontal: Wheel Up -> Scroll Left?
                 // Let's stick to standard: deltaY > 0 (Wheel Down) -> Right, deltaY < 0 (Wheel Up) -> Left
 
-                var delta = deltaY > 0 ? -0.15 : 0.15; // Invert? Let's check user pref. 
-                // Wait, if wheel down (dy>0), content moves up, view moves down.
-                // The user said: "Right Click + Scroll Horizontal Swipe"
-                // Let's implement reliable Step Logic.
-                // Current logic was:
+                var delta = deltaY > 0 ? -0.15 : 0.15; // 横向 (右键+滚轮): 滚轮下 -> 向左滑 -> 看右边 (保持原样)
                 var targetNx = Math.max(0.0, Math.min(1.0, p.nx + delta));
                 sendSwipe(p.nx, p.ny, targetNx, p.ny, 100);
             } else {
-                // Normal Scroll = Tap/Click? No, Vertical Swipe?
-                // Original logic: sendSwipe for small distances?
-                // Actually, let's map normal scroll to Vertical Swipe for fine scrolling
-                var vDelta = deltaY > 0 ? 0.05 : -0.05;
+                // 如果觉得反了，就把这里的正负号反过来
+                // 原来: deltaY > 0 ? 0.05 : -0.05 (向下滑 ->看上面) -> 用户反馈反了
+                // 现在: deltaY > 0 ? -0.05 : 0.05 (向上滑 ->看下面)
+                var vDelta = deltaY > 0 ? -0.05 : 0.05;
                 sendSwipe(p.nx, p.ny, p.nx, Math.max(0.0, Math.min(1.0, p.ny + vDelta)), 100);
             }
         }
