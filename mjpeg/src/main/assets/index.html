@@ -477,6 +477,76 @@
         };
         // =====================
 
+        // === VR INPUT DEBUG PANEL ===
+        // 启用方式: URL 加 ?debug=1
+        var urlParamsDebug = new URLSearchParams(window.location.search);
+        var showInputDebug = urlParamsDebug.get('debug') === '1';
+
+        var inputDebugDiv = document.createElement('div');
+        inputDebugDiv.id = 'inputDebugPanel';
+        inputDebugDiv.style.cssText = "position:fixed;top:10px;left:10px;width:300px;max-height:50%;overflow-y:auto;background:rgba(0,0,0,0.8);color:#0f0;z-index:99998;font-family:monospace;font-size:11px;padding:8px;border-radius:8px;display:" + (showInputDebug ? "block" : "none") + ";";
+        inputDebugDiv.innerHTML = "<b style='color:yellow'>VR Input Debug (最近20条)</b><br><span style='color:#888'>按下手柄按钮查看事件...</span><br>";
+        document.body.appendChild(inputDebugDiv);
+
+        var debugLogs = [];
+        function logInputEvent(type, detail) {
+            if (!showInputDebug) return;
+            var now = new Date();
+            var time = now.toTimeString().split(' ')[0].substr(3); // MM:SS
+            var log = time + " <b>" + type + "</b> " + detail;
+            debugLogs.unshift(log);
+            if (debugLogs.length > 20) debugLogs.pop();
+            inputDebugDiv.innerHTML = "<b style='color:yellow'>VR Input Debug</b><br>" + debugLogs.join("<br>");
+        }
+
+        // 监听各种可能的输入事件
+        ['keydown', 'keyup', 'keypress'].forEach(function (evtType) {
+            document.addEventListener(evtType, function (e) {
+                logInputEvent(evtType, "key=" + e.key + " code=" + e.code + " which=" + e.which);
+            }, true);
+        });
+
+        ['mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu'].forEach(function (evtType) {
+            document.addEventListener(evtType, function (e) {
+                logInputEvent(evtType, "btn=" + e.button + " btns=" + e.buttons + " x=" + Math.round(e.clientX) + " y=" + Math.round(e.clientY));
+            }, true);
+        });
+
+        ['pointerdown', 'pointerup', 'pointermove'].forEach(function (evtType) {
+            document.addEventListener(evtType, function (e) {
+                if (evtType === 'pointermove') return; // 太频繁，不记录
+                logInputEvent(evtType, "ptrType=" + e.pointerType + " btn=" + e.button + " btns=" + e.buttons);
+            }, true);
+        });
+
+        // Gamepad API 轮询 (用于检测 Quest 手柄)
+        var lastGamepadState = {};
+        function pollGamepads() {
+            if (!showInputDebug) return;
+            var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            for (var i = 0; i < gamepads.length; i++) {
+                var gp = gamepads[i];
+                if (!gp) continue;
+                var key = "gp" + i;
+                if (!lastGamepadState[key]) lastGamepadState[key] = { buttons: [] };
+
+                for (var b = 0; b < gp.buttons.length; b++) {
+                    var pressed = gp.buttons[b].pressed;
+                    var wasPressed = lastGamepadState[key].buttons[b] || false;
+                    if (pressed !== wasPressed) {
+                        logInputEvent("GAMEPAD", "pad=" + i + " btn[" + b + "]=" + (pressed ? "DOWN" : "UP") + " val=" + gp.buttons[b].value.toFixed(2));
+                    }
+                    lastGamepadState[key].buttons[b] = pressed;
+                }
+            }
+            requestAnimationFrame(pollGamepads);
+        }
+        if (showInputDebug) {
+            requestAnimationFrame(pollGamepads);
+            logInputEvent("INIT", "Debug panel active. isVR=" + (/Quest|OculusBrowser/i.test(navigator.userAgent)));
+        }
+        // === END VR INPUT DEBUG ===
+
         var clientId = RandomString(16);
         window.DD_LOGS && DD_LOGS.setGlobalContextProperty("clientId", clientId);
 
@@ -507,9 +577,17 @@
         // ?vr=cover = fill with crop (may cut edges)
         var vrMode = urlParams.get('vr') || urlParams.get('fullscreen');
         var allowVrKeyboardFocus = urlParams.get('vr_kb') === '1';
+        var allowKeyboardFocus = urlParams.get('kb') === '1'; // 通用键盘开关，适用于所有移动设备
         var isVrBrowser = /OculusBrowser|Quest/i.test(navigator.userAgent || "");
+        var isMobileBrowser = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent || "");
         function isVrEnv() { return document.body.classList.contains('vr-fullscreen') || isVrBrowser; }
-        function canAutoFocusHiddenInput() { return !isVrEnv() || allowVrKeyboardFocus; }
+        function isMobileEnv() { return isMobileBrowser && !isVrBrowser; } // 移动设备但非 VR
+        // 仅在桌面浏览器自动聚焦，移动/VR 设备需通过 ?kb=1 或 ?vr_kb=1 参数手动启用
+        function canAutoFocusHiddenInput() {
+            if (allowKeyboardFocus || allowVrKeyboardFocus) return true;
+            if (isVrEnv() || isMobileEnv()) return false;
+            return true; // 桌面浏览器默认启用
+        }
         if (vrMode) {
             document.body.classList.add('vr-fullscreen');
             if (vrMode === 'fill') {
@@ -681,8 +759,13 @@
 
 
         // 在 streamDiv 上监听事件，这样 img 和 video 都能响应
+        // VR 手柄 B/Y 按钮会触发 contextmenu 事件，映射为返回操作
         streamDiv.addEventListener("contextmenu", function (e) {
             e.preventDefault();
+            if (enableButtons) {
+                sendNavAction('/back');
+                showStatus("返回");
+            }
             return false;
         });
 
@@ -859,7 +942,7 @@
         // Version Indicator (User Verification)
         var verDiv = document.createElement('div');
         verDiv.style.cssText = "position:fixed;bottom:5px;right:5px;color:rgba(255,255,255,0.3);font-size:10px;pointer-events:none;z-index:9999;";
-        verDiv.innerText = "v10 (Clipboard Paste + VR Keyboard Gate)";
+        verDiv.innerText = "v16 (Joy Direction Fix)";
         document.body.appendChild(verDiv);
 
         // Debug Status for Input
@@ -921,34 +1004,61 @@
                 return;
             }
 
-            // 2. Joystick Swipe Logic
-            var axisRatio = 2.0;
+            // 2. Joystick Swipe Logic - 使用角度分区
+            // 将 360° 分成 4 个区域（每个 90°），中心扇区 ±45° 内为纯方向移动
+            // 
+            //          上 (270°±45°)
+            //              ▲
+            //      左 ◄────┼────► 右
+            //   (180°±45°) │  (0°±45°)
+            //              ▼
+            //          下 (90°±45°)
 
-            // Horizontal Dominant
-            if (Math.abs(dx) > Math.abs(dy) * axisRatio) {
-                var isLeftParams = (dx < 0);
-                if (invertJoystick) isLeftParams = !isLeftParams;
+            var angle = Math.atan2(dy, dx) * 180 / Math.PI; // -180 到 180
+            if (angle < 0) angle += 360; // 转换为 0 到 360
 
-                if (isLeftParams) {
+            // 定义方向区域（扇区角度范围）
+            // 右: 315°~45° (0° 中心，±45°)
+            // 下: 45°~135° (90° 中心，±45°)
+            // 左: 135°~225° (180° 中心，±45°)
+            // 上: 225°~315° (270° 中心，±45°)
+
+            var magnitude = Math.sqrt(dx * dx + dy * dy);
+            if (magnitude < 20) {
+                // 太小的移动走精细滚动
+                handleFineTuneMouseScroll(dx, dy);
+                return;
+            }
+
+            // 根据角度判断方向
+            if ((angle >= 315 || angle < 45)) {
+                // 右方向 (0° 中心)
+                var isLeft = invertJoystick;
+                if (isLeft) {
                     showStatus("⬅️ LEFT");
                     sendSwipe(0.615, 0.5, 0.385, 0.5, 100);
                 } else {
                     showStatus("➡️ RIGHT");
                     sendSwipe(0.385, 0.5, 0.615, 0.5, 100);
                 }
-                return;
-            }
-
-            // Vertical Dominant
-            if (Math.abs(dy) > Math.abs(dx) * axisRatio) {
-                if (dy < 0) {
-                    showStatus("⬆️ UP");
-                    sendSwipe(0.5, 0.475, 0.5, 0.525, 50);
+            } else if (angle >= 45 && angle < 135) {
+                // 下方向 (90° 中心) - 摇杆向下推 = 内容向上滚 = 屏幕从上往下滑
+                showStatus("⬇️ DOWN");
+                sendSwipe(0.5, 0.475, 0.5, 0.525, 50);  // 恢复原版距离和时间
+            } else if (angle >= 135 && angle < 225) {
+                // 左方向 (180° 中心)
+                var isRight = invertJoystick;
+                if (isRight) {
+                    showStatus("➡️ RIGHT");
+                    sendSwipe(0.385, 0.5, 0.615, 0.5, 100);
                 } else {
-                    showStatus("⬇️ DOWN");
-                    sendSwipe(0.5, 0.525, 0.5, 0.475, 50);
+                    showStatus("⬅️ LEFT");
+                    sendSwipe(0.615, 0.5, 0.385, 0.5, 100);
                 }
-                return;
+            } else {
+                // 上方向 (270° 中心, 225°~315°) - 摇杆向上推 = 内容向下滚 = 屏幕从下往上滑
+                showStatus("⬆️ UP");
+                sendSwipe(0.5, 0.525, 0.5, 0.475, 50);  // 恢复原版距离和时间
             }
         }
 
@@ -1569,49 +1679,61 @@
                 return;
             }
 
-            // PiP is supported for MJPEG mode only.
-            if (currentStreamCodec !== 0) return;
+            // 使用 IIFE 确保变量作用域正确（与原版一致）
+            var canvas;
+            var videoElement;
+            var context;
 
-            var canvas = document.createElement("canvas");
-            canvas.style.display = "none";
-            pipStreamDiv.appendChild(canvas);
+            (function () {
+                var drawMJPEGStream = function drawMJPEGStream() {
+                    var naturalWidth = stream.naturalWidth;
+                    var naturalHeight = stream.naturalHeight;
 
-            var videoElement = document.createElement("video");
-            videoElement.controls = false;
-            videoElement.muted = true;
-            videoElement.autoplay = true;
-            videoElement.srcObject = canvas.captureStream();
+                    if (canvas.width != naturalWidth || canvas.height != naturalHeight) {
+                        canvas.width = naturalWidth;
+                        canvas.height = naturalHeight;
+                    }
+                    context.drawImage(stream, 0, 0);
+                    drawTimeoutId = setTimeout(drawMJPEGStream, 32);
+                };
 
-            var context = canvas.getContext("2d");
-            var drawMJPEGStream = function drawMJPEGStream() {
-                var naturalWidth = stream.naturalWidth;
-                var naturalHeight = stream.naturalHeight;
-                if (canvas.width != naturalWidth || canvas.height != naturalHeight) {
-                    canvas.width = naturalWidth;
-                    canvas.height = naturalHeight;
-                }
-                context.drawImage(stream, 0, 0);
-                drawTimeoutId = setTimeout(drawMJPEGStream, 32);
-            };
+                canvas = document.createElement("canvas");
+                canvas.style.display = "none";
+                pipStreamDiv.appendChild(canvas);
 
-            videoElement.addEventListener("leavepictureinpicture", function () {
-                clearTimeout(drawTimeoutId);
-                while (pipStreamDiv.firstChild) pipStreamDiv.removeChild(pipStreamDiv.lastChild);
-                videoElement.srcObject = null;
-            });
+                videoElement = document.createElement("video");
+                videoElement.controls = false;
+                videoElement.muted = true;
+                videoElement.autoplay = true;
+                videoElement.srcObject = canvas.captureStream();
 
-            videoElement.addEventListener("loadedmetadata", function () {
-                videoElement.requestPictureInPicture()["catch"](function (error) {
+                videoElement.addEventListener("leavepictureinpicture", function () {
                     clearTimeout(drawTimeoutId);
-                    window.DD_LOGS && DD_LOGS.logger.error("PiP.requestPictureInPicture:", { message: error });
                     while (pipStreamDiv.firstChild) pipStreamDiv.removeChild(pipStreamDiv.lastChild);
-                    // buttonPiP.style.display = "none";
                     videoElement.srcObject = null;
+                    videoElement = null;
+                    canvas = null;
+                    context = null;
                 });
-            });
 
-            pipStreamDiv.appendChild(videoElement);
-            drawMJPEGStream();
+                videoElement.addEventListener("loadedmetadata", function () {
+                    videoElement.requestPictureInPicture()["catch"](function (error) {
+                        clearTimeout(drawTimeoutId);
+                        window.DD_LOGS && DD_LOGS.logger.error("PiP.requestPictureInPicture:", { message: error });
+                        while (pipStreamDiv.firstChild) pipStreamDiv.removeChild(pipStreamDiv.lastChild);
+                        videoElement.srcObject = null;
+                        videoElement = null;
+                        canvas = null;
+                        context = null;
+                    });
+                });
+
+                pipStreamDiv.appendChild(videoElement);
+
+                context = canvas.getContext("2d");
+
+                drawMJPEGStream();
+            })();
         }
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", connect);

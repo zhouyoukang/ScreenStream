@@ -6,12 +6,16 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Path
+import android.graphics.PixelFormat
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.os.SystemClock
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
 import android.view.ViewConfiguration
+import android.view.inputmethod.InputMethodManager
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -36,6 +40,8 @@ public class InputService : AccessibilityService() {
         
         public var scaling: Float = 1.0f
         public var isInputEnabled: Boolean = true
+
+        public var suppressSoftKeyboard: Boolean = false  // 默认关闭，让被控手机正常弹出键盘
         
         public fun isConnected(): Boolean = instance != null
     }
@@ -45,6 +51,9 @@ public class InputService : AccessibilityService() {
     private val path = Path()
     private var stroke: GestureDescription.StrokeDescription? = null
     private var lastGestureStartTime: Long = 0
+
+    private var imeOverlayView: View? = null
+    private var imeHandler: Handler? = null
     
     // Keyboard modifier states
     private var isKeyCtrlDown = false
@@ -66,11 +75,15 @@ public class InputService : AccessibilityService() {
         super.onServiceConnected()
         instance = this
         Log.i(TAG, "onServiceConnected - InputService is now active")
+
+        imeHandler = Handler(mainLooper)
+        setupImeOverlay()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         instance = null
+        removeImeOverlay()
         Log.i(TAG, "onDestroy - InputService stopped")
     }
 
@@ -265,6 +278,61 @@ public class InputService : AccessibilityService() {
         val clickStroke = GestureDescription.StrokeDescription(clickPath, 0, durationMs.toLong())
         val gesture = GestureDescription.Builder().addStroke(clickStroke).build()
         dispatchGesture(gesture, null, null)
+
+        scheduleHideSoftKeyboardIfNeeded()
+    }
+
+    private fun setupImeOverlay() {
+        if (imeOverlayView != null) return
+        try {
+            val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            val view = View(this)
+            val lp = WindowManager.LayoutParams(
+                1,
+                1,
+                WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT
+            )
+            wm.addView(view, lp)
+            imeOverlayView = view
+        } catch (e: Exception) {
+            Log.w(TAG, "setupImeOverlay failed: ${e.message}")
+        }
+    }
+
+    private fun removeImeOverlay() {
+        val view = imeOverlayView ?: return
+        try {
+            val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            wm.removeView(view)
+        } catch (_: Exception) {
+        } finally {
+            imeOverlayView = null
+        }
+    }
+
+    private fun scheduleHideSoftKeyboardIfNeeded() {
+        if (!suppressSoftKeyboard) return
+
+        val focusNode = findFocusedNode() ?: return
+        if (!focusNode.isEditable) return
+
+        val handler = imeHandler ?: return
+        handler.post { hideSoftKeyboard() }
+        handler.postDelayed({ hideSoftKeyboard() }, 120)
+        handler.postDelayed({ hideSoftKeyboard() }, 300)
+    }
+
+    private fun hideSoftKeyboard() {
+        val view = imeOverlayView ?: return
+        try {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        } catch (_: Exception) {
+        }
     }
 
     // ==================== Key Events ====================
@@ -390,6 +458,8 @@ public class InputService : AccessibilityService() {
                     // Ignore restore errors
                 }
             }, 100)
+
+            scheduleHideSoftKeyboardIfNeeded()
             
         } catch (e: Exception) {
             Log.e(TAG, "inputText failed: ${e.message}")
