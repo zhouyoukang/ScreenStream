@@ -163,28 +163,30 @@ This fork includes several enhancements optimized for remote control and reverse
 * **Escape = Back**: Press Escape to trigger Android back action.
 * **Shortcuts**: Ctrl+A (select all), Ctrl+C (copy), Ctrl+V (paste from PC clipboard), Ctrl+X (cut).
 
-### 🥽 VR / Quest Usage Notes
+### 🥽 VR / Quest Optimization
 
-* **Recommended**: Use **Local mode (MJPEG)** for maximum compatibility.
-* **Audio autoplay policy**: Quest/OculusBrowser may block audio until a user gesture.
-  If you see a hint like **"VR：请点击底部导航栏（三大金刚键区域）以开启音频"**, follow it once and audio will start.
-* **VR keyboard**: For Quest browsers, the web client suppresses auto-focusing hidden inputs by default to avoid popping up the VR keyboard.
-  If you really want VR keyboard focus, open the web client with `?vr_kb=1`.
-* **Controller buttons**:
-  - WebXR can expose many controller inputs via `XRInputSource.gamepad`, but **platform reserved/system buttons must not be exposed** (for example the system Home/Meta button).
-  - Plan to map actions to trigger/squeeze/thumbstick/A/B/X/Y instead of relying on reserved buttons.
+* **Controller Mapping**:
+  * **B / Y Buttons**: Mapped to **"Back"** action (prevents context menu conflicts).
+  * **Joystick Control**: Implemented 45-degree sector logic for precise directional swiping (Up/Down/Left/Right) without diagonal input cross-talk.
+  * **Natural Direction**: Unified Joystick and Mouse Wheel vertical direction to match standard PC behavior (Down = Scroll content up to view below).
+* **Workarounds**: Suppresses default soft keyboard pop-ups on mobile/VR browsers.
 
-### 🎤 Microphone / Audio Permission Shortcut
+### 🖼️ Picture-in-Picture (PiP)
 
-* The app shows a quick card on the Stream tab to request **RECORD_AUDIO**.
-* This permission is required for audio capture/streaming features.
+* **Functional PiP**: Fixed black screen issues for both MJPEG and H264 streams.
+* **Implementation**: Uses Canvas capture for MJPEG and direct video element for H264/H265.
+* **Limitation**: Due to browser security policies, PiP mode is view-only (no control).
 
-### 🖱️ Mouse & Scroll Control
+### ⌨️ Input & Shortcuts
 
-* **Inverted Scroll**: Scroll direction matches standard computer behavior.
-* **Horizontal Scroll**: Hold right-click + scroll wheel for horizontal scrolling.
-* **Right-Click = Back**: Right-click triggers Android back action.
-* **Adjustable Sensitivity**: Fine-tuned scroll speeds (vertical: 0.04, horizontal: 0.15).
+* **Shortcuts**:
+  * `Ctrl+V`: Pastes text from PC clipboard to Android.
+  * `Ctrl+C` / `Ctrl+X`: Text manipulation (supported in editable fields).
+  * `Escape` / `Right-Click`: Triggers Android **Back** action.
+* **Mouse Control**:
+  * **Inverted Scroll**: Vertical scroll direction matches standard computer behavior.
+  * **Horizontal Scroll**: Hold right-click + scroll wheel for horizontal scrolling.
+  * **Precision**: Fine-tuned swipe distances and thresholds for smoother experience.
 
 ### 🎨 UI/UX Improvements
 
