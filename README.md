@@ -2,12 +2,110 @@
 
 # ScreenStream
 
+## H264 UI Debug Notes (Local Web UI)
+
+This repository includes a customized local web UI (`mjpeg/src/main/assets/index.html`).
+
+### What works (stable)
+
+- MJPEG mode: stable and recommended for normal use.
+
+### What was tried for H.264/H.265 “small window” (not solved)
+
+- CSS 100% + `object-fit: contain` + absolute positioning for `<video>`.
+- JS `applyVideoFillFix()` that forces `<video>` to fill `#streamDiv`.
+- Extra attributes to suppress native overlays (PiP/remote playback).
+
+Result: H.264/H.265 still renders as a small viewport on Android browsers/WebView.
+
+### Experiments reverted due to side effects
+
+- `transform: scale(...)` loop (v24): intended to force scaling; caused stutter/lag.
+- Canvas mirror render (v25): decode via `<video>`, display via `<canvas>`; caused stutter/lag and did not resolve small window.
+
+### Next steps (future)
+
+- Investigate Android WebView/Chromium video rendering constraints with MSE/jMuxer.
+- Consider WebCodecs (if available) or server-side scaling/packaging changes.
+
+See also: `H264_UI_NOTES.md`
+
+## VDM 使用指南（中文 / 对外说明）
+
+本 Fork 的目标是把本地模式（MJPEG）做成“稳定可用”的远程查看+控制方案，并补齐网络接入与多端口（FRP/反代）场景。
+
+### 1. 推荐默认用法（稳定优先）
+
+- **优先用 MJPEG（本地模式）**：兼容性最好，日常稳定使用推荐。
+- **H264/H265（网页播放）**：部分 Android 浏览器/WebView 可能出现“小窗显示”，属于已知限制；本 Fork 当前策略是不再用高成本强制缩放（避免卡顿/跳帧）。
+
+### 2. 端口说明（视频端口 vs 控制端口）
+
+通常会涉及两个端口：
+
+- **视频/页面端口（MJPEG Server）**：默认 `8080`
+- **输入控制端口（Input API）**：默认 `8084`
+
+网页端指定输入端口：
+
+`http://<手机IP>:8080/?input_port=8084`
+
+说明：
+
+- 当你使用 **FRP/反向代理/端口分离** 时，视频端口和输入端口经常映射到不同外网端口，必须传 `?input_port=`.
+- 当前 `index.html` 默认 input 端口为 `8084`.
+
+### 3. 连接方式
+
+#### 3.1 手机-手机（同一 Wi‑Fi / 同一路由器）
+
+- 播放端手机浏览器打开：`http://<被控手机IP>:8080/`
+
+#### 3.2 手机-电脑（同一 Wi‑Fi）
+
+- 电脑浏览器打开：`http://<手机IP>:8080/`
+- 如需控制（点击/滑动/键盘），确保 App 侧已开启输入/无障碍相关权限。
+
+#### 3.3 手机-电脑（USB 连接 / USB 网络共享）
+
+适合 VR/低延迟场景：
+
+- Android 开启“USB 网络共享/USB tethering”。
+- 电脑侧会出现 USB 网卡（常见为 `rndis*`）。
+- 本 Fork 增强了 `rndis` 识别（用于更容易显示正确可访问地址）。
+
+#### 3.4 移动网络（4G/5G）
+
+- 运营商网络下，**入站连接可能被 NAT/防火墙阻断**，即使手机显示公网/运营商 IP，也不一定可从外网直连。
+- 外网访问通常要配合：FRP/组网（ZeroTier/Tailscale/WireGuard）/公网 IP 等。
+
+### 4. 高级设置：接口筛选 / 端口固定区（怎么理解）
+
+本地模式需要决定“在哪些网络接口上展示地址/监听”。常见接口：
+
+- **Wi‑Fi**：`wlan*` / `ap*` / `softap*`
+- **以太网**：`eth*` / `en*`
+- **移动网络**：`rmnet*` / `ccmni*`
+- **USB 网络共享**：`rndis*`
+
+注意：
+
+- 选择移动网络 ≠ 外网一定可访问；这只是让 App 在该接口上显示/监听地址。
+
+### 5. WebRTC 与本地模式的区别
+
+- **本地模式（MJPEG）**：无需外部服务器，适合局域网/热点/USB 网络共享。
+- **WebRTC（Global mode）**：依赖公网信令与网络条件，跨网可用但受 NAT/带宽/丢包影响。
+
+### 6. 常用 URL 参数（网页端）
+
+- `?input_port=8084`：指定输入控制端口（FRP/反代常用）
+- `?debug=1`：开启输入/VR 调试面板（默认关闭，避免影响性能）
+- `?kb=1`：允许移动设备启用键盘聚焦
+- `?vr=1` / `?vr=contain|fill|cover`：VR 全屏相关模式
+- `?vr_kb=1`：VR 环境允许键盘聚焦（避免默认弹 VR 键盘）
+
 ScreenStream is a user-friendly Android application that allows users to easily share their device screen and audio and view it directly in a web browser. No additional software is required other than the ScreenStream itself, a web browser, and an internet connection (for Global mode).
-
-Google Play version supports all modes: **Global mode (WebRTC)**, **Local mode (MJPEG)** and **RTSP mode** with ads included.<br>
-Versions from F-Droid are ad-free and support only **Local mode (MJPEG)** and **RTSP mode**.
-
-<a href='https://play.google.com/store/apps/details?id=info.dvkr.screenstream'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png' height="100"/></a> <a href="https://f-droid.org/packages/info.dvkr.screenstream/" target="_blank"><img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="100"/></a>
 
 * [Project support](#project-support)
 * [Stream modes](#stream-modes)

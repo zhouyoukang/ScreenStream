@@ -23,7 +23,7 @@ public interface InputSettings {
 
     public object Default {
         public const val INPUT_ENABLED: Boolean = true
-        public const val API_PORT: Int = 8085
+        public const val API_PORT: Int = 8084
         public const val SCALING_FACTOR: Float = 1.0f
         public const val AUTO_START_HTTP: Boolean = true
         public const val REQUIRE_PIN: Boolean = false
@@ -33,7 +33,7 @@ public interface InputSettings {
     @Immutable
     public data class Data(
         public val inputEnabled: Boolean = Default.INPUT_ENABLED,
-        public val apiPort: Int = 8085,
+        public val apiPort: Int = 8084,
         public val scalingFactor: Float = Default.SCALING_FACTOR,
         public val autoStartHttp: Boolean = Default.AUTO_START_HTTP,
         public val requirePin: Boolean = Default.REQUIRE_PIN,

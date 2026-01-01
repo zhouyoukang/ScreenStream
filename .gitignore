@@ -36,6 +36,15 @@ crash_extract.txt
 guard_output.txt
 log.txt
 
+# Local temp artifacts (do not commit)
+build_result*.txt
+commit_diff*.txt
+crash_*.txt
+current_build.txt
+*_diff.txt
+deploy_and_grant.ps1
+e591334.txt
+
 # Temp files
 temp_gh_*
 
@@ -57,3 +66,4 @@ captures/
 .idea
 
 .kotlin/
+

@@ -23,7 +23,7 @@ internal class NetworkHelper(private val context: Context) {
     private companion object {
         private val INTERFACE_PATTERNS = mapOf(
             MjpegSettings.Values.INTERFACE_WIFI to listOf("wlan\\d", "ap\\d", "wigig\\d", "softap\\.?\\d").map { it.toRegex() },
-            MjpegSettings.Values.INTERFACE_MOBILE to listOf("rmnet.*", "ccmni.*", "usb\\d").map { it.toRegex() },
+            MjpegSettings.Values.INTERFACE_MOBILE to listOf("rmnet.*", "ccmni.*", "usb\\d", "rndis\\d", "rndis_.*").map { it.toRegex() },
             MjpegSettings.Values.INTERFACE_ETHERNET to listOf("eth\\d", "en\\d", "lan\\d").map { it.toRegex() },
             MjpegSettings.Values.INTERFACE_VPN to listOf("tun\\d", "tap\\d", "ppp\\d", "vpn").map { it.toRegex() }
         )

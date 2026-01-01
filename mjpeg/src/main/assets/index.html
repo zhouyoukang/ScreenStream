@@ -66,17 +66,42 @@
             touch-action: none;
         }
 
-        #streamDiv img {
-            /* 移除 absolute 定位 */
+        #streamDiv img,
+        #streamDiv video,
+        #streamDiv canvas {
+            /* 填满容器并保持比例 */
             display: block;
-            width: auto;
-            height: auto;
-            max-width: 100%;
-            max-height: 100%;
+            min-width: 0;
+            min-height: 0;
+            flex: 1 1 auto;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             /* 禁用选中 */
             user-select: none;
             -webkit-user-select: none;
             touch-action: none;
+        }
+
+        #streamDiv img,
+        #streamDiv video,
+        #streamDiv canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        #streamDiv video::-webkit-media-controls,
+        #streamDiv video::-webkit-media-controls-enclosure,
+        #streamDiv video::-webkit-media-controls-panel,
+        #streamDiv video::-webkit-media-controls-overlay-enclosure,
+        #streamDiv video::-webkit-media-controls-play-button,
+        #streamDiv video::-webkit-media-controls-fullscreen-button {
+            display: none !important;
+            opacity: 0 !important;
         }
 
         #buttonsDiv {
@@ -299,7 +324,9 @@
     <div id="streamDiv">
         <img id="stream" FIT_WINDOW />
         <canvas id="streamCanvas" style="display: none; width: 100%; height: 100%; object-fit: contain;"></canvas>
-        <video id="videoPlayer" autoplay muted playsinline
+        <video id="videoPlayer" autoplay muted playsinline webkit-playsinline x5-playsinline x-webkit-airplay="deny"
+            x5-video-player-type="h5-page" x5-video-player-fullscreen="false"
+            controlslist="nodownload noremoteplayback noplaybackrate" disablepictureinpicture disableremoteplayback
             style="display: none; width: 100%; height: 100%; object-fit: contain;"></video>
     </div>
 
@@ -460,86 +487,88 @@
     <script>
         "use strict";
 
-        // === DEBUG CONSOLE ===
-        var debugDiv = document.createElement('div');
-        debugDiv.style.cssText = "position:fixed;top:0;left:0;width:100%;background:rgba(255,0,0,0.5);color:white;z-index:99999;pointer-events:none;font-size:12px;display:none;";
-        document.body.appendChild(debugDiv);
-        window.onerror = function (msg, url, lineNo, columnNo, error) {
-            debugDiv.style.display = "block";
-            debugDiv.innerHTML += "Error: " + msg + " at " + lineNo + ":" + columnNo + "<br>";
-            return false;
-        };
-        console.error = function (msg) {
-            debugDiv.style.display = "block";
-            debugDiv.innerHTML += "Err: " + msg + "<br>";
-        };
-        // =====================
-
-        // === VR INPUT DEBUG PANEL ===
-        // 启用方式: URL 加 ?debug=1
+        // Enable debug mode with: ?debug=1
         var urlParamsDebug = new URLSearchParams(window.location.search);
         var showInputDebug = urlParamsDebug.get('debug') === '1';
 
-        var inputDebugDiv = document.createElement('div');
-        inputDebugDiv.id = 'inputDebugPanel';
-        inputDebugDiv.style.cssText = "position:fixed;top:10px;left:10px;width:300px;max-height:50%;overflow-y:auto;background:rgba(0,0,0,0.8);color:#0f0;z-index:99998;font-family:monospace;font-size:11px;padding:8px;border-radius:8px;display:" + (showInputDebug ? "block" : "none") + ";";
-        inputDebugDiv.innerHTML = "<b style='color:yellow'>VR Input Debug (最近20条)</b><br><span style='color:#888'>按下手柄按钮查看事件...</span><br>";
-        document.body.appendChild(inputDebugDiv);
-
-        var debugLogs = [];
-        function logInputEvent(type, detail) {
-            if (!showInputDebug) return;
-            var now = new Date();
-            var time = now.toTimeString().split(' ')[0].substr(3); // MM:SS
-            var log = time + " <b>" + type + "</b> " + detail;
-            debugLogs.unshift(log);
-            if (debugLogs.length > 20) debugLogs.pop();
-            inputDebugDiv.innerHTML = "<b style='color:yellow'>VR Input Debug</b><br>" + debugLogs.join("<br>");
-        }
-
-        // 监听各种可能的输入事件
-        ['keydown', 'keyup', 'keypress'].forEach(function (evtType) {
-            document.addEventListener(evtType, function (e) {
-                logInputEvent(evtType, "key=" + e.key + " code=" + e.code + " which=" + e.which);
-            }, true);
-        });
-
-        ['mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu'].forEach(function (evtType) {
-            document.addEventListener(evtType, function (e) {
-                logInputEvent(evtType, "btn=" + e.button + " btns=" + e.buttons + " x=" + Math.round(e.clientX) + " y=" + Math.round(e.clientY));
-            }, true);
-        });
-
-        ['pointerdown', 'pointerup', 'pointermove'].forEach(function (evtType) {
-            document.addEventListener(evtType, function (e) {
-                if (evtType === 'pointermove') return; // 太频繁，不记录
-                logInputEvent(evtType, "ptrType=" + e.pointerType + " btn=" + e.button + " btns=" + e.buttons);
-            }, true);
-        });
-
-        // Gamepad API 轮询 (用于检测 Quest 手柄)
-        var lastGamepadState = {};
-        function pollGamepads() {
-            if (!showInputDebug) return;
-            var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-            for (var i = 0; i < gamepads.length; i++) {
-                var gp = gamepads[i];
-                if (!gp) continue;
-                var key = "gp" + i;
-                if (!lastGamepadState[key]) lastGamepadState[key] = { buttons: [] };
-
-                for (var b = 0; b < gp.buttons.length; b++) {
-                    var pressed = gp.buttons[b].pressed;
-                    var wasPressed = lastGamepadState[key].buttons[b] || false;
-                    if (pressed !== wasPressed) {
-                        logInputEvent("GAMEPAD", "pad=" + i + " btn[" + b + "]=" + (pressed ? "DOWN" : "UP") + " val=" + gp.buttons[b].value.toFixed(2));
-                    }
-                    lastGamepadState[key].buttons[b] = pressed;
-                }
-            }
-            requestAnimationFrame(pollGamepads);
-        }
+        // === DEBUG CONSOLE ===
+        var debugDiv = null;
         if (showInputDebug) {
+            debugDiv = document.createElement('div');
+            debugDiv.style.cssText = "position:fixed;top:0;left:0;width:100%;background:rgba(255,0,0,0.5);color:white;z-index:99999;pointer-events:none;font-size:12px;display:none;";
+            document.body.appendChild(debugDiv);
+            window.onerror = function (msg, url, lineNo, columnNo, error) {
+                debugDiv.style.display = "block";
+                debugDiv.innerHTML += "Error: " + msg + " at " + lineNo + ":" + columnNo + "<br>";
+                return false;
+            };
+            console.error = function (msg) {
+                debugDiv.style.display = "block";
+                debugDiv.innerHTML += "Err: " + msg + "<br>";
+            };
+        }
+        // =====================
+
+        // === VR INPUT DEBUG PANEL ===
+        if (showInputDebug) {
+            var inputDebugDiv = document.createElement('div');
+            inputDebugDiv.id = 'inputDebugPanel';
+            inputDebugDiv.style.cssText = "position:fixed;top:10px;left:10px;width:300px;max-height:50%;overflow-y:auto;background:rgba(0,0,0,0.8);color:#0f0;z-index:99998;font-family:monospace;font-size:11px;padding:8px;border-radius:8px;display:block;";
+            inputDebugDiv.innerHTML = "<b style='color:yellow'>VR Input Debug (最近20条)</b><br><span style='color:#888'>按下手柄按钮查看事件...</span><br>";
+            document.body.appendChild(inputDebugDiv);
+
+            var debugLogs = [];
+            function logInputEvent(type, detail) {
+                var now = new Date();
+                var time = now.toTimeString().split(' ')[0].substr(3); // MM:SS
+                var log = time + " <b>" + type + "</b> " + detail;
+                debugLogs.unshift(log);
+                if (debugLogs.length > 20) debugLogs.pop();
+                inputDebugDiv.innerHTML = "<b style='color:yellow'>VR Input Debug</b><br>" + debugLogs.join("<br>");
+            }
+
+            // 监听各种可能的输入事件
+            ['keydown', 'keyup', 'keypress'].forEach(function (evtType) {
+                document.addEventListener(evtType, function (e) {
+                    logInputEvent(evtType, "key=" + e.key + " code=" + e.code + " which=" + e.which);
+                }, true);
+            });
+
+            ['mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu'].forEach(function (evtType) {
+                document.addEventListener(evtType, function (e) {
+                    logInputEvent(evtType, "btn=" + e.button + " btns=" + e.buttons + " x=" + Math.round(e.clientX) + " y=" + Math.round(e.clientY));
+                }, true);
+            });
+
+            ['pointerdown', 'pointerup', 'pointermove'].forEach(function (evtType) {
+                document.addEventListener(evtType, function (e) {
+                    if (evtType === 'pointermove') return; // 太频繁，不记录
+                    logInputEvent(evtType, "ptrType=" + e.pointerType + " btn=" + e.button + " btns=" + e.buttons);
+                }, true);
+            });
+
+            // Gamepad API 轮询 (用于检测 Quest 手柄)
+            var lastGamepadState = {};
+            function pollGamepads() {
+                var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+                for (var i = 0; i < gamepads.length; i++) {
+                    var gp = gamepads[i];
+                    if (!gp) continue;
+                    var key = "gp" + i;
+                    if (!lastGamepadState[key]) lastGamepadState[key] = { buttons: [] };
+
+                    for (var b = 0; b < gp.buttons.length; b++) {
+                        var pressed = gp.buttons[b].pressed;
+                        var wasPressed = lastGamepadState[key].buttons[b] || false;
+                        if (pressed !== wasPressed) {
+                            logInputEvent("GAMEPAD", "pad=" + i + " btn[" + b + "]=" + (pressed ? "DOWN" : "UP") + " val=" + gp.buttons[b].value.toFixed(2));
+                        }
+                        lastGamepadState[key].buttons[b] = pressed;
+                    }
+                }
+                requestAnimationFrame(pollGamepads);
+            }
+
             requestAnimationFrame(pollGamepads);
             logInputEvent("INIT", "Debug panel active. isVR=" + (/Quest|OculusBrowser/i.test(navigator.userAgent)));
         }
@@ -556,17 +585,35 @@
         var videoPlayerEl = document.getElementById("videoPlayer");
         var activeStreamElement = stream; // Default to IMG
         var connectDiv = document.getElementById("connectDiv");
+
+        if (videoPlayerEl) {
+            try {
+                videoPlayerEl.disablePictureInPicture = true;
+                videoPlayerEl.setAttribute('disablepictureinpicture', '');
+                videoPlayerEl.setAttribute('disableremoteplayback', '');
+                videoPlayerEl.setAttribute('controlslist', 'nodownload noremoteplayback noplaybackrate');
+                videoPlayerEl.setAttribute('playsinline', '');
+                videoPlayerEl.setAttribute('webkit-playsinline', '');
+                videoPlayerEl.setAttribute('x5-playsinline', '');
+                videoPlayerEl.setAttribute('x5-video-player-type', 'h5-page');
+                videoPlayerEl.setAttribute('x5-video-player-fullscreen', 'false');
+                videoPlayerEl.setAttribute('x-webkit-airplay', 'deny');
+                videoPlayerEl.controls = false;
+            } catch (e) { }
+        }
+
         var pinDiv = document.getElementById("pinDiv");
         var pin = document.getElementById("pin");
         var sendPin = document.getElementById("sendPin");
+
         var pinWrongMsg = document.getElementById("pinWrongMsg");
         var blockedDiv = document.getElementById("blockedDiv");
         var errorDiv = document.getElementById("errorDiv");
         var pipStreamDiv = document.getElementById("pipStreamDiv");
 
-        // Get port from URL or default to 8085
+        // Get port from URL or default to 8084
         var urlParams = new URLSearchParams(window.location.search);
-        var inputApiPort = urlParams.get('input_port') || 8085;
+        var inputApiPort = urlParams.get('input_port') || 8084;
         var inputApiBase = null;
 
         // VR fullscreen mode: 
@@ -626,8 +673,13 @@
 
             // Handle different element types
             if (activeStreamElement.tagName === 'CANVAS') {
-                natW = activeStreamElement.width;
-                natH = activeStreamElement.height;
+                if (currentStreamCodec !== 0 && videoPlayerEl && videoPlayerEl.videoWidth && videoPlayerEl.videoHeight) {
+                    natW = videoPlayerEl.videoWidth;
+                    natH = videoPlayerEl.videoHeight;
+                } else {
+                    natW = activeStreamElement.width;
+                    natH = activeStreamElement.height;
+                }
             } else if (activeStreamElement.tagName === 'VIDEO') {
                 natW = activeStreamElement.videoWidth;
                 natH = activeStreamElement.videoHeight;
@@ -907,7 +959,7 @@
 
         // Debug & Control Overlay
         var statusOverlay = document.createElement('div');
-        statusOverlay.style.cssText = "position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#0f0;padding:8px 15px;border-radius:20px;font-family:monospace;z-index:99999;font-size:16px;border:1px solid #0f0;box-shadow:0 0 10px #0f0;display:none;align-items:center;gap:10px;pointer-events:none;cursor:default;opacity:0;transition:opacity 0.3s;";
+        statusOverlay.style.cssText = "position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#0f0;z-index:99999;font-family:monospace;z-index:99999;font-size:16px;border:1px solid #0f0;box-shadow:0 0 10px #0f0;display:none;align-items:center;gap:10px;pointer-events:none;cursor:default;opacity:0;transition:opacity 0.3s;";
 
         // Status Text
         var statusText = document.createElement('span');
@@ -937,10 +989,14 @@
             overlayTimer = setTimeout(function () { statusOverlay.style.opacity = 0; }, 2000);
         }
 
-        // Version Indicator (User Verification)
-        var verDiv = document.createElement('div');
-        verDiv.style.cssText = "position:fixed;bottom:5px;right:5px;color:rgba(255,255,255,0.3);font-size:10px;pointer-events:none;z-index:9999;";
-        verDiv.innerText = "v20 (Fix All Directions)";
+        var verDiv = document.getElementById('versionWatermark');
+        if (!verDiv) {
+            verDiv = document.createElement('div');
+            verDiv.id = 'versionWatermark';
+            verDiv.style.cssText = "position: fixed; bottom: 10px; right: 10px; font-size: 12px; color: rgba(255,255,255,0.5); pointer-events: none; z-index: 9999;";
+            document.body.appendChild(verDiv);
+        }
+        verDiv.innerText = "v27 (Rollback: Stable)";
         document.body.appendChild(verDiv);
 
         // Debug Status for Input
@@ -1209,20 +1265,8 @@
                         e.preventDefault();
                         return;
                     case 'v': // Ctrl+V 粘贴
-                        if (!canAutoFocusHiddenInput()) return;
-                        pendingPaste = true;
-                        if (pendingPasteTimer) {
-                            clearTimeout(pendingPasteTimer);
-                            pendingPasteTimer = null;
-                        }
-                        hiddenInput.value = '';
-                        pendingPasteTimer = setTimeout(function () {
-                            if (!pendingPaste) return;
-                            pendingPaste = false;
-                            tryReadClipboardText().then(function (t) {
-                                sendClipboardText(t);
-                            }).catch(function () { });
-                        }, 350);
+                        sendInputJson("/key", { keysym: 0xFF6D, down: true }); // XK_Paste
+                        e.preventDefault();
                         return;
                     case 'x': // Ctrl+X 剪切
                         sendInputJson("/key", { keysym: 0xFF6B, down: true }); // XK_Cut
@@ -1337,17 +1381,9 @@
 
         var hideTimeout = setTimeout(buttonsHideFunction, 1500);
         function configureButtons(enable) {
-            enable = true;
-            if (enableButtons != enable) {
-                enableButtons = enable;
-                if (enableButtons) {
-                    buttonsDiv.style.visibility = "visible";
-                    hideTimeout = setTimeout(buttonsHideFunction, 1500);
-                } else {
-                    clearTimeout(hideTimeout);
-                    buttonsDiv.style.visibility = "hidden";
-                }
-            }
+            // Buttons are now permanently hidden - do nothing
+            buttonsDiv.style.visibility = "hidden";
+            buttonsDiv.style.display = "none";
         }
 
         // Prevent selection GLOBALLY
@@ -1378,11 +1414,8 @@
             // PiP not supported
         }
 
-        window.onmousemove = function () {
-            if (!enableButtons) return;
-            buttonsDiv.style.visibility = "visible";
-            clearTimeout(hideTimeout);
-            hideTimeout = setTimeout(buttonsHideFunction, 1000);
+        var buttonsShowFunction = function () {
+            // Buttons are now hidden permanently - do nothing
         };
 
         var fullscreenInput = document.getElementById("fullscreen");
@@ -1576,13 +1609,12 @@
         var currentStreamCodec = 0; // 0=MJPEG, 1=H264, 2=H265
         var videoPlayer = null;
 
-        var currentStreamCodec = 0; // 0=MJPEG, 1=H264, 2=H265
-        var videoPlayer = null;
         // var webCodecsSupported = typeof window.VideoDecoder !== 'undefined'; // No longer needed
 
 
         // Show toast notification
         function showToast(message, duration) {
+            if (!showInputDebug) return;
             var toast = document.createElement('div');
             toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:#fff;padding:16px 24px;border-radius:8px;z-index:10000;font-size:14px;max-width:80%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
             toast.textContent = message;
@@ -1595,27 +1627,30 @@
             // var btn = document.getElementById('h264Toggle');
             // if (btn) btn.style.display = 'none';
 
-            // jMuxer works over HTTP, no HTTPS check needed.
-            if (currentStreamCodec !== 0) {
-                // console.warn("[VideoPlayer] Switched to H264/H265 (jMuxer)");
-            }
-
             if (currentStreamCodec === 0) {
                 stopVideo();
                 streamCanvas.style.display = 'none';
-                if (videoPlayerEl) videoPlayerEl.style.display = 'none';
+                if (videoPlayerEl) {
+                    videoPlayerEl.style.display = 'none';
+                    videoPlayerEl.style.opacity = '';
+                }
                 stream.style.display = 'block';
                 activeStreamElement = stream;
             } else {
                 stream.style.display = 'none';
                 streamCanvas.style.display = 'none';
-                if (videoPlayerEl) videoPlayerEl.style.display = 'block';
+                if (videoPlayerEl) {
+                    videoPlayerEl.style.display = 'block';
+                    videoPlayerEl.style.opacity = '';
+                }
+                // applyVideoFillFix(); // Keep if safe, or remove if part of reverted logic. Plan says remove if experimental. Let's remove to be safe/stock.
                 activeStreamElement = videoPlayerEl;
             }
         }
 
         function startVideo(codec) {
             if (!videoPlayer) videoPlayer = new VideoPlayer('videoPlayer');
+            // applyVideoFillFix(); // Reverted
             videoPlayer.start(codec);
         }
 
@@ -1754,14 +1789,17 @@
             try {
                 this.ws = new WebSocket(this.opts.url);
                 this.ws.onclose = function (e) {
+                    showToast("WS Closed: " + e.code, 2000);
                     _this.onclose(e);
                     _this.reconnect();
                 };
                 this.ws.onerror = function (e) {
+                    showToast("WS Error", 2000);
                     _this.onerror(e);
                     _this.reconnect();
                 };
                 this.ws.onopen = function (e) {
+                    showToast("WS Connected", 2000);
                     _this.onopen(e);
                     _this.heartCheck();
                 };

@@ -92,7 +92,7 @@ public interface MjpegSettings {
         public const val PIN: String = "000000"
         public const val BLOCK_ADDRESS: Boolean = true
 
-        public const val INTERFACE_FILTER: Int = Values.INTERFACE_WIFI or Values.INTERFACE_ETHERNET
+        public const val INTERFACE_FILTER: Int = Values.INTERFACE_WIFI or Values.INTERFACE_ETHERNET or Values.INTERFACE_MOBILE
         public const val ADDRESS_FILTER: Int = Values.ADDRESS_PRIVATE
         public const val ENABLE_IPV4: Boolean = true
         public const val ENABLE_IPV6: Boolean = false
