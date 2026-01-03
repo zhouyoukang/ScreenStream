@@ -126,7 +126,8 @@ public class InputHttpServer(
                 val isConnected = InputService.isConnected()
                 val isEnabled = InputService.isInputEnabled
                 val scaling = InputService.scaling
-                val json = "{\"connected\": $isConnected, \"inputEnabled\": $isEnabled, \"scaling\": $scaling}"
+                val isScreenOff = InputService.isScreenOffMode
+                val json = "{\"connected\": $isConnected, \"inputEnabled\": $isEnabled, \"scaling\": $scaling, \"screenOffMode\": $isScreenOff}"
                 call.respondText(json, ContentType.Application.Json)
             }
 

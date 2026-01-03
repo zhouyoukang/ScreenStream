@@ -92,6 +92,11 @@ internal fun StreamTabContent(
                             .padding(start = 16.dp, end = 8.dp, bottom = 8.dp)
                             .fillMaxWidth()
                     )
+                    WriteSettingsPermissionCard(
+                        modifier = Modifier
+                            .padding(start = 16.dp, end = 8.dp, bottom = 8.dp)
+                            .fillMaxWidth()
+                    )
                 }
                 Column(modifier = Modifier.weight(1F)) {
                     AdaptiveBanner(modifier = Modifier.fillMaxWidth())
@@ -106,16 +111,23 @@ internal fun StreamTabContent(
                         .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
                         .fillMaxWidth()
                 )
-                AccessibilityShortcutCard(
-                    modifier = Modifier
-                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
-                        .fillMaxWidth()
-                )
+                // ARCHIVED: Screen Off Feature disabled, hiding shortcut card
+                // AccessibilityShortcutCard(
+                //     modifier = Modifier
+                //         .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                //         .fillMaxWidth()
+                // )
                 MicrophonePermissionCard(
                     modifier = Modifier
                         .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
                         .fillMaxWidth()
                 )
+                // ARCHIVED: Screen Off Feature disabled, hiding permission card
+                // WriteSettingsPermissionCard(
+                //     modifier = Modifier
+                //         .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                //         .fillMaxWidth()
+                // )
                 AdaptiveBanner(modifier = Modifier.fillMaxWidth())
             }
         }
@@ -127,6 +139,9 @@ internal fun StreamTabContent(
 @Composable
 private fun AccessibilityShortcutCard(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    // Check if Accessibility Service is already enabled - hide card if enabled
+    if (info.dvkr.screenstream.input.InputService.isConnected()) return
+    
     Card(
         modifier = modifier,
         onClick = {
@@ -230,6 +245,47 @@ private fun MicrophonePermissionCard(modifier: Modifier = Modifier) {
             text = { Text(text = "权限已被永久拒绝，请在系统设置中手动开启麦克风权限") },
             shape = MaterialTheme.shapes.large
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WriteSettingsPermissionCard(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    // Check if we already have WRITE_SETTINGS permission
+    if (Settings.System.canWrite(context)) return
+
+    Card(
+        modifier = modifier,
+        onClick = {
+            try {
+                val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+                    data = "package:${context.packageName}".toUri()
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                // Fallback: open general settings
+                try {
+                    context.startActivity(Intent(Settings.ACTION_SETTINGS))
+                } catch (e2: Exception) {
+                    // Ignore
+                }
+            }
+        }
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(imageVector = Icon_Brightness, contentDescription = null)
+            Column(modifier = Modifier.padding(start = 16.dp)) {
+                Text("息屏功能需要授权", style = MaterialTheme.typography.titleMedium)
+                Text("点击此处授权「修改系统设置」权限", style = MaterialTheme.typography.bodySmall)
+            }
+        }
     }
 }
 
@@ -422,6 +478,42 @@ private val Icon_Accessibility: ImageVector = materialIcon(name = "Filled.Access
         verticalLineTo(7.0f)
         horizontalLineToRelative(18.0f)
         verticalLineToRelative(2.0f)
+        close()
+    }
+}
+
+// Brightness icon for Screen Off permission card
+private val Icon_Brightness: ImageVector = materialIcon(name = "Filled.BrightnessLow") {
+    materialPath {
+        moveTo(20.0f, 8.69f)
+        verticalLineTo(4.0f)
+        horizontalLineToRelative(-4.69f)
+        lineTo(12.0f, 0.69f)
+        lineTo(8.69f, 4.0f)
+        horizontalLineTo(4.0f)
+        verticalLineToRelative(4.69f)
+        lineTo(0.69f, 12.0f)
+        lineTo(4.0f, 15.31f)
+        verticalLineTo(20.0f)
+        horizontalLineToRelative(4.69f)
+        lineTo(12.0f, 23.31f)
+        lineTo(15.31f, 20.0f)
+        horizontalLineTo(20.0f)
+        verticalLineToRelative(-4.69f)
+        lineTo(23.31f, 12.0f)
+        lineTo(20.0f, 8.69f)
+        close()
+        moveTo(12.0f, 18.0f)
+        curveToRelative(-3.31f, 0.0f, -6.0f, -2.69f, -6.0f, -6.0f)
+        reflectiveCurveToRelative(2.69f, -6.0f, 6.0f, -6.0f)
+        reflectiveCurveToRelative(6.0f, 2.69f, 6.0f, 6.0f)
+        reflectiveCurveToRelative(-2.69f, 6.0f, -6.0f, 6.0f)
+        close()
+        moveTo(12.0f, 8.0f)
+        curveToRelative(-2.21f, 0.0f, -4.0f, 1.79f, -4.0f, 4.0f)
+        reflectiveCurveToRelative(1.79f, 4.0f, 4.0f, 4.0f)
+        reflectiveCurveToRelative(4.0f, -1.79f, 4.0f, -4.0f)
+        reflectiveCurveToRelative(-1.79f, -4.0f, -4.0f, -4.0f)
         close()
     }
 }

@@ -29,11 +29,12 @@
     <string name="app_permission_allow_notifications_settings">Application require permission to send notifications to be able to start streaming service.\n\nPlease allow sending notifications in application settings.</string>
     <string name="app_permission_notification_settings">Open settings</string>
 
-    <string name="app_notification_channel_streaming">Streaming notifications</string>
+    <string name="app_notification_channel_streaming">Streaming service</string>
     <string name="app_notification_channel_error">Error notifications</string>
     <string name="app_notification_streaming_title">Streaming…</string>
     <string name="app_notification_streaming_content">Press STOP to finish stream</string>
     <string name="app_notification_stop">Stop</string>
+    <string name="app_notification_screen_off">Screen Off</string>
 
     <string name="app_tile_start">Start</string>
     <string name="app_tile_stop">Stop</string>

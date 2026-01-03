@@ -422,6 +422,13 @@ internal class HttpServer(
                 call.respond(HttpStatusCode.OK)
             }
 
+            /* ARCHIVED: Screen Off 功能暂时禁用
+            post("/screen-off") {
+                InputService.instance?.toggleScreenOff()
+                call.respond(HttpStatusCode.OK)
+            }
+            */
+
             get("/status") {
                 val isConnected = InputService.isConnected()
                 call.respondText(

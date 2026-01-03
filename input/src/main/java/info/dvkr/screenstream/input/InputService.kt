@@ -39,6 +39,10 @@ public class InputService : AccessibilityService() {
             private set
         
         public var scaling: Float = 1.0f
+        
+        @Volatile
+        public var isScreenOffMode: Boolean = false // Track "Fake Screen Off" state
+
         public var isInputEnabled: Boolean = true
 
         public var suppressSoftKeyboard: Boolean = false  // 默认关闭，让被控手机正常弹出键盘
@@ -581,4 +585,84 @@ public class InputService : AccessibilityService() {
             Log.e(TAG, "cut failed: ${e.message}")
         }
     }
+    /* ARCHIVED: Screen Off (Brightness Control) 功能暂时禁用，保留代码供未来参考
+    // ==================== Screen Off Mode (Brightness Control Only) ====================
+    
+    private var savedBrightness: Int = -1
+    private var savedBrightnessMode: Int = -1
+
+    public fun toggleScreenOff() {
+        if (isScreenOffMode) {
+            restoreBrightness()
+        } else {
+            setMinimumBrightness()
+        }
+    }
+
+    private fun setMinimumBrightness() {
+        try {
+            if (!android.provider.Settings.System.canWrite(this)) {
+                Log.e(TAG, "setMinimumBrightness: No WRITE_SETTINGS permission!")
+                isScreenOffMode = true
+                return
+            }
+            savedBrightnessMode = android.provider.Settings.System.getInt(
+                contentResolver,
+                android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE,
+                android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL
+            )
+            savedBrightness = android.provider.Settings.System.getInt(
+                contentResolver, 
+                android.provider.Settings.System.SCREEN_BRIGHTNESS
+            )
+            Log.i(TAG, "setMinimumBrightness: Saved brightness=$savedBrightness, mode=$savedBrightnessMode")
+            android.provider.Settings.System.putInt(
+                contentResolver,
+                android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE,
+                android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL
+            )
+            android.provider.Settings.System.putInt(
+                contentResolver,
+                android.provider.Settings.System.SCREEN_BRIGHTNESS,
+                1
+            )
+            isScreenOffMode = true
+            Log.i(TAG, "Screen Off Mode Enabled (System Brightness = 1)")
+        } catch (e: Exception) {
+            Log.e(TAG, "setMinimumBrightness failed: ${e.message}")
+            isScreenOffMode = true
+        }
+    }
+
+    private fun restoreBrightness() {
+        try {
+            if (!android.provider.Settings.System.canWrite(this)) {
+                Log.e(TAG, "restoreBrightness: No WRITE_SETTINGS permission!")
+                isScreenOffMode = false
+                return
+            }
+            if (savedBrightness != -1) {
+                android.provider.Settings.System.putInt(
+                    contentResolver,
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS,
+                    savedBrightness
+                )
+                Log.i(TAG, "restoreBrightness: Restored brightness=$savedBrightness")
+            }
+            if (savedBrightnessMode != -1) {
+                android.provider.Settings.System.putInt(
+                    contentResolver,
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE,
+                    savedBrightnessMode
+                )
+                Log.i(TAG, "restoreBrightness: Restored mode=$savedBrightnessMode")
+            }
+            isScreenOffMode = false
+            Log.i(TAG, "Screen Off Mode Disabled")
+        } catch (e: Exception) {
+            Log.e(TAG, "restoreBrightness failed: ${e.message}")
+            isScreenOffMode = false
+        }
+    }
+    */
 }

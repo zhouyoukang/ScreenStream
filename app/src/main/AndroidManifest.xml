@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
 
     <application
         android:name=".ScreenStreamApp"
@@ -28,6 +29,14 @@
             android:name="com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT"
             android:value="true" />
 
+        <activity
+            android:name=".ui.activity.FakeScreenOffActivity"
+            android:label="@string/app_notification_screen_off"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
+            android:launchMode="singleInstance"
+            android:excludeFromRecents="true" 
+            android:exported="false" />
+            
         <activity
             android:name="info.dvkr.screenstream.SingleActivity"
             android:exported="true"

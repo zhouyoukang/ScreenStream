@@ -108,6 +108,14 @@
             display: none !important;
         }
 
+        /* VR 16:9 裁剪模式 */
+        #streamDiv.crop-16-9 img,
+        #streamDiv.crop-16-9 video,
+        #streamDiv.crop-16-9 canvas {
+            object-fit: cover !important;
+            aspect-ratio: 16 / 9 !important;
+        }
+
         #navBar {
             position: fixed;
             bottom: 0;
@@ -290,6 +298,12 @@
                 opacity: 1
             }
         }
+
+        .screen-off-mode img,
+        .screen-off-mode video,
+        .screen-off-mode canvas {
+            filter: none;
+        }
     </style>
     <script>
         "use strict";
@@ -345,12 +359,25 @@
     <!-- 底部工具栏：5按钮布局（控制模式） -->
     <div id="navBar">
         <!-- 最左：模式切换 -->
-        <button id="modeToggle" onclick="toggleNavMode()" title="切换模式">
-            <svg width="24" height="24" viewBox="0 0 24 24">
-                <path fill="#FFF"
-                    d="M12,6V9L16,5L12,1V4A8,8 0 0,0 4,12C4,13.57 4.46,15.03 5.24,16.26L6.7,14.8C6.25,13.97 6,13 6,12A6,6 0 0,1 12,6M18.76,7.74L17.3,9.2C17.74,10.04 18,11 18,12A6,6 0 0,1 12,18V15L8,19L12,23V20A8,8 0 0,0 20,12C20,10.43 19.54,8.97 18.76,7.74Z" />
-            </svg>
-        </button>
+        <!-- 最左：模式切换 & 息屏组合 -->
+        <div style="position:fixed;bottom:5px;right:5px;color:rgba(255,255,255,0.3);font-size:10px;">v29 (Ghost Mode)
+        </div>
+        <div style="display:flex; align-items:center; background:rgba(255,255,255,0.05); border-radius:4px;">
+            <button id="modeToggle" onclick="toggleNavMode()" title="切换模式" style="padding: 8px 12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                    <path fill="#FFF"
+                        d="M12,6V9L16,5L12,1V4A8,8 0 0,0 4,12C4,13.57 4.46,15.03 5.24,16.26L6.7,14.8C6.25,13.97 6,13 6,12A6,6 0 0,1 12,6M18.76,7.74L17.3,9.2C17.74,10.04 18,11 18,12A6,6 0 0,1 12,18V15L8,19L12,23V20A8,8 0 0,0 20,12C20,10.43 19.54,8.97 18.76,7.74Z" />
+                </svg>
+            </button>
+            <div style="width:1px; height:20px; background:#444;"></div>
+            <!-- VR 16:9 裁剪切换 -->
+            <button id="cropBtn" onclick="toggleCrop169()" title="VR 16:9 裁剪" style="padding: 8px 12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                    <rect x="2" y="6" width="20" height="12" rx="2" fill="none" stroke="#FFF" stroke-width="2" />
+                    <text x="12" y="14" text-anchor="middle" fill="#FFF" font-size="6" font-weight="bold">16:9</text>
+                </svg>
+            </button>
+        </div>
         <!-- 动态按钮1 -->
         <button id="dynBtn1" onclick="dynBtn1Click()" title="最近任务">
             <svg id="dynBtn1Icon" width="24" height="24" viewBox="0 0 24 24">
@@ -454,8 +481,71 @@
             toggleFullscreen();
         }
 
+        /* ARCHIVED: Screen Off 功能暂时禁用，保留代码供未来参考
+        function toggleScreenOff() {
+            sendNavAction('/screen-off');
+            var streamDiv = document.getElementById('streamDiv');
+            streamDiv.classList.toggle('screen-off-mode');
+            var isActive = streamDiv.classList.contains('screen-off-mode');
+            var btn = document.getElementById('screenOffBtn');
+            btn.style.background = isActive ? "rgba(255, 50, 50, 0.4)" : "";
+            showStatus(isActive ? "Screen Off Mode: ON" : "Screen Off Mode: OFF");
+        }
+        */
+
+        // VR 16:9 裁剪切换
+        var isCrop169Active = false;
+        function toggleCrop169() {
+            isCrop169Active = !isCrop169Active;
+            var streamDiv = document.getElementById('streamDiv');
+            var streamImg = document.getElementById('streamImg');
+            var videoElement = document.getElementById('video');
+            var btn = document.getElementById('cropBtn');
+
+            if (isCrop169Active) {
+                // 启用 16:9 裁剪：从 1:1 裁剪到 16:9（裁剪上下部分）
+                // 使用 object-fit: cover 来裁剪多余部分
+                streamDiv.classList.add('crop-16-9');
+                if (streamImg) {
+                    streamImg.style.objectFit = 'cover';
+                    streamImg.style.aspectRatio = '16/9';
+                }
+                if (videoElement) {
+                    videoElement.style.objectFit = 'cover';
+                    videoElement.style.aspectRatio = '16/9';
+                }
+                btn.style.background = "#4CAF50";  // 绿色表示激活
+                showStatus("VR 16:9 裁剪: ON");
+            } else {
+                // 恢复原始 1:1 显示
+                streamDiv.classList.remove('crop-16-9');
+                if (streamImg) {
+                    streamImg.style.objectFit = 'contain';
+                    streamImg.style.aspectRatio = '';
+                }
+                if (videoElement) {
+                    videoElement.style.objectFit = 'contain';
+                    videoElement.style.aspectRatio = '';
+                }
+                btn.style.background = "";
+                showStatus("VR 16:9 裁剪: OFF");
+            }
+        }
+
         // 初始化
         updateNavButtons();
+
+        // 状态同步循环 (1秒一次) - 仅检查连接状态
+        function syncStatus() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/status", true);
+            xhr.timeout = 1500;
+            xhr.onload = function () {
+                // 状态检查 - 如需扩展功能可在此处添加
+            };
+            xhr.send();
+        }
+        setInterval(syncStatus, 1000); // Poll every 1 second
     </script>
 
     <div id="pinDiv" style="visibility: hidden;">
@@ -996,7 +1086,7 @@
             verDiv.style.cssText = "position: fixed; bottom: 10px; right: 10px; font-size: 12px; color: rgba(255,255,255,0.5); pointer-events: none; z-index: 9999;";
             document.body.appendChild(verDiv);
         }
-        verDiv.innerText = "v27 (Rollback: Stable)";
+        verDiv.innerText = "v28";
         document.body.appendChild(verDiv);
 
         // Debug Status for Input

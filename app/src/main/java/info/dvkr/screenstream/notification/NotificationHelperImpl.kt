@@ -99,6 +99,18 @@ internal class NotificationHelperImpl(context: Context) : NotificationHelper {
                     PendingIntent.getService(context, 2, stopIntent, PendingIntent.FLAG_IMMUTABLE)
                 )
             )
+            .addAction(
+                NotificationCompat.Action(
+                    null,
+                    context.getString(R.string.app_notification_screen_off),
+                    PendingIntent.getActivity(
+                        context, 
+                        3, 
+                        Intent().setClassName(context, "info.dvkr.screenstream.ui.activity.FakeScreenOffActivity").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), 
+                        PendingIntent.FLAG_IMMUTABLE
+                    )
+                )
+            )
             .also { builder ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     notificationManager.getNotificationChannel(CHANNEL_STREAMING)?.let { notificationChannel ->
