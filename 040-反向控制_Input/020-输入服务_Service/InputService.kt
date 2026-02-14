@@ -1746,6 +1746,9 @@ public class InputService : AccessibilityService() {
         return try {
             val f = sanitizePath(path)
             if (!f.exists()) return JSONObject().put("ok", false).put("error", "Not found")
+            if (newName.contains('/') || newName.contains('\\') || newName.contains("..")) {
+                return JSONObject().put("ok", false).put("error", "Invalid name: path separators not allowed")
+            }
             val target = java.io.File(f.parent, newName)
             if (target.exists()) return JSONObject().put("ok", false).put("error", "Target already exists")
             val ok = f.renameTo(target)
