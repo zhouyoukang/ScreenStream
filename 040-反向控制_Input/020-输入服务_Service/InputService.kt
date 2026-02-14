@@ -1604,6 +1604,9 @@ public class InputService : AccessibilityService() {
 
     public fun saveFile(filename: String, data: ByteArray): JSONObject {
         return try {
+            if (filename.contains('/') || filename.contains('\\') || filename.contains("..")) {
+                return JSONObject().put("ok", false).put("error", "Invalid filename: path separators not allowed")
+            }
             val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             if (!dir.exists()) dir.mkdirs()
             val file = java.io.File(dir, filename)
