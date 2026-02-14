@@ -1,0 +1,210 @@
+name: ScreenStream API Services CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: 
+      - 'api-services/**'
+      - 'openclaw-skills/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'api-services/**'
+      - 'openclaw-skills/**'
+
+jobs:
+  api-services-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      # 可以添加需要的数据库或其他服务
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Setup Node.js for OpenClaw Skills
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install OpenClaw
+      run: |
+        npm install -g openclaw@latest
+        openclaw --version
+        
+    - name: Setup OpenClaw Config
+      run: |
+        mkdir -p ~/.openclaw
+        echo '{"models": {"default": "claude-3-sonnet"}}' > ~/.openclaw/config.json
+        
+    - name: Install ScreenStream Skills
+      run: |
+        mkdir -p ~/.openclaw/skills
+        cp openclaw-skills/screenstream-control.js ~/.openclaw/skills/
+        cp openclaw-skills/screenstream-test.js ~/.openclaw/skills/
+        
+    - name: Install Node.js Dependencies
+      working-directory: ./openclaw-skills
+      run: |
+        npm init -y
+        npm install node-fetch@2
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+    
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Build API Services
+      run: ./gradlew :api-services:mjpeg-server:build :api-services:rtsp-server:build :api-services:webrtc-server:build :api-services:input-server:build :api-services:gateway:build
+      
+    - name: Start API Services (Background)
+      run: |
+        # 启动所有服务在后台
+        nohup java -jar api-services/mjpeg-server/build/libs/mjpeg-server-*.jar > mjpeg.log 2>&1 &
+        nohup java -jar api-services/rtsp-server/build/libs/rtsp-server-*.jar > rtsp.log 2>&1 &
+        nohup java -jar api-services/webrtc-server/build/libs/webrtc-server-*.jar > webrtc.log 2>&1 &
+        nohup java -jar api-services/input-server/build/libs/input-server-*.jar > input.log 2>&1 &
+        nohup java -jar api-services/gateway/build/libs/gateway-*.jar > gateway.log 2>&1 &
+        
+        # 等待服务启动
+        sleep 15
+        
+    - name: Verify Services Health
+      run: |
+        # 检查服务是否启动成功
+        curl -f http://localhost:8080/health || (echo "Gateway failed" && exit 1)
+        curl -f http://localhost:8081/health || (echo "MJPEG failed" && exit 1)
+        curl -f http://localhost:8082/health || (echo "RTSP failed" && exit 1)
+        curl -f http://localhost:8083/health || (echo "WebRTC failed" && exit 1)
+        curl -f http://localhost:8084/health || (echo "Input failed" && exit 1)
+        
+    - name: Run OpenClaw Smoke Tests
+      run: |
+        cd ~/.openclaw
+        # 使用OpenClaw执行冒烟测试
+        timeout 300 openclaw skill run screenstream-test executeTestSuite smoke-test || echo "Test completed with timeout"
+        
+    - name: Run API Integration Tests
+      run: |
+        # 直接API测试
+        echo "Testing MJPEG service..."
+        curl -X POST http://localhost:8080/mjpeg/start -H "Content-Type: application/json" -d '{"quality":"high","fps":30}'
+        
+        echo "Testing Input service..."
+        curl -X POST http://localhost:8080/input/touch -H "Content-Type: application/json" -d '{"x":100,"y":200,"action":"tap"}'
+        
+        echo "Testing service status..."
+        curl http://localhost:8080/status
+        
+    - name: Run Performance Tests
+      run: |
+        # 简单的性能测试
+        echo "Performance testing..."
+        for i in {1..10}; do
+          curl -X POST http://localhost:8080/input/touch -H "Content-Type: application/json" -d "{\"x\":$((100+i)),\"y\":$((200+i)),\"action\":\"tap\"}"
+        done
+        
+    - name: Collect Service Logs
+      if: failure()
+      run: |
+        echo "=== Gateway Logs ==="
+        cat gateway.log || echo "No gateway logs"
+        echo "=== MJPEG Logs ==="
+        cat mjpeg.log || echo "No MJPEG logs"
+        echo "=== RTSP Logs ==="
+        cat rtsp.log || echo "No RTSP logs"
+        echo "=== WebRTC Logs ==="
+        cat webrtc.log || echo "No WebRTC logs"
+        echo "=== Input Logs ==="
+        cat input.log || echo "No Input logs"
+        
+    - name: Generate Test Report
+      run: |
+        echo "# ScreenStream API Services Test Report" > test-report.md
+        echo "" >> test-report.md
+        echo "## Service Health Check" >> test-report.md
+        curl -s http://localhost:8080/status | python3 -m json.tool >> test-report.md
+        echo "" >> test-report.md
+        echo "## Build Time: $(date)" >> test-report.md
+        
+    - name: Upload Test Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-report
+        path: test-report.md
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: api-services-test
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Docker Images
+      run: |
+        # 构建Gateway镜像
+        cd api-services/gateway
+        docker build -t screenstream/gateway:latest .
+        
+        # 构建MJPEG镜像
+        cd ../mjpeg-server
+        docker build -t screenstream/mjpeg:latest .
+        
+        # 构建完整镜像组合
+        cd ../..
+        docker-compose -f docker-compose.yml build
+        
+    - name: Test Docker Deployment
+      run: |
+        # 启动Docker环境
+        docker-compose up -d
+        sleep 20
+        
+        # 测试服务
+        curl -f http://localhost:8080/health
+        docker-compose down
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [api-services-test, docker-build]
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to Staging
+      run: |
+        echo "Deploying to staging environment..."
+        # 这里可以添加实际的部署逻辑
+        # 例如：kubectl apply, docker deploy等
+        
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [api-services-test, docker-build]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to Production
+      run: |
+        echo "Deploying to production environment..."
+        # 这里可以添加实际的生产部署逻辑

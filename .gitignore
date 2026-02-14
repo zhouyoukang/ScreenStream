@@ -48,12 +48,21 @@ e591334.txt
 # Temp files
 temp_gh_*
 
+# Lock / pid / crash leftovers
+*.lock
+*.lck
+*.pid
+*.pid.*
+hs_err_pid*.log
+replay_pid*.log
+
 # Local-only folders
 AudioCenter/
 backups/
+!.windsurf/backups/
 
 # Sensitive local assets
-mjpeg/src/main/assets/server.p12
+**/src/main/assets/server.p12
 
 # Android Studio Navigation editor temp files
 .navigation/
@@ -66,4 +75,86 @@ captures/
 .idea
 
 .kotlin/
+
+# Gradle/Android (multi-module)
+**/.gradle/
+**/.kotlin/
+**/build/
+**/out/
+**/captures/
+**/externalNativeBuild/
+**/.cxx/
+
+# Android build artifacts
+*.aab
+*.hprof
+
+# Signing / secrets
+*.jks
+*.keystore
+keystore.properties
+*.pem
+*.key
+*.crt
+
+# Env files
+.env
+.env.local
+.env.*.local
+*.env
+
+# API Services specific
+api-services/logs/
+api-services/*/logs/
+api-services/*/build/libs/*.jar
+api-services/.gradle/
+api-services/build/
+
+# Docker & Deployment
+docker-compose.override.yml
+.docker/
+volumes/
+data/
+
+# Service Runtime
+*.pid
+service_*.log
+health_check.log
+startup.log
+shutdown.log
+
+# OpenClaw (if re-enabled later)
+.openclaw/
+skills/temp/
+skills/.cache/
+
+# IDE Workspace specific
+# .vscode/settings.json  # 已解除限制，允许 Cascade 访问和修复终端配置
+# .vscode/launch.json
+*.code-workspace
+
+# Backup files
+*.backup
+*.bak
+.windsurfrules.backup
+.windsurfrules.optimized
+
+# Performance & Profiling
+*.hprof
+*.prof
+heap_dump_*
+cpu_profile_*
+
+# Temporary Analysis Files
+analysis_*.txt
+comparison_*.txt
+verification_*.log
+
+# Build artifacts in 090 directory (local only)
+090-构建与部署_Build/android-sdk/
+090-构建与部署_Build/temp-build/
+090-构建与部署_Build/gradle/
+
+# Embedded git repos (references, must not be committed directly)
+050-音频处理_Audio/010-音频中心_AudioCenter/references/
 

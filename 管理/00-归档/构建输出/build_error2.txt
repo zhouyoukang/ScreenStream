@@ -1,0 +1,17 @@
+Calculating task graph as no cached configuration is available for tasks: :input:compileDebugKotlin
+Type-safe project accessors is an incubating feature.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Could not determine the dependencies of task ':input:compileDebugKotlin'.
+> SDK location not found. Define a valid SDK location with an ANDROID_HOME environment variable or by setting the sdk.dir path in your project's local properties file at 'F:\github\AIOT\ScreenStream\local.properties'.
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1m 5s
+Configuration cache entry stored.

@@ -1,0 +1,34 @@
+# ScreenStream_v2 规则体系（已迁移到结构化规则）
+
+> ⚠️ 本文件已被 `.windsurf/rules/` 结构化规则体系替代
+> 保留此文件仅为向后兼容；新规则请编辑 `.windsurf/rules/` 下的文件
+> 迁移日期：2026-02-13
+
+## 规则体系说明
+
+本项目的 AI 规则已从单一 `.windsurfrules` 升级为多层结构化体系：
+
+### .windsurf/rules/ — 结构化规则（替代本文件）
+- `soul.md` (Always On) — AI思维内核：PREDICT框架+预测补全+自我进化
+- `project-structure.md` (Always On) — 项目结构：Gradle映射+端口+文档入口
+- `execution-engine.md` (Always On) — 执行引擎：闭环执行+防卡顿+MCP+严禁事项
+- `kotlin-android.md` (Glob: *.kt) — Kotlin/Android 专属规则
+- `frontend-html.md` (Glob: *.html) — 前端开发规则
+- `build-deploy.md` (Model Decision) — 构建部署流程
+
+### AGENTS.md — 目录级自动加载指令
+每个主要模块目录包含专属 AGENTS.md，操作该目录时自动加载。
+
+### .windsurf/skills/ — 原生技能系统（7个）
+- `build-and-deploy/` — 构建→推送→安装→启动
+- `keyboard-input-debug/` — 键盘输入调试
+- `api-testing/` — API端点测试
+- `new-module-setup/` — 新模块创建
+- `adb-device-debug/` — ADB设备调试
+- `feature-development/` — ScreenStream 功能开发全流程
+- `full-verification/` — 编译→推送→安装→启动→API验证→日志检查
+
+### .windsurf/hooks.json — 自动化钩子
+- 当前为空 `{"hooks": {}}`
+- Python/Node.js hooks 安全可用（参考分发包 `hooks/examples/`）
+- **PowerShell hooks 绝对禁止**

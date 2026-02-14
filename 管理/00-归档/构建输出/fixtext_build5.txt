@@ -1,0 +1,60 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as no cached configuration is available for tasks: :app:assembleFDroidDebug
+
+> Configure project :app
+w: file:///E:/github/AIOT/ScreenStream_v2/010-%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2%E4%B8%8E%E4%BA%A4%E4%BA%92_UI/build.gradle.kts:55:9: 'jvmTarget: String' is deprecated. Please migrate to the compilerOptions DSL. More details are here: https://kotl.in/u1r8ln
+e: file:///E:/github/AIOT/ScreenStream_v2/010-%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2%E4%B8%8E%E4%BA%A4%E4%BA%92_UI/build.gradle.kts:20:9: Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
+public open fun NamedDomainObjectContainer<ApplicationBuildType>.debug(action: ApplicationBuildType.() -> Unit): Unit defined in com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+e: file:///E:/github/AIOT/ScreenStream_v2/010-%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2%E4%B8%8E%E4%BA%A4%E4%BA%92_UI/build.gradle.kts:21:13: Unresolved reference: storeFile
+e: file:///E:/github/AIOT/ScreenStream_v2/010-%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2%E4%B8%8E%E4%BA%A4%E4%BA%92_UI/build.gradle.kts:22:13: Unresolved reference: storePassword
+e: file:///E:/github/AIOT/ScreenStream_v2/010-%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2%E4%B8%8E%E4%BA%A4%E4%BA%92_UI/build.gradle.kts:23:13: Unresolved reference: keyAlias
+e: file:///E:/github/AIOT/ScreenStream_v2/010-%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2%E4%B8%8E%E4%BA%A4%E4%BA%92_UI/build.gradle.kts:24:13: Unresolved reference: keyPassword
+e: file:///E:/github/AIOT/ScreenStream_v2/010-%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2%E4%B8%8E%E4%BA%A4%E4%BA%92_UI/build.gradle.kts:30:44: Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
+public val NamedDomainObjectContainer<KotlinSourceSet>.debug: NamedDomainObjectProvider<KotlinSourceSet> defined in org.gradle.kotlin.dsl
+e: file:///E:/github/AIOT/ScreenStream_v2/010-%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2%E4%B8%8E%E4%BA%A4%E4%BA%92_UI/build.gradle.kts:94:52: Unresolved reference: ktx
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Build file 'E:\github\AIOT\ScreenStream_v2\010-用户界面与交互_UI\build.gradle.kts' line: 20
+
+* What went wrong:
+Script compilation errors:
+
+  Line 20:         debug {
+                   ^ Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
+                       public open fun NamedDomainObjectContainer<ApplicationBuildType>.debug(action: ApplicationBuildType.() -> Unit): Unit defined in com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+
+  Line 21:             storeFile = file("../090-构建与部署_Build/07-构建与脚本_build/debug-key.jks")
+                       ^ Unresolved reference: storeFile
+
+  Line 22:             storePassword = "debug_key_password"
+                       ^ Unresolved reference: storePassword
+
+  Line 23:             keyAlias = "debug_key_alias"
+                       ^ Unresolved reference: keyAlias
+
+  Line 24:             keyPassword = "debug_key_password"
+                       ^ Unresolved reference: keyPassword
+
+  Line 30:             signingConfig = signingConfigs.debug
+Configuration cache entry stored.
+                                                      ^ Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
+                                                          public val NamedDomainObjectContainer<KotlinSourceSet>.debug: NamedDomainObjectProvider<KotlinSourceSet> defined in org.gradle.kotlin.dsl
+
+  Line 55:         jvmTarget = "1.8"
+                   ^ 'jvmTarget: String' is deprecated. Please migrate to the compilerOptions DSL. More details are here: https://kotl.in/u1r8ln
+
+  Line 94:     implementation(libs.androidx.lifecycle.runtime.ktx)
+                                                              ^ Unresolved reference: ktx
+
+8 errors
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1m 45s

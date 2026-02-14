@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="input_service_description">Remote input for ScreenStream</string>
+    <string name="input_module_title">Remote Input</string>
+    <string name="input_accessibility_not_enabled">Accessibility service is not enabled. Enable it to allow remote input.</string>
+    <string name="input_enable_accessibility">Enable Accessibility</string>
+    <string name="input_server_port">Server Port</string>
+    <string name="input_server_running">Input server running on port %d</string>
+</resources>
