@@ -28,7 +28,7 @@ internal class AudioStreamer(private val context: Context) {
 
     private val _audioFlow = MutableSharedFlow<ByteArray>(
         replay = 0,
-        extraBufferCapacity = 128, 
+        extraBufferCapacity = 128,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     internal val audioFlow: SharedFlow<ByteArray> = _audioFlow.asSharedFlow()
@@ -76,7 +76,7 @@ internal class AudioStreamer(private val context: Context) {
 
             audioThread = thread(name = "AudioCaptureThread") {
                 val buffer = ByteArray(4096)
-                
+
                 while (isStreaming.get()) {
                      val read = audioRecord?.read(buffer, 0, buffer.size) ?: -1
                      if (read > 0) {
@@ -87,7 +87,7 @@ internal class AudioStreamer(private val context: Context) {
                          }
                      }
                 }
-                
+
                 try {
                     audioRecord?.stop()
                     audioRecord?.release()
@@ -101,6 +101,9 @@ internal class AudioStreamer(private val context: Context) {
 
         } catch (e: Exception) {
              XLog.e("[AudioStreamer::start] Error", e)
+             try { audioRecord?.stop() } catch (_: Exception) {}
+             try { audioRecord?.release() } catch (_: Exception) {}
+             audioRecord = null
              return false
         }
     }

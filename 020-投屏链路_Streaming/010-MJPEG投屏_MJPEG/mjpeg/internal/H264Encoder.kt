@@ -22,7 +22,7 @@ internal data class H264Frame(
         const val TYPE_CONFIG: Int = 0
         const val TYPE_KEY_FRAME: Int = 1
         const val TYPE_DELTA_FRAME: Int = 2
-        
+
         // Helper to check NAL type from byte
         fun isKeyFrame(byte: Byte): Boolean {
             return (byte.toInt() and 0x1F) == 5
@@ -56,14 +56,14 @@ internal class H264Encoder(
             format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
             format.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
             format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1) // 1 second between keyframes
-            
+
             // Low-latency encoding optimizations
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 format.setInteger(MediaFormat.KEY_ALLOW_FRAME_DROP, 0) // Don't drop frames
             }
             format.setInteger(MediaFormat.KEY_BITRATE_MODE, MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR)
             format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 0) // No limit
-            
+
             // Try to set low latency mode if supported
             try {
                 format.setInteger(MediaFormat.KEY_LATENCY, 0)
@@ -81,7 +81,10 @@ internal class H264Encoder(
                 }
 
                 override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
-                    if (!isRunning) return
+                    if (!isRunning) {
+                        try { codec.releaseOutputBuffer(index, false) } catch (_: Exception) {}
+                        return
+                    }
                     try {
                         val encodedData = codec.getOutputBuffer(index)
                         if (encodedData != null) {
@@ -100,10 +103,11 @@ internal class H264Encoder(
 
                             callback(H264Frame(data, type, info.presentationTimeUs))
                             XLog.d(getLog("onOutputBufferAvailable", "type=$type size=${info.size}"))
-                            codec.releaseOutputBuffer(index, false)
                         }
                     } catch (e: Exception) {
                         XLog.e(getLog("onOutputBufferAvailable", e.toString()))
+                    } finally {
+                        try { codec.releaseOutputBuffer(index, false) } catch (_: Exception) {}
                     }
                 }
 
@@ -167,7 +171,7 @@ internal class H264Encoder(
         try {
             mediaCodec?.release()
         } catch (e: Exception) { }
-        
+
         mediaCodec = null
         inputSurface = null
     }

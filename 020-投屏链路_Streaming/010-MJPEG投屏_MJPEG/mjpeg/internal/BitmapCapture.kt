@@ -148,18 +148,18 @@ internal class BitmapCapture(
         val windowManager = serviceContext.getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager
         @Suppress("DEPRECATION")
         val display = windowManager.defaultDisplay
-        
+
         // Get screen size using Display.getRealSize like v3.6.4
         val screenSize = android.graphics.Point()
         @Suppress("DEPRECATION")
         display.getRealSize(screenSize)
-        
+
         // Use original resolution for normal phones
         // Resolution cap only applied in switchToFallback() for VR devices with very high resolution
         currentWidth = screenSize.x
         currentHeight = screenSize.y
         XLog.d(getLog("start", "Resolution: ${currentWidth}x${currentHeight}"))
-        
+
         // Get densityDpi from Display like v3.6.4
         val displayMetrics = android.util.DisplayMetrics()
         @Suppress("DEPRECATION")
@@ -323,7 +323,7 @@ internal class BitmapCapture(
         imageReader?.surface?.release()
         imageReader?.close()
         imageReader = null
-        
+
         // OpenGL ES resource cleanup
         mProducerSide?.release()
         mProducerSide = null
@@ -335,7 +335,7 @@ internal class BitmapCapture(
         mEglCore?.release()
         mEglCore = null
         mBuf = null
-        
+
         reusableBitmap = null
         outputBitmap = null
     }
@@ -346,19 +346,19 @@ internal class BitmapCapture(
             XLog.d(getLog("switchToFallback", "Ignored, state=$state"))
             return
         }
-        
+
         // Release ImageReader resources (but keep VirtualDisplay!)
         imageListener = null
         imageReader?.surface?.release()
         imageReader?.close()
         imageReader = null
-        
+
         // Ensure resolution is capped to prevent overflow (Quest 3 has very high resolution)
         // Use 1:1 aspect ratio with higher resolution for better VR quality
         val maxRes = 2560
         val cappedWidth = min(currentWidth, maxRes)
         val cappedHeight = min(currentHeight, maxRes)
-        
+
         // Calculate buffer size safely
         val bufferSize = cappedWidth.toLong() * cappedHeight.toLong() * 4
         if (bufferSize > Int.MAX_VALUE || bufferSize <= 0) {
@@ -367,7 +367,7 @@ internal class BitmapCapture(
             onError(MjpegError.UnknownError(RuntimeException("Buffer size overflow: $bufferSize")))
             return
         }
-        
+
         // Initialize OpenGL ES fallback with capped dimensions
         try {
             mEglCore = EglCore(null, EglCore.FLAG_TRY_GLES3 or EglCore.FLAG_RECORDABLE)
@@ -384,12 +384,12 @@ internal class BitmapCapture(
                 setOnFrameAvailableListener(newFallbackListener, imageThreadHandler)
             }
             mProducerSide = Surface(mTexture)
-            
+
             mEglCore!!.makeNothingCurrent()
-            
+
             // Swap the VirtualDisplay surface to OpenGL (Android 14+ compatible - no recreate!)
             virtualDisplay?.surface = mProducerSide
-            
+
             XLog.d(getLog("switchToFallback", "Successfully switched to OpenGL ES surface"))
         } catch (cause: Throwable) {
             XLog.w(getLog("switchToFallback", "OpenGL ES fallback failed: ${cause.message}"), cause)
@@ -398,7 +398,7 @@ internal class BitmapCapture(
             safeRelease()
         }
     }
-    
+
     @Synchronized
     private fun restart() {
         XLog.d(getLog("restart", "Start"))
@@ -470,7 +470,8 @@ internal class BitmapCapture(
         }
         reusableBitmap!!.copyPixelsFromBuffer(plane.buffer)
 
-        val tmpBitmap = if (planeWidth > fullWidth) {
+        val isCropped = planeWidth > fullWidth
+        val tmpBitmap = if (isCropped) {
             Bitmap.createBitmap(reusableBitmap!!, 0, 0, fullWidth, fullHeight)
         } else {
             reusableBitmap!!
@@ -573,6 +574,8 @@ internal class BitmapCapture(
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
         canvas.drawBitmap(tmpBitmap, transformMatrix, paint)
 
+        if (isCropped) tmpBitmap.recycle()
+
         return outputBitmap!!.copy(outputBitmap!!.config ?: Bitmap.Config.ARGB_8888, false)
     }
 
@@ -587,7 +590,7 @@ internal class BitmapCapture(
     /** OpenGL ES fallback frame listener for VR devices (from v3.6.4)
      *  https://stackoverflow.com/a/34741581 **/
     private inner class FallbackFrameListener(
-        private val width: Int, 
+        private val width: Int,
         private val height: Int
     ) : SurfaceTexture.OnFrameAvailableListener {
         override fun onFrameAvailable(surfaceTexture: SurfaceTexture?) {
@@ -620,12 +623,13 @@ internal class BitmapCapture(
                     buf.rewind()
                     GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf)
                     buf.rewind()
-                    
+
                     val cleanBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
                     cleanBitmap.copyPixelsFromBuffer(buf)
 
                     // Apply transformations similar to ImageListener
                     val bitmap = applyTransformations(cleanBitmap)
+                    if (bitmap !== cleanBitmap) cleanBitmap.recycle()
                     bitmapStateFlow.tryEmit(bitmap)
 
                 } catch (throwable: Throwable) {
