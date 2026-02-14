@@ -273,6 +273,14 @@
 - 内部服务（8081-8084）：绑定 `127.0.0.1` 防止绕过网关直连
 - Grafana：默认密码改为环境变量 `${GRAFANA_ADMIN_PASSWORD:-changeme}`
 
+### PIN 生成安全修复 ✅
+- `MjpegStreamingService.randomPin()` 使用 `kotlin.random.Random`（可预测 PRNG）→ 改用 `SecureRandom`
+
+### 媒体管线资源泄漏修复 ✅
+- **BitmapCapture**：`tmpBitmap` 裁剪后未 recycle（每帧泄漏）；OpenGL fallback `cleanBitmap` 变换后未 recycle
+- **H264Encoder**：`releaseOutputBuffer` 在 try 内而非 finally，callback 异常导致编码器停滞
+- **AudioStreamer**：`start()` 异常时 AudioRecord 未释放
+
 ### S48 快传中心 ✅
 - PC → 设备：拖拽上传文件（Base64编码，自动存到 /sdcard/Download/）
 - 设备 → PC：输入路径下载文件（自动 Base64 解码保存）
