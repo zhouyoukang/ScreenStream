@@ -3585,9 +3585,9 @@
                 acc += '/' + parts[i];
                 var isLast = (i === parts.length - 1);
                 if (isLast) {
-                    html += '<span style="color:#fff;font-weight:600;">' + parts[i] + '</span>';
+                    html += '<span style="color:#fff;font-weight:600;">' + escapeHtml(parts[i]) + '</span>';
                 } else {
-                    html += '<span style="cursor:pointer;color:#8af;" onclick="fmNavigate(\'' + acc.replace(/'/g, "\\'") + '\')">' + parts[i] + '</span>';
+                    html += '<span style="cursor:pointer;color:#8af;" onclick="fmNavigate(\'' + acc.replace(/'/g, "\\'") + '\')">' + escapeHtml(parts[i]) + '</span>';
                     html += '<span style="color:#555;margin:0 3px;">/</span>';
                 }
             }
@@ -3627,7 +3627,7 @@
                     html += (isDir ? 'ondblclick="fmNavigate(\'' + ePath + '\')" ' : 'ondblclick="fmPreviewFile(\'' + ePath + '\',\'' + ext + '\')" ');
                     html += 'onclick="fmSelectRow(this,\'' + ePath + '\',event)">';
                     html += '<div style="font-size:32px;margin-bottom:4px;">' + icon + '</div>';
-                    html += '<div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + name.replace(/"/g, '&quot;') + '">' + name + '</div>';
+                    html += '<div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + name.replace(/"/g, '&quot;') + '">' + escapeHtml(name) + '</div>';
                     if (sizeStr) html += '<div style="font-size:10px;color:#888;">' + sizeStr + '</div>';
                     html += '</div>';
                 } else {
@@ -3637,7 +3637,7 @@
                     html += (isDir ? 'ondblclick="fmNavigate(\'' + ePath + '\')" ' : 'ondblclick="fmPreviewFile(\'' + ePath + '\',\'' + ext + '\')" ');
                     html += 'onclick="fmSelectRow(this,\'' + ePath + '\',event)">';
                     html += '<span style="width:24px;text-align:center;font-size:16px;">' + icon + '</span>';
-                    html += '<span style="flex:1;margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + '</span>';
+                    html += '<span style="flex:1;margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(name) + '</span>';
                     html += '<span style="width:80px;text-align:right;color:#888;font-size:11px;font-family:monospace;">' + sizeStr + '</span>';
                     html += '<span style="width:120px;text-align:right;color:#666;font-size:11px;margin-left:8px;">' + dateStr + '</span>';
                     html += '<span style="display:flex;gap:2px;margin-left:8px;">';
@@ -4085,7 +4085,7 @@
                 var c = colors[i % colors.length];
                 h += '<div onclick="s34Launch(\'' + a.packageName.replace(/'/g, "\\'") + '\')" style="display:flex;flex-direction:column;align-items:center;padding:10px 4px;background:rgba(255,255,255,0.05);border-radius:12px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background=\'rgba(100,180,255,0.15)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.05)\'">';
                 h += '<div style="width:44px;height:44px;background:' + c + ';border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;">' + (a.appName || '?').charAt(0).toUpperCase() + '</div>';
-                h += '<span style="font-size:10px;text-align:center;line-height:1.2;max-height:2.4em;overflow:hidden;width:100%;">' + (a.appName || a.packageName.split('.').pop()) + '</span></div>';
+                h += '<span style="font-size:10px;text-align:center;line-height:1.2;max-height:2.4em;overflow:hidden;width:100%;">' + escapeHtml(a.appName || a.packageName.split('.').pop()) + '</span></div>';
             });
             h += '</div>';
             p.innerHTML = h;
@@ -4120,8 +4120,8 @@
                     var pkg = (n.package || '').split('.').pop();
                     h += '<div style="padding:12px;margin-bottom:8px;background:rgba(255,255,255,0.05);border-radius:10px;border-left:3px solid #4a9eff;">';
                     h += '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:11px;color:#4a9eff;font-weight:600;">' + pkg + '</span><span style="font-size:10px;color:rgba(255,255,255,0.3);">' + t + '</span></div>';
-                    if (n.title) h += '<div style="font-weight:600;font-size:14px;">' + n.title + '</div>';
-                    h += '<div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:2px;">' + (n.body || n.text || '') + '</div></div>';
+                    if (n.title) h += '<div style="font-weight:600;font-size:14px;">' + escapeHtml(n.title) + '</div>';
+                    h += '<div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:2px;">' + escapeHtml(n.body || n.text || '') + '</div></div>';
                 });
                 h += '</div>';
                 p.innerHTML = h;
@@ -4154,7 +4154,7 @@
                 if (clickables.length) {
                     h += '<div style="font-size:12px;font-weight:600;color:#4a9eff;margin-bottom:8px;">🖱️ 可点击元素</div>';
                     clickables.forEach(function (c) {
-                        var lbl = (c.label || '').replace(/</g, '&lt;').substring(0, 80);
+                        var lbl = escapeHtml((c.label || '').substring(0, 80));
                         h += '<div onclick="s36Click(\'' + lbl.replace(/'/g, "\\'") + '\')" style="padding:8px 12px;margin-bottom:4px;background:rgba(74,158,255,0.1);border-radius:8px;cursor:pointer;font-size:13px;border:1px solid rgba(74,158,255,0.2);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(74,158,255,0.2)\'" onmouseout="this.style.background=\'rgba(74,158,255,0.1)\'">👆 ' + lbl + '</div>';
                     });
                 }
@@ -4163,7 +4163,7 @@
                     var badge = '';
                     if (t.clickable) badge += '<span style="background:#4a9eff;color:#fff;padding:1px 5px;border-radius:4px;font-size:9px;margin-left:6px;">可点击</span>';
                     if (t.editable) badge += '<span style="background:#10b981;color:#fff;padding:1px 5px;border-radius:4px;font-size:9px;margin-left:6px;">可编辑</span>';
-                    h += '<div style="padding:6px 10px;margin-bottom:3px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:13px;display:flex;align-items:center;"><span style="flex:1;word-break:break-all;">' + (t.text || '').replace(/</g, '&lt;') + '</span>' + badge + '</div>';
+                    h += '<div style="padding:6px 10px;margin-bottom:3px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:13px;display:flex;align-items:center;"><span style="flex:1;word-break:break-all;">' + escapeHtml(t.text || '') + '</span>' + badge + '</div>';
                 });
                 h += '</div>';
                 p.innerHTML = h;
@@ -4430,7 +4430,7 @@
                 (s41Content.texts || []).forEach(function (t) {
                     h += '<div style="padding:6px 10px;margin-bottom:3px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:13px;">';
                     if (t.clickable) h += '<span style="color:#4a9eff;cursor:pointer;" onclick="s36Click(\'' + (t.text || '').replace(/'/g, "\\'").substring(0, 50) + '\')">👆</span> ';
-                    h += (t.text || '').replace(/</g, '&lt;') + '</div>';
+                    h += escapeHtml(t.text || '') + '</div>';
                 });
             } else {
                 h += '<div style="text-align:center;padding:60px;color:rgba(255,255,255,0.3);">输入URL → 前往（手机打开） → 读取（提取内容）</div>';
@@ -4484,7 +4484,7 @@
                 var t = item.time ? new Date(item.time).toLocaleTimeString() : '';
                 h += '<div style="padding:12px;margin-bottom:8px;background:rgba(255,255,255,0.05);border-radius:10px;cursor:pointer;" onclick="s42Copy(' + i + ')" onmouseover="this.style.background=\'rgba(74,158,255,0.1)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.05)\'">';
                 h += '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:10px;color:rgba(255,255,255,0.3);">' + t + '</span><span style="font-size:10px;color:#4a9eff;">点击复制</span></div>';
-                h += '<div style="font-size:13px;word-break:break-all;max-height:60px;overflow:hidden;">' + (item.text || '').replace(/</g, '&lt;') + '</div></div>';
+                h += '<div style="font-size:13px;word-break:break-all;max-height:60px;overflow:hidden;">' + escapeHtml(item.text || '') + '</div></div>';
             });
             h += '</div>';
             p.innerHTML = h;
