@@ -242,6 +242,9 @@
 - 修复 CSS transform 冲突（rotate + mirror/zoom 合并）
 - 修复 batteryWidget 与 controlStatus 位置重叠
 - 修复 GameMode 不恢复 perfOverlay 状态
+- 修复 8 个平台面板 XSS（S34/S35/S36/S41/S42/FM 统一 escapeHtml）
+- 修复 S36/S41/S42 不完整转义（仅 `<` → 完整 `&<>"'`）
+- 修复 S47-S49 未声明变量导致 ReferenceError 崩溃（添加 stub）
 
 ## 3) 进行中
 
