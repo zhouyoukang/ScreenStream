@@ -54,7 +54,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.delay
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.random.Random
+import java.security.SecureRandom
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import androidx.core.graphics.toColorInt
@@ -600,7 +600,7 @@ internal class MjpegStreamingService(
             mediaProjection = null
 
             isStreaming = false
-            
+
             audioStreamer?.stop()
         } else {
             XLog.d(getLog("stopStream", "Not streaming. Ignoring."))
@@ -650,9 +650,10 @@ internal class MjpegStreamingService(
         }
     }
 
-    private fun randomPin(): String = Random.nextInt(10).toString() + Random.nextInt(10).toString() +
-            Random.nextInt(10).toString() + Random.nextInt(10).toString() +
-            Random.nextInt(10).toString() + Random.nextInt(10).toString()
+    private val secureRandom = SecureRandom()
+    private fun randomPin(): String = secureRandom.nextInt(10).toString() + secureRandom.nextInt(10).toString() +
+            secureRandom.nextInt(10).toString() + secureRandom.nextInt(10).toString() +
+            secureRandom.nextInt(10).toString() + secureRandom.nextInt(10).toString()
 
     private fun getStartBitmap(): Bitmap {
         startBitmap?.let { return it }
@@ -700,7 +701,7 @@ internal class MjpegStreamingService(
         if (now - lastBitrateUpdate < 500) return // Limit updates to 2x per second
 
         var newBitrate = currentBitrate
-        
+
         if (latency > 50) { // Congestion detected (send took > 50ms)
             // Rapid backoff: Drop 1Mbps or 20%, whichever is larger
             val drop = max(1000000, (currentBitrate * 0.2).toInt())
