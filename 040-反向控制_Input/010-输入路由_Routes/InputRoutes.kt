@@ -634,13 +634,7 @@ public fun Route.installInputRoutes() {
             return@requireInputService
         }
         val bytes = android.util.Base64.decode(data, android.util.Base64.DEFAULT)
-        val file = java.io.File(path)
-        file.parentFile?.mkdirs()
-        file.writeBytes(bytes)
-        call.respondText(
-            JSONObject().put("ok", true).put("path", file.absolutePath).put("size", bytes.size).toString(),
-            ContentType.Application.Json
-        )
+        call.respondText(svc.uploadFile(path, bytes).toString(), ContentType.Application.Json)
     }}
 
     // ==================== Platform Layer: APP Orchestration ====================

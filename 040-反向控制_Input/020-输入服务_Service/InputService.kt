@@ -133,15 +133,11 @@ public class InputService : AccessibilityService() {
         if ((buttonMask and 1) != 0 && !isButtonOneDown) {
             isButtonOneDown = true
             startStroke(scaledX, scaledY)
-        }
-
-        // Down, was down -> continue stroke
-        if ((buttonMask and 1) != 0 && isButtonOneDown) {
+        } else if ((buttonMask and 1) != 0 && isButtonOneDown) {
+            // Down, was down -> continue stroke
             continueStroke(scaledX, scaledY)
-        }
-
-        // Up, was down -> end stroke
-        if ((buttonMask and 1) == 0 && isButtonOneDown) {
+        } else if ((buttonMask and 1) == 0 && isButtonOneDown) {
+            // Up, was down -> end stroke
             isButtonOneDown = false
             endStroke(scaledX, scaledY)
         }
@@ -291,7 +287,9 @@ public class InputService : AccessibilityService() {
     }
 
     private fun scroll(x: Int, y: Int, scrollAmount: Int) {
-        swipe(x, y, x, y - scrollAmount, ViewConfiguration.getScrollDefaultDelay().toLong())
+        // x,y are already scaled — call performSwipe directly to avoid double-scaling via swipe()
+        performSwipe(x.toFloat(), y.toFloat(), x.toFloat(), (y - scrollAmount).toFloat(),
+            ViewConfiguration.getScrollDefaultDelay().toLong())
     }
 
     private fun dispatchClick(x: Int, y: Int, durationMs: Int) {
@@ -1413,13 +1411,14 @@ public class InputService : AccessibilityService() {
     // ==================== Find My Phone (KDE Connect style) ====================
 
     private var findPhonePlayer: android.media.MediaPlayer? = null
+    private var findPhoneSavedVolume: Int = -1
 
     public fun findPhone(ring: Boolean): Boolean {
         return try {
+            val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
             if (ring) {
                 if (findPhonePlayer != null) return true
-                val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                val origVol = am.getStreamVolume(AudioManager.STREAM_ALARM)
+                findPhoneSavedVolume = am.getStreamVolume(AudioManager.STREAM_ALARM)
                 am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0)
                 val uri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM)
                     ?: android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE)
@@ -1436,7 +1435,11 @@ public class InputService : AccessibilityService() {
                 findPhonePlayer?.stop()
                 findPhonePlayer?.release()
                 findPhonePlayer = null
-                Log.i(TAG, "findPhone: stopped")
+                if (findPhoneSavedVolume >= 0) {
+                    am.setStreamVolume(AudioManager.STREAM_ALARM, findPhoneSavedVolume, 0)
+                    findPhoneSavedVolume = -1
+                }
+                Log.i(TAG, "findPhone: stopped, volume restored")
             }
             true
         } catch (e: Exception) {
@@ -1808,6 +1811,21 @@ public class InputService : AccessibilityService() {
             val mime = fileToJson(f).optString("mime", "application/octet-stream")
             JSONObject().put("ok", true).put("data", b64).put("mime", mime).put("size", bytes.size).put("name", f.name)
         } catch (e: Exception) {
+            JSONObject().put("ok", false).put("error", e.message ?: "unknown")
+        }
+    }
+
+    public fun uploadFile(path: String, data: ByteArray): JSONObject {
+        return try {
+            val file = sanitizePath(path)
+            file.parentFile?.let { if (!it.exists()) it.mkdirs() }
+            file.writeBytes(data)
+            Log.i(TAG, "uploadFile: ${file.absolutePath} (${data.size} bytes)")
+            JSONObject().put("ok", true).put("path", file.absolutePath).put("size", data.size)
+        } catch (e: SecurityException) {
+            JSONObject().put("ok", false).put("error", e.message ?: "Access denied")
+        } catch (e: Exception) {
+            Log.e(TAG, "uploadFile failed: ${e.message}")
             JSONObject().put("ok", false).put("error", e.message ?: "unknown")
         }
     }
