@@ -5486,7 +5486,7 @@
                         var debugDiv = document.querySelector('div[style*="background:rgba(255,0,0,0.5)"]');
                         if (debugDiv) {
                             debugDiv.style.display = "block";
-                            debugDiv.innerHTML += "WS Closed: " + e.code + " " + e.reason + "<br>";
+                            debugDiv.innerHTML += "WS Closed: " + e.code + " " + escapeHtml(e.reason || '') + "<br>";
                         }
                     }
                     self.stopLiveSync();
@@ -5500,7 +5500,7 @@
                     var debugDiv = document.querySelector('div[style*="background:rgba(255,0,0,0.5)"]');
                     if (debugDiv) {
                         debugDiv.style.display = "block";
-                        debugDiv.innerHTML += "WS Error: " + msg + "<br>";
+                        debugDiv.innerHTML += "WS Error: " + escapeHtml(msg) + "<br>";
                     }
                 };
             }
