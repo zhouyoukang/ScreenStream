@@ -4392,14 +4392,14 @@
             if (s40History.length) {
                 h += '<div style="padding:20px;margin-bottom:16px;background:rgba(74,158,255,0.1);border-radius:16px;text-align:center;">';
                 h += '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px;">当前前台应用</div>';
-                h += '<div style="font-size:20px;font-weight:700;color:#4a9eff;word-break:break-all;">' + s40History[0].pkg + '</div>';
+                h += '<div style="font-size:20px;font-weight:700;color:#4a9eff;word-break:break-all;">' + escapeHtml(s40History[0].pkg) + '</div>';
                 h += '<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px;">' + s40History[0].nodes + ' 节点</div></div>';
             }
             for (var i = 1; i < s40History.length; i++) {
                 var hi = s40History[i];
                 h += '<div style="padding:8px 12px;margin-bottom:4px;background:rgba(255,255,255,0.04);border-radius:8px;display:flex;align-items:center;gap:10px;">';
                 h += '<span style="color:rgba(255,255,255,0.3);font-size:10px;min-width:55px;">' + hi.time.toLocaleTimeString() + '</span>';
-                h += '<span style="font-size:13px;flex:1;word-break:break-all;">' + hi.pkg + '</span>';
+                h += '<span style="font-size:13px;flex:1;word-break:break-all;">' + escapeHtml(hi.pkg) + '</span>';
                 h += '<span style="color:rgba(255,255,255,0.3);font-size:10px;">' + hi.nodes + '</span></div>';
             }
             h += '</div>';
@@ -4427,7 +4427,7 @@
             h += '<button onclick="s41Read()" style="padding:8px 12px;background:#10b981;color:#fff;border:none;border-radius:8px;cursor:pointer;">📖 读取</button></div>';
             h += '<div style="flex:1;overflow-y:auto;padding:12px;">';
             if (s41Content) {
-                h += '<div style="margin-bottom:8px;padding:8px;background:rgba(16,185,129,0.1);border-radius:8px;font-size:12px;">📦 ' + (s41Content.package || '') + ' · 📝 ' + (s41Content.textCount || 0) + ' 项</div>';
+                h += '<div style="margin-bottom:8px;padding:8px;background:rgba(16,185,129,0.1);border-radius:8px;font-size:12px;">📦 ' + escapeHtml(s41Content.package || '') + ' · 📝 ' + (s41Content.textCount || 0) + ' 项</div>';
                 (s41Content.texts || []).forEach(function (t) {
                     h += '<div style="padding:6px 10px;margin-bottom:3px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:13px;">';
                     if (t.clickable) h += '<span style="color:#4a9eff;cursor:pointer;" onclick="s36Click(\'' + (t.text || '').replace(/'/g, "\\'").substring(0, 50) + '\')">👆</span> ';
@@ -4530,7 +4530,7 @@
             h += '<textarea id="s43Json" rows="5" placeholder=\'[{"type":"openApp","value":"com.tencent.mm"},{"type":"delay","value":"2000"}]\' style="width:100%;padding:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:12px;font-family:monospace;resize:vertical;box-sizing:border-box;"></textarea>';
             if (s43Log.length) {
                 h += '<div style="margin-top:16px;font-size:12px;font-weight:600;color:#10b981;margin-bottom:8px;">📋 执行日志</div>';
-                s43Log.forEach(function (l) { h += '<div style="padding:3px 8px;font-size:11px;color:rgba(255,255,255,0.6);font-family:monospace;">' + l + '</div>'; });
+                s43Log.forEach(function (l) { h += '<div style="padding:3px 8px;font-size:11px;color:rgba(255,255,255,0.6);font-family:monospace;">' + escapeHtml(l) + '</div>'; });
             }
             h += '</div>';
             p.innerHTML = h;
@@ -4578,7 +4578,7 @@
                 h += '<button onclick="s44StopAll()" style="padding:5px 12px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">⏹ 全停</button></div>';
                 h += '<div style="flex:1;overflow-y:auto;padding:16px;">';
                 if (!macros.length) h += '<div style="text-align:center;padding:60px;color:rgba(255,255,255,0.3);">📭 暂无宏<br><span style="font-size:12px;">点击"新建"创建</span></div>';
-                macros.forEach(function (m) { var ir = running.indexOf(m.id) >= 0; h += '<div style="padding:12px;margin-bottom:8px;background:rgba(255,255,255,0.05);border-radius:10px;border-left:3px solid ' + (ir ? '#10b981' : '#7c3aed') + ';display:flex;align-items:center;gap:8px;"><div style="flex:1;"><div style="font-weight:600;">' + (m.name || m.id) + (ir ? ' <span style="color:#10b981;font-size:11px;">● 运行中</span>' : '') + '</div><div style="font-size:11px;color:rgba(255,255,255,0.4);">' + (m.steps || []).length + ' 步 · ' + m.id.substring(0, 8) + '</div></div>' + (ir ? '<button onclick="s44Stop(\'' + m.id + '\')" style="padding:4px 10px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;">⏹</button>' : '<button onclick="s44Run(\'' + m.id + '\')" style="padding:4px 10px;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;">▶</button>') + '<button onclick="s44Log(\'' + m.id + '\')" style="padding:4px 10px;background:rgba(255,255,255,0.08);color:#ddd;border:none;border-radius:6px;cursor:pointer;font-size:11px;">📋</button><button onclick="s44Del(\'' + m.id + '\')" style="padding:4px 10px;background:rgba(239,68,68,0.15);color:#f77;border:none;border-radius:6px;cursor:pointer;font-size:11px;">🗑</button></div>'; });
+                macros.forEach(function (m) { var ir = running.indexOf(m.id) >= 0; h += '<div style="padding:12px;margin-bottom:8px;background:rgba(255,255,255,0.05);border-radius:10px;border-left:3px solid ' + (ir ? '#10b981' : '#7c3aed') + ';display:flex;align-items:center;gap:8px;"><div style="flex:1;"><div style="font-weight:600;">' + escapeHtml(m.name || m.id) + (ir ? ' <span style="color:#10b981;font-size:11px;">● 运行中</span>' : '') + '</div><div style="font-size:11px;color:rgba(255,255,255,0.4);">' + (m.steps || []).length + ' 步 · ' + m.id.substring(0, 8) + '</div></div>' + (ir ? '<button onclick="s44Stop(\'' + m.id + '\')" style="padding:4px 10px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;">⏹</button>' : '<button onclick="s44Run(\'' + m.id + '\')" style="padding:4px 10px;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;">▶</button>') + '<button onclick="s44Log(\'' + m.id + '\')" style="padding:4px 10px;background:rgba(255,255,255,0.08);color:#ddd;border:none;border-radius:6px;cursor:pointer;font-size:11px;">📋</button><button onclick="s44Del(\'' + m.id + '\')" style="padding:4px 10px;background:rgba(239,68,68,0.15);color:#f77;border:none;border-radius:6px;cursor:pointer;font-size:11px;">🗑</button></div>'; });
                 h += '<div style="margin-top:16px;padding:14px;background:rgba(255,255,255,0.04);border-radius:10px;"><div style="font-size:12px;font-weight:600;margin-bottom:6px;">⚡ 内联执行</div>';
                 h += '<textarea id="s44Inline" rows="3" placeholder=\'[{"action":"home"},{"action":"delay","value":1000}]\' style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;font-size:11px;font-family:monospace;resize:vertical;box-sizing:border-box;"></textarea>';
                 h += '<button onclick="s44RunInline()" style="margin-top:6px;padding:5px 14px;background:#7c3aed;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">▶ 执行</button></div></div>'; p.innerHTML = h;
