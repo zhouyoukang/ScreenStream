@@ -246,6 +246,12 @@
 - 修复 S36/S41/S42 不完整转义（仅 `<` → 完整 `&<>"'`）
 - 修复 S47-S49 未声明变量导致 ReferenceError 崩溃（添加 stub）
 
+### 后端安全与逻辑修复 ✅（InputService.kt 2376行审查）
+- **安全**：/files/upload 路径穿越漏洞 — 绕过 sanitizePath() 可写入任意设备路径（已修复）
+- **逻辑**：onPointerEvent 鼠标按下时 startStroke+continueStroke 双重触发（if→else-if）
+- **逻辑**：scroll() 调用 swipe() 导致坐标双重缩放（改用 performSwipe 直接调用）
+- **逻辑**：findPhone() 停止响铃后不恢复原始音量（本地变量→类字段）
+
 ### S48 快传中心 ✅
 - PC → 设备：拖拽上传文件（Base64编码，自动存到 /sdcard/Download/）
 - 设备 → PC：输入路径下载文件（自动 Base64 解码保存）
