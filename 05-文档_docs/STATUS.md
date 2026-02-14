@@ -261,6 +261,17 @@
 - S35 通知中心：package 名未转义（escapeHtml）
 - S36 屏幕阅读器：package 名未转义 + onclick 双重转义失效（raw+escapeHtml 分离）
 - AI 输出/错误消息：JSON.stringify(d) 和 e.message 统一 escapeHtml
+- R4: S40 应用监控 pkg、S41 远程浏览器 package、S43 批量日志、S44 宏管理 name
+- R5: WebSocket debug output（e.reason + error msg）
+
+### MJPEG HttpServer 安全修复 ✅
+- **信息泄露**：StatusPages 异常处理向客户端返回完整异常堆栈（改为固定 "500: Internal Server Error"）
+- **注意**：ForwardedHeaders 信任 X-Forwarded-For 可绕过 IP 封锁（需在反代场景下评估）
+
+### docker-compose 安全加固 ✅
+- Redis：添加 `--requirepass`，移除主机端口暴露（仅内部网络）
+- 内部服务（8081-8084）：绑定 `127.0.0.1` 防止绕过网关直连
+- Grafana：默认密码改为环境变量 `${GRAFANA_ADMIN_PASSWORD:-changeme}`
 
 ### S48 快传中心 ✅
 - PC → 设备：拖拽上传文件（Base64编码，自动存到 /sdcard/Download/）
