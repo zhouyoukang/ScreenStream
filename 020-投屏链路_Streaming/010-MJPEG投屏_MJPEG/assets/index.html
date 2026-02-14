@@ -903,8 +903,12 @@
                         var m = list[i];
                         var runColor = m.running ? '#f44' : '#4a4';
                         var runText = m.running ? '⏹停止' : '▶运行';
+                        var hasTrigger = m.trigger && m.trigger.type;
+                        var triggerIcon = hasTrigger ? (m.trigger.enabled !== false ? '⚡' : '💤') : '🔔';
+                        var triggerColor = hasTrigger ? (m.trigger.enabled !== false ? '#f90' : '#666') : '#555';
                         html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;">';
                         html += '<span style="flex:1;">' + (m.name || m.id) + ' <span style="color:#888;">(' + m.stepsCount + '步)</span></span>';
+                        html += '<button onclick="showTriggerConfig(\'' + m.id + '\')" style="background:' + triggerColor + ';color:#fff;border:none;padding:3px 6px;border-radius:3px;cursor:pointer;font-size:11px;margin-right:4px;" title="配置触发器">' + triggerIcon + '</button>';
                         html += '<button onclick="toggleMacroRun(\'' + m.id + '\',' + m.running + ')" style="background:' + runColor + ';color:#fff;border:none;padding:3px 10px;border-radius:3px;cursor:pointer;font-size:11px;margin-right:4px;">' + runText + '</button>';
                         html += '<button onclick="deleteMacroById(\'' + m.id + '\')" style="background:#a33;color:#fff;border:none;padding:3px 8px;border-radius:3px;cursor:pointer;font-size:11px;">🗑</button>';
                         html += '</div>';
@@ -932,6 +936,84 @@
                 showStatus('宏已删除');
                 refreshMacroList();
             }).catch(function (e) { showStatus('删除失败: ' + e.message); });
+        }
+
+        function showTriggerConfig(macroId) {
+            var old = document.getElementById('triggerConfigPanel');
+            if (old) old.remove();
+            var macro = null;
+            if (macroList) {
+                for (var i = 0; i < macroList.length; i++) {
+                    if (macroList[i].id === macroId) { macro = macroList[i]; break; }
+                }
+            }
+            var existing = (macro && macro.trigger) ? macro.trigger : {};
+            var panel = document.createElement('div');
+            panel.id = 'triggerConfigPanel';
+            panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(5,5,10,0.97);color:#fff;padding:20px;border-radius:12px;border:1px solid #f90;z-index:10002;min-width:320px;max-width:90vw;font-family:monospace;font-size:13px;';
+            var html = '<div style="text-align:center;font-size:15px;font-weight:bold;margin-bottom:12px;">⚡ 触发器配置</div>';
+            html += '<div style="color:#888;margin-bottom:8px;">宏: ' + escapeHtml(macro ? (macro.name || macro.id) : macroId) + '</div>';
+            html += '<div style="margin-bottom:8px;"><label>类型: </label><select id="triggerType" style="background:#222;color:#fff;border:1px solid #555;padding:4px;border-radius:4px;">';
+            html += '<option value="notification"' + (existing.type === 'notification' ? ' selected' : '') + '>通知到达</option>';
+            html += '<option value="app_switch"' + (existing.type === 'app_switch' ? ' selected' : '') + '>应用切换</option>';
+            html += '<option value="timer"' + (existing.type === 'timer' ? ' selected' : '') + '>定时执行</option>';
+            html += '</select></div>';
+            html += '<input id="triggerPkg" placeholder="包名过滤 (如 com.tencent.mm)" value="' + escapeHtml(existing.package || '') + '" style="width:100%;padding:6px;margin-bottom:6px;background:#222;border:1px solid #555;color:#fff;border-radius:4px;box-sizing:border-box;">';
+            html += '<input id="triggerText" placeholder="文本匹配 (通知触发用)" value="' + escapeHtml(existing.textMatch || '') + '" style="width:100%;padding:6px;margin-bottom:6px;background:#222;border:1px solid #555;color:#fff;border-radius:4px;box-sizing:border-box;">';
+            html += '<div style="display:flex;gap:6px;margin-bottom:6px;">';
+            html += '<select id="triggerDirection" style="flex:1;background:#222;color:#fff;border:1px solid #555;padding:4px;border-radius:4px;">';
+            html += '<option value="enter"' + (existing.direction === 'enter' || !existing.direction ? ' selected' : '') + '>进入应用</option>';
+            html += '<option value="leave"' + (existing.direction === 'leave' ? ' selected' : '') + '>离开应用</option>';
+            html += '<option value="any"' + (existing.direction === 'any' ? ' selected' : '') + '>任意切换</option>';
+            html += '</select>';
+            html += '<input id="triggerInterval" type="number" placeholder="间隔(ms)" value="' + (existing.intervalMs || 60000) + '" style="flex:1;padding:4px;background:#222;border:1px solid #555;color:#fff;border-radius:4px;">';
+            html += '</div>';
+            html += '<div style="display:flex;gap:8px;margin-top:10px;">';
+            html += '<button onclick="saveTrigger(\'' + macroId + '\')" style="flex:1;background:#f90;color:#000;font-weight:bold;border:none;padding:6px;border-radius:4px;cursor:pointer;">保存</button>';
+            if (existing.type) {
+                html += '<button onclick="removeTrigger(\'' + macroId + '\')" style="flex:1;background:#a33;color:#fff;border:none;padding:6px;border-radius:4px;cursor:pointer;">删除触发器</button>';
+            }
+            html += '<button onclick="document.getElementById(\'triggerConfigPanel\').remove()" style="flex:1;background:#555;color:#fff;border:none;padding:6px;border-radius:4px;cursor:pointer;">取消</button>';
+            html += '</div>';
+            panel.innerHTML = html;
+            document.body.appendChild(panel);
+        }
+
+        function saveTrigger(macroId) {
+            var type = document.getElementById('triggerType').value;
+            var trigger = { type: type, enabled: true };
+            var pkg = document.getElementById('triggerPkg').value.trim();
+            if (pkg) trigger.package = pkg;
+            if (type === 'notification') {
+                var text = document.getElementById('triggerText').value.trim();
+                if (text) trigger.textMatch = text;
+            }
+            if (type === 'app_switch') {
+                trigger.direction = document.getElementById('triggerDirection').value;
+            }
+            if (type === 'timer') {
+                var interval = parseInt(document.getElementById('triggerInterval').value) || 60000;
+                trigger.intervalMs = Math.max(10000, interval);
+            }
+            fetch(getInputApiBase() + '/macro/trigger/' + macroId, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(trigger)
+            }).then(function (r) { return r.json(); }).then(function () {
+                showStatus('触发器已保存');
+                var p = document.getElementById('triggerConfigPanel');
+                if (p) p.remove();
+                refreshMacroList();
+            }).catch(function (e) { showStatus('保存失败: ' + e.message); });
+        }
+
+        function removeTrigger(macroId) {
+            fetch(getInputApiBase() + '/macro/trigger/' + macroId + '/remove', { method: 'POST' })
+                .then(function (r) { return r.json(); }).then(function () {
+                    showStatus('触发器已删除');
+                    var p = document.getElementById('triggerConfigPanel');
+                    if (p) p.remove();
+                    refreshMacroList();
+                }).catch(function (e) { showStatus('删除失败: ' + e.message); });
         }
 
         function createMacroFromPanel() {

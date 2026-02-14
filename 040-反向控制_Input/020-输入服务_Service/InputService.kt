@@ -83,6 +83,13 @@ public class InputService : AccessibilityService() {
         if (event.eventType == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
             onNotificationEvent(event)
         }
+        // Detect foreground app changes for macro triggers
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            val pkg = event.packageName?.toString() ?: ""
+            if (pkg.isNotEmpty()) {
+                MacroEngine.instance.onAppSwitch(pkg)
+            }
+        }
     }
 
     override fun onInterrupt() {
@@ -97,7 +104,7 @@ public class InputService : AccessibilityService() {
         imeHandler = Handler(mainLooper)
         setupImeOverlay()
 
-        MacroEngine.instance.init(applicationContext)
+        MacroEngine.instance.init(applicationContext, this)
     }
 
     override fun onDestroy() {
@@ -2310,6 +2317,13 @@ public class InputService : AccessibilityService() {
                 }
             }
             Log.i(TAG, "Notification captured from ${event.packageName}")
+
+            // Feed to macro trigger engine
+            MacroEngine.instance.onNotification(
+                event.packageName?.toString() ?: "",
+                entry.optString("title", ""),
+                entry.optString("body", "")
+            )
         } catch (e: Exception) {
             Log.e(TAG, "onNotificationEvent failed: ${e.message}")
         }

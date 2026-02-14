@@ -40,13 +40,22 @@ public class MacroEngine private constructor() {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var storageFile: File? = null
 
+    // Trigger engine state
+    private var triggerService: InputService? = null
+    private val timerJobs = ConcurrentHashMap<String, Job>()
+    private var lastForegroundPackage: String = ""
+    private val triggerCooldowns = ConcurrentHashMap<String, Long>()
+    private val TRIGGER_COOLDOWN_MS = 5000L // Prevent rapid re-triggering
+
     /**
-     * Initialize persistence. Call from InputService.onServiceConnected().
-     * Loads previously saved macros from disk.
+     * Initialize persistence and trigger engine.
+     * Call from InputService.onServiceConnected().
      */
-    public fun init(context: Context) {
+    public fun init(context: Context, service: InputService? = null) {
         storageFile = File(context.filesDir, "macros.json")
+        triggerService = service
         loadFromDisk()
+        startTimerTriggers()
     }
 
     private fun saveToDisk() {
@@ -129,6 +138,163 @@ public class MacroEngine private constructor() {
         val removed = macros.remove(id) != null
         if (removed) saveToDisk()
         return removed
+    }
+
+    // ==================== Trigger Engine ====================
+
+    /**
+     * Called by InputService when a notification arrives.
+     * Checks all macros for matching notification triggers.
+     */
+    public fun onNotification(packageName: String, title: String, body: String) {
+        val svc = triggerService ?: return
+        for (entry in macros) {
+            val macro = entry.value
+            if (!macro.optBoolean("enabled", true)) continue
+            val trigger = macro.optJSONObject("trigger") ?: continue
+            if (trigger.optString("type") != "notification") continue
+            if (!trigger.optBoolean("enabled", true)) continue
+            if (!matchesTrigger(trigger, packageName, title, body)) continue
+            if (isInCooldown(entry.key)) continue
+
+            Log.i(TAG, "Trigger [notification] fired for macro '${entry.key}' (pkg=$packageName)")
+            triggerCooldowns[entry.key] = System.currentTimeMillis()
+            runMacro(entry.key, svc)
+        }
+    }
+
+    /**
+     * Called by InputService when the foreground app changes.
+     * Checks all macros for matching app_switch triggers.
+     */
+    public fun onAppSwitch(newPackage: String) {
+        if (newPackage == lastForegroundPackage) return
+        val oldPackage = lastForegroundPackage
+        lastForegroundPackage = newPackage
+        val svc = triggerService ?: return
+
+        for (entry in macros) {
+            val macro = entry.value
+            if (!macro.optBoolean("enabled", true)) continue
+            val trigger = macro.optJSONObject("trigger") ?: continue
+            if (trigger.optString("type") != "app_switch") continue
+            if (!trigger.optBoolean("enabled", true)) continue
+
+            val targetPkg = trigger.optString("package", "")
+            val direction = trigger.optString("direction", "enter") // "enter", "leave", "any"
+            if (targetPkg.isEmpty()) continue
+
+            val match = when (direction) {
+                "enter" -> newPackage.contains(targetPkg, ignoreCase = true)
+                "leave" -> oldPackage.contains(targetPkg, ignoreCase = true)
+                "any" -> newPackage.contains(targetPkg, ignoreCase = true) || oldPackage.contains(targetPkg, ignoreCase = true)
+                else -> false
+            }
+            if (!match) continue
+            if (isInCooldown(entry.key)) continue
+
+            Log.i(TAG, "Trigger [app_switch] fired for macro '${entry.key}' ($oldPackage -> $newPackage)")
+            triggerCooldowns[entry.key] = System.currentTimeMillis()
+            runMacro(entry.key, svc)
+        }
+    }
+
+    private fun matchesTrigger(trigger: JSONObject, pkg: String, title: String, body: String): Boolean {
+        val filterPkg = trigger.optString("package", "")
+        if (filterPkg.isNotEmpty() && !pkg.contains(filterPkg, ignoreCase = true)) return false
+        val filterText = trigger.optString("textMatch", "")
+        if (filterText.isNotEmpty()) {
+            val combined = "$title $body"
+            if (!combined.contains(filterText, ignoreCase = true)) return false
+        }
+        return true
+    }
+
+    private fun isInCooldown(macroId: String): Boolean {
+        val last = triggerCooldowns[macroId] ?: return false
+        return (System.currentTimeMillis() - last) < TRIGGER_COOLDOWN_MS
+    }
+
+    /**
+     * Start timer-based triggers for all macros that have timer triggers.
+     */
+    private fun startTimerTriggers() {
+        stopAllTimerTriggers()
+        for (entry in macros) {
+            startTimerTriggerIfNeeded(entry.key, entry.value)
+        }
+    }
+
+    private fun startTimerTriggerIfNeeded(id: String, macro: JSONObject) {
+        if (!macro.optBoolean("enabled", true)) return
+        val trigger = macro.optJSONObject("trigger") ?: return
+        if (trigger.optString("type") != "timer") return
+        if (!trigger.optBoolean("enabled", true)) return
+        val intervalMs = trigger.optLong("intervalMs", 0)
+        if (intervalMs < 10000) return // Minimum 10 seconds to prevent abuse
+
+        timerJobs[id]?.cancel()
+        timerJobs[id] = scope.launch {
+            val initialDelay = trigger.optLong("initialDelayMs", intervalMs)
+            delay(initialDelay)
+            while (isActive) {
+                val svc = triggerService
+                if (svc != null && !isInCooldown(id)) {
+                    Log.i(TAG, "Trigger [timer] fired for macro '$id' (interval=${intervalMs}ms)")
+                    triggerCooldowns[id] = System.currentTimeMillis()
+                    runMacro(id, svc)
+                }
+                delay(intervalMs)
+            }
+        }
+    }
+
+    private fun stopAllTimerTriggers() {
+        timerJobs.values.forEach { it.cancel() }
+        timerJobs.clear()
+    }
+
+    /**
+     * Set or update a trigger for a macro.
+     * trigger JSON: { "type": "notification"|"app_switch"|"timer", "enabled": true, ... }
+     */
+    public fun setTrigger(macroId: String, trigger: JSONObject): Boolean {
+        val macro = macros[macroId] ?: return false
+        macro.put("trigger", trigger)
+        saveToDisk()
+        // Restart timer if applicable
+        timerJobs[macroId]?.cancel()
+        timerJobs.remove(macroId)
+        startTimerTriggerIfNeeded(macroId, macro)
+        return true
+    }
+
+    /**
+     * Remove the trigger from a macro.
+     */
+    public fun removeTrigger(macroId: String): Boolean {
+        val macro = macros[macroId] ?: return false
+        macro.remove("trigger")
+        timerJobs[macroId]?.cancel()
+        timerJobs.remove(macroId)
+        saveToDisk()
+        return true
+    }
+
+    /**
+     * List all macros that have triggers configured.
+     */
+    public fun listTriggers(): JSONArray {
+        val arr = JSONArray()
+        for (entry in macros) {
+            val trigger = entry.value.optJSONObject("trigger") ?: continue
+            arr.put(JSONObject().apply {
+                put("macroId", entry.key)
+                put("macroName", entry.value.optString("name", "unnamed"))
+                put("trigger", trigger)
+            })
+        }
+        return arr
     }
 
     // ==================== Execution ====================

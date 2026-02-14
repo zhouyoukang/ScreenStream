@@ -228,6 +228,21 @@
 - ✅ **CRUD 自动保存** — create/update/delete 后自动 `saveToDisk()`
 - ⏳ 待编译验证（当前机器无 JAVA_HOME）
 
+### 宏系统触发器（Phase 2）✅
+- MacroEngine 新增触发引擎：notification / app_switch / timer 三种触发类型
+- InputService 集成：通知事件 + 前台应用切换自动喂入触发引擎
+- 5秒冷却防止重复触发，定时器最小间隔10秒
+- API 路由：GET /macro/triggers, POST /macro/trigger/{id}, POST /macro/trigger/{id}/remove
+- 前端 UI：宏列表显示触发状态图标，点击打开触发器配置面板
+- 触发器随宏 JSON 一起持久化到 macros.json
+- ⏳ 待编译验证
+
+### 前端安全与 Bug 修复 ✅
+- 修复 3 处 XSS 漏洞（clipboard/appList/viewTree 加 escapeHtml）
+- 修复 CSS transform 冲突（rotate + mirror/zoom 合并）
+- 修复 batteryWidget 与 controlStatus 位置重叠
+- 修复 GameMode 不恢复 perfOverlay 状态
+
 ## 3) 进行中
 
 - **合并/归档差异清单**：Quest vs v2 逐目录对照 — app/ 已完成（9条）
@@ -236,8 +251,7 @@
 
 1. **Shizuku API集成**：自动启用无障碍服务（无需手动设置）
 2. **OTG纯控模式**：无屏幕投射的纯键鼠控制模式
-3. **宏系统触发器**：通知到达/应用切换/定时触发（Phase 2 完整版）
-4. **Quest 日志移植**：AppLogger + CollectingLogsUi（需添加 ProcessPhoenix 依赖）
+3. **Quest 日志移植**：AppLogger + CollectingLogsUi（需添加 ProcessPhoenix 依赖）
 5. **评估 .so 动态库寄生方案**（长期研究项）
 
 ## 5) 风险与护栏
