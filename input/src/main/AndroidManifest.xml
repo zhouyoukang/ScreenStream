@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- Input module specific permissions -->
-    <!-- AccessibilityService permission is handled by the service declaration in app module -->
-    
-</manifest>

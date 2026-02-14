@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="input_service_description">Allows remote control of your device through ScreenStream. When enabled, remote users can tap, swipe, and type on your screen.</string>
-    <string name="input_module_title">Input Control</string>
-    <string name="input_accessibility_not_enabled">Accessibility service is not enabled. Please enable it in Settings to use remote control.</string>
-    <string name="input_enable_accessibility">Enable Accessibility</string>
-    <string name="input_server_port">Control API Port</string>
-    <string name="input_server_running">Control API running on port %d</string>
-</resources>
