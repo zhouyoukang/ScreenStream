@@ -33,7 +33,7 @@ services:
       context: ./api-services/mjpeg-server
       dockerfile: Dockerfile
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"  # localhost only, access via gateway
     environment:
       - SERVER_PORT=8081
       - JAVA_OPTS=-Xmx512m
@@ -52,8 +52,8 @@ services:
       context: ./api-services/rtsp-server
       dockerfile: Dockerfile
     ports:
-      - "8082:8082"
-      - "8554:8554"  # RTSP端口
+      - "127.0.0.1:8082:8082"  # localhost only, access via gateway
+      - "8554:8554"  # RTSP端口 - 需要直连
     environment:
       - SERVER_PORT=8082
       - RTSP_PORT=8554
@@ -73,7 +73,7 @@ services:
       context: ./api-services/webrtc-server
       dockerfile: Dockerfile
     ports:
-      - "8083:8083"
+      - "127.0.0.1:8083:8083"  # localhost only, access via gateway
     environment:
       - SERVER_PORT=8083
       - JAVA_OPTS=-Xmx512m
@@ -92,7 +92,7 @@ services:
       context: ./api-services/input-server
       dockerfile: Dockerfile
     ports:
-      - "8084:8084"
+      - "127.0.0.1:8084:8084"  # localhost only, access via gateway
     environment:
       - SERVER_PORT=8084
       - JAVA_OPTS=-Xmx256m
@@ -108,9 +108,9 @@ services:
   # Redis缓存 (可选，用于会话管理)
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes
+    # ports:  # 不暴露到主机，仅内部网络访问
+    #   - "6379:6379"
+    command: redis-server --appendonly yes --requirepass screenstream_redis_secret
     volumes:
       - redis-data:/data
     restart: unless-stopped
@@ -159,7 +159,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme}
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro

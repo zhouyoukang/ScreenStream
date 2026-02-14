@@ -374,7 +374,7 @@ internal class HttpServer(
                 if (cause is IOException || cause is IllegalArgumentException || cause is IllegalStateException) return@exception
                 XLog.e(this@appModule.getLog("exception"), RuntimeException("Throwable", cause))
                 sendEvent(MjpegStreamingService.InternalEvent.Error(MjpegError.HttpServerException))
-                call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
+                call.respondText(text = "500: Internal Server Error", status = HttpStatusCode.InternalServerError)
             }
         }
 
