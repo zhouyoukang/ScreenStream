@@ -254,6 +254,14 @@
 - **安全**：renameFile() newName 参数可含路径分隔符导致路径穿越（已拒绝 `/\..`）
 - **安全**：saveFile() filename 参数同样存在路径穿越（已拒绝 `/\..`）
 
+### 前端 XSS 第三轮修复 ✅
+- 宏面板：macro name/id 渲染 + onclick 注入（escapeHtml）
+- 设备信息：manufacturer/model/androidVersion 未转义（escapeHtml）
+- 文本片段：localStorage 数据直接渲染（escapeHtml）
+- S35 通知中心：package 名未转义（escapeHtml）
+- S36 屏幕阅读器：package 名未转义 + onclick 双重转义失效（raw+escapeHtml 分离）
+- AI 输出/错误消息：JSON.stringify(d) 和 e.message 统一 escapeHtml
+
 ### S48 快传中心 ✅
 - PC → 设备：拖拽上传文件（Base64编码，自动存到 /sdcard/Download/）
 - 设备 → PC：输入路径下载文件（自动 Base64 解码保存）
