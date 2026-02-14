@@ -4655,6 +4655,12 @@
         function s46Bright(v) { fetch(getInputApiBase() + '/brightness/' + v, { method: 'POST' }).then(function () { showStatus('亮度: ' + Math.round(v / 255 * 100) + '%') }).catch(function () { showStatus('失败') }) }
         function s46Rotate(d) { fetch(getInputApiBase() + '/rotate/' + d, { method: 'POST' }).then(function () { showStatus('旋转: ' + d + '°') }).catch(function () { showStatus('失败') }) }
 
+        // ==================== S47-S49: Stubs (planned, not yet implemented) ====================
+        var s47Visible = false, s48Visible = false, s49Visible = false;
+        function toggleAIAssistant() { showStatus('AI助手: 开发中...'); }
+        function toggleQuickShare() { showStatus('快传中心: 开发中...'); }
+        function toggleGesturePanel() { showStatus('手势面板: 开发中...'); }
+
         if (isFullscreenEnabled()) {
             document.addEventListener("fullscreenchange", fullScreenHandler);
             document.addEventListener("webkitfullscreenchange", fullScreenHandler);
