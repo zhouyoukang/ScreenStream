@@ -251,6 +251,7 @@
 - **逻辑**：onPointerEvent 鼠标按下时 startStroke+continueStroke 双重触发（if→else-if）
 - **逻辑**：scroll() 调用 swipe() 导致坐标双重缩放（改用 performSwipe 直接调用）
 - **逻辑**：findPhone() 停止响铃后不恢复原始音量（本地变量→类字段）
+- **安全**：renameFile() newName 参数可含路径分隔符导致路径穿越（已拒绝 `/\..`）
 
 ### S48 快传中心 ✅
 - PC → 设备：拖拽上传文件（Base64编码，自动存到 /sdcard/Download/）
