@@ -4655,10 +4655,152 @@
         function s46Bright(v) { fetch(getInputApiBase() + '/brightness/' + v, { method: 'POST' }).then(function () { showStatus('亮度: ' + Math.round(v / 255 * 100) + '%') }).catch(function () { showStatus('失败') }) }
         function s46Rotate(d) { fetch(getInputApiBase() + '/rotate/' + d, { method: 'POST' }).then(function () { showStatus('旋转: ' + d + '°') }).catch(function () { showStatus('失败') }) }
 
-        // ==================== S47-S48: Stubs (planned) ====================
-        var s47Visible = false, s48Visible = false;
+        // ==================== S47: Stub (planned) ====================
+        var s47Visible = false;
         function toggleAIAssistant() { showStatus('AI助手: 开发中...'); }
-        function toggleQuickShare() { showStatus('快传中心: 开发中...'); }
+
+        // ==================== S48: Quick Share ====================
+        var s48Visible = false, s48TransferLog = [];
+        function toggleQuickShare() {
+            if (!s48Visible) closePlatformPanels();
+            s48Visible = !s48Visible;
+            var p = document.getElementById('s48Panel');
+            if (!p) { p = document.createElement('div'); p.id = 's48Panel'; p.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(8,8,12,0.98);color:#e0e0e0;z-index:10002;display:flex;flex-direction:column;font-family:system-ui;overflow:hidden;'; document.body.appendChild(p); }
+            p.style.display = s48Visible ? 'flex' : 'none';
+            if (s48Visible) { hideCommandMenu(); s48Render(); }
+        }
+        function s48Render() {
+            var p = document.getElementById('s48Panel'); if (!p) return;
+            var h = '<div style="padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);">';
+            h += '<span style="font-size:18px;cursor:pointer;" onclick="toggleQuickShare()">✕</span>';
+            h += '<span style="font-size:16px;font-weight:600;">📤 快传中心</span>';
+            h += '<div style="flex:1"></div>';
+            h += '<button onclick="s48TransferLog=[];s48Render()" style="padding:4px 10px;background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;">清空日志</button></div>';
+            h += '<div style="flex:1;overflow-y:auto;padding:16px;">';
+            h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">';
+            h += '<div style="padding:20px;background:rgba(74,158,255,0.08);border:2px dashed rgba(74,158,255,0.3);border-radius:16px;text-align:center;cursor:pointer;transition:all 0.2s;" id="s48DropZone" onclick="document.getElementById(\'s48FileInput\').click()" onmouseover="this.style.borderColor=\'rgba(74,158,255,0.6)\'" onmouseout="this.style.borderColor=\'rgba(74,158,255,0.3)\'">';
+            h += '<div style="font-size:36px;margin-bottom:8px;">📤</div>';
+            h += '<div style="font-weight:600;font-size:14px;">PC → 设备</div>';
+            h += '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">点击选文件或拖拽到此处</div>';
+            h += '<input type="file" id="s48FileInput" multiple style="display:none;" onchange="s48Upload(this.files)">';
+            h += '</div>';
+            h += '<div style="padding:20px;background:rgba(16,185,129,0.08);border:2px dashed rgba(16,185,129,0.3);border-radius:16px;text-align:center;">';
+            h += '<div style="font-size:36px;margin-bottom:8px;">📥</div>';
+            h += '<div style="font-weight:600;font-size:14px;">设备 → PC</div>';
+            h += '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">输入设备文件路径下载</div>';
+            h += '<div style="display:flex;gap:6px;margin-top:10px;">';
+            h += '<input id="s48DlPath" type="text" placeholder="/sdcard/DCIM/photo.jpg" style="flex:1;padding:6px 10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;font-size:12px;" onkeydown="if(event.key===\'Enter\')s48Download()">';
+            h += '<button onclick="s48Download()" style="padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">下载</button>';
+            h += '</div></div></div>';
+            h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">';
+            h += '<div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:12px;">';
+            h += '<div style="font-size:12px;font-weight:600;color:#f59e0b;margin-bottom:8px;">📋 文本互传</div>';
+            h += '<textarea id="s48Text" rows="3" placeholder="输入文本..." style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;font-size:12px;resize:vertical;box-sizing:border-box;font-family:monospace;"></textarea>';
+            h += '<div style="display:flex;gap:6px;margin-top:6px;">';
+            h += '<button onclick="s48SendText()" style="flex:1;padding:5px;background:#f59e0b;color:#000;font-weight:600;border:none;border-radius:6px;cursor:pointer;font-size:11px;">发送到设备</button>';
+            h += '<button onclick="s48GetClipboard()" style="flex:1;padding:5px;background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;">读取设备</button>';
+            h += '</div></div>';
+            h += '<div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:12px;">';
+            h += '<div style="font-size:12px;font-weight:600;color:#7c3aed;margin-bottom:8px;">📁 快捷路径</div>';
+            var shortcuts = ['/sdcard/DCIM', '/sdcard/Download', '/sdcard/Pictures', '/sdcard/Documents'];
+            shortcuts.forEach(function (sp) {
+                h += '<button onclick="document.getElementById(\'s48DlPath\').value=\'' + sp + '/\'" style="display:block;width:100%;text-align:left;padding:5px 8px;margin-bottom:3px;background:rgba(124,58,237,0.1);border:none;border-radius:4px;color:#a78bfa;cursor:pointer;font-size:11px;font-family:monospace;">' + sp + '</button>';
+            });
+            h += '</div></div>';
+            if (s48TransferLog.length) {
+                h += '<div style="font-size:12px;font-weight:600;color:#10b981;margin-bottom:8px;">📋 传输日志</div>';
+                s48TransferLog.forEach(function (l) {
+                    h += '<div style="padding:4px 8px;font-size:11px;color:rgba(255,255,255,0.6);font-family:monospace;border-left:2px solid ' + (l.ok ? '#10b981' : '#ef4444') + ';margin-bottom:3px;">' + escapeHtml(l.msg) + '</div>';
+                });
+            }
+            h += '</div>';
+            p.innerHTML = h;
+            s48InitDragDrop();
+        }
+        function s48InitDragDrop() {
+            var zone = document.getElementById('s48DropZone');
+            if (!zone) return;
+            zone.addEventListener('dragover', function (e) { e.preventDefault(); e.stopPropagation(); zone.style.borderColor = 'rgba(74,158,255,0.8)'; zone.style.background = 'rgba(74,158,255,0.15)'; });
+            zone.addEventListener('dragleave', function (e) { e.preventDefault(); zone.style.borderColor = 'rgba(74,158,255,0.3)'; zone.style.background = 'rgba(74,158,255,0.08)'; });
+            zone.addEventListener('drop', function (e) { e.preventDefault(); e.stopPropagation(); zone.style.borderColor = 'rgba(74,158,255,0.3)'; zone.style.background = 'rgba(74,158,255,0.08)'; if (e.dataTransfer.files.length) s48Upload(e.dataTransfer.files); });
+        }
+        function s48Upload(files) {
+            if (!files || !files.length) return;
+            var base = getInputApiBase();
+            var dest = '/sdcard/Download/';
+            Array.prototype.forEach.call(files, function (file) {
+                var reader = new FileReader();
+                reader.onload = function () {
+                    var b64 = reader.result.split(',')[1];
+                    var path = dest + file.name;
+                    s48TransferLog.unshift({ ok: true, msg: '⬆ 上传中: ' + file.name + ' (' + s48FmtSize(file.size) + ')' });
+                    s48Render();
+                    fetch(base + '/files/upload', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: path, data: b64 })
+                    }).then(function (r) { return r.json(); }).then(function (d) {
+                        s48TransferLog.unshift({ ok: d.ok !== false, msg: (d.ok !== false ? '✅ ' : '❌ ') + file.name + ' → ' + path });
+                        s48Render();
+                    }).catch(function (e) {
+                        s48TransferLog.unshift({ ok: false, msg: '❌ 上传失败: ' + file.name + ' - ' + e.message });
+                        s48Render();
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        function s48Download() {
+            var pathEl = document.getElementById('s48DlPath');
+            var path = (pathEl || {}).value;
+            if (!path) { showStatus('请输入文件路径'); return; }
+            s48TransferLog.unshift({ ok: true, msg: '⬇ 下载中: ' + path });
+            s48Render();
+            fetch(getInputApiBase() + '/files/download?path=' + encodeURIComponent(path))
+                .then(function (r) { return r.json(); }).then(function (d) {
+                    if (d.error) { s48TransferLog.unshift({ ok: false, msg: '❌ ' + d.error }); s48Render(); return; }
+                    var b64 = d.data || d.base64 || '';
+                    if (!b64) { s48TransferLog.unshift({ ok: false, msg: '❌ 无数据返回' }); s48Render(); return; }
+                    var name = path.split('/').pop();
+                    var link = document.createElement('a');
+                    link.href = 'data:application/octet-stream;base64,' + b64;
+                    link.download = name;
+                    link.click();
+                    s48TransferLog.unshift({ ok: true, msg: '✅ 已下载: ' + name });
+                    s48Render();
+                }).catch(function (e) {
+                    s48TransferLog.unshift({ ok: false, msg: '❌ 下载失败: ' + e.message });
+                    s48Render();
+                });
+        }
+        function s48SendText() {
+            var ta = document.getElementById('s48Text');
+            var text = (ta || {}).value;
+            if (!text) { showStatus('请输入文本'); return; }
+            fetch(getInputApiBase() + '/clipboard/set', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            }).then(function () {
+                s48TransferLog.unshift({ ok: true, msg: '📋 文本已发送到设备剪贴板 (' + text.length + '字)' });
+                s48Render(); showStatus('已发送到设备剪贴板');
+            }).catch(function (e) {
+                s48TransferLog.unshift({ ok: false, msg: '❌ 发送失败: ' + e.message });
+                s48Render();
+            });
+        }
+        function s48GetClipboard() {
+            fetch(getInputApiBase() + '/clipboard').then(function (r) { return r.json(); }).then(function (d) {
+                var text = d.text || d.clipboard || '';
+                var ta = document.getElementById('s48Text');
+                if (ta) ta.value = text;
+                s48TransferLog.unshift({ ok: true, msg: '📋 已读取设备剪贴板 (' + text.length + '字)' });
+                s48Render();
+            }).catch(function (e) { showStatus('读取失败: ' + e.message); });
+        }
+        function s48FmtSize(bytes) {
+            if (bytes < 1024) return bytes + 'B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + 'KB';
+            return (bytes / 1048576).toFixed(1) + 'MB';
+        }
 
         // ==================== S49: Gesture Panel ====================
         var s49Visible = false, s49Points = [], s49Drawing = false, s49Canvas = null, s49Ctx = null;
