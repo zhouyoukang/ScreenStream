@@ -4655,11 +4655,148 @@
         function s46Bright(v) { fetch(getInputApiBase() + '/brightness/' + v, { method: 'POST' }).then(function () { showStatus('亮度: ' + Math.round(v / 255 * 100) + '%') }).catch(function () { showStatus('失败') }) }
         function s46Rotate(d) { fetch(getInputApiBase() + '/rotate/' + d, { method: 'POST' }).then(function () { showStatus('旋转: ' + d + '°') }).catch(function () { showStatus('失败') }) }
 
-        // ==================== S47-S49: Stubs (planned, not yet implemented) ====================
-        var s47Visible = false, s48Visible = false, s49Visible = false;
+        // ==================== S47-S48: Stubs (planned) ====================
+        var s47Visible = false, s48Visible = false;
         function toggleAIAssistant() { showStatus('AI助手: 开发中...'); }
         function toggleQuickShare() { showStatus('快传中心: 开发中...'); }
-        function toggleGesturePanel() { showStatus('手势面板: 开发中...'); }
+
+        // ==================== S49: Gesture Panel ====================
+        var s49Visible = false, s49Points = [], s49Drawing = false, s49Canvas = null, s49Ctx = null;
+        var s49Presets = JSON.parse(localStorage.getItem('s49Custom') || '[]');
+        function toggleGesturePanel() {
+            if (!s49Visible) closePlatformPanels();
+            s49Visible = !s49Visible;
+            var p = document.getElementById('s49Panel');
+            if (!p) { p = document.createElement('div'); p.id = 's49Panel'; p.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(8,8,12,0.98);color:#e0e0e0;z-index:10002;display:flex;flex-direction:column;font-family:system-ui;overflow:hidden;'; document.body.appendChild(p); }
+            p.style.display = s49Visible ? 'flex' : 'none';
+            if (s49Visible) { hideCommandMenu(); s49Render(); }
+        }
+        function s49Render() {
+            var p = document.getElementById('s49Panel'); if (!p) return;
+            var h = '<div style="padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);">';
+            h += '<span style="font-size:18px;cursor:pointer;" onclick="toggleGesturePanel()">✕</span>';
+            h += '<span style="font-size:16px;font-weight:600;">✋ 手势面板</span>';
+            h += '<div style="flex:1"></div>';
+            h += '<button onclick="s49Clear()" style="padding:4px 12px;background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">清除画布</button>';
+            h += '<button onclick="s49Execute()" style="padding:4px 12px;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">▶ 执行</button>';
+            h += '<button onclick="s49Save()" style="padding:4px 12px;background:#7c3aed;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">💾 保存</button></div>';
+            h += '<div style="display:flex;flex:1;overflow:hidden;">';
+            h += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;position:relative;">';
+            h += '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px;">在下方画布绘制手势 → 点击执行发送到设备</div>';
+            h += '<canvas id="s49Canvas" width="320" height="480" style="border:1px solid rgba(255,255,255,0.15);border-radius:12px;background:rgba(255,255,255,0.03);cursor:crosshair;touch-action:none;"></canvas>';
+            h += '<div id="s49Info" style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.4);">等待绘制...</div></div>';
+            h += '<div style="width:200px;border-left:1px solid rgba(255,255,255,0.1);overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px;">';
+            h += '<div style="font-size:12px;font-weight:600;color:#4a9eff;margin-bottom:4px;">⚡ 快捷手势</div>';
+            var quick = [
+                ['⬆', '上滑', { nx1: 0.5, ny1: 0.7, nx2: 0.5, ny2: 0.3, duration: 300 }],
+                ['⬇', '下滑', { nx1: 0.5, ny1: 0.3, nx2: 0.5, ny2: 0.7, duration: 300 }],
+                ['⬅', '左滑', { nx1: 0.7, ny1: 0.5, nx2: 0.3, ny2: 0.5, duration: 300 }],
+                ['➡', '右滑', { nx1: 0.3, ny1: 0.5, nx2: 0.7, ny2: 0.5, duration: 300 }],
+                ['↗', '右上滑', { nx1: 0.3, ny1: 0.7, nx2: 0.7, ny2: 0.3, duration: 300 }],
+                ['↙', '左下滑', { nx1: 0.7, ny1: 0.3, nx2: 0.3, ny2: 0.7, duration: 300 }],
+                ['🔽', '下拉通知', { nx1: 0.5, ny1: 0.02, nx2: 0.5, ny2: 0.5, duration: 400 }],
+                ['🔼', '上拉收起', { nx1: 0.5, ny1: 0.98, nx2: 0.5, ny2: 0.5, duration: 400 }],
+            ];
+            quick.forEach(function (g) {
+                h += '<button onclick=\'s49RunSwipe(' + JSON.stringify(g[2]).replace(/'/g, "&#39;") + ')\' style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.06);border:none;border-radius:8px;color:#e0e0e0;cursor:pointer;font-size:12px;text-align:left;transition:background 0.15s;" onmouseover="this.style.background=\'rgba(74,158,255,0.15)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.06)\'">';
+                h += '<span style="font-size:16px;min-width:22px;text-align:center;">' + g[0] + '</span>' + g[1] + '</button>';
+            });
+            h += '<div style="font-size:12px;font-weight:600;color:#f59e0b;margin:8px 0 4px;">📌 已保存手势</div>';
+            if (!s49Presets.length) h += '<div style="font-size:11px;color:rgba(255,255,255,0.3);">画布绘制后点"保存"</div>';
+            s49Presets.forEach(function (g, i) {
+                h += '<div style="display:flex;align-items:center;gap:4px;">';
+                h += '<button onclick=\'s49RunSaved(' + i + ')\' style="flex:1;padding:6px 10px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:6px;color:#f59e0b;cursor:pointer;font-size:11px;text-align:left;">' + escapeHtml(g.name) + ' (' + g.points + '点)</button>';
+                h += '<span onclick="s49DeleteSaved(' + i + ')" style="cursor:pointer;color:#f55;font-size:14px;padding:2px;">✕</span></div>';
+            });
+            h += '</div></div>';
+            p.innerHTML = h;
+            setTimeout(s49InitCanvas, 50);
+        }
+        function s49InitCanvas() {
+            s49Canvas = document.getElementById('s49Canvas');
+            if (!s49Canvas) return;
+            s49Ctx = s49Canvas.getContext('2d');
+            s49Ctx.strokeStyle = '#4a9eff';
+            s49Ctx.lineWidth = 3;
+            s49Ctx.lineCap = 'round';
+            s49Ctx.lineJoin = 'round';
+            var getPos = function (e) {
+                var r = s49Canvas.getBoundingClientRect();
+                var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: clientX - r.left, y: clientY - r.top };
+            };
+            var onStart = function (e) { e.preventDefault(); s49Drawing = true; s49Points = []; var p = getPos(e); s49Points.push(p); s49Ctx.beginPath(); s49Ctx.moveTo(p.x, p.y); };
+            var onMove = function (e) { if (!s49Drawing) return; e.preventDefault(); var p = getPos(e); s49Points.push(p); s49Ctx.lineTo(p.x, p.y); s49Ctx.stroke(); };
+            var onEnd = function (e) { if (!s49Drawing) return; s49Drawing = false; s49UpdateInfo(); };
+            s49Canvas.addEventListener('mousedown', onStart);
+            s49Canvas.addEventListener('mousemove', onMove);
+            s49Canvas.addEventListener('mouseup', onEnd);
+            s49Canvas.addEventListener('mouseleave', onEnd);
+            s49Canvas.addEventListener('touchstart', onStart, { passive: false });
+            s49Canvas.addEventListener('touchmove', onMove, { passive: false });
+            s49Canvas.addEventListener('touchend', onEnd);
+        }
+        function s49UpdateInfo() {
+            var el = document.getElementById('s49Info');
+            if (!el) return;
+            if (s49Points.length < 2) { el.textContent = '等待绘制...'; return; }
+            var dx = s49Points[s49Points.length - 1].x - s49Points[0].x;
+            var dy = s49Points[s49Points.length - 1].y - s49Points[0].y;
+            var dist = Math.round(Math.sqrt(dx * dx + dy * dy));
+            el.textContent = s49Points.length + ' 点 | 距离: ' + dist + 'px | 方向: ' + s49Direction(dx, dy);
+        }
+        function s49Direction(dx, dy) {
+            var angle = Math.atan2(-dy, dx) * 180 / Math.PI;
+            if (angle < 0) angle += 360;
+            if (angle < 22.5 || angle >= 337.5) return '→ 右';
+            if (angle < 67.5) return '↗ 右上';
+            if (angle < 112.5) return '↑ 上';
+            if (angle < 157.5) return '↖ 左上';
+            if (angle < 202.5) return '← 左';
+            if (angle < 247.5) return '↙ 左下';
+            if (angle < 292.5) return '↓ 下';
+            return '↘ 右下';
+        }
+        function s49Clear() {
+            s49Points = [];
+            if (s49Ctx && s49Canvas) { s49Ctx.clearRect(0, 0, s49Canvas.width, s49Canvas.height); }
+            s49UpdateInfo();
+        }
+        function s49Execute() {
+            if (s49Points.length < 2) { showStatus('请先在画布上绘制手势'); return; }
+            var cw = s49Canvas.width, ch = s49Canvas.height;
+            var p0 = s49Points[0], pN = s49Points[s49Points.length - 1];
+            var duration = Math.max(100, Math.min(2000, s49Points.length * 8));
+            var swipeData = { nx1: p0.x / cw, ny1: p0.y / ch, nx2: pN.x / cw, ny2: pN.y / ch, duration: duration };
+            s49RunSwipe(swipeData);
+        }
+        function s49RunSwipe(data) {
+            fetch(getInputApiBase() + '/swipe', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(function () { showStatus('手势已执行'); }).catch(function () { showStatus('手势执行失败'); });
+        }
+        function s49Save() {
+            if (s49Points.length < 2) { showStatus('请先绘制手势'); return; }
+            var name = prompt('手势名称:');
+            if (!name) return;
+            var cw = s49Canvas.width, ch = s49Canvas.height;
+            var p0 = s49Points[0], pN = s49Points[s49Points.length - 1];
+            s49Presets.push({ name: name, points: s49Points.length, nx1: p0.x / cw, ny1: p0.y / ch, nx2: pN.x / cw, ny2: pN.y / ch, duration: Math.max(100, s49Points.length * 8) });
+            localStorage.setItem('s49Custom', JSON.stringify(s49Presets));
+            s49Render();
+            showStatus('手势已保存: ' + name);
+        }
+        function s49RunSaved(i) {
+            var g = s49Presets[i]; if (!g) return;
+            s49RunSwipe({ nx1: g.nx1, ny1: g.ny1, nx2: g.nx2, ny2: g.ny2, duration: g.duration || 300 });
+        }
+        function s49DeleteSaved(i) {
+            s49Presets.splice(i, 1);
+            localStorage.setItem('s49Custom', JSON.stringify(s49Presets));
+            s49Render();
+        }
 
         if (isFullscreenEnabled()) {
             document.addEventListener("fullscreenchange", fullScreenHandler);
