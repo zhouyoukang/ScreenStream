@@ -775,49 +775,109 @@
 
             aiCommandRunning = true;
             result.classList.add('visible');
-            result.innerHTML = '<div class="cmd-loading">⏳ 执行中: ' + escapeHtml(command) + '...</div>';
+            result.innerHTML = '<div class="cmd-loading">⏳ ' + escapeHtml(command) + '</div>';
+            input.value = '';
 
             var controller = new AbortController();
             var timeout = setTimeout(function () { controller.abort(); }, 30000);
 
-            fetch('/command', {
+            // Use SSE streaming for real-time step feedback
+            fetch('/command/stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ command: command }),
                 signal: controller.signal
             })
-                .then(function (r) { clearTimeout(timeout); return r.json(); })
-                .then(function (data) {
-                    aiCommandRunning = false;
-                    var html = '';
-                    if (data.ok) {
-                        html += '<div class="cmd-ok">✅ ' + escapeHtml(data.action || 'done') + ' (' + (data.totalMs || 0) + 'ms)</div>';
-                    } else {
-                        html += '<div class="cmd-err">❌ ' + escapeHtml(data.error || 'failed') + '</div>';
-                        if (data.hint) html += '<div class="cmd-step">💡 ' + escapeHtml(data.hint) + '</div>';
+                .then(function (response) {
+                    clearTimeout(timeout);
+                    var reader = response.body.getReader();
+                    var decoder = new TextDecoder();
+                    var buffer = '';
+
+                    function processChunk() {
+                        return reader.read().then(function (res) {
+                            if (res.done) {
+                                aiCommandRunning = false;
+                                input.focus();
+                                return;
+                            }
+                            buffer += decoder.decode(res.value, { stream: true });
+                            var lines = buffer.split('\n');
+                            buffer = lines.pop() || '';
+
+                            for (var i = 0; i < lines.length; i++) {
+                                var line = lines[i].trim();
+                                if (!line.startsWith('data: ')) continue;
+                                var data = line.substring(6);
+                                if (data === '[DONE]') {
+                                    aiCommandRunning = false;
+                                    input.focus();
+                                    return;
+                                }
+                                try {
+                                    var step = JSON.parse(data);
+                                    appendStepToResult(result, step);
+                                } catch (e) { }
+                            }
+                            return processChunk();
+                        });
                     }
-                    if (data.steps) {
-                        var steps = data.steps;
-                        for (var i = 0; i < steps.length; i++) {
-                            var s = steps[i];
-                            html += '<div class="cmd-step">' + (s.ok ? '✓' : '✗') + ' ' +
-                                escapeHtml(s.step) + (s.detail ? ': ' + escapeHtml(s.detail).substring(0, 120) : '') +
-                                ' <span style="color:#555">(' + s.ms + 'ms)</span></div>';
-                        }
-                    }
-                    result.innerHTML = html;
-                    input.value = '';
-                    input.focus();
+                    return processChunk();
                 })
                 .catch(function (err) {
                     clearTimeout(timeout);
                     aiCommandRunning = false;
                     if (err.name === 'AbortError') {
-                        result.innerHTML = '<div class="cmd-err">⏱️ 超时 (30s)，命令可能仍在执行中</div>';
+                        result.innerHTML += '<div class="cmd-err">⏱️ 超时 (30s)</div>';
                     } else {
-                        result.innerHTML = '<div class="cmd-err">❌ 网络错误: ' + escapeHtml(err.message) + '</div>';
+                        result.innerHTML += '<div class="cmd-err">❌ ' + escapeHtml(err.message) + '</div>';
                     }
+                    input.focus();
                 });
+        }
+
+        function appendStepToResult(el, step) {
+            var div = document.createElement('div');
+            var type = step.type || '';
+            var ok = step.ok;
+            var detail = step.detail || step.command || '';
+
+            if (type === 'plan') {
+                div.className = 'cmd-step';
+                div.innerHTML = '📋 ' + escapeHtml(detail);
+            } else if (type === 'start') {
+                div.className = 'cmd-loading';
+                div.innerHTML = '▶ ' + escapeHtml(step.command || '');
+            } else if (type === 'result') {
+                div.className = ok ? 'cmd-ok' : 'cmd-err';
+                var icon = ok ? '✅' : '❌';
+                var action = step.action ? ' [' + step.action + ']' : '';
+                div.innerHTML = icon + ' ' + escapeHtml(step.command || '') + action +
+                    (detail ? ': ' + escapeHtml(detail).substring(0, 150) : '') +
+                    ' <span style="color:#555">(' + (step.ms || 0) + 'ms)</span>';
+            } else if (type === 'screen') {
+                div.className = 'cmd-step';
+                div.innerHTML = '👁 ' + escapeHtml(detail).substring(0, 200);
+            } else if (type === 'done') {
+                div.className = 'cmd-ok';
+                div.style.fontWeight = '600';
+                div.innerHTML = '🏁 ' + escapeHtml(detail);
+            } else if (type === 'error') {
+                div.className = 'cmd-err';
+                div.innerHTML = '❌ ' + escapeHtml(detail);
+            } else {
+                div.className = 'cmd-step';
+                div.innerHTML = (ok ? '✓' : '✗') + ' ' + escapeHtml(detail);
+            }
+
+            // Remove loading indicator if present
+            var loading = el.querySelector('.cmd-loading');
+            if (loading && type !== 'start' && type !== 'plan') {
+                // Keep it but add new content
+            }
+
+            el.appendChild(div);
+            el.scrollTop = el.scrollHeight;
         }
 
         function escapeHtml(s) {

@@ -2981,6 +2981,324 @@ public class InputService : AccessibilityService() {
         }
     }
 
+    /**
+     * Compound command: splits multi-step intent into atomic actions and executes sequentially.
+     * Calls [onStep] callback after each step for real-time streaming.
+     * Examples:
+     *   "打开设置看看WiFi" → [打开设置, 看看WiFi]
+     *   "打开计算器按5+3=" → [打开计算器, 按5, 按+, 按3, 按=, 读结果]
+     */
+    public fun executeCompoundCommand(command: String, onStep: (JSONObject) -> Unit): JSONObject {
+        val startTime = System.currentTimeMillis()
+        val allSteps = JSONArray()
+
+        fun emitStep(step: JSONObject) {
+            step.put("ms", System.currentTimeMillis() - startTime)
+            allSteps.put(step)
+            onStep(step)
+        }
+
+        try {
+            val steps = splitCompoundCommand(command)
+            emitStep(JSONObject().put("type", "plan").put("ok", true)
+                .put("detail", "拆解为 ${steps.size} 步: ${steps.joinToString(" → ")}"))
+
+            var lastScreenInfo = ""
+            for ((index, step) in steps.withIndex()) {
+                emitStep(JSONObject().put("type", "start").put("ok", true)
+                    .put("index", index).put("command", step))
+
+                val result = executeSingleStep(step)
+                val ok = result.optBoolean("ok", false)
+                emitStep(JSONObject().put("type", "result").put("ok", ok)
+                    .put("index", index).put("command", step)
+                    .put("action", result.optString("action", ""))
+                    .put("detail", result.optString("summary", result.optString("error", ""))))
+
+                // After each step, brief pause for UI to settle
+                if (index < steps.size - 1) Thread.sleep(800)
+
+                // If step involves opening/navigating, read screen for context
+                val action = result.optString("action", "")
+                if (action in listOf("open_app", "wifi_toggle", "click", "fallback_click")) {
+                    Thread.sleep(500)
+                    val screen = extractScreenText()
+                    lastScreenInfo = "pkg=${screen.optString("package")} texts=${screen.optInt("textCount")}"
+                }
+
+                if (!ok && action != "screen_read") {
+                    emitStep(JSONObject().put("type", "error").put("ok", false)
+                        .put("detail", "步骤 ${index + 1} 失败，停止执行"))
+                    break
+                }
+            }
+
+            // Final screen read for result
+            Thread.sleep(300)
+            val finalScreen = extractScreenText()
+            val screenSummary = buildScreenSummary(finalScreen)
+            emitStep(JSONObject().put("type", "screen").put("ok", true)
+                .put("detail", screenSummary))
+
+            emitStep(JSONObject().put("type", "done").put("ok", true)
+                .put("totalMs", System.currentTimeMillis() - startTime)
+                .put("detail", "完成 ${steps.size} 步，耗时 ${System.currentTimeMillis() - startTime}ms"))
+
+            return JSONObject().put("ok", true)
+                .put("totalMs", System.currentTimeMillis() - startTime)
+                .put("steps", allSteps)
+                .put("screenSummary", screenSummary)
+
+        } catch (e: Exception) {
+            emitStep(JSONObject().put("type", "error").put("ok", false).put("detail", e.message ?: "unknown"))
+            return JSONObject().put("ok", false).put("error", e.message).put("steps", allSteps)
+        }
+    }
+
+    /** Split a compound command into atomic steps */
+    private fun splitCompoundCommand(command: String): List<String> {
+        val cmd = command.trim()
+
+        // Split on explicit conjunctions first
+        val conjunctions = listOf("然后", "接着", "再", "之后", "并且", " and then ", " then ")
+        var parts = listOf(cmd)
+        for (conj in conjunctions) {
+            parts = parts.flatMap { it.split(conj).map { p -> p.trim() }.filter { p -> p.isNotEmpty() } }
+        }
+
+        // Further split individual parts for compound patterns
+        val result = mutableListOf<String>()
+        for (part in parts) {
+            result.addAll(splitSinglePart(part))
+        }
+        return result.filter { it.isNotEmpty() }
+    }
+
+    /** Split a single part that may contain compound patterns */
+    private fun splitSinglePart(part: String): List<String> {
+        // Pattern: "打开X看Y" → ["打开X", "看看Y"]
+        val openLookMatch = Regex("(打开\\S+?)(看看?|查看)(\\S+)").find(part)
+        if (openLookMatch != null) {
+            return listOf(openLookMatch.groupValues[1], "看看${openLookMatch.groupValues[3]}")
+        }
+
+        // Pattern: "打开计算器按5+3=" → ["打开计算器", calc sequence]
+        val calcMatch = Regex("(打开\\S*计算器?)\\s*[按点击](.+)").find(part)
+        if (calcMatch != null) {
+            val calcSteps = mutableListOf(calcMatch.groupValues[1])
+            calcSteps.addAll(splitCalcExpression(calcMatch.groupValues[2]))
+            return calcSteps
+        }
+
+        // Pattern: "按5+3=" or "点5+3=" — calculator button sequence
+        val btnMatch = Regex("^[按点击](\\d[\\d+\\-×÷*/=.]+)$").find(part)
+        if (btnMatch != null) {
+            return splitCalcExpression(btnMatch.groupValues[1])
+        }
+
+        return listOf(part)
+    }
+
+    /** Split a calculator expression into individual button presses */
+    private fun splitCalcExpression(expr: String): List<String> {
+        val steps = mutableListOf<String>()
+        for (ch in expr) {
+            val label = when (ch) {
+                '+' -> "+"
+                '-' -> "-"
+                '*', '×' -> "×"
+                '/', '÷' -> "÷"
+                '=' -> "="
+                '.' -> "."
+                in '0'..'9' -> ch.toString()
+                else -> continue
+            }
+            steps.add("calc:$label")
+        }
+        // After last char (usually =), read the result
+        if (expr.endsWith("=")) {
+            steps.add("看看结果")
+        }
+        return steps
+    }
+
+    /** Execute a single atomic step — delegates to existing commands + new "look" capability */
+    private fun executeSingleStep(step: String): JSONObject {
+        val cmd = step.trim().lowercase()
+
+        // "calc:X" — calculator button press via View tree ID matching
+        if (cmd.startsWith("calc:")) {
+            val label = step.substring(5)
+            return clickCalcButton(label)
+        }
+
+        // "看看" / "查看" — read screen and return semantic info
+        if (cmd.startsWith("看看") || cmd.startsWith("查看") || cmd.startsWith("look")) {
+            val target = step.trim().let {
+                when {
+                    it.startsWith("看看") -> it.substring(2)
+                    it.startsWith("查看") -> it.substring(2)
+                    it.startsWith("look") -> it.substring(4)
+                    else -> it
+                }
+            }.trim()
+
+            Thread.sleep(300)
+            val screen = extractScreenText()
+            val summary = buildScreenSummary(screen)
+
+            // If target specified, try to find relevant info
+            var found = ""
+            if (target.isNotEmpty()) {
+                val texts = screen.optJSONArray("texts")
+                if (texts != null) {
+                    for (i in 0 until texts.length()) {
+                        val textObj = texts.getJSONObject(i)
+                        val text = textObj.optString("text", "")
+                        if (text.contains(target, ignoreCase = true)) {
+                            found = text
+                            break
+                        }
+                    }
+                }
+            }
+
+            return JSONObject().put("ok", true).put("action", "screen_read")
+                .put("summary", if (found.isNotEmpty()) "找到: $found | $summary" else summary)
+        }
+
+        // Delegate to existing natural command executor
+        return executeNaturalCommand(step)
+    }
+
+    /** Click a calculator button by label — uses View tree ID matching for operators */
+    private fun clickCalcButton(label: String): JSONObject {
+        // Map display labels to known calculator resource ID patterns
+        val idPatterns = when (label) {
+            "+" -> listOf("op_add", "plus", "add")
+            "-" -> listOf("op_sub", "minus", "sub")
+            "×", "*" -> listOf("op_mul", "multiply", "mul")
+            "÷", "/" -> listOf("op_div", "divide", "div")
+            "=" -> listOf("op_eq", "equals", "eq", "result")
+            "." -> listOf("dec_point", "dot", "decimal")
+            "0" -> listOf("digit_0", "btn_0")
+            "1" -> listOf("digit_1", "btn_1")
+            "2" -> listOf("digit_2", "btn_2")
+            "3" -> listOf("digit_3", "btn_3")
+            "4" -> listOf("digit_4", "btn_4")
+            "5" -> listOf("digit_5", "btn_5")
+            "6" -> listOf("digit_6", "btn_6")
+            "7" -> listOf("digit_7", "btn_7")
+            "8" -> listOf("digit_8", "btn_8")
+            "9" -> listOf("digit_9", "btn_9")
+            else -> listOf()
+        }
+
+        val root = rootInActiveWindow
+            ?: return JSONObject().put("ok", false).put("error", "No active window")
+
+        try {
+            // Strategy 1: Find by text (works for digit buttons)
+            val textResult = findAndClickByText(label)
+            if (textResult.optBoolean("ok")) {
+                return textResult.put("action", "click").put("summary", "clicked '$label' via text")
+            }
+
+            // Strategy 2: Find by resource ID pattern
+            for (pattern in idPatterns) {
+                // Try common package prefixes
+                val ids = listOf(
+                    "com.coloros.calculator:id/$pattern",
+                    "com.coloros.calculator:id/op_$pattern",
+                    "com.android.calculator2:id/$pattern",
+                    "com.sec.android.app.popupcalculator:id/$pattern"
+                )
+                for (id in ids) {
+                    val nodes = root.findAccessibilityNodeInfosByViewId(id)
+                    if (nodes != null && nodes.isNotEmpty()) {
+                        for (node in nodes) {
+                            if (node.isVisibleToUser) {
+                                val clicked = if (node.isClickable) {
+                                    node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                                } else {
+                                    // Try parent click
+                                    var parent = node.parent
+                                    var result = false
+                                    var depth = 0
+                                    while (parent != null && depth < 3) {
+                                        if (parent.isClickable) {
+                                            result = parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                                            try { parent.recycle() } catch (_: Exception) {}
+                                            break
+                                        }
+                                        val gp = parent.parent
+                                        try { parent.recycle() } catch (_: Exception) {}
+                                        parent = gp
+                                        depth++
+                                    }
+                                    result
+                                }
+                                if (clicked) {
+                                    nodes.forEach { try { it.recycle() } catch (_: Exception) {} }
+                                    return JSONObject().put("ok", true).put("action", "click")
+                                        .put("summary", "clicked '$label' via id=$id")
+                                }
+                            }
+                        }
+                        nodes.forEach { try { it.recycle() } catch (_: Exception) {} }
+                    }
+                }
+            }
+
+            // Strategy 3: Find by contentDescription
+            fun findByDesc(node: AccessibilityNodeInfo, depth: Int): AccessibilityNodeInfo? {
+                if (depth > 15) return null
+                val desc = node.contentDescription?.toString() ?: ""
+                if (desc.contains(label, ignoreCase = true) && node.isVisibleToUser) return node
+                for (i in 0 until node.childCount) {
+                    val child = node.getChild(i) ?: continue
+                    val found = findByDesc(child, depth + 1)
+                    if (found != null) return found
+                    try { child.recycle() } catch (_: Exception) {}
+                }
+                return null
+            }
+
+            val descNode = findByDesc(root, 0)
+            if (descNode != null) {
+                val rect = Rect()
+                descNode.getBoundsInScreen(rect)
+                dispatchClick(rect.centerX(), rect.centerY(), 50)
+                try { descNode.recycle() } catch (_: Exception) {}
+                return JSONObject().put("ok", true).put("action", "click")
+                    .put("summary", "clicked '$label' via contentDescription at ${rect.centerX()},${rect.centerY()}")
+            }
+
+            return JSONObject().put("ok", false).put("action", "click")
+                .put("error", "Calculator button '$label' not found")
+        } finally {
+            try { root.recycle() } catch (_: Exception) {}
+        }
+    }
+
+    /** Build a human-readable summary of the current screen */
+    private fun buildScreenSummary(screen: JSONObject): String {
+        val pkg = screen.optString("package", "unknown")
+        val texts = screen.optJSONArray("texts")
+        val textCount = screen.optInt("textCount", 0)
+
+        // Extract the most important visible text (first few items)
+        val visibleTexts = mutableListOf<String>()
+        if (texts != null) {
+            for (i in 0 until minOf(texts.length(), 8)) {
+                val text = texts.getJSONObject(i).optString("text", "")
+                if (text.length in 1..50) visibleTexts.add(text)
+            }
+        }
+
+        return "[$pkg] ${visibleTexts.joinToString(" | ")} (共${textCount}项)"
+    }
+
     /** Open app by name — tries package list first, then known apps, then intent search */
     private fun executeOpenApp(appName: String, steps: JSONArray, startTime: Long): JSONObject {
         fun step(name: String, ok: Boolean, detail: String = "") {

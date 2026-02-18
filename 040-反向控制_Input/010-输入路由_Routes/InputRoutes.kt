@@ -5,6 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondText
+import io.ktor.server.response.respondTextWriter
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
@@ -659,6 +660,26 @@ public fun Route.installInputRoutes() {
             call.respondText(JSONObject().put("ok", false).put("error", "Empty command").toString(), ContentType.Application.Json)
         } else {
             call.respondText(svc.executeNaturalCommand(command).toString(), ContentType.Application.Json)
+        }
+    }}
+
+    // Compound command with SSE streaming — real-time step-by-step feedback
+    post("/command/stream") { requireInputService { svc ->
+        val json = runCatching { JSONObject(call.receiveText()) }.getOrElse { JSONObject() }
+        val command = json.optString("command", "").trim()
+        if (command.isEmpty()) {
+            call.respondText(JSONObject().put("ok", false).put("error", "Empty command").toString(), ContentType.Application.Json)
+        } else {
+            call.respondTextWriter(contentType = ContentType.Text.EventStream) {
+                write("data: ${JSONObject().put("type", "start").put("command", command)}\n\n")
+                flush()
+                svc.executeCompoundCommand(command) { step ->
+                    write("data: $step\n\n")
+                    flush()
+                }
+                write("data: [DONE]\n\n")
+                flush()
+            }
         }
     }}
 
