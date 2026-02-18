@@ -689,13 +689,15 @@
     <div id="mobileGestureHint"></div>
 
     <!-- AI 命令输入栏 -->
-    <div id="aiCommandBar">
+    <div id="aiCommandBar" onmousedown="event.stopPropagation()" onmouseup="event.stopPropagation()"
+        ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation()">
         <div class="cmd-header">
             <span>🤖 AI 命令</span>
             <button class="cmd-close" onclick="toggleAiCommand()">✕</button>
         </div>
         <input id="aiCommandInput" type="text" placeholder="说点什么...  打开计算器 / 关掉WiFi / 点击设置"
-            onkeydown="if(event.key==='Enter')runAiCommand()" autocomplete="off" />
+            onkeydown="event.stopPropagation();if(event.key==='Enter')runAiCommand();if(event.key==='Escape'){toggleAiCommand();event.preventDefault();}"
+            autocomplete="off" onfocus="this.dataset.focused='1'" onblur="this.dataset.focused='0'" />
         <div id="aiCommandResult"></div>
     </div>
 
@@ -754,6 +756,11 @@
         // ==================== AI Command Bar ====================
         var aiCommandVisible = false;
         var aiCommandRunning = false;
+
+        function isAiInputFocused() {
+            var inp = document.getElementById('aiCommandInput');
+            return inp && (document.activeElement === inp || inp.dataset.focused === '1');
+        }
 
         function toggleAiCommand() {
             aiCommandVisible = !aiCommandVisible;
@@ -2743,6 +2750,8 @@
 
         // 特殊按键处理 - 附带 shift/ctrl 修饰键状态实现完整PC键盘映射
         hiddenInput.addEventListener('keydown', function (e) {
+            // Don't send keys to phone when AI command input is focused
+            if (isAiInputFocused()) return;
             var mods = { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey };
 
             // Ctrl 组合键处理
@@ -2838,6 +2847,8 @@
         // This matches scrcpy's shortcut system for muscle-memory compatibility
         document.addEventListener("keydown", function (e) {
             if (!enableButtons) return;
+            // Skip all shortcuts when AI command input is focused
+            if (isAiInputFocused()) return;
 
             // --- Ctrl+Arrow = Volume (scrcpy compatible) ---
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {

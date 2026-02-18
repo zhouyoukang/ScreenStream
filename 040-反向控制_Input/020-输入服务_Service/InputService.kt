@@ -2910,18 +2910,18 @@ public class InputService : AccessibilityService() {
                 }
             }
 
-            // === Pattern: Navigation ===
-            if (cmd.contains("返回") || cmd == "back" || cmd == "go back") {
-                performGlobalAction(GLOBAL_ACTION_BACK)
-                step("execute", true, "GLOBAL_ACTION_BACK")
-                return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
-                    .put("command", command).put("action", "back").put("steps", steps)
-            }
+            // === Pattern: Navigation (HOME before BACK to handle "返回桌面" correctly) ===
             if (cmd.contains("主页") || cmd.contains("桌面") || cmd == "home" || cmd == "go home") {
                 performGlobalAction(GLOBAL_ACTION_HOME)
                 step("execute", true, "GLOBAL_ACTION_HOME")
                 return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
                     .put("command", command).put("action", "home").put("steps", steps)
+            }
+            if (cmd.contains("返回") || cmd == "back" || cmd == "go back") {
+                performGlobalAction(GLOBAL_ACTION_BACK)
+                step("execute", true, "GLOBAL_ACTION_BACK")
+                return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
+                    .put("command", command).put("action", "back").put("steps", steps)
             }
             if (cmd.contains("最近") || cmd.contains("任务") || cmd == "recents") {
                 performGlobalAction(GLOBAL_ACTION_RECENTS)
@@ -3302,7 +3302,7 @@ public class InputService : AccessibilityService() {
             return clickCalcButton(label)
         }
 
-        // "找到X" — search View tree for target element, report location
+        // "找到X" — search View tree → click found element → verify navigation
         if (cmd.startsWith("找到") || cmd.startsWith("find")) {
             val target = step.trim().let {
                 when {
@@ -3313,54 +3313,53 @@ public class InputService : AccessibilityService() {
             }.trim()
 
             if (target.isNotEmpty()) {
-                // First try to find on current screen
-                val screen = extractScreenText()
-                val texts = screen.optJSONArray("texts")
-                var found = false
-                var foundInfo = ""
-                if (texts != null) {
-                    for (i in 0 until texts.length()) {
-                        val textObj = texts.getJSONObject(i)
-                        val text = textObj.optString("text", "")
-                        if (text.contains(target, ignoreCase = true)) {
-                            foundInfo = "'$text' bounds=${textObj.optString("bounds")} clickable=${textObj.optBoolean("clickable")}"
-                            found = true
-                            break
-                        }
-                    }
-                }
+                // Search current screen + scroll up to 3 times
+                var matchedText = ""
+                var scrollCount = 0
 
-                if (found) {
-                    return JSONObject().put("ok", true).put("action", "find")
-                        .put("summary", "找到: $foundInfo | ${buildScreenSummary(screen)}")
-                }
-
-                // Not on current screen — try scrolling (max 3 times)
-                for (scroll in 1..3) {
-                    scrollNormalized(0.5f, 0.5f, "down", 600)
-                    Thread.sleep(800)
-                    val scrollScreen = extractScreenText()
-                    val scrollTexts = scrollScreen.optJSONArray("texts")
-                    if (scrollTexts != null) {
-                        for (i in 0 until scrollTexts.length()) {
-                            val textObj = scrollTexts.getJSONObject(i)
-                            val text = textObj.optString("text", "")
+                for (attempt in 0..3) {
+                    val screen = extractScreenText()
+                    val texts = screen.optJSONArray("texts")
+                    if (texts != null) {
+                        for (i in 0 until texts.length()) {
+                            val text = texts.getJSONObject(i).optString("text", "")
                             if (text.contains(target, ignoreCase = true)) {
-                                foundInfo = "'$text' bounds=${textObj.optString("bounds")} clickable=${textObj.optBoolean("clickable")}"
-                                found = true
+                                matchedText = text
                                 break
                             }
                         }
                     }
-                    if (found) {
-                        return JSONObject().put("ok", true).put("action", "find")
-                            .put("summary", "滚动${scroll}次后找到: $foundInfo | ${buildScreenSummary(scrollScreen)}")
+                    if (matchedText.isNotEmpty()) break
+                    if (attempt < 3) {
+                        scrollCount++
+                        scrollNormalized(0.5f, 0.5f, "down", 600)
+                        Thread.sleep(800)
                     }
                 }
 
-                return JSONObject().put("ok", false).put("action", "find")
-                    .put("error", "未找到'$target'")
-                    .put("summary", "滚动3次后未找到'$target' | ${buildScreenSummary(extractScreenText())}")
+                if (matchedText.isEmpty()) {
+                    return JSONObject().put("ok", false).put("action", "find")
+                        .put("error", "未找到'$target'")
+                        .put("summary", "滚动${scrollCount}次后未找到'$target' | ${buildScreenSummary(extractScreenText())}")
+                }
+
+                // Found — now click it to navigate
+                val scrollNote = if (scrollCount > 0) "滚动${scrollCount}次后" else ""
+                val clickResult = findAndClickByText(matchedText)
+                if (!clickResult.optBoolean("ok")) {
+                    return JSONObject().put("ok", false).put("action", "find")
+                        .put("error", "${scrollNote}找到'$matchedText'但点击失败")
+                        .put("summary", "找到但无法点击'$matchedText'")
+                }
+
+                // Wait for UI to settle, then read new screen
+                Thread.sleep(500)
+                val newScreen = extractScreenText()
+                val newPkg = newScreen.optString("package", "")
+                val summary = buildScreenSummary(newScreen)
+
+                return JSONObject().put("ok", true).put("action", "find_and_navigate")
+                    .put("summary", "${scrollNote}找到'$matchedText' → 点击 → $summary")
             }
         }
 
