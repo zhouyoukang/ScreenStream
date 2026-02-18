@@ -96,6 +96,15 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".DevControlReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.screenstream.DEV_CONTROL" />
+            </intent-filter>
+        </receiver>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="info.dvkr.screenstream.fileprovider"

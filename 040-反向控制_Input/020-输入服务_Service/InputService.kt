@@ -2369,6 +2369,153 @@ public class InputService : AccessibilityService() {
         return json
     }
 
+    /**
+     * Semantic Automation Demo: Opens calculator, finds "5" button via View tree, clicks it.
+     * Proves that ScreenStream can "see" any APP's UI and "act" on it — the foundation
+     * for cross-app semantic automation.
+     */
+    public fun runSemanticDemo(targetButton: String = "5"): JSONObject {
+        val log = JSONArray()
+        val startTime = System.currentTimeMillis()
+        fun logStep(step: String, ok: Boolean, detail: String = "") {
+            val entry = JSONObject()
+                .put("step", step)
+                .put("ok", ok)
+                .put("ms", System.currentTimeMillis() - startTime)
+            if (detail.isNotEmpty()) entry.put("detail", detail)
+            log.put(entry)
+            Log.i(TAG, "SemanticDemo [$step] ok=$ok $detail")
+        }
+
+        try {
+            // Step 1: Open calculator via Intent
+            val calcPackages = listOf(
+                "com.google.android.calculator",
+                "com.sec.android.app.popupcalculator",
+                "com.miui.calculator",
+                "com.coloros.calculator",
+                "com.vivo.calculator",
+                "com.asus.calculator",
+                "com.oneplus.calculator",
+                "com.android.calculator2"
+            )
+            var launched = false
+            for (pkg in calcPackages) {
+                try {
+                    val intent = packageManager.getLaunchIntentForPackage(pkg)
+                    if (intent != null) {
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                        logStep("open_calculator", true, "package=$pkg")
+                        launched = true
+                        break
+                    }
+                } catch (_: Exception) {}
+            }
+            if (!launched) {
+                // Fallback 1: try explicit component (some OEM calcs hide launch intent)
+                val knownComponents = listOf(
+                    "com.coloros.calculator/com.android.calculator2.Calculator",
+                    "com.sec.android.app.popupcalculator/com.sec.android.app.popupcalculator.Calculator",
+                    "com.android.calculator2/com.android.calculator2.Calculator"
+                )
+                for (comp in knownComponents) {
+                    try {
+                        val (pkg, cls) = comp.split("/")
+                        val intent = Intent(Intent.ACTION_MAIN).apply {
+                            setClassName(pkg, cls)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        startActivity(intent)
+                        logStep("open_calculator", true, "component=$comp")
+                        launched = true
+                        break
+                    } catch (_: Exception) {}
+                }
+            }
+            if (!launched) {
+                // Fallback 2: try generic calculator category
+                try {
+                    val intent = Intent(Intent.ACTION_MAIN).apply {
+                        addCategory(Intent.CATEGORY_APP_CALCULATOR)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intent)
+                    logStep("open_calculator", true, "via CATEGORY_APP_CALCULATOR")
+                    launched = true
+                } catch (e: Exception) {
+                    logStep("open_calculator", false, "no calculator found: ${e.message}")
+                }
+            }
+            if (!launched) {
+                return JSONObject().put("ok", false).put("log", log)
+                    .put("error", "No calculator app found on device")
+            }
+
+            // Step 2: Wait for calculator to load (poll for the target button)
+            Thread.sleep(1500) // Initial wait for app to launch
+            val waitResult = waitForCondition(targetButton, 5000, 300)
+            val found = waitResult.optBoolean("found", false)
+            logStep("wait_for_ui", found,
+                "target='$targetButton' elapsed=${waitResult.optLong("elapsed")}ms attempts=${waitResult.optInt("attempts")}")
+
+            if (!found) {
+                // Still try to read what IS on screen for diagnostics
+                val screenText = extractScreenText()
+                logStep("screen_snapshot", true,
+                    "package=${screenText.optString("package")} texts=${screenText.optInt("textCount")} clickables=${screenText.optInt("clickableCount")}")
+                return JSONObject().put("ok", false).put("log", log)
+                    .put("error", "Button '$targetButton' not found on calculator screen")
+                    .put("screen", screenText)
+            }
+
+            // Step 3: Read View tree to find the button (for logging — show we can "see")
+            val root = rootInActiveWindow
+            var buttonInfo = ""
+            if (root != null) {
+                try {
+                    val nodes = root.findAccessibilityNodeInfosByText(targetButton)
+                    if (nodes != null && nodes.isNotEmpty()) {
+                        val node = nodes[0]
+                        val rect = Rect()
+                        node.getBoundsInScreen(rect)
+                        buttonInfo = "text='${node.text}' cls=${node.className} bounds=${rect} clickable=${node.isClickable}"
+                        nodes.forEach { try { it.recycle() } catch (_: Exception) {} }
+                    }
+                } finally {
+                    try { root.recycle() } catch (_: Exception) {}
+                }
+            }
+            logStep("find_button", buttonInfo.isNotEmpty(), buttonInfo)
+
+            // Step 4: Click the button via semantic action (findAndClickByText)
+            val clickResult = findAndClickByText(targetButton)
+            val clicked = clickResult.optBoolean("ok", false)
+            logStep("click_button", clicked,
+                "clicked='${clickResult.optString("clicked")}' via=${clickResult.optString("via", "direct")}")
+
+            // Step 5: Verify — read screen after click
+            Thread.sleep(500)
+            val afterScreen = extractScreenText()
+            logStep("verify_after_click", true,
+                "package=${afterScreen.optString("package")} texts=${afterScreen.optInt("textCount")}")
+
+            val totalMs = System.currentTimeMillis() - startTime
+            return JSONObject()
+                .put("ok", clicked)
+                .put("totalMs", totalMs)
+                .put("log", log)
+                .put("summary", if (clicked)
+                    "SUCCESS: Opened calculator → Found '$targetButton' button ($buttonInfo) → Clicked it in ${totalMs}ms"
+                else
+                    "PARTIAL: Opened calculator, found button but click failed")
+
+        } catch (e: Exception) {
+            logStep("error", false, e.message ?: "unknown")
+            return JSONObject().put("ok", false).put("log", log).put("error", e.message)
+        }
+    }
+
     public fun getActiveWindowInfo(): JSONObject {
         val root = rootInActiveWindow
             ?: return JSONObject().put("error", "No active window")

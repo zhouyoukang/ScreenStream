@@ -637,6 +637,15 @@ public fun Route.installInputRoutes() {
         call.respondText(svc.uploadFile(path, bytes).toString(), ContentType.Application.Json)
     }}
 
+    // ==================== Semantic Automation Demo ====================
+
+    // Proof-of-concept: open calculator → find button via View tree → click it
+    post("/demo/semantic") { requireInputService { svc ->
+        val json = runCatching { JSONObject(call.receiveText()) }.getOrElse { JSONObject() }
+        val target = json.optString("target", "5")
+        call.respondText(svc.runSemanticDemo(target).toString(), ContentType.Application.Json)
+    }}
+
     // ==================== Platform Layer: APP Orchestration ====================
 
     // Generic Intent - launch ANY app/action/deep link

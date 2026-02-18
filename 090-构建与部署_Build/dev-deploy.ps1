@@ -63,37 +63,39 @@ else {
     Ok "AccessibilityService 已处于启用状态"
 }
 
-# 5. 唤醒屏幕 + 启动应用
+# 5. 唤醒屏幕 + 配置端口 + 启动应用（全自动，无需手动操作）
+$TARGET_PORT = 8086
 Log "唤醒屏幕..."
 & $ADB shell "input keyevent KEYCODE_WAKEUP" 2>&1 | Out-Null
 Start-Sleep -Seconds 1
-Log "启动应用..."
-& $ADB shell "am start -n $ACTIVITY" 2>&1 | Out-Null
-Start-Sleep -Seconds 3
-Ok "应用已启动"
 
-# 6. 动态探测端口并转发
-Log "探测手机监听端口..."
+Log "发送 DEV_CONTROL 广播（端口=$TARGET_PORT）..."
+& $ADB shell "am broadcast -a com.screenstream.DEV_CONTROL --ei port $TARGET_PORT -n $PKG/info.dvkr.screenstream.DevControlReceiver" 2>&1 | Out-Null
+Start-Sleep -Seconds 4
+Ok "DEV_CONTROL 广播已发送"
+
+# 6. 端口转发（固定端口 + 探测补充）
+Log "设置端口转发..."
+& $ADB forward tcp:$TARGET_PORT tcp:$TARGET_PORT 2>&1 | Out-Null
+
 $ssOutput = & $ADB shell "ss -tlnp 2>/dev/null" 2>$null
-$ports = @()
+$ports = @($TARGET_PORT)
 foreach ($line in $ssOutput) {
     if ($line -match '\*:(\d+)\s' -and [int]$Matches[1] -ge 8080 -and [int]$Matches[1] -le 8099) {
-        $ports += $Matches[1]
+        if ($Matches[1] -ne $TARGET_PORT.ToString()) {
+            $ports += $Matches[1]
+            & $ADB forward tcp:$($Matches[1]) tcp:$($Matches[1]) 2>&1 | Out-Null
+        }
     }
 }
 $ports = $ports | Sort-Object -Unique
-if ($ports.Count -eq 0) { $ports = @('8080', '8081', '8084', '8086') }
-Log "发现端口: $($ports -join ', ')"
-foreach ($p in $ports) {
-    & $ADB forward tcp:$p tcp:$p 2>&1 | Out-Null
-}
 Ok "端口转发完成: $($ports -join '/')"
 
-# 7. 动态探测 Input API 端口
+# 7. 等待 Input API 就绪（优先检测目标端口）
 Log "等待 Input API 就绪..."
 $ready = $false
 $apiPort = $null
-for ($i = 0; $i -lt 10; $i++) {
+for ($i = 0; $i -lt 15; $i++) {
     foreach ($p in $ports) {
         try {
             $resp = curl.exe -s --connect-timeout 2 http://127.0.0.1:${p}/status 2>$null
