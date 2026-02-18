@@ -646,6 +646,11 @@ public fun Route.installInputRoutes() {
         call.respondText(svc.runSemanticDemo(target).toString(), ContentType.Application.Json)
     }}
 
+    // Cross-screen demo: Settings → WiFi → Toggle switch
+    post("/demo/wifi") { requireInputService { svc ->
+        call.respondText(svc.runWifiToggleDemo().toString(), ContentType.Application.Json)
+    }}
+
     // ==================== Platform Layer: APP Orchestration ====================
 
     // Generic Intent - launch ANY app/action/deep link

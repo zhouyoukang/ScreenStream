@@ -2516,6 +2516,323 @@ public class InputService : AccessibilityService() {
         }
     }
 
+    /**
+     * Cross-screen sequential automation demo: Open Settings → Find WiFi → Toggle switch.
+     * Tests: screen transitions, View tree re-read, list scrolling, Switch/Toggle recognition.
+     */
+    public fun runWifiToggleDemo(): JSONObject {
+        val log = JSONArray()
+        val startTime = System.currentTimeMillis()
+        fun logStep(step: String, ok: Boolean, detail: String = "") {
+            val entry = JSONObject()
+                .put("step", step)
+                .put("ok", ok)
+                .put("ms", System.currentTimeMillis() - startTime)
+            if (detail.isNotEmpty()) entry.put("detail", detail)
+            log.put(entry)
+            Log.i(TAG, "WifiDemo [$step] ok=$ok $detail")
+        }
+
+        // Helper: find a node matching any of the given texts
+        fun findNodeByTexts(texts: List<String>): Pair<AccessibilityNodeInfo?, String> {
+            val root = rootInActiveWindow ?: return null to "no active window"
+            try {
+                for (text in texts) {
+                    val nodes = root.findAccessibilityNodeInfosByText(text)
+                    if (nodes != null && nodes.isNotEmpty()) {
+                        for (node in nodes) {
+                            if (node.isVisibleToUser) {
+                                val label = node.text?.toString() ?: node.contentDescription?.toString() ?: text
+                                // Don't recycle the found node - caller will use it
+                                return node to label
+                            }
+                        }
+                        nodes.forEach { try { it.recycle() } catch (_: Exception) {} }
+                    }
+                }
+            } catch (_: Exception) {}
+            try { root.recycle() } catch (_: Exception) {}
+            return null to "not found: ${texts.joinToString("/")}"
+        }
+
+        // Helper: click a node or its clickable parent
+        fun clickNode(node: AccessibilityNodeInfo): Boolean {
+            if (node.isClickable) {
+                return node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            }
+            // Walk up to find clickable parent
+            var parent = node.parent
+            var depth = 0
+            while (parent != null && depth < 5) {
+                if (parent.isClickable) {
+                    val result = parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    try { parent.recycle() } catch (_: Exception) {}
+                    return result
+                }
+                val gp = parent.parent
+                try { parent.recycle() } catch (_: Exception) {}
+                parent = gp
+                depth++
+            }
+            return false
+        }
+
+        // Helper: snapshot current screen elements for diagnostics
+        fun screenSnapshot(): String {
+            val screen = extractScreenText()
+            return "pkg=${screen.optString("package")} texts=${screen.optInt("textCount")} clickables=${screen.optInt("clickableCount")}"
+        }
+
+        try {
+            // === Step 1: Record initial WiFi state ===
+            val wifiManager = try {
+                applicationContext.getSystemService(android.content.Context.WIFI_SERVICE) as? android.net.wifi.WifiManager
+            } catch (_: Exception) { null }
+            val initialWifiState = try { wifiManager?.isWifiEnabled } catch (_: Exception) { null }
+            logStep("initial_state", true, "wifi_enabled=$initialWifiState")
+
+            // === Step 2: Open system Settings ===
+            val settingsIntent = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(settingsIntent)
+            Thread.sleep(1500)
+
+            val settingsScreen = extractScreenText()
+            logStep("open_settings", true,
+                "pkg=${settingsScreen.optString("package")} texts=${settingsScreen.optInt("textCount")}")
+
+            // === Step 3: Find WiFi/WLAN item ===
+            // OEM variations: WLAN, Wi-Fi, WiFi, 无线局域网, WLAN/WiFi
+            val wifiLabels = listOf("WLAN", "Wi-Fi", "WiFi", "无线局域网", "网络和互联网", "连接")
+
+            var (wifiNode, wifiLabel) = findNodeByTexts(wifiLabels)
+
+            // If not found, try scrolling down
+            if (wifiNode == null) {
+                logStep("wifi_search_scroll", false, "Not visible, scrolling down...")
+                for (scrollAttempt in 1..3) {
+                    scrollNormalized(0.5f, 0.7f, "down", 600)
+                    Thread.sleep(800)
+                    val result = findNodeByTexts(wifiLabels)
+                    wifiNode = result.first
+                    wifiLabel = result.second
+                    if (wifiNode != null) {
+                        logStep("wifi_found_after_scroll", true, "attempt=$scrollAttempt label='$wifiLabel'")
+                        break
+                    }
+                }
+            }
+
+            if (wifiNode == null) {
+                logStep("find_wifi_item", false, "WiFi item not found. Screen: ${screenSnapshot()}")
+                // Dump all visible texts for diagnostics
+                val allTexts = extractScreenText()
+                return JSONObject().put("ok", false).put("log", log)
+                    .put("error", "WiFi/WLAN item not found in Settings")
+                    .put("screen", allTexts)
+            }
+
+            val wifiRect = Rect()
+            wifiNode.getBoundsInScreen(wifiRect)
+            logStep("find_wifi_item", true,
+                "label='$wifiLabel' bounds=$wifiRect clickable=${wifiNode.isClickable}")
+
+            // === Step 4: Click WiFi item to enter WiFi settings ===
+            val wifiClicked = clickNode(wifiNode)
+            try { wifiNode.recycle() } catch (_: Exception) {}
+            logStep("click_wifi_item", wifiClicked, "label='$wifiLabel'")
+
+            if (!wifiClicked) {
+                return JSONObject().put("ok", false).put("log", log)
+                    .put("error", "Failed to click WiFi item")
+            }
+
+            // === Step 5: Wait for WiFi settings page to load, re-read View tree ===
+            Thread.sleep(1500)
+            val wifiPageScreen = extractScreenText()
+            logStep("wifi_page_loaded", true,
+                "pkg=${wifiPageScreen.optString("package")} texts=${wifiPageScreen.optInt("textCount")} clickables=${wifiPageScreen.optInt("clickableCount")}")
+
+            // === Step 6: Find WiFi toggle switch ===
+            // Strategy: Look for Switch/Toggle widget near WiFi text, or find by class name
+            val root = rootInActiveWindow
+            var switchNode: AccessibilityNodeInfo? = null
+            var switchInfo = ""
+
+            if (root != null) {
+                try {
+                    // Strategy A: Find Switch/Toggle by class name (don't require isClickable — OEM switches may not be)
+                    fun findSwitchInTree(node: AccessibilityNodeInfo, depth: Int): AccessibilityNodeInfo? {
+                        if (depth > 15) return null
+                        val cls = node.className?.toString() ?: ""
+                        if (cls.contains("Switch") || cls.contains("Toggle") || cls.contains("CheckBox")) {
+                            if (node.isVisibleToUser) {
+                                switchInfo = "cls=$cls checked=${node.isChecked} clickable=${node.isClickable} checkable=${node.isCheckable} text='${node.text ?: ""}' id='${node.viewIdResourceName ?: ""}'"
+                                return node
+                            }
+                        }
+                        for (i in 0 until node.childCount) {
+                            val child = node.getChild(i) ?: continue
+                            val found = findSwitchInTree(child, depth + 1)
+                            if (found != null) return found
+                            try { child.recycle() } catch (_: Exception) {}
+                        }
+                        return null
+                    }
+                    switchNode = findSwitchInTree(root, 0)
+
+                    // Strategy B: Find by resource ID (common switch IDs)
+                    if (switchNode == null) {
+                        val switchIds = listOf("android:id/switch_widget", "android:id/switchWidget", "com.android.settings:id/switch_widget")
+                        for (id in switchIds) {
+                            val nodes = root.findAccessibilityNodeInfosByViewId(id)
+                            if (nodes != null && nodes.isNotEmpty()) {
+                                switchNode = nodes[0]
+                                switchInfo = "byId=$id cls=${switchNode!!.className} checked=${switchNode!!.isChecked}"
+                                nodes.drop(1).forEach { try { it.recycle() } catch (_: Exception) {} }
+                                break
+                            }
+                        }
+                    }
+
+                    // Strategy C: Find checkable node with WiFi-related text
+                    if (switchNode == null) {
+                        val wifiSwitchLabels = listOf("WLAN", "Wi-Fi", "WiFi")
+                        for (label in wifiSwitchLabels) {
+                            val nodes = root.findAccessibilityNodeInfosByText(label)
+                            if (nodes != null) {
+                                for (node in nodes) {
+                                    if (node.isCheckable && node.isVisibleToUser) {
+                                        switchNode = node
+                                        switchInfo = "checkable cls=${node.className} checked=${node.isChecked} text='${node.text}'"
+                                        break
+                                    }
+                                }
+                                if (switchNode != null) break
+                                nodes.forEach { try { it.recycle() } catch (_: Exception) {} }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    logStep("find_switch_error", false, e.message ?: "unknown")
+                } finally {
+                    try { root.recycle() } catch (_: Exception) {}
+                }
+            }
+
+            if (switchNode == null) {
+                logStep("find_wifi_switch", false, "Switch not found. Screen: ${screenSnapshot()}")
+                val allTexts = extractScreenText()
+                return JSONObject().put("ok", false).put("log", log)
+                    .put("error", "WiFi switch/toggle not found on WiFi settings page")
+                    .put("screen", allTexts)
+                    .put("phase2_debt", "Need smarter widget detection: scan for Switch/Toggle by class hierarchy, handle OEM custom widgets")
+            }
+
+            val switchRect = Rect()
+            switchNode.getBoundsInScreen(switchRect)
+            val wasChecked = switchNode.isChecked
+            logStep("find_wifi_switch", true,
+                "$switchInfo bounds=$switchRect was_checked=$wasChecked")
+
+            // === Step 7: Toggle the switch (try multiple strategies) ===
+            var toggleResult = switchNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            var toggleVia = "ACTION_CLICK"
+
+            // If direct click didn't work, try clicking parent
+            if (!toggleResult) {
+                var parent = switchNode.parent
+                var depth = 0
+                while (parent != null && depth < 3) {
+                    if (parent.isClickable) {
+                        toggleResult = parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                        toggleVia = "parent_click(depth=$depth)"
+                        try { parent.recycle() } catch (_: Exception) {}
+                        break
+                    }
+                    val gp = parent.parent
+                    try { parent.recycle() } catch (_: Exception) {}
+                    parent = gp
+                    depth++
+                }
+            }
+
+            // Last resort: coordinate-based tap on switch center
+            if (!toggleResult) {
+                val cx = switchRect.centerX()
+                val cy = switchRect.centerY()
+                dispatchClick(cx, cy, 100)
+                toggleResult = true
+                toggleVia = "coordinate_tap($cx,$cy)"
+            }
+
+            try { switchNode.recycle() } catch (_: Exception) {}
+            logStep("toggle_switch", toggleResult, "was_checked=$wasChecked → target=${!wasChecked} via=$toggleVia")
+
+            // === Step 8: Verify WiFi state actually changed ===
+            Thread.sleep(2000) // Wait for WiFi state transition
+
+            val finalWifiState = try { wifiManager?.isWifiEnabled } catch (_: Exception) { null }
+            val stateChanged = initialWifiState != finalWifiState
+            logStep("verify_state", stateChanged,
+                "initial=$initialWifiState → final=$finalWifiState changed=$stateChanged")
+
+            // Also re-read the switch state from View tree
+            Thread.sleep(500)
+            val verifyRoot = rootInActiveWindow
+            var finalSwitchChecked: Boolean? = null
+            if (verifyRoot != null) {
+                try {
+                    fun findFirstSwitch(node: AccessibilityNodeInfo, depth: Int): Boolean? {
+                        if (depth > 15) return null
+                        val cls = node.className?.toString() ?: ""
+                        if ((cls.contains("Switch") || cls.contains("Toggle") || cls.contains("CheckBox")) && node.isVisibleToUser) {
+                            return node.isChecked
+                        }
+                        for (i in 0 until node.childCount) {
+                            val child = node.getChild(i) ?: continue
+                            val result = findFirstSwitch(child, depth + 1)
+                            if (result != null) {
+                                try { child.recycle() } catch (_: Exception) {}
+                                return result
+                            }
+                            try { child.recycle() } catch (_: Exception) {}
+                        }
+                        return null
+                    }
+                    finalSwitchChecked = findFirstSwitch(verifyRoot, 0)
+                } finally {
+                    try { verifyRoot.recycle() } catch (_: Exception) {}
+                }
+            }
+            logStep("verify_switch_ui", finalSwitchChecked != null,
+                "switch_checked=$finalSwitchChecked (was $wasChecked)")
+
+            // === Step 9: Go back to home ===
+            performGlobalAction(GLOBAL_ACTION_HOME)
+
+            val totalMs = System.currentTimeMillis() - startTime
+            val success = stateChanged || (finalSwitchChecked != null && finalSwitchChecked != wasChecked)
+            return JSONObject()
+                .put("ok", success)
+                .put("totalMs", totalMs)
+                .put("log", log)
+                .put("wifiState", JSONObject()
+                    .put("initial", initialWifiState)
+                    .put("final", finalWifiState)
+                    .put("changed", stateChanged))
+                .put("summary", if (success)
+                    "SUCCESS: Settings → WiFi → Toggle ($wasChecked→${!wasChecked}) in ${totalMs}ms. WiFi: $initialWifiState→$finalWifiState"
+                else
+                    "PARTIAL: Navigation worked but WiFi state may not have changed. initial=$initialWifiState final=$finalWifiState")
+
+        } catch (e: Exception) {
+            logStep("error", false, e.message ?: "unknown")
+            return JSONObject().put("ok", false).put("log", log).put("error", e.message)
+        }
+    }
+
     public fun getActiveWindowInfo(): JSONObject {
         val root = rootInActiveWindow
             ?: return JSONObject().put("error", "No active window")
