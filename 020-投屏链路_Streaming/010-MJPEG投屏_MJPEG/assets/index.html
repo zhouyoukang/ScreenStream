@@ -865,6 +865,13 @@
             } else if (type === 'error') {
                 div.className = 'cmd-err';
                 div.innerHTML = '❌ ' + escapeHtml(detail);
+            } else if (type.startsWith('agent_')) {
+                var agentType = type.substring(6);
+                var icons = { start: '🤖', plan: '🔍', read: '📖', found: '🎯', click: '👆', verify: '✔', scroll: '📜', exhausted: '🚫', timeout: '⏱', error: '❌' };
+                var icon = icons[agentType] || '🔹';
+                div.className = ok ? 'cmd-step' : 'cmd-err';
+                div.innerHTML = icon + ' ' + escapeHtml(detail) +
+                    ' <span style="color:#555">(' + (step.ms || 0) + 'ms)</span>';
             } else {
                 div.className = 'cmd-step';
                 div.innerHTML = (ok ? '✓' : '✗') + ' ' + escapeHtml(detail);

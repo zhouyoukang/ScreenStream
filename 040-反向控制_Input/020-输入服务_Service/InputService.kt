@@ -2838,7 +2838,7 @@ public class InputService : AccessibilityService() {
      * Parses user intent via keyword matching and chains existing capabilities.
      * Examples: "关掉WiFi", "打开计算器", "点击设置", "输入hello", "返回", "截图"
      */
-    public fun executeNaturalCommand(command: String): JSONObject {
+    public fun executeNaturalCommand(command: String, onStep: ((JSONObject) -> Unit)? = null): JSONObject {
         val startTime = System.currentTimeMillis()
         val steps = JSONArray()
         fun step(name: String, ok: Boolean, detail: String = "") {
@@ -2968,17 +2968,184 @@ public class InputService : AccessibilityService() {
                     .put("detail", fallbackResult)
             }
 
+            // === Agent Path: intelligent View tree search when keywords fail ===
+            val agentResult = runAgentPath(command, startTime, onStep)
+            if (agentResult.optBoolean("ok")) {
+                steps.put(JSONObject().put("step", "agent").put("ok", true)
+                    .put("ms", System.currentTimeMillis() - startTime)
+                    .put("detail", agentResult.optString("summary", "agent completed")))
+                return agentResult.put("steps", steps)
+            }
+
             // === Not understood ===
-            step("execute", false, "command not understood")
+            step("execute", false, "command not understood, agent also failed")
             return JSONObject().put("ok", false).put("totalMs", System.currentTimeMillis() - startTime)
                 .put("command", command).put("error", "无法理解命令: $command")
-                .put("steps", steps)
+                .put("steps", steps).put("agentLog", agentResult.optJSONArray("agentSteps"))
                 .put("hint", "支持: 打开[APP], 关掉/打开WiFi, 点击[文字], 输入[文本], 返回, 主页, 截图, 上滑/下滑")
 
         } catch (e: Exception) {
             step("error", false, e.message ?: "unknown")
             return JSONObject().put("ok", false).put("command", command).put("error", e.message).put("steps", steps)
         }
+    }
+
+    /**
+     * Agent Path: intelligent View tree search when keyword matching fails.
+     * Reads screen → searches for matching elements → clicks/scrolls → verifies.
+     * Max 8 steps, 20s timeout.
+     */
+    private fun runAgentPath(command: String, globalStartTime: Long, onStep: ((JSONObject) -> Unit)?): JSONObject {
+        val agentSteps = JSONArray()
+        val agentStart = System.currentTimeMillis()
+        val maxSteps = 8
+        val timeoutMs = 20_000L
+        var stepCount = 0
+
+        fun emit(type: String, ok: Boolean, detail: String) {
+            val step = JSONObject()
+                .put("type", "agent_$type").put("ok", ok).put("detail", detail)
+                .put("ms", System.currentTimeMillis() - globalStartTime)
+                .put("agentStep", stepCount)
+            agentSteps.put(step)
+            onStep?.invoke(step)
+        }
+
+        fun elapsed() = System.currentTimeMillis() - agentStart
+        fun timedOut() = elapsed() > timeoutMs
+
+        val cmd = command.trim()
+        val cmdLower = cmd.lowercase()
+        emit("start", true, "Agent 启动: '$cmd'")
+
+        try {
+            // Extract search keywords from command
+            val keywords = extractSearchKeywords(cmd)
+            emit("plan", true, "搜索关键词: ${keywords.joinToString(", ")}")
+
+            // Step loop: read screen → search → act → verify
+            var scrollAttempts = 0
+            val maxScrolls = 3
+
+            while (stepCount < maxSteps && !timedOut()) {
+                stepCount++
+
+                // 1. Read current screen
+                val screen = extractScreenText()
+                val pkg = screen.optString("package", "")
+                val texts = screen.optJSONArray("texts")
+                val textCount = screen.optInt("textCount", 0)
+                emit("read", true, "屏幕: [$pkg] ${textCount}个元素")
+
+                if (timedOut()) break
+
+                // 2. Search for matching elements
+                var bestMatch: JSONObject? = null
+                var bestScore = 0
+                if (texts != null) {
+                    for (i in 0 until texts.length()) {
+                        val textObj = texts.getJSONObject(i)
+                        val text = textObj.optString("text", "")
+                        val score = calculateMatchScore(text, keywords, cmdLower)
+                        if (score > bestScore) {
+                            bestScore = score
+                            bestMatch = textObj
+                        }
+                    }
+                }
+
+                if (bestMatch != null && bestScore >= 2) {
+                    val matchText = bestMatch.optString("text", "")
+                    val matchBounds = bestMatch.optString("bounds", "")
+                    val isClickable = bestMatch.optBoolean("clickable", false)
+                    emit("found", true, "匹配: '$matchText' (score=$bestScore, bounds=$matchBounds)")
+
+                    // 3. Try to click it
+                    val clickResult = findAndClickByText(matchText)
+                    if (clickResult.optBoolean("ok")) {
+                        emit("click", true, "点击成功: '$matchText'")
+
+                        // 4. Verify: wait and re-read
+                        Thread.sleep(500)
+                        if (timedOut()) break
+                        val verifyScreen = extractScreenText()
+                        val verifyPkg = verifyScreen.optString("package", "")
+                        val verifyTexts = verifyScreen.optInt("textCount", 0)
+                        val changed = verifyPkg != pkg || verifyTexts != textCount
+                        emit("verify", true,
+                            "验证: [$verifyPkg] ${verifyTexts}项 ${if (changed) "(界面已变化)" else "(未变化)"}")
+
+                        // Build summary of what we see now
+                        val summary = buildScreenSummary(verifyScreen)
+
+                        return JSONObject().put("ok", true)
+                            .put("totalMs", System.currentTimeMillis() - globalStartTime)
+                            .put("command", command).put("action", "agent")
+                            .put("summary", "Agent找到并点击了'$matchText' → $summary")
+                            .put("agentSteps", agentSteps)
+                            .put("screenSummary", summary)
+                    } else {
+                        emit("click", false, "点击失败: '$matchText'")
+                    }
+                } else {
+                    // No match found — try scrolling
+                    if (scrollAttempts < maxScrolls) {
+                        scrollAttempts++
+                        emit("scroll", true, "未找到匹配，滚动搜索 ($scrollAttempts/$maxScrolls)")
+                        scrollNormalized(0.5f, 0.5f, "down", 600)
+                        Thread.sleep(800)
+                    } else {
+                        emit("exhausted", false, "滚动${maxScrolls}次后仍未找到匹配")
+                        break
+                    }
+                }
+            }
+
+            if (timedOut()) {
+                emit("timeout", false, "Agent 超时 (${timeoutMs / 1000}s)")
+            }
+
+            return JSONObject().put("ok", false).put("command", command)
+                .put("error", "Agent未能找到匹配的操作目标")
+                .put("agentSteps", agentSteps)
+
+        } catch (e: Exception) {
+            emit("error", false, e.message ?: "unknown")
+            return JSONObject().put("ok", false).put("command", command)
+                .put("error", e.message).put("agentSteps", agentSteps)
+        }
+    }
+
+    /** Extract meaningful search keywords from a natural language command */
+    private fun extractSearchKeywords(command: String): List<String> {
+        // Remove common action verbs to get the target keywords
+        val stopWords = listOf(
+            "打开", "启动", "运行", "找到", "找", "搜索", "看看", "查看",
+            "点击", "按", "去", "进入", "切换", "关闭", "关掉",
+            "open", "find", "go to", "click", "tap", "search", "look",
+            "一个", "那个", "这个", "的", "了", "吧", "啊"
+        )
+        var cleaned = command.trim()
+        for (word in stopWords) {
+            cleaned = cleaned.replace(word, " ", ignoreCase = true)
+        }
+        return cleaned.split(Regex("[\\s,，、]+")).filter { it.length >= 1 }.distinct()
+    }
+
+    /** Calculate how well a View tree text matches the search keywords */
+    private fun calculateMatchScore(text: String, keywords: List<String>, fullCommand: String): Int {
+        if (text.isBlank()) return 0
+        val textLower = text.lowercase()
+        var score = 0
+        for (kw in keywords) {
+            if (kw.isBlank()) continue
+            if (textLower.contains(kw.lowercase())) score += 3
+            else if (textLower.contains(kw.take(2).lowercase())) score += 1
+        }
+        // Bonus for exact substring match with command
+        if (fullCommand.contains(text, ignoreCase = true)) score += 2
+        if (text.contains(fullCommand, ignoreCase = true)) score += 2
+        return score
     }
 
     /**
@@ -3008,7 +3175,7 @@ public class InputService : AccessibilityService() {
                 emitStep(JSONObject().put("type", "start").put("ok", true)
                     .put("index", index).put("command", step))
 
-                val result = executeSingleStep(step)
+                val result = executeSingleStep(step, onStep)
                 val ok = result.optBoolean("ok", false)
                 emitStep(JSONObject().put("type", "result").put("ok", ok)
                     .put("index", index).put("command", step)
@@ -3076,10 +3243,13 @@ public class InputService : AccessibilityService() {
 
     /** Split a single part that may contain compound patterns */
     private fun splitSinglePart(part: String): List<String> {
-        // Pattern: "打开X看Y" → ["打开X", "看看Y"]
-        val openLookMatch = Regex("(打开\\S+?)(看看?|查看)(\\S+)").find(part)
-        if (openLookMatch != null) {
-            return listOf(openLookMatch.groupValues[1], "看看${openLookMatch.groupValues[3]}")
+        // Pattern: "打开X看Y" / "打开X找Y" / "打开X找到Y" → ["打开X", "看看Y"] or ["打开X", "找到Y"]
+        val openActionMatch = Regex("(打开\\S+?)(看看?|查看|找到?|搜索)(\\S+)").find(part)
+        if (openActionMatch != null) {
+            val action = openActionMatch.groupValues[2]
+            val target = openActionMatch.groupValues[3]
+            val prefix = if (action.startsWith("找")) "找到" else "看看"
+            return listOf(openActionMatch.groupValues[1], "$prefix$target")
         }
 
         // Pattern: "打开计算器按5+3=" → ["打开计算器", calc sequence]
@@ -3123,13 +3293,75 @@ public class InputService : AccessibilityService() {
     }
 
     /** Execute a single atomic step — delegates to existing commands + new "look" capability */
-    private fun executeSingleStep(step: String): JSONObject {
+    private fun executeSingleStep(step: String, onStep: ((JSONObject) -> Unit)? = null): JSONObject {
         val cmd = step.trim().lowercase()
 
         // "calc:X" — calculator button press via View tree ID matching
         if (cmd.startsWith("calc:")) {
             val label = step.substring(5)
             return clickCalcButton(label)
+        }
+
+        // "找到X" — search View tree for target element, report location
+        if (cmd.startsWith("找到") || cmd.startsWith("find")) {
+            val target = step.trim().let {
+                when {
+                    it.startsWith("找到") -> it.substring(2)
+                    it.startsWith("find") -> it.substring(4)
+                    else -> it
+                }
+            }.trim()
+
+            if (target.isNotEmpty()) {
+                // First try to find on current screen
+                val screen = extractScreenText()
+                val texts = screen.optJSONArray("texts")
+                var found = false
+                var foundInfo = ""
+                if (texts != null) {
+                    for (i in 0 until texts.length()) {
+                        val textObj = texts.getJSONObject(i)
+                        val text = textObj.optString("text", "")
+                        if (text.contains(target, ignoreCase = true)) {
+                            foundInfo = "'$text' bounds=${textObj.optString("bounds")} clickable=${textObj.optBoolean("clickable")}"
+                            found = true
+                            break
+                        }
+                    }
+                }
+
+                if (found) {
+                    return JSONObject().put("ok", true).put("action", "find")
+                        .put("summary", "找到: $foundInfo | ${buildScreenSummary(screen)}")
+                }
+
+                // Not on current screen — try scrolling (max 3 times)
+                for (scroll in 1..3) {
+                    scrollNormalized(0.5f, 0.5f, "down", 600)
+                    Thread.sleep(800)
+                    val scrollScreen = extractScreenText()
+                    val scrollTexts = scrollScreen.optJSONArray("texts")
+                    if (scrollTexts != null) {
+                        for (i in 0 until scrollTexts.length()) {
+                            val textObj = scrollTexts.getJSONObject(i)
+                            val text = textObj.optString("text", "")
+                            if (text.contains(target, ignoreCase = true)) {
+                                foundInfo = "'$text' bounds=${textObj.optString("bounds")} clickable=${textObj.optBoolean("clickable")}"
+                                found = true
+                                break
+                            }
+                        }
+                    }
+                    if (found) {
+                        return JSONObject().put("ok", true).put("action", "find")
+                            .put("summary", "滚动${scroll}次后找到: $foundInfo | ${buildScreenSummary(scrollScreen)}")
+                    }
+                }
+
+                return JSONObject().put("ok", false).put("action", "find")
+                    .put("error", "未找到'$target'")
+                    .put("summary", "滚动3次后未找到'$target' | ${buildScreenSummary(extractScreenText())}")
+            }
         }
 
         // "看看" / "查看" — read screen and return semantic info
@@ -3168,7 +3400,7 @@ public class InputService : AccessibilityService() {
         }
 
         // Delegate to existing natural command executor
-        return executeNaturalCommand(step)
+        return executeNaturalCommand(step, onStep)
     }
 
     /** Click a calculator button by label — uses View tree ID matching for operators */
@@ -3355,8 +3587,10 @@ public class InputService : AccessibilityService() {
                     startActivity(intent)
                     step("execute", true, "opened via action+data: $value")
                 } else {
-                    // Action only
-                    val intent = Intent(value).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                    // Action only (settings etc.) — clear task to start fresh
+                    val intent = Intent(value).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    }
                     startActivity(intent)
                     step("execute", true, "opened via action: $value")
                 }
