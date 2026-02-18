@@ -651,6 +651,17 @@ public fun Route.installInputRoutes() {
         call.respondText(svc.runWifiToggleDemo().toString(), ContentType.Application.Json)
     }}
 
+    // Natural language command: user describes intent, system executes
+    post("/command") { requireInputService { svc ->
+        val json = runCatching { JSONObject(call.receiveText()) }.getOrElse { JSONObject() }
+        val command = json.optString("command", "").trim()
+        if (command.isEmpty()) {
+            call.respondText(JSONObject().put("ok", false).put("error", "Empty command").toString(), ContentType.Application.Json)
+        } else {
+            call.respondText(svc.executeNaturalCommand(command).toString(), ContentType.Application.Json)
+        }
+    }}
+
     // ==================== Platform Layer: APP Orchestration ====================
 
     // Generic Intent - launch ANY app/action/deep link

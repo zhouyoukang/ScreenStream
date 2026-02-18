@@ -2833,6 +2833,249 @@ public class InputService : AccessibilityService() {
         }
     }
 
+    /**
+     * Natural language command executor.
+     * Parses user intent via keyword matching and chains existing capabilities.
+     * Examples: "关掉WiFi", "打开计算器", "点击设置", "输入hello", "返回", "截图"
+     */
+    public fun executeNaturalCommand(command: String): JSONObject {
+        val startTime = System.currentTimeMillis()
+        val steps = JSONArray()
+        fun step(name: String, ok: Boolean, detail: String = "") {
+            steps.put(JSONObject().put("step", name).put("ok", ok)
+                .put("ms", System.currentTimeMillis() - startTime)
+                .apply { if (detail.isNotEmpty()) put("detail", detail) })
+        }
+
+        val cmd = command.trim().lowercase()
+        step("parse", true, "input='$command'")
+
+        try {
+            // === Pattern: Open/Launch app ===
+            val openPatterns = listOf("打开", "启动", "运行", "open", "launch", "start")
+            val appMatch = openPatterns.firstOrNull { cmd.startsWith(it) }
+            if (appMatch != null) {
+                val appName = command.trim().substring(appMatch.length).trim()
+                if (appName.isNotEmpty()) {
+                    return executeOpenApp(appName, steps, startTime)
+                }
+            }
+
+            // === Pattern: Toggle WiFi ===
+            val hasWifi = cmd.contains("wifi") || cmd.contains("wlan") || cmd.contains("无线")
+            val wantOff = cmd.contains("关") || cmd.contains("off") || cmd.contains("disable") || cmd.contains("断开")
+            val wantOn = cmd.contains("开") || cmd.contains("on") || cmd.contains("enable") || cmd.contains("连接")
+            val wantToggle = cmd.contains("切换") || cmd.contains("toggle") || cmd.contains("switch")
+            if (hasWifi && (wantOff || wantOn || wantToggle)) {
+                step("intent", true, "wifi_toggle target=${if (wantOff) "off" else if (wantOn) "on" else "toggle"}")
+                val result = runWifiToggleDemo()
+                step("execute", result.optBoolean("ok"), result.optString("summary"))
+                return JSONObject().put("ok", result.optBoolean("ok"))
+                    .put("totalMs", System.currentTimeMillis() - startTime)
+                    .put("command", command).put("action", "wifi_toggle").put("steps", steps)
+                    .put("detail", result)
+            }
+
+            // === Pattern: Click UI element by text ===
+            val clickPatterns = listOf("点击", "按", "tap", "click", "press")
+            val clickMatch = clickPatterns.firstOrNull { cmd.startsWith(it) }
+            if (clickMatch != null) {
+                val target = command.trim().substring(clickMatch.length).trim()
+                    .removeSurrounding("\"").removeSurrounding("'").removeSurrounding(""", """)
+                if (target.isNotEmpty()) {
+                    step("intent", true, "click target='$target'")
+                    val result = findAndClickByText(target)
+                    val ok = result.optBoolean("ok")
+                    step("execute", ok, result.toString())
+                    return JSONObject().put("ok", ok)
+                        .put("totalMs", System.currentTimeMillis() - startTime)
+                        .put("command", command).put("action", "click").put("target", target)
+                        .put("steps", steps).put("detail", result)
+                }
+            }
+
+            // === Pattern: Type/Input text ===
+            val typePatterns = listOf("输入", "type", "input", "键入", "写入")
+            val typeMatch = typePatterns.firstOrNull { cmd.startsWith(it) }
+            if (typeMatch != null) {
+                val text = command.trim().substring(typeMatch.length).trim()
+                    .removeSurrounding("\"").removeSurrounding("'").removeSurrounding(""", """)
+                if (text.isNotEmpty()) {
+                    step("intent", true, "type text='$text'")
+                    inputText(text)
+                    step("execute", true, "typed ${text.length} chars")
+                    return JSONObject().put("ok", true)
+                        .put("totalMs", System.currentTimeMillis() - startTime)
+                        .put("command", command).put("action", "type").put("text", text).put("steps", steps)
+                }
+            }
+
+            // === Pattern: Navigation ===
+            if (cmd.contains("返回") || cmd == "back" || cmd == "go back") {
+                performGlobalAction(GLOBAL_ACTION_BACK)
+                step("execute", true, "GLOBAL_ACTION_BACK")
+                return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
+                    .put("command", command).put("action", "back").put("steps", steps)
+            }
+            if (cmd.contains("主页") || cmd.contains("桌面") || cmd == "home" || cmd == "go home") {
+                performGlobalAction(GLOBAL_ACTION_HOME)
+                step("execute", true, "GLOBAL_ACTION_HOME")
+                return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
+                    .put("command", command).put("action", "home").put("steps", steps)
+            }
+            if (cmd.contains("最近") || cmd.contains("任务") || cmd == "recents") {
+                performGlobalAction(GLOBAL_ACTION_RECENTS)
+                step("execute", true, "GLOBAL_ACTION_RECENTS")
+                return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
+                    .put("command", command).put("action", "recents").put("steps", steps)
+            }
+            if (cmd.contains("通知") || cmd == "notifications") {
+                performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS)
+                step("execute", true, "GLOBAL_ACTION_NOTIFICATIONS")
+                return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
+                    .put("command", command).put("action", "notifications").put("steps", steps)
+            }
+
+            // === Pattern: Screenshot ===
+            if (cmd.contains("截图") || cmd.contains("screenshot") || cmd.contains("截屏")) {
+                val screen = extractScreenText()
+                step("execute", true, "screen captured: ${screen.optInt("textCount")} texts")
+                return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
+                    .put("command", command).put("action", "screen_read").put("screen", screen).put("steps", steps)
+            }
+
+            // === Pattern: Scroll ===
+            if (cmd.contains("上滑") || cmd.contains("scroll up") || cmd.contains("往上")) {
+                scrollNormalized(0.5f, 0.5f, "up", 600)
+                step("execute", true, "scroll up")
+                return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
+                    .put("command", command).put("action", "scroll_up").put("steps", steps)
+            }
+            if (cmd.contains("下滑") || cmd.contains("scroll down") || cmd.contains("往下")) {
+                scrollNormalized(0.5f, 0.5f, "down", 600)
+                step("execute", true, "scroll down")
+                return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
+                    .put("command", command).put("action", "scroll_down").put("steps", steps)
+            }
+
+            // === Fallback: try to find and click any matching text on screen ===
+            step("intent", true, "fallback: try click '$cmd'")
+            val fallbackResult = findAndClickByText(command.trim())
+            if (fallbackResult.optBoolean("ok")) {
+                step("execute", true, "fallback clicked: ${fallbackResult.optString("clicked")}")
+                return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
+                    .put("command", command).put("action", "fallback_click").put("steps", steps)
+                    .put("detail", fallbackResult)
+            }
+
+            // === Not understood ===
+            step("execute", false, "command not understood")
+            return JSONObject().put("ok", false).put("totalMs", System.currentTimeMillis() - startTime)
+                .put("command", command).put("error", "无法理解命令: $command")
+                .put("steps", steps)
+                .put("hint", "支持: 打开[APP], 关掉/打开WiFi, 点击[文字], 输入[文本], 返回, 主页, 截图, 上滑/下滑")
+
+        } catch (e: Exception) {
+            step("error", false, e.message ?: "unknown")
+            return JSONObject().put("ok", false).put("command", command).put("error", e.message).put("steps", steps)
+        }
+    }
+
+    /** Open app by name — tries package list first, then known apps, then intent search */
+    private fun executeOpenApp(appName: String, steps: JSONArray, startTime: Long): JSONObject {
+        fun step(name: String, ok: Boolean, detail: String = "") {
+            steps.put(JSONObject().put("step", name).put("ok", ok)
+                .put("ms", System.currentTimeMillis() - startTime)
+                .apply { if (detail.isNotEmpty()) put("detail", detail) })
+        }
+
+        step("intent", true, "open app='$appName'")
+
+        // Known app mappings (Chinese → package/intent)
+        val knownApps = mapOf(
+            "计算器" to "com.coloros.calculator/com.android.calculator2.Calculator",
+            "calculator" to "com.coloros.calculator/com.android.calculator2.Calculator",
+            "设置" to "android.settings.SETTINGS",
+            "settings" to "android.settings.SETTINGS",
+            "相机" to "android.media.action.IMAGE_CAPTURE",
+            "camera" to "android.media.action.IMAGE_CAPTURE",
+            "浏览器" to "android.intent.action.VIEW:https://www.baidu.com",
+            "browser" to "android.intent.action.VIEW:https://www.google.com",
+            "电话" to "android.intent.action.DIAL",
+            "phone" to "android.intent.action.DIAL",
+            "短信" to "android.intent.action.VIEW:sms:",
+            "sms" to "android.intent.action.VIEW:sms:",
+            "wifi" to "android.settings.WIFI_SETTINGS",
+            "wlan" to "android.settings.WIFI_SETTINGS",
+            "蓝牙" to "android.settings.BLUETOOTH_SETTINGS",
+            "bluetooth" to "android.settings.BLUETOOTH_SETTINGS",
+        )
+
+        val appNameLower = appName.lowercase()
+
+        // Try known apps first
+        val known = knownApps.entries.firstOrNull { appNameLower.contains(it.key) }
+        if (known != null) {
+            try {
+                val value = known.value
+                if (value.contains("/")) {
+                    // Explicit component
+                    val (pkg, cls) = value.split("/")
+                    val intent = Intent(Intent.ACTION_MAIN).apply {
+                        setClassName(pkg, cls)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intent)
+                    step("execute", true, "opened via component: $value")
+                } else if (value.contains(":")) {
+                    // Action with data
+                    val (action, data) = value.split(":", limit = 2)
+                    val intent = Intent(action).apply {
+                        this.data = android.net.Uri.parse(data)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intent)
+                    step("execute", true, "opened via action+data: $value")
+                } else {
+                    // Action only
+                    val intent = Intent(value).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                    startActivity(intent)
+                    step("execute", true, "opened via action: $value")
+                }
+                return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
+                    .put("command", "打开$appName").put("action", "open_app").put("app", appName).put("steps", steps)
+            } catch (e: Exception) {
+                step("known_app_failed", false, e.message ?: "")
+            }
+        }
+
+        // Try packageManager.getLaunchIntentForPackage with app name
+        try {
+            val pm = packageManager
+            val installedApps = pm.getInstalledApplications(0)
+            for (app in installedApps) {
+                val label = pm.getApplicationLabel(app).toString()
+                if (label.contains(appName, ignoreCase = true) || appName.contains(label, ignoreCase = true)) {
+                    val launchIntent = pm.getLaunchIntentForPackage(app.packageName)
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(launchIntent)
+                        step("execute", true, "opened '$label' (${app.packageName})")
+                        return JSONObject().put("ok", true).put("totalMs", System.currentTimeMillis() - startTime)
+                            .put("command", "打开$appName").put("action", "open_app")
+                            .put("app", label).put("package", app.packageName).put("steps", steps)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            step("search_failed", false, e.message ?: "")
+        }
+
+        step("execute", false, "app not found: $appName")
+        return JSONObject().put("ok", false).put("totalMs", System.currentTimeMillis() - startTime)
+            .put("command", "打开$appName").put("error", "找不到应用: $appName").put("steps", steps)
+    }
+
     public fun getActiveWindowInfo(): JSONObject {
         val root = rootInActiveWindow
             ?: return JSONObject().put("error", "No active window")

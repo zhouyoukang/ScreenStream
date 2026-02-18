@@ -344,6 +344,107 @@
             cursor: crosshair !important;
         }
 
+        /* AI Command Bar */
+        #aiCommandBar {
+            display: none;
+            position: fixed;
+            bottom: 52px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 420px;
+            max-width: 94vw;
+            z-index: 101;
+            background: rgba(15, 15, 20, 0.96);
+            border: 1px solid rgba(100, 180, 255, 0.25);
+            border-radius: 16px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            padding: 12px 16px;
+            font-family: -apple-system, system-ui, sans-serif;
+        }
+
+        #aiCommandBar.visible {
+            display: block;
+        }
+
+        #aiCommandBar .cmd-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        #aiCommandBar .cmd-header span {
+            color: #7af;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        #aiCommandBar .cmd-header .cmd-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 6px;
+        }
+
+        #aiCommandInput {
+            width: 100%;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #eee;
+            font-size: 14px;
+            outline: none;
+            font-family: inherit;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+        }
+
+        #aiCommandInput::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        #aiCommandInput:focus {
+            border-color: rgba(100, 180, 255, 0.5);
+        }
+
+        #aiCommandResult {
+            margin-top: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #ccc;
+            display: none;
+        }
+
+        #aiCommandResult.visible {
+            display: block;
+        }
+
+        #aiCommandResult .cmd-ok {
+            color: #6f6;
+        }
+
+        #aiCommandResult .cmd-err {
+            color: #f66;
+        }
+
+        #aiCommandResult .cmd-step {
+            color: #aaa;
+            padding: 1px 0;
+        }
+
+        #aiCommandResult .cmd-loading {
+            color: #7af;
+        }
+
         #navBar {
             position: fixed;
             bottom: 0;
@@ -587,6 +688,17 @@
     <button id="mobileToggle" onclick="toggleMobileNav()">☰</button>
     <div id="mobileGestureHint"></div>
 
+    <!-- AI 命令输入栏 -->
+    <div id="aiCommandBar">
+        <div class="cmd-header">
+            <span>🤖 AI 命令</span>
+            <button class="cmd-close" onclick="toggleAiCommand()">✕</button>
+        </div>
+        <input id="aiCommandInput" type="text" placeholder="说点什么...  打开计算器 / 关掉WiFi / 点击设置"
+            onkeydown="if(event.key==='Enter')runAiCommand()" autocomplete="off" />
+        <div id="aiCommandResult"></div>
+    </div>
+
     <!-- 底部工具栏：固定导航 + 命令菜单 -->
     <div id="navBar">
         <!-- 返回 -->
@@ -609,6 +721,13 @@
         </button>
         <!-- 分隔线 -->
         <div style="width:1px;height:24px;background:#444;margin:0 2px;"></div>
+        <!-- AI 命令 -->
+        <button onclick="toggleAiCommand()" title="AI 命令 (Alt+/)" style="padding:8px 12px;">
+            <svg width="24" height="24" viewBox="0 0 24 24">
+                <path fill="#7af"
+                    d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M9,10H15V12H9V10M9,14H12V16H9V14Z" />
+            </svg>
+        </button>
         <!-- 命令菜单 -->
         <button id="menuBtn" onclick="toggleCommandMenu()" title="命令菜单 (Alt+M)" style="padding:8px 12px;">
             <svg width="24" height="24" viewBox="0 0 24 24">
@@ -632,6 +751,85 @@
     </div>
 
     <script>
+        // ==================== AI Command Bar ====================
+        var aiCommandVisible = false;
+        var aiCommandRunning = false;
+
+        function toggleAiCommand() {
+            aiCommandVisible = !aiCommandVisible;
+            var bar = document.getElementById('aiCommandBar');
+            if (aiCommandVisible) {
+                bar.classList.add('visible');
+                document.getElementById('aiCommandInput').focus();
+            } else {
+                bar.classList.remove('visible');
+            }
+        }
+
+        function runAiCommand() {
+            if (aiCommandRunning) return;
+            var input = document.getElementById('aiCommandInput');
+            var result = document.getElementById('aiCommandResult');
+            var command = input.value.trim();
+            if (!command) return;
+
+            aiCommandRunning = true;
+            result.classList.add('visible');
+            result.innerHTML = '<div class="cmd-loading">⏳ 执行中: ' + escapeHtml(command) + '...</div>';
+
+            var controller = new AbortController();
+            var timeout = setTimeout(function () { controller.abort(); }, 30000);
+
+            fetch('/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command }),
+                signal: controller.signal
+            })
+                .then(function (r) { clearTimeout(timeout); return r.json(); })
+                .then(function (data) {
+                    aiCommandRunning = false;
+                    var html = '';
+                    if (data.ok) {
+                        html += '<div class="cmd-ok">✅ ' + escapeHtml(data.action || 'done') + ' (' + (data.totalMs || 0) + 'ms)</div>';
+                    } else {
+                        html += '<div class="cmd-err">❌ ' + escapeHtml(data.error || 'failed') + '</div>';
+                        if (data.hint) html += '<div class="cmd-step">💡 ' + escapeHtml(data.hint) + '</div>';
+                    }
+                    if (data.steps) {
+                        var steps = data.steps;
+                        for (var i = 0; i < steps.length; i++) {
+                            var s = steps[i];
+                            html += '<div class="cmd-step">' + (s.ok ? '✓' : '✗') + ' ' +
+                                escapeHtml(s.step) + (s.detail ? ': ' + escapeHtml(s.detail).substring(0, 120) : '') +
+                                ' <span style="color:#555">(' + s.ms + 'ms)</span></div>';
+                        }
+                    }
+                    result.innerHTML = html;
+                    input.value = '';
+                    input.focus();
+                })
+                .catch(function (err) {
+                    clearTimeout(timeout);
+                    aiCommandRunning = false;
+                    if (err.name === 'AbortError') {
+                        result.innerHTML = '<div class="cmd-err">⏱️ 超时 (30s)，命令可能仍在执行中</div>';
+                    } else {
+                        result.innerHTML = '<div class="cmd-err">❌ 网络错误: ' + escapeHtml(err.message) + '</div>';
+                    }
+                });
+        }
+
+        function escapeHtml(s) {
+            if (!s) return '';
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Alt+/ shortcut to toggle AI command
+        document.addEventListener('keydown', function (e) {
+            if (e.altKey && e.key === '/') { e.preventDefault(); toggleAiCommand(); }
+        });
+
         // ==================== Command Menu (replaces 6-mode cycling) ====================
         var commandMenuVisible = false;
 
