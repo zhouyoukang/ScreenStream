@@ -158,3 +158,36 @@ verification_*.log
 # Embedded git repos (references, must not be committed directly)
 050-音频处理_Audio/010-音频中心_AudioCenter/references/
 
+# Local-only: Windsurf hooks (contains local paths, not portable)
+.windsurf/hooks.json
+
+# Local-only: personal media/video editing files
+*.mkv
+*.mp4
+*.wav
+*.srt
+*.ass
+transcript*.json
+burn_subs.py
+burst_cut.py
+cloud_transcribe.py
+edit_video.py
+final_sub.py
+fix_srt.py
+merge_matched.py
+retranscribe.py
+split_srt.py
+matched_temp/
+split_temp/
+sub_temp/
+presentation/
+bilibili_publish/
+audio_levels.txt
+final_output*
+matched_*.mp4
+burst_final*
+
+# Local-only: Agent demo scripts (contain localhost refs)
+090-构建与部署_Build/agent_demo.py
+090-构建与部署_Build/agent_task5.py
+
