@@ -345,83 +345,211 @@
         }
 
         /* AI Command Bar */
+        @keyframes cmdSlideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(16px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+        }
+
+        @keyframes cmdSlideDown {
+            from {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(-50%) translateY(16px) scale(0.98);
+            }
+        }
+
+        @keyframes cmdPulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes cmdShimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        @keyframes cmdGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 12px rgba(100, 180, 255, 0.15);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(100, 180, 255, 0.3);
+            }
+        }
+
         #aiCommandBar {
             display: none;
             position: fixed;
-            bottom: 52px;
+            bottom: 54px;
             left: 50%;
             transform: translateX(-50%);
-            width: 420px;
+            width: 460px;
             max-width: 94vw;
             z-index: 101;
-            background: rgba(15, 15, 20, 0.96);
-            border: 1px solid rgba(100, 180, 255, 0.25);
-            border-radius: 16px;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            padding: 12px 16px;
-            font-family: -apple-system, system-ui, sans-serif;
+            background: linear-gradient(165deg, rgba(16, 18, 28, 0.98), rgba(10, 12, 20, 0.99));
+            border: 1px solid rgba(100, 170, 255, 0.18);
+            border-radius: 20px;
+            backdrop-filter: blur(24px) saturate(1.2);
+            -webkit-backdrop-filter: blur(24px) saturate(1.2);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04) inset, 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+            padding: 16px 18px 14px;
+            font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
         }
 
         #aiCommandBar.visible {
             display: block;
+            animation: cmdSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #aiCommandBar.hiding {
+            animation: cmdSlideDown 0.18s ease-in forwards;
         }
 
         #aiCommandBar .cmd-header {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
         #aiCommandBar .cmd-header span {
-            color: #7af;
+            color: #8bc4ff;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        #aiCommandBar .cmd-header .cmd-badge {
+            font-size: 10px;
+            color: rgba(139, 196, 255, 0.6);
+            background: rgba(100, 170, 255, 0.1);
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-weight: 500;
         }
 
         #aiCommandBar .cmd-header .cmd-close {
             margin-left: auto;
             background: none;
             border: none;
-            color: #888;
+            color: #555;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 18px;
             padding: 2px 6px;
+            border-radius: 8px;
+            transition: all 0.15s;
+            line-height: 1;
+        }
+
+        #aiCommandBar .cmd-header .cmd-close:hover {
+            background: rgba(255, 80, 80, 0.15);
+            color: #f66;
         }
 
         #aiCommandInput {
             width: 100%;
             box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            padding: 10px 14px;
-            color: #eee;
-            font-size: 14px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 12px 16px;
+            color: #f0f2f5;
+            font-size: 14.5px;
             outline: none;
             font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
             -webkit-user-select: text !important;
             user-select: text !important;
         }
 
         #aiCommandInput::placeholder {
-            color: rgba(255, 255, 255, 0.35);
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 13px;
         }
 
         #aiCommandInput:focus {
-            border-color: rgba(100, 180, 255, 0.5);
+            border-color: rgba(100, 180, 255, 0.45);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(100, 180, 255, 0.08), 0 0 16px rgba(100, 180, 255, 0.06);
+        }
+
+        .cmd-chips {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .cmd-chip {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 5px 12px;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .cmd-chip:hover {
+            background: rgba(100, 170, 255, 0.12);
+            border-color: rgba(100, 170, 255, 0.25);
+            color: #8bc4ff;
+        }
+
+        .cmd-chip:active {
+            transform: scale(0.95);
         }
 
         #aiCommandResult {
-            margin-top: 8px;
-            max-height: 200px;
+            margin-top: 12px;
+            max-height: 260px;
             overflow-y: auto;
-            font-size: 12px;
-            line-height: 1.5;
+            font-size: 12.5px;
+            line-height: 1.7;
             color: #ccc;
             display: none;
+        }
+
+        #aiCommandResult::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #aiCommandResult::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #aiCommandResult::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 2px;
         }
 
         #aiCommandResult.visible {
@@ -429,20 +557,81 @@
         }
 
         #aiCommandResult .cmd-ok {
-            color: #6f6;
+            color: #6dd87a;
+            background: linear-gradient(90deg, rgba(109, 216, 122, 0.08), transparent);
+            border-left: 3px solid rgba(109, 216, 122, 0.5);
+            padding: 5px 12px;
+            margin: 4px 0;
+            border-radius: 0 10px 10px 0;
         }
 
         #aiCommandResult .cmd-err {
-            color: #f66;
+            color: #ff7b7b;
+            background: linear-gradient(90deg, rgba(255, 123, 123, 0.08), transparent);
+            border-left: 3px solid rgba(255, 123, 123, 0.5);
+            padding: 5px 12px;
+            margin: 4px 0;
+            border-radius: 0 10px 10px 0;
         }
 
         #aiCommandResult .cmd-step {
-            color: #aaa;
-            padding: 1px 0;
+            color: #888;
+            padding: 4px 12px;
+            margin: 2px 0;
+            border-left: 3px solid rgba(255, 255, 255, 0.06);
+            border-radius: 0 10px 10px 0;
         }
 
         #aiCommandResult .cmd-loading {
-            color: #7af;
+            color: #8bc4ff;
+            animation: cmdPulse 1.4s ease-in-out infinite;
+            padding: 4px 12px;
+            background: linear-gradient(90deg, transparent, rgba(100, 170, 255, 0.04), transparent);
+            background-size: 200% 100%;
+            animation: cmdPulse 1.4s ease-in-out infinite, cmdShimmer 2s linear infinite;
+        }
+
+        #aiCommandResult .cmd-done {
+            color: #8bc4ff;
+            background: linear-gradient(90deg, rgba(139, 196, 255, 0.1), rgba(139, 196, 255, 0.02));
+            border-left: 3px solid rgba(139, 196, 255, 0.5);
+            padding: 6px 12px;
+            margin: 6px 0 2px;
+            border-radius: 0 10px 10px 0;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        #aiCommandResult .cmd-screen {
+            color: #999;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 3px solid rgba(255, 255, 255, 0.08);
+            padding: 4px 12px;
+            margin: 2px 0;
+            border-radius: 0 10px 10px 0;
+            font-size: 11px;
+            word-break: break-all;
+            max-height: 44px;
+            overflow: hidden;
+        }
+
+        .cmd-ms {
+            color: #555;
+            font-size: 10.5px;
+            margin-left: 6px;
+            font-weight: 400;
+        }
+
+        .cmd-action-tag {
+            display: inline-block;
+            background: rgba(139, 196, 255, 0.1);
+            color: #7ab8ff;
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            font-weight: 500;
+            vertical-align: middle;
         }
 
         #navBar {
@@ -692,12 +881,21 @@
     <div id="aiCommandBar" onmousedown="event.stopPropagation()" onmouseup="event.stopPropagation()"
         ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation()">
         <div class="cmd-header">
-            <span>🤖 AI 命令</span>
+            <span>AI Command</span>
+            <span class="cmd-badge">↑↓ History</span>
             <button class="cmd-close" onclick="toggleAiCommand()">✕</button>
         </div>
-        <input id="aiCommandInput" type="text" placeholder="说点什么...  打开计算器 / 关掉WiFi / 点击设置"
-            onkeydown="event.stopPropagation();if(event.key==='Enter')runAiCommand();if(event.key==='Escape'){toggleAiCommand();event.preventDefault();}"
+        <input id="aiCommandInput" type="text" placeholder="输入命令...  打开微信 / 返回桌面 / 打开设置找到蓝牙"
+            onkeydown="event.stopPropagation();if(event.key==='Enter')runAiCommand();else if(event.key==='Escape'){toggleAiCommand();event.preventDefault();}else if(event.key==='ArrowUp'){aiHistoryNav(-1);event.preventDefault();}else if(event.key==='ArrowDown'){aiHistoryNav(1);event.preventDefault();}"
             autocomplete="off" onfocus="this.dataset.focused='1'" onblur="this.dataset.focused='0'" />
+        <div class="cmd-chips" id="cmdChips">
+            <span class="cmd-chip" onclick="quickCmd('打开微信')">打开微信</span>
+            <span class="cmd-chip" onclick="quickCmd('返回桌面')">返回桌面</span>
+            <span class="cmd-chip" onclick="quickCmd('截图')">截图</span>
+            <span class="cmd-chip" onclick="quickCmd('打开设置找到蓝牙')">设置→蓝牙</span>
+            <span class="cmd-chip" onclick="quickCmd('关掉WiFi')">关WiFi</span>
+            <span class="cmd-chip" onclick="quickCmd('打开WiFi')">开WiFi</span>
+        </div>
         <div id="aiCommandResult"></div>
     </div>
 
@@ -756,6 +954,8 @@
         // ==================== AI Command Bar ====================
         var aiCommandVisible = false;
         var aiCommandRunning = false;
+        var aiCommandHistory = [];
+        var aiHistoryIndex = -1;
 
         function isAiInputFocused() {
             var inp = document.getElementById('aiCommandInput');
@@ -763,14 +963,42 @@
         }
 
         function toggleAiCommand() {
-            aiCommandVisible = !aiCommandVisible;
             var bar = document.getElementById('aiCommandBar');
-            if (aiCommandVisible) {
+            if (!aiCommandVisible) {
+                aiCommandVisible = true;
+                bar.classList.remove('hiding');
                 bar.classList.add('visible');
                 document.getElementById('aiCommandInput').focus();
             } else {
-                bar.classList.remove('visible');
+                aiCommandVisible = false;
+                bar.classList.add('hiding');
+                setTimeout(function () {
+                    if (!aiCommandVisible) {
+                        bar.classList.remove('visible');
+                        bar.classList.remove('hiding');
+                    }
+                }, 200);
             }
+        }
+
+        function quickCmd(cmd) {
+            var input = document.getElementById('aiCommandInput');
+            input.value = cmd;
+            input.focus();
+            runAiCommand();
+        }
+
+        function aiHistoryNav(dir) {
+            if (aiCommandHistory.length === 0) return;
+            var inp = document.getElementById('aiCommandInput');
+            aiHistoryIndex += dir;
+            if (aiHistoryIndex < 0) aiHistoryIndex = 0;
+            if (aiHistoryIndex >= aiCommandHistory.length) {
+                aiHistoryIndex = aiCommandHistory.length;
+                inp.value = '';
+                return;
+            }
+            inp.value = aiCommandHistory[aiHistoryIndex];
         }
 
         function runAiCommand() {
@@ -780,10 +1008,13 @@
             var command = input.value.trim();
             if (!command) return;
 
+            aiCommandHistory.push(command);
+            aiHistoryIndex = aiCommandHistory.length;
             aiCommandRunning = true;
             result.classList.add('visible');
             result.innerHTML = '<div class="cmd-loading">⏳ ' + escapeHtml(command) + '</div>';
             input.value = '';
+            document.getElementById('cmdChips').style.display = 'none';
 
             var controller = new AbortController();
             var timeout = setTimeout(function () { controller.abort(); }, 30000);
@@ -805,6 +1036,7 @@
                         return reader.read().then(function (res) {
                             if (res.done) {
                                 aiCommandRunning = false;
+                                document.getElementById('cmdChips').style.display = 'flex';
                                 input.focus();
                                 return;
                             }
@@ -818,6 +1050,7 @@
                                 var data = line.substring(6);
                                 if (data === '[DONE]') {
                                     aiCommandRunning = false;
+                                    document.getElementById('cmdChips').style.display = 'flex';
                                     input.focus();
                                     return;
                                 }
@@ -834,6 +1067,7 @@
                 .catch(function (err) {
                     clearTimeout(timeout);
                     aiCommandRunning = false;
+                    document.getElementById('cmdChips').style.display = 'flex';
                     if (err.name === 'AbortError') {
                         result.innerHTML += '<div class="cmd-err">⏱️ 超时 (30s)</div>';
                     } else {
@@ -848,6 +1082,8 @@
             var type = step.type || '';
             var ok = step.ok;
             var detail = step.detail || step.command || '';
+            var ms = step.ms || 0;
+            var msTag = ms ? '<span class="cmd-ms">(' + ms + 'ms)</span>' : '';
 
             if (type === 'plan') {
                 div.className = 'cmd-step';
@@ -858,36 +1094,28 @@
             } else if (type === 'result') {
                 div.className = ok ? 'cmd-ok' : 'cmd-err';
                 var icon = ok ? '✅' : '❌';
-                var action = step.action ? ' [' + step.action + ']' : '';
-                div.innerHTML = icon + ' ' + escapeHtml(step.command || '') + action +
-                    (detail ? ': ' + escapeHtml(detail).substring(0, 150) : '') +
-                    ' <span style="color:#555">(' + (step.ms || 0) + 'ms)</span>';
+                var actionTag = step.action ? ' <span class="cmd-action-tag">' + step.action + '</span>' : '';
+                div.innerHTML = icon + ' ' + escapeHtml(step.command || '') + actionTag +
+                    (detail ? ': ' + escapeHtml(detail).substring(0, 180) : '') + ' ' + msTag;
             } else if (type === 'screen') {
-                div.className = 'cmd-step';
-                div.innerHTML = '👁 ' + escapeHtml(detail).substring(0, 200);
+                div.className = 'cmd-screen';
+                div.innerHTML = '👁 ' + escapeHtml(detail).substring(0, 220);
             } else if (type === 'done') {
-                div.className = 'cmd-ok';
-                div.style.fontWeight = '600';
+                div.className = 'cmd-done';
                 div.innerHTML = '🏁 ' + escapeHtml(detail);
             } else if (type === 'error') {
                 div.className = 'cmd-err';
-                div.innerHTML = '❌ ' + escapeHtml(detail);
+                var hint = step.hint ? '<br><span style="opacity:0.7;font-size:11px">💡 ' + escapeHtml(step.hint) + '</span>' : '';
+                div.innerHTML = '❌ ' + escapeHtml(detail) + hint;
             } else if (type.startsWith('agent_')) {
                 var agentType = type.substring(6);
                 var icons = { start: '🤖', plan: '🔍', read: '📖', found: '🎯', click: '👆', verify: '✔', scroll: '📜', exhausted: '🚫', timeout: '⏱', error: '❌' };
                 var icon = icons[agentType] || '🔹';
                 div.className = ok ? 'cmd-step' : 'cmd-err';
-                div.innerHTML = icon + ' ' + escapeHtml(detail) +
-                    ' <span style="color:#555">(' + (step.ms || 0) + 'ms)</span>';
+                div.innerHTML = icon + ' ' + escapeHtml(detail) + ' ' + msTag;
             } else {
                 div.className = 'cmd-step';
                 div.innerHTML = (ok ? '✓' : '✗') + ' ' + escapeHtml(detail);
-            }
-
-            // Remove loading indicator if present
-            var loading = el.querySelector('.cmd-loading');
-            if (loading && type !== 'start' && type !== 'plan') {
-                // Keep it but add new content
             }
 
             el.appendChild(div);

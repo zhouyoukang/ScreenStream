@@ -2591,70 +2591,17 @@ public class InputService : AccessibilityService() {
             val initialWifiState = try { wifiManager?.isWifiEnabled } catch (_: Exception) { null }
             logStep("initial_state", true, "wifi_enabled=$initialWifiState")
 
-            // === Step 2: Open system Settings ===
-            val settingsIntent = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            // === Step 2: Open WiFi settings directly (bypass Settings main page) ===
+            val wifiSettingsIntent = Intent(android.provider.Settings.ACTION_WIFI_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             }
-            startActivity(settingsIntent)
-            Thread.sleep(1500)
-
-            val settingsScreen = extractScreenText()
-            logStep("open_settings", true,
-                "pkg=${settingsScreen.optString("package")} texts=${settingsScreen.optInt("textCount")}")
-
-            // === Step 3: Find WiFi/WLAN item ===
-            // OEM variations: WLAN, Wi-Fi, WiFi, 无线局域网, WLAN/WiFi
-            val wifiLabels = listOf("WLAN", "Wi-Fi", "WiFi", "无线局域网", "网络和互联网", "连接")
-
-            var (wifiNode, wifiLabel) = findNodeByTexts(wifiLabels)
-
-            // If not found, try scrolling down
-            if (wifiNode == null) {
-                logStep("wifi_search_scroll", false, "Not visible, scrolling down...")
-                for (scrollAttempt in 1..3) {
-                    scrollNormalized(0.5f, 0.7f, "down", 600)
-                    Thread.sleep(800)
-                    val result = findNodeByTexts(wifiLabels)
-                    wifiNode = result.first
-                    wifiLabel = result.second
-                    if (wifiNode != null) {
-                        logStep("wifi_found_after_scroll", true, "attempt=$scrollAttempt label='$wifiLabel'")
-                        break
-                    }
-                }
-            }
-
-            if (wifiNode == null) {
-                logStep("find_wifi_item", false, "WiFi item not found. Screen: ${screenSnapshot()}")
-                // Dump all visible texts for diagnostics
-                val allTexts = extractScreenText()
-                return JSONObject().put("ok", false).put("log", log)
-                    .put("error", "WiFi/WLAN item not found in Settings")
-                    .put("screen", allTexts)
-            }
-
-            val wifiRect = Rect()
-            wifiNode.getBoundsInScreen(wifiRect)
-            logStep("find_wifi_item", true,
-                "label='$wifiLabel' bounds=$wifiRect clickable=${wifiNode.isClickable}")
-
-            // === Step 4: Click WiFi item to enter WiFi settings ===
-            val wifiClicked = clickNode(wifiNode)
-            try { wifiNode.recycle() } catch (_: Exception) {}
-            logStep("click_wifi_item", wifiClicked, "label='$wifiLabel'")
-
-            if (!wifiClicked) {
-                return JSONObject().put("ok", false).put("log", log)
-                    .put("error", "Failed to click WiFi item")
-            }
-
-            // === Step 5: Wait for WiFi settings page to load, re-read View tree ===
+            startActivity(wifiSettingsIntent)
             Thread.sleep(1500)
             val wifiPageScreen = extractScreenText()
             logStep("wifi_page_loaded", true,
                 "pkg=${wifiPageScreen.optString("package")} texts=${wifiPageScreen.optInt("textCount")} clickables=${wifiPageScreen.optInt("clickableCount")}")
 
-            // === Step 6: Find WiFi toggle switch ===
+            // === Step 3: Find WiFi toggle switch ===
             // Strategy: Look for Switch/Toggle widget near WiFi text, or find by class name
             val root = rootInActiveWindow
             var switchNode: AccessibilityNodeInfo? = null
@@ -2736,7 +2683,7 @@ public class InputService : AccessibilityService() {
             logStep("find_wifi_switch", true,
                 "$switchInfo bounds=$switchRect was_checked=$wasChecked")
 
-            // === Step 7: Toggle the switch (try multiple strategies) ===
+            // === Step 4: Toggle the switch (try multiple strategies) ===
             var toggleResult = switchNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             var toggleVia = "ACTION_CLICK"
 
@@ -2770,7 +2717,7 @@ public class InputService : AccessibilityService() {
             try { switchNode.recycle() } catch (_: Exception) {}
             logStep("toggle_switch", toggleResult, "was_checked=$wasChecked → target=${!wasChecked} via=$toggleVia")
 
-            // === Step 8: Verify WiFi state actually changed ===
+            // === Step 5: Verify WiFi state actually changed ===
             Thread.sleep(2000) // Wait for WiFi state transition
 
             val finalWifiState = try { wifiManager?.isWifiEnabled } catch (_: Exception) { null }
