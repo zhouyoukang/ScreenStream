@@ -1,331 +1,172 @@
-![](screenshots/about_image_full.png)
+# ScreenStream Enhanced
 
-# ScreenStream
+**Android screen streaming + full remote control + AI Agent brain — all in your browser.**
 
-## H264 UI Debug Notes (Local Web UI)
+> A feature-rich fork of [dkrivoruchko/ScreenStream](https://github.com/dkrivoruchko/ScreenStream) with AI-powered phone control, VR headset support, full keyboard input, and reverse proxy (FRP) compatibility.
 
-This repository includes a customized local web UI (`mjpeg/src/main/assets/index.html`).
+[![Android](https://img.shields.io/badge/Android-6.0%2B-green?logo=android)](https://developer.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-Ktor-purple?logo=kotlin)](https://kotlinlang.org)
+[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
-### What works (stable)
+---
 
-- MJPEG mode: stable and recommended for normal use.
+## What's Different in This Fork?
 
-### What was tried for H.264/H.265 “small window” (not solved)
+| Capability | Upstream ScreenStream | This Fork |
+|---|---|---|
+| Screen streaming | MJPEG / WebRTC / RTSP | Same |
+| Remote touch control | Basic tap/swipe | **Pixel-perfect** (aspect-ratio aware) |
+| Keyboard input | None | **Full keyboard** + Chinese IME + shortcuts |
+| AI Agent | None | **Natural language commands** — "open WeChat", "turn off WiFi" |
+| VR / Quest | None | **Controller mapping** + joystick swiping + PiP |
+| Reverse proxy (FRP) | Not supported | **Custom port routing** via URL params |
+| System control | None | **Volume / lock / notifications / brightness / clipboard** |
 
-- CSS 100% + `object-fit: contain` + absolute positioning for `<video>`.
-- JS `applyVideoFillFix()` that forces `<video>` to fill `#streamDiv`.
-- Extra attributes to suppress native overlays (PiP/remote playback).
+---
 
-Result: H.264/H.265 still renders as a small viewport on Android browsers/WebView.
+## Key Features
 
-### Experiments reverted due to side effects
+### 🤖 AI Agent Brain
+
+Use natural language to control your phone — no manual tapping required.
+
+```
+"打开支付宝"  →  App launches automatically
+"关闭WiFi"    →  WiFi toggles off
+"返回桌面"    →  Home screen
+```
 
-- `transform: scale(...)` loop (v24): intended to force scaling; caused stutter/lag.
-- Canvas mirror render (v25): decode via `<video>`, display via `<canvas>`; caused stutter/lag and did not resolve small window.
+- **Observe → Think → Act** loop powered by AccessibilityService + View Tree analysis
+- **18 action types**: tap, swipe, type, scroll, open app, navigate, toggle WiFi, and more
+- **Smart dialog handling**: auto-detects permission popups and handles them
+- **Compound commands**: chain multiple actions in one sentence
+- **Zero extra cost**: uses the IDE's AI (Cascade) as the LLM brain — no API keys needed
 
-### Next steps (future)
+### ⌨️ Full Keyboard & Mouse Control
 
-- Investigate Android WebView/Chromium video rendering constraints with MSE/jMuxer.
-- Consider WebCodecs (if available) or server-side scaling/packaging changes.
+- Type directly from PC → phone (including **Chinese IME**)
+- **Shortcuts**: `Ctrl+V` paste, `Ctrl+C` copy, `Escape` = Back, arrow keys, Tab, Delete
+- **Mouse**: pixel-perfect click, right-click = Back, scroll wheel with natural direction
+- **Horizontal scroll**: right-click + scroll wheel
 
-See also: `H264_UI_NOTES.md`
+### 🥽 VR / Meta Quest Ready
 
-## VDM 使用指南（中文 / 对外说明）
+- **B / Y buttons** → Back action (no context menu conflicts)
+- **Joystick** → 4-directional swiping (45° sector logic, no diagonal cross-talk)
+- **PiP mode** → Picture-in-Picture for MJPEG and H.264/H.265 streams
+- Soft keyboard suppression for VR browsers
 
-本 Fork 的目标是把本地模式（MJPEG）做成“稳定可用”的远程查看+控制方案，并补齐网络接入与多端口（FRP/反代）场景。
+### 🌐 Network & FRP Support
 
-### 1. 推荐默认用法（稳定优先）
+- Server binds to `0.0.0.0` — works with `localhost`, LAN, USB tethering, and FRP
+- **Custom input port**: `http://<ip>:8080/?input_port=9000`
+- Full IPv4/IPv6 support, enhanced `rndis` (USB network) detection
 
-- **优先用 MJPEG（本地模式）**：兼容性最好，日常稳定使用推荐。
-- **H264/H265（网页播放）**：部分 Android 浏览器/WebView 可能出现“小窗显示”，属于已知限制；本 Fork 当前策略是不再用高成本强制缩放（避免卡顿/跳帧）。
+### 📱 System-Level Control (30+ APIs)
 
-### 2. 端口说明（视频端口 vs 控制端口）
+| Category | Actions |
+|---|---|
+| **Navigation** | Home, Back, Recents, Notifications, Quick Settings |
+| **Media** | Volume up/down/mute |
+| **Power** | Wake, Lock screen, Brightness |
+| **Input** | Tap, Long press, Double tap, Swipe, Pinch, Scroll |
+| **Apps** | Open by name, Device info, Clipboard sync |
+| **AI** | View tree, Semantic click, Smart close dialog, Find & navigate |
 
-通常会涉及两个端口：
+---
 
-- **视频/页面端口（MJPEG Server）**：默认 `8080`
-- **输入控制端口（Input API）**：默认 `8084`
+## Quick Start
 
-网页端指定输入端口：
+### 1. Install & Run
 
-`http://<手机IP>:8080/?input_port=8084`
+Install the APK on your Android device (Android 6.0+), grant the required permissions (Screen Capture + Accessibility Service), and start streaming.
 
-说明：
+### 2. Connect from Browser
 
-- 当你使用 **FRP/反向代理/端口分离** 时，视频端口和输入端口经常映射到不同外网端口，必须传 `?input_port=`.
-- 当前 `index.html` 默认 input 端口为 `8084`.
+```
+http://<phone-ip>:8080/
+```
 
-### 3. 连接方式
+| Scenario | URL |
+|---|---|
+| Same WiFi | `http://192.168.1.x:8080/` |
+| USB tethering | `http://192.168.42.129:8080/` |
+| FRP / reverse proxy | `http://your-domain:port/?input_port=9000` |
+| VR mode | `http://<ip>:8080/?vr=1` |
+| Debug panel | `http://<ip>:8080/?debug=1` |
 
-#### 3.1 手机-手机（同一 Wi‑Fi / 同一路由器）
+### 3. Control
 
-- 播放端手机浏览器打开：`http://<被控手机IP>:8080/`
-
-#### 3.2 手机-电脑（同一 Wi‑Fi）
-
-- 电脑浏览器打开：`http://<手机IP>:8080/`
-- 如需控制（点击/滑动/键盘），确保 App 侧已开启输入/无障碍相关权限。
-
-#### 3.3 手机-电脑（USB 连接 / USB 网络共享）
-
-适合 VR/低延迟场景：
-
-- Android 开启“USB 网络共享/USB tethering”。
-- 电脑侧会出现 USB 网卡（常见为 `rndis*`）。
-- 本 Fork 增强了 `rndis` 识别（用于更容易显示正确可访问地址）。
-
-#### 3.4 移动网络（4G/5G）
-
-- 运营商网络下，**入站连接可能被 NAT/防火墙阻断**，即使手机显示公网/运营商 IP，也不一定可从外网直连。
-- 外网访问通常要配合：FRP/组网（ZeroTier/Tailscale/WireGuard）/公网 IP 等。
-
-### 4. 高级设置：接口筛选 / 端口固定区（怎么理解）
-
-本地模式需要决定“在哪些网络接口上展示地址/监听”。常见接口：
-
-- **Wi‑Fi**：`wlan*` / `ap*` / `softap*`
-- **以太网**：`eth*` / `en*`
-- **移动网络**：`rmnet*` / `ccmni*`
-- **USB 网络共享**：`rndis*`
-
-注意：
-
-- 选择移动网络 ≠ 外网一定可访问；这只是让 App 在该接口上显示/监听地址。
-
-### 5. WebRTC 与本地模式的区别
-
-- **本地模式（MJPEG）**：无需外部服务器，适合局域网/热点/USB 网络共享。
-- **WebRTC（Global mode）**：依赖公网信令与网络条件，跨网可用但受 NAT/带宽/丢包影响。
-
-### 6. 常用 URL 参数（网页端）
-
-- `?input_port=8084`：指定输入控制端口（FRP/反代常用）
-- `?debug=1`：开启输入/VR 调试面板（默认关闭，避免影响性能）
-- `?kb=1`：允许移动设备启用键盘聚焦
-- `?vr=1` / `?vr=contain|fill|cover`：VR 全屏相关模式
-- `?vr_kb=1`：VR 环境允许键盘聚焦（避免默认弹 VR 键盘）
-
-ScreenStream is a user-friendly Android application that allows users to easily share their device screen and audio and view it directly in a web browser. No additional software is required other than the ScreenStream itself, a web browser, and an internet connection (for Global mode).
-
-* [Project support](#project-support)
-* [Stream modes](#stream-modes)
-  * [Local mode (MJPEG)](#local-mode-mjpeg)
-  * [Global mode (WebRTC)](#global-mode-webrtc)
-  * [RTSP mode](#rtsp-mode)
-* [Screenshots](#screenshots)
-* [Contribution](#contribution)
-* [Developer](#developed-by)
-* [Privacy Policy and Terms & Conditions](#privacy-policy-and-terms--conditions)
-* [License](#license)
-
-## Project support
-
-If you find **ScreenStream** useful, please consider donating to support its development.<br>
-Your contribution is greatly appreciated!
-
-**Tron (TRC20) USDT / USDC :** `TUKtTz3oe3qKYmm1ScDLKjRz9ty1FahpzR`
-
-**Solana (SPL) USDT / USDC :** `7HasyJBLpiNhFvMvbfKUDXZwThRCfc3S4Yr74Rbs5e23`
-
-**BNB Smart Chain (BEP20) USDT / USDC / BUSD / BNB :** `0x96818c1CfE9F613d8194c882a0898B8B3c47077B`
-
-## Stream modes
-
-ScreenStream offers three stream modes: **Global mode (WebRTC)** (in [Google Play Store](https://play.google.com/store/apps/details?id=info.dvkr.screenstream) version only), **Local mode (MJPEG)** and **RTSP mode**. All modes aim to stream the Android device screen and audio but function differently. They are independent of each other, with unique functionalities, restrictions, and customization options.
-
-| Mode               | Transport | Audio | Internet required | Server side | Security                              |
-|--------------------|-----------|-------|-------------------|-------------|---------------------------------------|
-| **Local (MJPEG)**  | HTTP MJPEG | ✕     | No                | Built‑in    | Optional 4‑digit PIN                  |
-| **Global (WebRTC)**| WebRTC    | ✓     | Yes               | Public signalling @ screenstream.io | End‑to‑end encryption + password |
-| **RTSP**           | RTSP<br>H.265/H.264/AV1<br>OPUS/AAC/G.711 | ✓ | Depends on server | External RTSP server (e.g. MediaMTX) | Basic Auth + optional TLS |
-
-In **Global (WebRTC)** and **Local (MJPEG)** modes the number of clients is not directly limited, but it's important to keep in mind that each client consumes CPU resources and bandwidth for data transmission.
-
-The application uses Android [MediaProjection](https://developer.android.com/reference/android/media/projection/MediaProjection) feature and requires Android 6.0 or higher.
-
-> [!WARNING]
->
-> * **High Traffic on Mobile Networks**: Use caution when streaming via mobile 3G/4G/5G/LTE networks to avoid excessive data usage.
->
-> * **Delay in Streaming**: Expect a delay of at least 0.5-1 second or more in certain conditions: slow device, poor internet or network connection, or when the device is under heavy CPU load due to other applications.
->
-> * **Video Streaming Limitation**: ScreenStream is not designed for streaming video, particularly HD video. While it will function, the stream quality may not meet your expectations.
-
-### Local mode (MJPEG)
-
-Local mode in the ScreenStream application is built on the MJPEG standard and utilizes an embedded HTTP server within the app. As a result, an internet connection is not required; instead, it can function on a local network, such as Wi-Fi, device hotspot, Network-over-USB, or any other network between the client's web browser and the Android device with the ScreenStream app.
-
-For optimal performance, a fast and stable network connection is recommended due to high traffic and low network delay requirements.
-
-In Local mode, the app processes each frame independently, one-by-one, enabling additional image transformations such as cropping, resizing, rotating, and more before sending the image to the client's web browser.
-
-The Local mode offers the following functionality:
-
-* Powered by MJPEG standard.
-* Utilizes PIN for security (no encryption).
-* Sends video as a series of independent images (no audio).
-* Works without an internet connection within your local network.
-* Embedded HTTP server.
-* Allows resizing by percentage or specifying an exact resolution.
-* Works with WiFi and/or mobile networks, supporting IPv4 and IPv6.
-* Clients connect via web browser using the app's provided IP address.
-* Highly customizable.
-* Individual data transmission for each client, with more clients requiring increased internet bandwidth to maintain optimal performance.
-
-> [!NOTE]
->
-> * Please be aware that certain cell operators may block incoming connections to your device for security reasons. Consequently, even if your device has an IP address from a cell operator, connecting to the device using this IP address may not be possible.
->
-> * Some WiFi networks, particularly public or guest networks, may block connections between its clients for security reasons. In such cases, connecting to the device via WiFi might not be feasible. For instance, a laptop and a phone within such a WiFi network will not be able to connect to each other.
-
-### Global mode (WebRTC)
-
-Global mode in the ScreenStream application is built on WebRTC technology and relies on an external signaling server to facilitate communication between the streaming host (the app) and the streaming client, which is a web browser equipped with the ScreenStream [Web Client](https://screenstream.io).
-
-Both the signaling server and the web client for ScreenStream are open-source and available in the [ScreenStreamWeb](https://github.com/dkrivoruchko/ScreenStreamWeb) repository. These components can be accessed publicly at <https://screenstream.io>. The system is designed to function seamlessly with any desktop or mobile browser that supports WebRTC, such as Chrome, Safari, EDGE, Firefox, and others.
-
-The Global mode was introduced in app version 4 and offers the following functionality:
-
-* Powered by WebRTC technology.
-* End-to-end encrypted communication.
-* Stream protection with password.
-* Supports both video and audio streaming.
-* Connect using unique stream ID and password.
-* Requires an internet connection for streaming.
-* Individual data transmission for each client, with more clients requiring increased internet bandwidth to maintain optimal performance.
-
-> [!NOTE]
-> Global mode (WebRTC) only available in Google Play version
-
-### RTSP mode
-
-RTSP mode in ScreenStream streams your Android device screen to an external RTSP media server, providing compatibility with a wide range of standard RTSP clients.
-
-For optimal performance, a fast and stable network connection is recommended due to high traffic and low network delay requirements.
-
-* Powered by RTSP protocol.
-* Requires an RTSP-capable media server (tested with MediaMTX).
-* Supports both video (H.265, H.264, AV1) and audio (OPUS, AAC, G.711).
-* Can be protected by username/password.
-* Optional control channel encryption (RTSPS using TLS).
-* Compatible with WiFi, mobile networks, and both IPv4/IPv6.
-* Requires an RTSP client or player for viewing (tested with VLC).
-
-> [!NOTE]
-> You need an RTSP‑capable media server (e.g., [MediaMTX](https://github.com/aler9/mediamtx)) to stream to.
-
-## Screenshots
-
-![](screenshots/screenshot_lm_d.png)&nbsp;![](screenshots/screenshot_lm_d_about.png)<br>
-![](screenshots/screenshot_gm_d.png)&nbsp;![](screenshots/screenshot_gm_d_about.png)<br>
-![](screenshots/screenshot_rtsp_d.png)&nbsp;![](screenshots/screenshot_rtsp_d_about.png)<br>
-![](screenshots/screenshot_rtsp_d_video.png)&nbsp;![](screenshots/screenshot_rtsp_d_audio.png)<br>
-![](screenshots/screenshot_settings_1_d.png)&nbsp;![](screenshots/screenshot_settings_1_l.png)<br>
-![](screenshots/screenshot_settings_2_d.png)&nbsp;![](screenshots/screenshot_settings_2_l.png)<br>
-![](screenshots/screenshot_settings_3_d.png)&nbsp;![](screenshots/screenshot_settings_3_l.png)<br>
-![](screenshots/screenshot_settings_4_d.png)&nbsp;![](screenshots/screenshot_settings_4_l.png)<br>
-![](screenshots/screenshot_about_d.png)
-
-## Contribution
-
-To contribute with translation, kindly translate the following four files:
-
-1. <https://github.com/dkrivoruchko/ScreenStream/blob/master/app/src/main/res/values/strings.xml>
-1. <https://github.com/dkrivoruchko/ScreenStream/blob/master/mjpeg/src/main/res/values/strings.xml>
-1. <https://github.com/dkrivoruchko/ScreenStream/blob/master/webrtc/src/main/res/values/strings.xml>
-1. <https://github.com/dkrivoruchko/ScreenStream/blob/master/rtsp/src/main/res/values/strings.xml>
-
-Then, please, [make a pull request](https://help.github.com/en/articles/creating-a-pull-request) or send those translated files to the developer via e-mail <dkrivoruchko@gmail.com> as an attachment.
-
-Your contribution is valuable and will help improve the accessibility of the application. Thank you for your efforts!
-
-## Fork Features (by zhouyoukang)
-
-This fork includes several enhancements optimized for remote control and reverse proxy (FRP) scenarios:
-
-### 🚀 Network Connectivity
-
-* **Localhost Binding**: Changed server binding to `0.0.0.0`, allowing access via `localhost` and simplifying `frp` configuration.
-* **FRP Port Support**: Added `?input_port=` URL parameter (e.g., `http://ip:8080/?input_port=9000`) to support custom input ports when using reverse proxies.
-
-### 🎯 Input Precision
-
-* **Coordinate Fix**: Implemented aspect-ratio aware coordinate mapping. Clicks are now pixel-perfect even when the stream has black bars (letterboxing/pillarboxing).
-* **Normalized Coordinates**: Updated input service to use normalized coordinates (0.0-1.0) for better compatibility across different screen resolutions.
-
-### ⌨️ Keyboard Input Support
-
-* **Full Keyboard Control**: Type directly from your computer keyboard to the phone.
-* **Chinese IME Support**: Full support for Chinese input via composition events.
-* **Special Keys**: Backspace, Enter, Tab, Arrow keys, Delete, Home, End.
-* **Escape = Back**: Press Escape to trigger Android back action.
-* **Shortcuts**: Ctrl+A (select all), Ctrl+C (copy), Ctrl+V (paste from PC clipboard), Ctrl+X (cut).
-
-### 🥽 VR / Quest Optimization
-
-* **Controller Mapping**:
-  * **B / Y Buttons**: Mapped to **"Back"** action (prevents context menu conflicts).
-  * **Joystick Control**: Implemented 45-degree sector logic for precise directional swiping (Up/Down/Left/Right) without diagonal input cross-talk.
-  * **Natural Direction**: Unified Joystick and Mouse Wheel vertical direction to match standard PC behavior (Down = Scroll content up to view below).
-* **Workarounds**: Suppresses default soft keyboard pop-ups on mobile/VR browsers.
-
-### 🖼️ Picture-in-Picture (PiP)
-
-* **Functional PiP**: Fixed black screen issues for both MJPEG and H264 streams.
-* **Implementation**: Uses Canvas capture for MJPEG and direct video element for H264/H265.
-* **Limitation**: Due to browser security policies, PiP mode is view-only (no control).
-
-### ⌨️ Input & Shortcuts
-
-* **Shortcuts**:
-  * `Ctrl+V`: Pastes text from PC clipboard to Android.
-  * `Ctrl+C` / `Ctrl+X`: Text manipulation (supported in editable fields).
-  * `Escape` / `Right-Click`: Triggers Android **Back** action.
-* **Mouse Control**:
-  * **Inverted Scroll**: Vertical scroll direction matches standard computer behavior.
-  * **Horizontal Scroll**: Hold right-click + scroll wheel for horizontal scrolling.
-  * **Precision**: Fine-tuned swipe distances and thresholds for smoother experience.
-
-### 🎨 UI/UX Improvements
-
-* **Status Indicator**: Added a visual "Control Active" / "View Only" status indicator to the web interface.
-* **Selection Fix**: Removed the annoying blue selection box and disabled text selection interference.
-* **Accessibility Settings Button**: Quick access button to open accessibility settings on the main page.
-
-## Fork Maintainer
-
-Maintained by **[zhouyoukang](https://github.com/zhouyoukang)**.
-
-## Developed By
-
-Developed by [Dmytro Kryvoruchko](dkrivoruchko@gmail.com). If there are any issues or ideas, feel free to contact me.
-
-## Privacy Policy and Terms & Conditions
-
-App [Privacy Policy](https://github.com/dkrivoruchko/ScreenStream/blob/master/PrivacyPolicy.md) and [Terms & Conditions](https://github.com/dkrivoruchko/ScreenStream/blob/master/TermsConditions.md)
+- **Touch**: Click/drag on the stream image
+- **Keyboard**: Just start typing (click the stream area first)
+- **AI commands**: Open the command bar and type natural language instructions
+- **VR**: Use Quest controllers — joystick to swipe, B/Y to go back
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│  Browser (PC / VR / Mobile)                 │
+│  ┌───────────┬──────────┬─────────────────┐ │
+│  │ Stream    │ Touch /  │ AI Command Bar  │ │
+│  │ Viewer    │ Keyboard │ (NL → Action)   │ │
+│  └─────┬─────┴────┬─────┴───────┬─────────┘ │
+└────────┼──────────┼─────────────┼───────────┘
+         │ MJPEG    │ HTTP/WS     │ HTTP POST
+         ▼          ▼             ▼
+┌─────────────────────────────────────────────┐
+│  Android Device                              │
+│  ┌──────────┐  ┌────────────┐  ┌──────────┐ │
+│  │ MJPEG    │  │ Input      │  │ AI Brain │ │
+│  │ Server   │  │ Service    │  │ (Agent)  │ │
+│  │ :8080    │  │ :8084      │  │ :8086    │ │
+│  └──────────┘  └────────────┘  └──────────┘ │
+│       │        AccessibilityService          │
+│       │        MediaProjection               │
+└───────┼──────────────────────────────────────┘
+        ▼
+   Screen Capture → JPEG frames → HTTP stream
+```
+
+---
+
+## Stream Modes
+
+| Mode | Transport | Audio | Internet | Security |
+|---|---|---|---|---|
+| **Local (MJPEG)** | HTTP MJPEG | No | Not required | Optional PIN |
+| **Global (WebRTC)** | WebRTC | Yes | Required | E2E encryption + password |
+| **RTSP** | RTSP (H.265/H.264/AV1) | Yes | Depends | Basic Auth + TLS |
+
+**Recommended**: Use **MJPEG (Local mode)** for best stability and lowest latency on LAN/USB.
+
+---
+
+## URL Parameters
+
+| Parameter | Description | Example |
+|---|---|---|
+| `input_port` | Custom input control port (for FRP) | `?input_port=9000` |
+| `debug` | Show debug panel | `?debug=1` |
+| `vr` | VR fullscreen mode | `?vr=1` or `?vr=fill` |
+| `kb` | Enable keyboard focus on mobile | `?kb=1` |
+| `vr_kb` | Allow keyboard in VR mode | `?vr_kb=1` |
+
+---
+
+## Contributing
+
+Issues and PRs welcome. This fork focuses on **remote control**, **AI automation**, and **VR** use cases.
+
+For translation contributions to the upstream project, see [dkrivoruchko/ScreenStream](https://github.com/dkrivoruchko/ScreenStream).
+
+## Credits
+
+- **Upstream**: [Dmytro Kryvoruchko](https://github.com/dkrivoruchko) — original ScreenStream
+- **Fork maintainer**: [zhouyoukang](https://github.com/zhouyoukang) — remote control, AI Agent, VR enhancements
 
 ## License
 
-```
-The MIT License (MIT)
-
-Copyright (c) 2016 Dmytro Kryvoruchko
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+[MIT License](LICENSE) — Copyright (c) 2016 Dmytro Kryvoruchko

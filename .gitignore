@@ -181,6 +181,8 @@ matched_temp/
 split_temp/
 sub_temp/
 presentation/
+!presentation/*.py
+!presentation/*.md
 bilibili_publish/
 audio_levels.txt
 final_output*
@@ -191,3 +193,41 @@ burst_final*
 090-构建与部署_Build/agent_demo.py
 090-构建与部署_Build/agent_task5.py
 
+# Internal dev files (not for public GitHub)
+AGENTS.md
+IMPLEMENTATION_SUMMARY.md
+.windsurfrules
+.windsurfrules.*
+.aiexclude
+.vscode/
+
+# Windsurf IDE internal (rules/intelligence/backups/scripts)
+.windsurf/backups/
+.windsurf/intelligence/
+.windsurf/rules/
+.windsurf/fix-global-hooks.ps1
+.windsurf/workflows/
+.windsurf/skills/
+
+# Internal dev docs (legacy notes, strategy, analysis - not for public GitHub)
+05-文档_docs/90-根目录零散资料/
+05-文档_docs/CHINESE_REFACTOR_STRATEGY.md
+05-文档_docs/MERGE_ARCHIVE_CHECKLIST.md
+05-文档_docs/NEEDS_*.md
+05-文档_docs/RESEARCH_ANALYSIS_*.md
+05-文档_docs/PROCESS.md
+05-文档_docs/DATA.md
+05-文档_docs/SKILLS.md
+05-文档_docs/SKILL_HOWTO_CN.md
+05-文档_docs/TERMINAL_RUNBOOK.md
+05-文档_docs/PROJECT_MAP_CN.md
+05-文档_docs/DISTRIBUTION.md
+
+# Internal skills (IDE-specific, not portable)
+06-技能_skills/
+
+# Internal management folder (build logs, archives, screenshots)
+管理/
+
+# Polish SRT script (local video editing)
+polish_srt.py
