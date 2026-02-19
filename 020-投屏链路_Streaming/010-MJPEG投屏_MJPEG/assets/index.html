@@ -1127,6 +1127,111 @@
             return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
+        // ==================== Agent API (Cascade LLM Brain Interface) ====================
+        // Provides structured observe/act/verify primitives for AI Agent control loops.
+        // Usage from MCP evaluate_script: agent.observe(), agent.act('tap',{x,y}), etc.
+        window.agent = {
+            _base: '',
+            _log: [],
+            _fetch: function (path, opts) {
+                return fetch(this._base + path, opts).then(function (r) { return r.json(); });
+            },
+            observe: function () {
+                return this._fetch('/screen/text').then(function (d) {
+                    var texts = (d.texts || []).map(function (t) { return t.text || ''; });
+                    var clickables = (d.clickables || []).map(function (c) {
+                        return { text: c.text || c.label || '', bounds: c.bounds };
+                    });
+                    return {
+                        pkg: d.package || '',
+                        texts: texts,
+                        clickables: clickables,
+                        textCount: d.textCount || 0,
+                        clickableCount: d.clickableCount || 0,
+                        summary: '[' + (d.package || '').split('.').pop() + '] ' +
+                            texts.slice(0, 8).join(' | ') +
+                            (texts.length > 8 ? ' ... (+' + (texts.length - 8) + ')' : '')
+                    };
+                });
+            },
+            viewTree: function () {
+                return this._fetch('/viewtree');
+            },
+            deviceInfo: function () {
+                return this._fetch('/deviceinfo');
+            },
+            act: function (action, params) {
+                var self = this;
+                var map = {
+                    tap: ['POST', '/tap'],
+                    swipe: ['POST', '/swipe'],
+                    type: ['POST', '/type'],
+                    key: ['POST', '/key'],
+                    click: ['POST', '/findclick'],
+                    intent: ['POST', '/intent'],
+                    home: ['GET', '/home'],
+                    back: ['GET', '/back'],
+                    recents: ['GET', '/recents'],
+                    wake: ['GET', '/wake'],
+                    lock: ['GET', '/lock'],
+                    screenshot: ['GET', '/screenshot'],
+                    scroll_down: ['POST', '/scroll', { direction: 'down' }],
+                    scroll_up: ['POST', '/scroll', { direction: 'up' }],
+                    volume_up: ['GET', '/volume/up'],
+                    volume_down: ['GET', '/volume/down'],
+                    notifications: ['GET', '/notifications'],
+                    quicksettings: ['GET', '/quicksettings']
+                };
+                var entry = map[action];
+                if (!entry) return Promise.reject(new Error('Unknown action: ' + action));
+                var method = entry[0];
+                var path = entry[1];
+                var body = Object.assign({}, entry[2] || {}, params || {});
+                var opts = { method: method };
+                if (method === 'POST') {
+                    opts.headers = { 'Content-Type': 'application/json' };
+                    opts.body = JSON.stringify(body);
+                }
+                var t0 = Date.now();
+                return self._fetch(path, opts).then(function (r) {
+                    var ms = Date.now() - t0;
+                    self._log.push({ action: action, params: params, ms: ms, ok: r.ok !== false });
+                    return { ok: r.ok !== false, ms: ms, data: r };
+                });
+            },
+            waitFor: function (text, timeout) {
+                return this._fetch('/wait?text=' + encodeURIComponent(text) +
+                    '&timeout=' + (timeout || 5000));
+            },
+            openApp: function (name) {
+                return this._fetch('/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: '打开' + name })
+                });
+            },
+            run: function (steps) {
+                var self = this;
+                var results = [];
+                var chain = Promise.resolve();
+                steps.forEach(function (step, i) {
+                    chain = chain.then(function () {
+                        return self.act(step.action, step.params).then(function (r) {
+                            results.push({ step: i, action: step.action, ok: r.ok, ms: r.ms });
+                            if (step.wait) {
+                                return new Promise(function (resolve) {
+                                    setTimeout(resolve, step.wait);
+                                });
+                            }
+                        });
+                    });
+                });
+                return chain.then(function () { return results; });
+            },
+            getLog: function () { return this._log; },
+            clearLog: function () { this._log = []; }
+        };
+
         // Alt+/ shortcut to toggle AI command
         document.addEventListener('keydown', function (e) {
             if (e.altKey && e.key === '/') { e.preventDefault(); toggleAiCommand(); }
