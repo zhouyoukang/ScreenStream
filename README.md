@@ -1,172 +1,338 @@
-# ScreenStream Enhanced
+<p align="center">
+  <img src="screenshots/about_image_full.png" width="400" alt="ScreenStream">
+</p>
 
-**Android screen streaming + full remote control + AI Agent brain — all in your browser.**
+<h1 align="center">ScreenStream</h1>
 
-> A feature-rich fork of [dkrivoruchko/ScreenStream](https://github.com/dkrivoruchko/ScreenStream) with AI-powered phone control, VR headset support, full keyboard input, and reverse proxy (FRP) compatibility.
+<p align="center">
+  <strong>Android screen mirroring + full remote control + AI Agent brain</strong><br>
+  Stream, control, and automate any Android device from your browser.
+</p>
 
-[![Android](https://img.shields.io/badge/Android-6.0%2B-green?logo=android)](https://developer.android.com)
-[![Kotlin](https://img.shields.io/badge/Kotlin-Ktor-purple?logo=kotlin)](https://kotlinlang.org)
-[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+<p align="center">
+  <a href="#-whats-different">What's Different</a> &bull;
+  <a href="#-key-capabilities">Capabilities</a> &bull;
+  <a href="#-quick-start">Quick Start</a> &bull;
+  <a href="#-ai-agent--automation">AI Agent</a> &bull;
+  <a href="#-api-reference">API</a> &bull;
+  <a href="#-stream-modes">Stream Modes</a> &bull;
+  <a href="#license">License</a>
+</p>
 
 ---
 
-## What's Different in This Fork?
+## What's Different
 
-| Capability | Upstream ScreenStream | This Fork |
+This is a **heavily enhanced fork** of [dkrivoruchko/ScreenStream](https://github.com/dkrivoruchko/ScreenStream) that goes far beyond screen mirroring. While the original app streams your screen, this fork turns your phone into a **fully controllable, programmable device** accessible from any browser.
+
+| | Original ScreenStream | This Fork |
 |---|---|---|
-| Screen streaming | MJPEG / WebRTC / RTSP | Same |
-| Remote touch control | Basic tap/swipe | **Pixel-perfect** (aspect-ratio aware) |
-| Keyboard input | None | **Full keyboard** + Chinese IME + shortcuts |
-| AI Agent | None | **Natural language commands** — "open WeChat", "turn off WiFi" |
-| VR / Quest | None | **Controller mapping** + joystick swiping + PiP |
-| Reverse proxy (FRP) | Not supported | **Custom port routing** via URL params |
-| System control | None | **Volume / lock / notifications / brightness / clipboard** |
+| Screen mirroring | MJPEG / WebRTC / RTSP | Same |
+| Remote control | None | Full touch, keyboard, swipe, gestures |
+| API endpoints | 0 | **60+** REST endpoints |
+| AI capabilities | None | View tree analysis, semantic click, natural language commands |
+| File management | None | Full remote file manager (browse/upload/download/edit) |
+| Automation | None | Macro engine, workflow builder, Agent API |
+| Features | ~10 | **150+** |
 
----
+## Key Capabilities
 
-## Key Features
+### Screen Mirroring
+- **MJPEG** (local, no internet needed) / **H.264** / **H.265** with audio
+- **WebRTC** (global, E2E encrypted) / **RTSP** (external server)
+- Picture-in-Picture, fullscreen, rotation, zoom, pixel-perfect mode
 
-### 🤖 AI Agent Brain
+### Full Remote Control
+- **Touch**: tap, swipe, long press, double tap, pinch zoom, multi-touch
+- **Keyboard**: full PC keyboard input with Chinese IME support
+- **Navigation**: Home, Back, Recents, notifications, quick settings
+- **System**: volume, brightness, screen lock/wake, power dialog, split screen
+- **Gamepad**: Xbox/PS controller mapping with joystick directional swiping
+- **VR/Quest**: optimized controller mapping, immersive mode
 
-Use natural language to control your phone — no manual tapping required.
+### AI Agent Brain
+- **Natural language commands**: type what you want, phone executes it
+- **View tree analysis**: inspect any app's UI hierarchy in real-time
+- **Semantic click**: find and click elements by text, not coordinates
+- **Screen text extraction**: read all visible text + clickable elements
+- **Smart dialog dismissal**: auto-detect and close popups
+- **Agent API** (`window.agent`): structured Observe-Think-Act loop for LLM integration
 
-```
-"打开支付宝"  →  App launches automatically
-"关闭WiFi"    →  WiFi toggles off
-"返回桌面"    →  Home screen
-```
+### Remote Tools (10 platform panels, Alt+1~0)
+- **App Launcher** (Alt+1): grid view, search, one-click launch via Intent
+- **Notification Center** (Alt+2): real-time feed, 5s auto-refresh
+- **Screen Reader** (Alt+3): extract text + clickable elements, one-click action
+- **Quick Actions** (Alt+4): 12 presets (call, camera, WeChat...) + custom
+- **Device Dashboard** (Alt+5): battery/storage/network/CPU in 6 cards
+- **Workflow Builder** (Alt+6): visual step chains (open app -> wait -> click -> read)
+- **App Monitor** (Alt+7): 3s polling, app switch history
+- **Remote Browser** (Alt+8): open URL on phone, extract content
+- **Clipboard History** (Alt+9): persistent history, one-click copy to PC
+- **Batch Runner** (Alt+0): preset/custom JSON batch operations
 
-- **Observe → Think → Act** loop powered by AccessibilityService + View Tree analysis
-- **18 action types**: tap, swipe, type, scroll, open app, navigate, toggle WiFi, and more
-- **Smart dialog handling**: auto-detects permission popups and handles them
-- **Compound commands**: chain multiple actions in one sentence
-- **Zero extra cost**: uses the IDE's AI (Cascade) as the LLM brain — no API keys needed
+### File Manager (Alt+E)
+- Browse, upload, download, rename, move, copy, delete
+- Grid/list view, drag-drop upload, multi-select batch operations
+- Image/video/audio preview, text file editing
+- Right-click context menu, breadcrumb navigation
 
-### ⌨️ Full Keyboard & Mouse Control
+### Macro Engine
+- Create, save, and replay action sequences
+- Loop support, inline execution, import/export
+- REST API for programmatic macro control
 
-- Type directly from PC → phone (including **Chinese IME**)
-- **Shortcuts**: `Ctrl+V` paste, `Ctrl+C` copy, `Escape` = Back, arrow keys, Tab, Delete
-- **Mouse**: pixel-perfect click, right-click = Back, scroll wheel with natural direction
-- **Horizontal scroll**: right-click + scroll wheel
-
-### 🥽 VR / Meta Quest Ready
-
-- **B / Y buttons** → Back action (no context menu conflicts)
-- **Joystick** → 4-directional swiping (45° sector logic, no diagonal cross-talk)
-- **PiP mode** → Picture-in-Picture for MJPEG and H.264/H.265 streams
-- Soft keyboard suppression for VR browsers
-
-### 🌐 Network & FRP Support
-
-- Server binds to `0.0.0.0` — works with `localhost`, LAN, USB tethering, and FRP
-- **Custom input port**: `http://<ip>:8080/?input_port=9000`
-- Full IPv4/IPv6 support, enhanced `rndis` (USB network) detection
-
-### 📱 System-Level Control (30+ APIs)
-
-| Category | Actions |
-|---|---|
-| **Navigation** | Home, Back, Recents, Notifications, Quick Settings |
-| **Media** | Volume up/down/mute |
-| **Power** | Wake, Lock screen, Brightness |
-| **Input** | Tap, Long press, Double tap, Swipe, Pinch, Scroll |
-| **Apps** | Open by name, Device info, Clipboard sync |
-| **AI** | View tree, Semantic click, Smart close dialog, Find & navigate |
-
----
+### Developer Features
+- **60+ REST API endpoints** for full programmatic control
+- **WebSocket** real-time touch streaming
+- **SSE** streaming for command execution feedback
+- **Intent API**: send arbitrary Android Intents (open any app, any action)
+- **Wait API**: poll view tree until condition met (for automation)
+- **Notification API**: read device notifications programmatically
 
 ## Quick Start
 
-### 1. Install & Run
+### USB (recommended for development)
 
-Install the APK on your Android device (Android 6.0+), grant the required permissions (Screen Capture + Accessibility Service), and start streaming.
+```bash
+# 1. Install APK
+adb install screenstream.apk
 
-### 2. Connect from Browser
+# 2. Grant accessibility permission (on phone)
+#    Settings -> Accessibility -> ScreenStream -> Enable
+
+# 3. Start streaming (on phone)
+#    Open ScreenStream app -> Start
+
+# 4. Port forward
+adb forward tcp:8086 tcp:8086
+
+# 5. Open in browser
+open http://127.0.0.1:8086/
+```
+
+### WiFi (same network)
 
 ```
 http://<phone-ip>:8080/
 ```
 
-| Scenario | URL |
-|---|---|
-| Same WiFi | `http://192.168.1.x:8080/` |
-| USB tethering | `http://192.168.42.129:8080/` |
-| FRP / reverse proxy | `http://your-domain:port/?input_port=9000` |
-| VR mode | `http://<ip>:8080/?vr=1` |
-| Debug panel | `http://<ip>:8080/?debug=1` |
-
-### 3. Control
-
-- **Touch**: Click/drag on the stream image
-- **Keyboard**: Just start typing (click the stream area first)
-- **AI commands**: Open the command bar and type natural language instructions
-- **VR**: Use Quest controllers — joystick to swipe, B/Y to go back
-
----
-
-## Architecture
+### With reverse proxy (FRP/Nginx)
 
 ```
-┌─────────────────────────────────────────────┐
-│  Browser (PC / VR / Mobile)                 │
-│  ┌───────────┬──────────┬─────────────────┐ │
-│  │ Stream    │ Touch /  │ AI Command Bar  │ │
-│  │ Viewer    │ Keyboard │ (NL → Action)   │ │
-│  └─────┬─────┴────┬─────┴───────┬─────────┘ │
-└────────┼──────────┼─────────────┼───────────┘
-         │ MJPEG    │ HTTP/WS     │ HTTP POST
-         ▼          ▼             ▼
-┌─────────────────────────────────────────────┐
-│  Android Device                              │
-│  ┌──────────┐  ┌────────────┐  ┌──────────┐ │
-│  │ MJPEG    │  │ Input      │  │ AI Brain │ │
-│  │ Server   │  │ Service    │  │ (Agent)  │ │
-│  │ :8080    │  │ :8084      │  │ :8086    │ │
-│  └──────────┘  └────────────┘  └──────────┘ │
-│       │        AccessibilityService          │
-│       │        MediaProjection               │
-└───────┼──────────────────────────────────────┘
-        ▼
-   Screen Capture → JPEG frames → HTTP stream
+http://<proxy-host>:PORT/?input_port=<control-port>
 ```
 
----
+## AI Agent & Automation
+
+This fork is designed to work as an **AI Agent platform**. The phone's AccessibilityService provides the "senses" and "muscles", while any LLM (or a human) acts as the "brain".
+
+### Agent Loop: Observe -> Think -> Act -> Verify
+
+```javascript
+// 1. Observe: read current screen
+const screen = await agent.observe();
+// -> { pkg: "com.android.settings", texts: [...], clickables: [...] }
+
+// 2. Think: decide what to do (this is where LLM reasoning happens)
+
+// 3. Act: execute the decision
+await agent.act('click', { text: 'Wi-Fi' });
+
+// 4. Verify: check result
+await agent.waitFor('WLAN', 5000);
+```
+
+### Available Actions
+
+| Action | Example | Description |
+|--------|---------|-------------|
+| `tap` | `agent.act('tap', {x:540, y:1200})` | Coordinate tap |
+| `click` | `agent.act('click', {text:'Settings'})` | Semantic click by text |
+| `swipe` | `agent.act('swipe', {x1:540,y1:1800,x2:540,y2:600})` | Directional swipe |
+| `type` | `agent.act('type', {text:'hello'})` | Text input |
+| `intent` | `agent.act('intent', {action:'android.settings.WIFI_SETTINGS'})` | Open anything |
+| `home` | `agent.act('home')` | Home button |
+| `back` | `agent.act('back')` | Back button |
+| `scroll_down` | `agent.act('scroll_down')` | Scroll page |
+
+### Intent Shortcuts
+
+```bash
+# Open any settings page directly
+curl -X POST http://127.0.0.1:8086/intent \
+  -H "Content-Type: application/json" \
+  -d '{"action":"android.settings.WIFI_SETTINGS"}'
+
+# Open a URL in the default browser
+curl -X POST http://127.0.0.1:8086/intent \
+  -H "Content-Type: application/json" \
+  -d '{"action":"android.intent.action.VIEW","data":"https://github.com"}'
+
+# Make a phone call
+curl -X POST http://127.0.0.1:8086/intent \
+  -H "Content-Type: application/json" \
+  -d '{"action":"android.intent.action.DIAL","data":"tel:+1234567890"}'
+```
+
+## API Reference
+
+### Input Control
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/tap` | Tap at coordinates `{x, y}` |
+| POST | `/swipe` | Swipe `{x1, y1, x2, y2, duration}` |
+| POST | `/type` | Type text `{text}` |
+| POST | `/key` | Send keycode `{keycode}` |
+| POST | `/longpress` | Long press `{x, y}` |
+| POST | `/doubletap` | Double tap `{x, y}` |
+| POST | `/scroll` | Scroll `{direction}` |
+| POST | `/pinch` | Pinch zoom `{action, x, y, factor}` |
+
+### Navigation
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/home` | Home button |
+| GET | `/back` | Back button |
+| GET | `/recents` | Recent apps |
+| GET | `/notifications` | Pull down notification shade |
+| GET | `/quicksettings` | Pull down quick settings |
+
+### System Control
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/wake` | Wake screen |
+| GET | `/lock` | Lock screen |
+| GET | `/volume/up` `/volume/down` | Volume control |
+| POST | `/brightness/{level}` | Set brightness (0-255) |
+| POST | `/media/{action}` | Media control (play/pause/next/prev) |
+| POST | `/findphone/{true\|false}` | Ring phone at max volume |
+| POST | `/flashlight/{true\|false}` | Toggle flashlight |
+| POST | `/vibrate` | Vibrate device |
+| POST | `/rotate/{degrees}` | Rotate screen |
+
+### AI & Semantic
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/screen/text` | Extract all visible text + clickable elements |
+| GET | `/viewtree` | Full accessibility tree (JSON) |
+| GET | `/windowinfo` | Current window info |
+| POST | `/findclick` | Click element by text `{text}` |
+| POST | `/findnodes` | Search nodes by text |
+| POST | `/dismiss` | Dismiss top dialog |
+| POST | `/intent` | Send arbitrary Intent |
+| GET | `/wait` | Wait for text to appear `?text=X&timeout=5000` |
+| POST | `/command` | Natural language command |
+| POST | `/command/stream` | SSE streaming command execution |
+
+### Device Info
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/status` | Connection status |
+| GET | `/deviceinfo` | Model, battery, WiFi, storage, uptime |
+| GET | `/apps` | Installed app list |
+| GET | `/clipboard` | Read clipboard |
+| GET | `/foreground` | Current foreground app |
+| GET | `/notifications/read` | Recent notifications |
+
+### File Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/files/list` | List directory `?path=/sdcard` |
+| GET | `/files/info` | File details |
+| GET | `/files/read` | Read text file |
+| GET | `/files/download` | Download file (base64) |
+| GET | `/files/search` | Search files recursively |
+| GET | `/files/storage` | Storage info |
+| POST | `/files/mkdir` | Create directory |
+| POST | `/files/delete` | Delete file/directory |
+| POST | `/files/rename` | Rename |
+| POST | `/files/move` | Move |
+| POST | `/files/copy` | Copy |
+| POST | `/files/upload` | Upload file (base64) |
+
+### Macros
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/macro/list` | List all macros |
+| POST | `/macro/create` | Create macro |
+| POST | `/macro/run/{id}` | Run macro |
+| POST | `/macro/run-inline` | Run inline macro (no save) |
+| POST | `/macro/stop/{id}` | Stop running macro |
+| GET | `/macro/running` | Currently running macros |
 
 ## Stream Modes
 
 | Mode | Transport | Audio | Internet | Security |
-|---|---|---|---|---|
-| **Local (MJPEG)** | HTTP MJPEG | No | Not required | Optional PIN |
-| **Global (WebRTC)** | WebRTC | Yes | Required | E2E encryption + password |
-| **RTSP** | RTSP (H.265/H.264/AV1) | Yes | Depends | Basic Auth + TLS |
+|------|-----------|-------|----------|----------|
+| **Local (MJPEG)** | HTTP MJPEG | Via WebSocket | No | Optional PIN |
+| **Global (WebRTC)** | WebRTC | Yes | Yes | E2E encryption + password |
+| **RTSP** | H.265/H.264/AV1 | OPUS/AAC/G.711 | Depends | Basic Auth + TLS |
 
-**Recommended**: Use **MJPEG (Local mode)** for best stability and lowest latency on LAN/USB.
+Requires Android 6.0+ (API 21). Uses [MediaProjection](https://developer.android.com/reference/android/media/projection/MediaProjection).
 
----
+## Keyboard Shortcuts
 
-## URL Parameters
+| Shortcut | Action |
+|----------|--------|
+| `Alt+/` | AI command bar |
+| `Alt+M` | Command menu |
+| `Alt+E` | File manager |
+| `Alt+1`~`0` | Platform panels (App Launcher to Batch Runner) |
+| `F1` | Shortcut help |
+| `Alt+I` | FPS/latency overlay |
+| `Alt+K` | Screenshot |
+| `Alt+Shift+P` | Picture-in-Picture |
+| `Alt+G` | Pixel-perfect mode |
+| `Alt+Left/Right` | Rotate display |
+| `Ctrl+Arrow Up/Down` | Volume control |
+| `Escape` / `Right-click` | Android Back |
+| `Middle-click` | Android Home |
 
-| Parameter | Description | Example |
-|---|---|---|
-| `input_port` | Custom input control port (for FRP) | `?input_port=9000` |
-| `debug` | Show debug panel | `?debug=1` |
-| `vr` | VR fullscreen mode | `?vr=1` or `?vr=fill` |
-| `kb` | Enable keyboard focus on mobile | `?kb=1` |
-| `vr_kb` | Allow keyboard in VR mode | `?vr_kb=1` |
+## Architecture
 
----
-
-## Contributing
-
-Issues and PRs welcome. This fork focuses on **remote control**, **AI automation**, and **VR** use cases.
-
-For translation contributions to the upstream project, see [dkrivoruchko/ScreenStream](https://github.com/dkrivoruchko/ScreenStream).
+```
+010-UI/                    # Android app UI (Kotlin/Compose)
+020-Streaming/             # MJPEG + RTSP + WebRTC engines
+  010-MJPEG/assets/        #   Web UI (index.html - 6000+ lines)
+040-Input/                 # Reverse control module
+  010-Routes/              #   60+ HTTP API routes (Ktor)
+  020-Service/             #   AccessibilityService (1200+ lines)
+  040-Macro/               #   Macro engine
+070-Infrastructure/        # Common modules, DI, logging
+080-Settings/              # Per-module settings
+090-Build/                 # Build scripts, deployment tools
+```
 
 ## Credits
 
-- **Upstream**: [Dmytro Kryvoruchko](https://github.com/dkrivoruchko) — original ScreenStream
-- **Fork maintainer**: [zhouyoukang](https://github.com/zhouyoukang) — remote control, AI Agent, VR enhancements
+- **Original project**: [dkrivoruchko/ScreenStream](https://github.com/dkrivoruchko/ScreenStream) by Dmytro Kryvoruchko
+- **This fork**: [zhouyoukang/ScreenStream](https://github.com/zhouyoukang/ScreenStream) - AI Agent & remote control enhancements
+
+## Privacy Policy and Terms & Conditions
+
+[Privacy Policy](PrivacyPolicy.md) | [Terms & Conditions](TermsConditions.md)
 
 ## License
 
-[MIT License](LICENSE) — Copyright (c) 2016 Dmytro Kryvoruchko
+```
+The MIT License (MIT)
+
+Copyright (c) 2016 Dmytro Kryvoruchko
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

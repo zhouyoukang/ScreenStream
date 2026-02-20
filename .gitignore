@@ -158,8 +158,15 @@ verification_*.log
 # Embedded git repos (references, must not be committed directly)
 050-音频处理_Audio/010-音频中心_AudioCenter/references/
 
-# Local-only: Windsurf hooks (contains local paths, not portable)
-.windsurf/hooks.json
+# Local-only: Windsurf/AI IDE config (not portable)
+.windsurf/
+.windsurfrules*
+.aiexclude
+AGENTS.md
+**/AGENTS.md
+IMPLEMENTATION_SUMMARY.md
+06-技能_skills/
+管理/
 
 # Local-only: personal media/video editing files
 *.mkv
