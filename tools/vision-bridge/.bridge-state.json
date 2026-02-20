@@ -1,0 +1,30 @@
+{
+  "agents": {
+    "VisionBridge-Server": {
+      "name": "VisionBridge-Server",
+      "start_time": 1771591627.8233364,
+      "messages": [
+        {
+          "time": "20:47:07",
+          "epoch": 1771591627.8233364,
+          "text": "Server (re)started on port 9902",
+          "type": "success"
+        },
+        {
+          "time": "20:48:00",
+          "epoch": 1771591680.5170314,
+          "text": "Server (re)started on port 9902",
+          "type": "success"
+        }
+      ],
+      "role": "infrastructure",
+      "task": "HTTP Bridge on port 9902",
+      "status": "working",
+      "last_heartbeat": 1771598705.8459184
+    }
+  },
+  "frame_count": 0,
+  "start_time": 1771591627.8233364,
+  "saved_at": 1771598715.8518581,
+  "saved_at_human": "2026-02-20 22:45:15"
+}

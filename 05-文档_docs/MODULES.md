@@ -44,6 +44,6 @@
 - 架构决策：`05-文档_docs/adr/`
 - 合并/归档清单：`05-文档_docs/MERGE_ARCHIVE_CHECKLIST.md`
 - 愿景路线：`05-文档_docs/VISION.md`
-- Windsurf Skills：`.windsurf/skills/`（7个项目技能）
-- Windsurf Rules：`.windsurf/rules/`（6个结构化规则）
+- Windsurf Skills：`.windsurf/skills/`（8个项目技能）
+- Windsurf Rules：`.windsurf/rules/`（7个结构化规则）
 - AGENTS.md：8个目录级指令文件

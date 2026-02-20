@@ -1,0 +1,6 @@
+mcp>=1.20.0
+pyautogui>=0.9.54
+pywinauto>=0.6.8
+mss>=10.0.0
+Pillow>=10.0.0
+pyperclip>=1.8.0

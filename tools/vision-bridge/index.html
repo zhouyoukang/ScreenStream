@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Vision Bridge v2.1 — Command Center</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0a0a0f; --surface: #12121d; --surface2: #1a1a2e;
+  --border: #2a2a3e; --text: #e0e0e8; --text2: #8888a0;
+  --accent: #6366f1; --accent2: #818cf8; --green: #22c55e;
+  --red: #ef4444; --yellow: #eab308; --orange: #f97316; --cyan: #06b6d4;
+}
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; overflow: hidden; }
+
+/* === Header === */
+header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; height: 48px; }
+header h1 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+header h1 .logo { color: var(--accent2); }
+header h1 .ver { color: var(--text2); font-size: 11px; font-weight: 400; }
+.header-indicators { display: flex; gap: 14px; font-size: 12px; color: var(--text2); }
+.indicator { display: flex; align-items: center; gap: 5px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.dot-off { background: #444; }
+.dot-green { background: var(--green); }
+.dot-red { background: var(--red); animation: blink 1s infinite; }
+.dot-yellow { background: var(--yellow); animation: blink 2s infinite; }
+.dot-cyan { background: var(--cyan); }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+.header-actions { display: flex; gap: 6px; }
+.icon-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text2); cursor: pointer; padding: 5px 10px; font-size: 12px; transition: all 0.15s; }
+.icon-btn:hover { border-color: var(--accent); color: var(--text); }
+.icon-btn.active { border-color: var(--green); color: var(--green); }
+
+/* === Layout === */
+main { display: grid; grid-template-columns: 1fr 300px; grid-template-rows: 1fr auto; height: calc(100vh - 48px); }
+
+/* === Video Zone === */
+#video-zone { position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#preview { max-width: 100%; max-height: 100%; object-fit: contain; }
+.overlay-badge { position: absolute; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; pointer-events: none; }
+#rec-badge { top: 12px; left: 12px; background: var(--red); color: #fff; display: none; align-items: center; gap: 5px; }
+#rec-badge.on { display: flex; }
+#timer { top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: #fff; font-family: monospace; }
+#bridge-badge { bottom: 12px; left: 12px; background: rgba(6,182,212,0.2); color: var(--cyan); border: 1px solid rgba(6,182,212,0.3); font-size: 11px; display: none; }
+#bridge-badge.on { display: block; }
+#no-signal { color: var(--text2); font-size: 14px; text-align: center; line-height: 1.6; }
+
+/* === Right Panel === */
+#right-panel { background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.section { padding: 14px; border-bottom: 1px solid var(--border); }
+.section h3 { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+.section h3 .tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; background: rgba(99,102,241,0.15); color: var(--accent2); text-transform: none; letter-spacing: 0; }
+
+/* Buttons */
+.btn-row { display: flex; gap: 6px; }
+.btn { padding: 7px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface2); color: var(--text); cursor: pointer; font-size: 12px; transition: all 0.15s; display: flex; align-items: center; gap: 5px; flex: 1; justify-content: center; }
+.btn:hover { border-color: var(--accent); }
+.btn.active { border-color: var(--accent); background: rgba(99,102,241,0.12); color: var(--accent2); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* Settings */
+.setting { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
+.setting select, .setting input[type=range] { accent-color: var(--accent); }
+.setting select { background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; font-size: 11px; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.stat { background: var(--surface2); border-radius: 5px; padding: 8px; text-align: center; }
+.stat .v { font-size: 18px; font-weight: 700; color: var(--accent2); }
+.stat .l { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+/* Frame gallery */
+#gallery-wrap { flex: 1; overflow-y: auto; padding: 10px; }
+#gallery-wrap h3 { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+#gallery { display: flex; flex-direction: column; gap: 6px; }
+.frame-thumb { background: var(--surface2); border-radius: 5px; overflow: hidden; cursor: pointer; border: 1px solid transparent; transition: border-color 0.15s; }
+.frame-thumb:hover { border-color: var(--accent); }
+.frame-thumb img { width: 100%; display: block; }
+.frame-info { padding: 4px 8px; font-size: 10px; color: var(--text2); display: flex; justify-content: space-between; }
+
+/* === Bottom: Agent Observatory === */
+#agent-bar { grid-column: 1 / -1; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: stretch; height: 140px; overflow: hidden; }
+#agent-cards { flex: 1; display: flex; gap: 8px; padding: 10px; overflow-x: auto; }
+.a-card { background: var(--surface2); border-radius: 6px; min-width: 220px; max-width: 280px; flex-shrink: 0; border-left: 3px solid var(--accent); display: flex; flex-direction: column; }
+.a-card.state-active { border-left-color: var(--green); }
+.a-card.state-stale { border-left-color: var(--yellow); }
+.a-card.state-dead { border-left-color: var(--red); }
+.a-head { padding: 8px 10px 4px; display: flex; align-items: center; justify-content: space-between; }
+.a-name { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+.a-badge { font-size: 9px; padding: 1px 6px; border-radius: 8px; }
+.a-badge-active { background: rgba(34,197,94,0.15); color: var(--green); }
+.a-badge-stale { background: rgba(234,179,8,0.15); color: var(--yellow); }
+.a-badge-dead { background: rgba(239,68,68,0.15); color: var(--red); }
+.a-body { padding: 4px 10px; font-size: 11px; color: var(--text2); flex: 1; overflow-y: auto; }
+.a-row { display: flex; justify-content: space-between; padding: 2px 0; }
+.a-msgs { border-top: 1px solid var(--border); padding: 4px 10px; max-height: 50px; overflow-y: auto; }
+.a-msg { font-size: 10px; padding: 1px 0; color: var(--text2); }
+.a-msg.success { color: var(--green); }
+.a-msg.error { color: var(--red); }
+.a-msg.warn { color: var(--yellow); }
+
+/* Anxiety meter */
+#anxiety-zone { min-width: 180px; padding: 10px 14px; border-left: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+#anxiety-zone h4 { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+#anxiety-icon { font-size: 32px; text-align: center; }
+#anxiety-label { text-align: center; font-size: 13px; font-weight: 600; }
+#anxiety-bar-wrap { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+#anxiety-fill { height: 100%; border-radius: 3px; transition: width 0.8s, background 0.8s; width: 0%; background: var(--green); }
+#anxiety-detail { font-size: 10px; color: var(--text2); text-align: center; }
+
+/* Hidden */
+#hidden-canvas { display: none; }
+
+/* Toast */
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; padding: 6px 18px; border-radius: 5px; font-size: 12px; z-index: 100; animation: fadeIO 2s forwards; }
+@keyframes fadeIO { 0% { opacity: 0; transform: translateX(-50%) translateY(8px); } 10% { opacity: 1; transform: translateX(-50%); } 80% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>
+    <span class="logo">AI</span> Vision Bridge
+    <span class="ver">v2.1 Persistent</span>
+  </h1>
+  <div class="header-indicators">
+    <span class="indicator" id="ind-source"><span class="dot dot-off"></span> Source</span>
+    <span class="indicator" id="ind-record"><span class="dot dot-off"></span> Rec</span>
+    <span class="indicator" id="ind-bridge"><span class="dot dot-off"></span> Bridge</span>
+    <span class="indicator" id="ind-server"><span class="dot dot-off"></span> Server</span>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" onclick="togglePiP()" title="画中画 (Alt+P)">PiP</button>
+    <button class="icon-btn" onclick="requestNotifyPermission()" title="浏览器通知">通知</button>
+    <button class="icon-btn" id="btn-auto" onclick="toggleAutoMode()" title="一键全自动 (Alt+A)">自动</button>
+  </div>
+</header>
+
+<main>
+  <div id="video-zone">
+    <video id="preview" autoplay muted playsinline></video>
+    <div class="overlay-badge" id="rec-badge"><span class="dot dot-red"></span> REC</div>
+    <div class="overlay-badge" id="timer">00:00:00</div>
+    <div class="overlay-badge" id="bridge-badge">BRIDGE ACTIVE</div>
+    <div id="no-signal">
+      AI Vision Bridge v2.1<br>
+      <span style="font-size:12px;color:var(--text2)">选择视频源开始 — Alt+1 摄像头 / Alt+2 屏幕 / Alt+A 全自动<br>服务器状态持久化 · Agent心跳自动保活 · 重启不丢数据</span>
+    </div>
+  </div>
+
+  <div id="right-panel">
+    <div class="section">
+      <h3>视频源</h3>
+      <div class="btn-row">
+        <button class="btn" id="btn-cam" onclick="startSource('webcam')">摄像头</button>
+        <button class="btn" id="btn-scr" onclick="startSource('screen')">屏幕</button>
+        <button class="btn" id="btn-both" onclick="startSource('both')">双路</button>
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn btn-primary" id="btn-rec" onclick="toggleRecording()" disabled>开始录制</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>帧桥接 <span class="tag">HTTP</span></h3>
+      <div class="setting">
+        <span>间隔</span>
+        <div><input type="range" id="ext-interval" min="1" max="15" value="3" style="width:90px" oninput="document.getElementById('iv').textContent=this.value+'s'"> <span id="iv">3s</span></div>
+      </div>
+      <div class="setting">
+        <span>质量</span>
+        <select id="ext-quality"><option value="0.3">低</option><option value="0.6" selected>中</option><option value="0.85">高</option></select>
+      </div>
+      <div class="setting">
+        <span>缩放</span>
+        <select id="ext-scale"><option value="0.25">25%</option><option value="0.5" selected>50%</option><option value="0.75">75%</option><option value="1">100%</option></select>
+      </div>
+      <button class="btn" id="btn-ext" onclick="toggleExtraction()" disabled style="width:100%">启动桥接</button>
+    </div>
+
+    <div class="section">
+      <h3>统计</h3>
+      <div class="stats">
+        <div class="stat"><div class="v" id="s-frames">0</div><div class="l">帧</div></div>
+        <div class="stat"><div class="v" id="s-size">-</div><div class="l">帧大小</div></div>
+        <div class="stat"><div class="v" id="s-fps">-</div><div class="l">FPS</div></div>
+        <div class="stat"><div class="v" id="s-res">-</div><div class="l">分辨率</div></div>
+      </div>
+    </div>
+
+    <div id="gallery-wrap">
+      <h3>帧画廊</h3>
+      <div id="gallery"></div>
+    </div>
+  </div>
+
+  <div id="agent-bar">
+    <div id="agent-cards">
+      <div style="color:var(--text2);font-size:12px;padding:20px;text-align:center;width:100%">
+        等待Agent连接...<br><span style="font-size:10px">Agent通过 POST /api/agent/heartbeat 注册</span>
+      </div>
+    </div>
+    <div id="anxiety-zone">
+      <h4>焦虑指数</h4>
+      <div id="anxiety-icon">😌</div>
+      <div id="anxiety-label" style="color:var(--green)">平静</div>
+      <div id="anxiety-bar-wrap"><div id="anxiety-fill"></div></div>
+      <div id="anxiety-detail">所有Agent活跃</div>
+    </div>
+  </div>
+</main>
+
+<canvas id="hidden-canvas"></canvas>
+
+<script>
+// =====================================================
+// AI Vision Bridge v2.1 — Unified Command Center
+// 路1: MediaRecorder → .webm (B站素材)
+// 路2: Canvas → JPEG → HTTP Bridge → Any Agent
+// v2.1: Connection resilience + server restart detection
+// =====================================================
+
+const API_BASE = location.origin;
+const FRAME_POST_URL = API_BASE + '/api/frame';
+const AGENTS_URL = API_BASE + '/api/agents';
+const CUNZHI_URL = API_BASE + '/api/cunzhi';
+const STATUS_URL = API_BASE + '/api/status';
+
+// === State ===
+let stream = null, mediaRecorder = null, recordedChunks = [];
+let isRecording = false, isExtracting = false, autoMode = false;
+let extractTimer = null, frameCount = 0, recordStart = null, timerInterval = null;
+let frames = [], serverAlive = false, wasServerAlive = false;
+const MAX_FRAMES = 30;
+let serverRestartCount = 0;
+
+const video = document.getElementById('preview');
+const canvas = document.getElementById('hidden-canvas');
+const ctx = canvas.getContext('2d');
+
+// === Server Health Check (with reconnection detection) ===
+async function checkServer() {
+  try {
+    const r = await fetch(STATUS_URL, { signal: AbortSignal.timeout(2000) });
+    const d = await r.json();
+    serverAlive = d.ok === true;
+    // Detect server restart (was dead, now alive)
+    if (serverAlive && !wasServerAlive && serverRestartCount > 0) {
+      showToast('Server reconnected - state persisted');
+    }
+    if (!serverAlive && wasServerAlive) {
+      showToast('Server connection lost - will auto-reconnect', 'error');
+    }
+    wasServerAlive = serverAlive;
+    if (serverAlive) serverRestartCount++;
+  } catch {
+    if (serverAlive) showToast('Server connection lost', 'error');
+    serverAlive = false;
+    wasServerAlive = false;
+  }
+  setIndicator('ind-server', serverAlive ? 'green' : 'off');
+}
+setInterval(checkServer, 3000); // faster polling for resilience
+checkServer();
+
+// === Video Source ===
+async function startSource(type) {
+  try {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+
+    if (type === 'webcam') {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1920, height: 1080 }, audio: true });
+    } else if (type === 'screen') {
+      stream = await navigator.mediaDevices.getDisplayMedia({ video: { width: 1920, height: 1080 }, audio: true });
+    } else if (type === 'both') {
+      // Screen + webcam PiP overlay
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { width: 1920, height: 1080 }, audio: true });
+      const camStream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 }, audio: false });
+      // Use screen as main, we'll overlay webcam in canvas during extraction
+      stream = screenStream;
+      stream._camStream = camStream;
+      stream._camTrack = camStream.getVideoTracks()[0];
+    }
+
+    video.srcObject = stream;
+    document.getElementById('no-signal').style.display = 'none';
+    document.getElementById('btn-rec').disabled = false;
+    document.getElementById('btn-ext').disabled = false;
+
+    ['btn-cam','btn-scr','btn-both'].forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById(type === 'webcam' ? 'btn-cam' : type === 'screen' ? 'btn-scr' : 'btn-both').classList.add('active');
+
+    setIndicator('ind-source', 'green');
+    const vt = stream.getVideoTracks()[0];
+    const s = vt.getSettings();
+    document.getElementById('s-res').textContent = `${s.width||'?'}x${s.height||'?'}`;
+    document.getElementById('s-fps').textContent = Math.round(s.frameRate || 0) + '';
+
+    vt.onended = () => {
+      setIndicator('ind-source', 'off');
+      if (isRecording) toggleRecording();
+      if (isExtracting) toggleExtraction();
+      document.getElementById('no-signal').style.display = '';
+    };
+
+    // Auto mode: start everything
+    if (autoMode) {
+      if (!isRecording) toggleRecording();
+      if (!isExtracting) toggleExtraction();
+    }
+  } catch(e) {
+    showToast('视频源获取失败: ' + e.message, 'error');
+  }
+}
+
+// === Recording (路1) ===
+function toggleRecording() {
+  const btn = document.getElementById('btn-rec');
+  if (!isRecording) {
+    recordedChunks = [];
+    const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : 'video/webm';
+    mediaRecorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 5000000 });
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `bilibili_${new Date().toISOString().replace(/[:.]/g,'-')}.webm`;
+      a.click();
+      showToast(`视频已保存: ${(blob.size/1048576).toFixed(1)}MB`);
+    };
+    mediaRecorder.start(1000);
+    isRecording = true;
+    recordStart = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+    btn.className = 'btn btn-danger'; btn.textContent = '停止录制';
+    document.getElementById('rec-badge').classList.add('on');
+    setIndicator('ind-record', 'red');
+  } else {
+    mediaRecorder.stop();
+    isRecording = false;
+    clearInterval(timerInterval);
+    btn.className = 'btn btn-primary'; btn.textContent = '开始录制';
+    document.getElementById('rec-badge').classList.remove('on');
+    setIndicator('ind-record', 'off');
+  }
+}
+
+// === Frame Bridge (路2) ===
+function toggleExtraction() {
+  const btn = document.getElementById('btn-ext');
+  if (!isExtracting) {
+    isExtracting = true;
+    const ms = parseInt(document.getElementById('ext-interval').value) * 1000;
+    extractAndPost();
+    extractTimer = setInterval(extractAndPost, ms);
+    btn.className = 'btn btn-danger'; btn.textContent = '停止桥接'; btn.style.width = '100%';
+    document.getElementById('bridge-badge').classList.add('on');
+    setIndicator('ind-bridge', 'cyan');
+  } else {
+    isExtracting = false;
+    clearInterval(extractTimer);
+    btn.className = 'btn'; btn.textContent = '启动桥接'; btn.style.width = '100%';
+    document.getElementById('bridge-badge').classList.remove('on');
+    setIndicator('ind-bridge', 'off');
+  }
+}
+
+async function extractAndPost() {
+  if (!stream || !video.videoWidth) return;
+  const scale = parseFloat(document.getElementById('ext-scale').value);
+  const quality = parseFloat(document.getElementById('ext-quality').value);
+  const w = Math.round(video.videoWidth * scale);
+  const h = Math.round(video.videoHeight * scale);
+
+  canvas.width = w; canvas.height = h;
+  ctx.drawImage(video, 0, 0, w, h);
+
+  // Overlay webcam PiP if in 'both' mode
+  if (stream._camTrack && stream._camTrack.readyState === 'live') {
+    try {
+      const camVideo = document.createElement('video');
+      camVideo.srcObject = new MediaStream([stream._camTrack]);
+      camVideo.muted = true;
+      await camVideo.play();
+      const pw = Math.round(w * 0.2), ph = Math.round(h * 0.2);
+      ctx.drawImage(camVideo, w - pw - 10, h - ph - 10, pw, ph);
+      camVideo.pause();
+    } catch {}
+  }
+
+  const dataUrl = canvas.toDataURL('image/jpeg', quality);
+  const size = Math.round((dataUrl.length - 23) * 0.75);
+  frameCount++;
+
+  const frame = { id: frameCount, ts: timeStr(), dataUrl, size, w, h };
+  frames.unshift(frame);
+  if (frames.length > MAX_FRAMES) frames.pop();
+
+  document.getElementById('s-frames').textContent = frameCount;
+  document.getElementById('s-size').textContent = fmtSize(size);
+  renderGallery();
+
+  // POST to server (路2 core)
+  if (serverAlive) {
+    try {
+      await fetch(FRAME_POST_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl, width: w, height: h }),
+      });
+    } catch {}
+  }
+
+  // Also localStorage (backward compat)
+  try {
+    localStorage.setItem('vision-bridge-latest-frame', JSON.stringify({ id: frame.id, timestamp: frame.ts, dataUrl, width: w, height: h }));
+  } catch {}
+}
+
+// === Gallery ===
+function renderGallery() {
+  const g = document.getElementById('gallery');
+  g.innerHTML = frames.slice(0, 10).map(f => `
+    <div class="frame-thumb" onclick="copyFrame(${f.id})">
+      <img src="${f.dataUrl}" loading="lazy">
+      <div class="frame-info"><span>#${f.id} ${f.ts}</span><span>${fmtSize(f.size)}</span></div>
+    </div>
+  `).join('');
+}
+
+function copyFrame(id) {
+  const f = frames.find(x => x.id === id);
+  if (!f) return;
+  navigator.clipboard.writeText(f.dataUrl.split(',')[1]).then(() => showToast(`帧#${id} Base64已复制`));
+}
+
+// === Agent Observatory ===
+let lastAgentData = {};
+
+async function pollAgents() {
+  try {
+    const r = await fetch(AGENTS_URL, { signal: AbortSignal.timeout(2000) });
+    const d = await r.json();
+    if (d.ok) renderAgents(d.agents);
+  } catch {}
+}
+
+function renderAgents(agents) {
+  const container = document.getElementById('agent-cards');
+  const entries = Object.values(agents);
+  if (entries.length === 0) {
+    container.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:20px;text-align:center;width:100%">等待Agent连接...</div>';
+    updateAnxiety(0);
+    return;
+  }
+
+  container.innerHTML = entries.sort((a,b) => (a.elapsed_seconds||0) - (b.elapsed_seconds||0)).map(a => {
+    const st = a.computed_state || 'active';
+    const badgeCls = st === 'active' ? 'a-badge-active' : st === 'stale' ? 'a-badge-stale' : 'a-badge-dead';
+    const label = st === 'active' ? '活跃' : st === 'stale' ? '静默' : '失联';
+    const msgs = (a.messages || []).slice(-5).reverse();
+    return `
+      <div class="a-card state-${st}">
+        <div class="a-head">
+          <span class="a-name"><span class="dot dot-${st === 'active' ? 'green' : st === 'stale' ? 'yellow' : 'red'}"></span> ${a.name}</span>
+          <span class="a-badge ${badgeCls}">${label}</span>
+        </div>
+        <div class="a-body">
+          <div class="a-row"><span>角色</span><span>${a.role || '-'}</span></div>
+          <div class="a-row"><span>任务</span><span>${(a.task || '-').slice(0,30)}</span></div>
+          <div class="a-row"><span>心跳</span><span>${fmtElapsed(a.elapsed_seconds)}前</span></div>
+        </div>
+        ${msgs.length ? `<div class="a-msgs">${msgs.map(m => `<div class="a-msg ${m.type||''}">${m.time} ${m.text||''}</div>`).join('')}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  // Detect state changes for notifications
+  entries.forEach(a => {
+    const prev = lastAgentData[a.name];
+    if (prev && prev.computed_state !== a.computed_state) {
+      if (a.computed_state === 'dead') {
+        sendNotification(`Agent ${a.name} 失联`, `已 ${fmtElapsed(a.elapsed_seconds)} 无心跳`);
+      } else if (a.computed_state === 'active' && prev.computed_state === 'dead') {
+        sendNotification(`Agent ${a.name} 恢复`, '重新活跃');
+      }
+    }
+    lastAgentData[a.name] = { computed_state: a.computed_state };
+  });
+
+  // Anxiety based on worst agent
+  const worstElapsed = Math.max(...entries.map(a => a.elapsed_seconds || 0));
+  updateAnxiety(worstElapsed);
+}
+
+function updateAnxiety(seconds) {
+  const fill = document.getElementById('anxiety-fill');
+  const icon = document.getElementById('anxiety-icon');
+  const label = document.getElementById('anxiety-label');
+  const detail = document.getElementById('anxiety-detail');
+
+  let pct, color, emoji, text;
+  if (seconds < 30) {
+    pct = (seconds/30)*25; color = 'var(--green)'; emoji = '😌'; text = '平静';
+  } else if (seconds < 120) {
+    pct = 25+((seconds-30)/90)*25; color = 'var(--yellow)'; emoji = '🤔'; text = '关注';
+  } else if (seconds < 300) {
+    pct = 50+((seconds-120)/180)*25; color = 'var(--orange)'; emoji = '😰'; text = '焦虑';
+  } else {
+    pct = 75+Math.min((seconds-300)/300,1)*25; color = 'var(--red)'; emoji = '🚨'; text = '需干预';
+  }
+  fill.style.width = Math.min(pct,100) + '%';
+  fill.style.background = color;
+  icon.textContent = emoji;
+  label.textContent = text;
+  label.style.color = color;
+  detail.textContent = seconds > 0 ? `最久静默: ${fmtElapsed(seconds)}` : '所有Agent活跃';
+}
+
+setInterval(pollAgents, 3000);
+pollAgents();
+
+// === Auto Mode ===
+function toggleAutoMode() {
+  autoMode = !autoMode;
+  document.getElementById('btn-auto').classList.toggle('active', autoMode);
+  if (autoMode) {
+    showToast('全自动模式: 屏幕+录制+桥接');
+    startSource('screen');
+  }
+}
+
+// === PiP ===
+async function togglePiP() {
+  try {
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+    } else if (video.srcObject) {
+      await video.requestPictureInPicture();
+    }
+  } catch(e) { showToast('PiP不可用: ' + e.message, 'error'); }
+}
+
+// === Notifications ===
+function requestNotifyPermission() {
+  if ('Notification' in window) {
+    Notification.requestPermission().then(p => showToast(p === 'granted' ? '通知已开启' : '通知被拒绝'));
+  }
+}
+function sendNotification(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '🤖' });
+  }
+}
+
+// === Indicators ===
+function setIndicator(id, state) {
+  const el = document.getElementById(id);
+  const dot = el.querySelector('.dot');
+  dot.className = 'dot dot-' + (state === 'off' ? 'off' : state);
+}
+
+// === Timer ===
+function updateTimer() {
+  if (!recordStart) return;
+  const s = Math.floor((Date.now() - recordStart) / 1000);
+  document.getElementById('timer').textContent =
+    `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+
+// === Helpers ===
+function timeStr() { return new Date().toLocaleTimeString('zh-CN', {hour12:false}); }
+function fmtSize(b) { return b < 1024 ? b+'B' : b < 1048576 ? (b/1024).toFixed(1)+'KB' : (b/1048576).toFixed(1)+'MB'; }
+function fmtElapsed(s) { return s < 60 ? Math.round(s)+'s' : s < 3600 ? Math.floor(s/60)+'m'+Math.round(s%60)+'s' : Math.floor(s/3600)+'h'+Math.floor((s%3600)/60)+'m'; }
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  if (type === 'error') t.style.background = 'var(--red)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// === Keyboard Shortcuts ===
+document.addEventListener('keydown', e => {
+  if (e.altKey && e.key === '1') { e.preventDefault(); startSource('webcam'); }
+  if (e.altKey && e.key === '2') { e.preventDefault(); startSource('screen'); }
+  if (e.altKey && e.key === '3') { e.preventDefault(); startSource('both'); }
+  if (e.altKey && (e.key === 'r' || e.key === 'R')) { e.preventDefault(); if (!document.getElementById('btn-rec').disabled) toggleRecording(); }
+  if (e.altKey && (e.key === 'e' || e.key === 'E')) { e.preventDefault(); if (!document.getElementById('btn-ext').disabled) toggleExtraction(); }
+  if (e.altKey && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); toggleAutoMode(); }
+  if (e.altKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); togglePiP(); }
+  if (e.key === 'Escape' && isExtracting) toggleExtraction();
+});
+
+// === Public API ===
+window.VisionBridge = {
+  getLatestFrame: () => frames[0] || null,
+  getStatus: () => ({ recording: isRecording, extracting: isExtracting, frames: frameCount, serverAlive }),
+  postHeartbeat: async (name, data) => {
+    await fetch(API_BASE + '/api/agent/heartbeat', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ name, ...data })
+    });
+  },
+};
+</script>
+</body>
+</html>

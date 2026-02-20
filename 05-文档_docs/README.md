@@ -44,8 +44,8 @@
 
 ## AI 配置体系
 
-- **规则**：`.windsurf/rules/`（6 个结构化规则）
-- **技能**：`.windsurf/skills/`（7 个项目技能）
+- **规则**：`.windsurf/rules/`（7 个结构化规则）
+- **技能**：`.windsurf/skills/`（8 个项目技能）
 - **AGENTS.md**：8 个目录级指令
 - **工作流**：`.windsurf/workflows/`（9 个标准工作流）
 - **部署**：`090-构建与部署_Build/dev-deploy.ps1`（一键编译→安装→启用→验证）

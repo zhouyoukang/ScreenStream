@@ -129,7 +129,7 @@ skills/temp/
 skills/.cache/
 
 # IDE Workspace specific
-# .vscode/settings.json  # 宸茶В闄ら檺鍒讹紝鍏佽� Cascade 璁块棶鍜屼慨澶嶇粓绔�厤缃?
+# .vscode/settings.json  # 已解除限制，允许 Cascade 访问和修复终端配置
 # .vscode/launch.json
 *.code-workspace
 
@@ -151,12 +151,12 @@ comparison_*.txt
 verification_*.log
 
 # Build artifacts in 090 directory (local only)
-090-鏋勫缓涓庨儴缃瞋Build/android-sdk/
-090-鏋勫缓涓庨儴缃瞋Build/temp-build/
-090-鏋勫缓涓庨儴缃瞋Build/gradle/
+090-构建与部署_Build/android-sdk/
+090-构建与部署_Build/temp-build/
+090-构建与部署_Build/gradle/
 
 # Embedded git repos (references, must not be committed directly)
-050-闊抽�澶勭悊_Audio/010-闊抽�涓�績_AudioCenter/references/
+050-音频处理_Audio/010-音频中心_AudioCenter/references/
 
 # Local-only: Windsurf/AI IDE config (not portable)
 .windsurf/
@@ -165,76 +165,32 @@ verification_*.log
 AGENTS.md
 **/AGENTS.md
 IMPLEMENTATION_SUMMARY.md
-06-鎶€鑳絖skills/
-绠＄悊/
+06-技能_skills/
+管理/
 
-# Local-only: personal media/video editing files
-*.mkv
-*.mp4
-*.wav
-*.srt
-*.ass
-transcript*.json
-burn_subs.py
-burst_cut.py
-cloud_transcribe.py
-edit_video.py
-final_sub.py
-fix_srt.py
-merge_matched.py
-retranscribe.py
-split_srt.py
-matched_temp/
-split_temp/
-sub_temp/
+# Local-only: video production (all consolidated under presentation/)
 presentation/*
 !presentation/*.py
 !presentation/*.md
-bilibili_publish/
-audio_levels.txt
-final_output*
-matched_*.mp4
-burst_final*
 
 # Local-only: Agent demo scripts (contain localhost refs)
-090-鏋勫缓涓庨儴缃瞋Build/agent_demo.py
-090-鏋勫缓涓庨儴缃瞋Build/agent_task5.py
+090-构建与部署_Build/agent_demo.py
+090-构建与部署_Build/agent_task5.py
 
-# Internal dev files (not for public GitHub)
-AGENTS.md
-IMPLEMENTATION_SUMMARY.md
-.windsurfrules
-.windsurfrules.*
-.aiexclude
+# IDE workspace (not for public GitHub)
 .vscode/
 
-# Windsurf IDE internal (rules/intelligence/backups/scripts)
-.windsurf/backups/
-.windsurf/intelligence/
-# .windsurf/rules/  # unblocked for agent-communication rule creation
-.windsurf/fix-global-hooks.ps1
-.windsurf/workflows/
-.windsurf/skills/
-
 # Internal dev docs (legacy notes, strategy, analysis - not for public GitHub)
-05-鏂囨。_docs/90-鏍圭洰褰曢浂鏁ｈ祫鏂?
-05-鏂囨。_docs/CHINESE_REFACTOR_STRATEGY.md
-05-鏂囨。_docs/MERGE_ARCHIVE_CHECKLIST.md
-05-鏂囨。_docs/NEEDS_*.md
-05-鏂囨。_docs/RESEARCH_ANALYSIS_*.md
-05-鏂囨。_docs/PROCESS.md
-05-鏂囨。_docs/DATA.md
-05-鏂囨。_docs/SKILLS.md
-05-鏂囨。_docs/SKILL_HOWTO_CN.md
-05-鏂囨。_docs/TERMINAL_RUNBOOK.md
-05-鏂囨。_docs/PROJECT_MAP_CN.md
-05-鏂囨。_docs/DISTRIBUTION.md
+05-文档_docs/90-根目录零散资料/
+05-文档_docs/CHINESE_REFACTOR_STRATEGY.md
+05-文档_docs/MERGE_ARCHIVE_CHECKLIST.md
+05-文档_docs/NEEDS_*.md
+05-文档_docs/RESEARCH_ANALYSIS_*.md
+05-文档_docs/PROCESS.md
+05-文档_docs/DATA.md
+05-文档_docs/SKILLS.md
+05-文档_docs/SKILL_HOWTO_CN.md
+05-文档_docs/TERMINAL_RUNBOOK.md
+05-文档_docs/PROJECT_MAP_CN.md
+05-文档_docs/DISTRIBUTION.md
 
-# Internal skills (IDE-specific, not portable)
-06-鎶€鑳絖skills/
-
-# Internal management folder (build logs, archives, screenshots)
-绠＄悊/
-
-# Polish SRT script (local video editing)
-polish_srt.py
