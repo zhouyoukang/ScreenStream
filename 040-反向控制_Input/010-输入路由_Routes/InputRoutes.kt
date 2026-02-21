@@ -206,6 +206,16 @@ public fun Route.installInputRoutes() {
         )
     }}
 
+    post("/clipboard") { requireInputService { svc ->
+        val json = JSONObject(call.receiveText())
+        val text = json.getString("text")
+        svc.setClipboard(text)
+        call.respondText(
+            JSONObject().put("ok", true).put("length", text.length).toString(),
+            ContentType.Application.Json
+        )
+    }}
+
     post("/scaling/{factor}") {
         val factor = call.parameters["factor"]?.toFloatOrNull()
         if (factor == null || factor <= 0) {
