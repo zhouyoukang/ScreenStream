@@ -1354,7 +1354,7 @@
 
             // --- 智能家居 ---
             s += menuSection('🏠 智能家居', [
-                ['🏠', '设备控制', "menuAction(toggleSmartHomePanel)", 'Alt+H'],
+                ['🏠', '设备控制', "menuAction(toggleSmartHomePanel)", 'A+Sh+H'],
                 ['🌙', '场景切换', "menuAction(showSmartHomeScenes)"],
                 ['🔌', '全部关闭', "menuAction(function(){smartHomeQuick('all_off')})"],
                 ['💡', '全部开灯', "menuAction(function(){smartHomeQuick('lights_on')})"],
@@ -3202,7 +3202,10 @@
                 var k = e.key.toLowerCase();
                 var handled = true;
                 switch (k) {
-                    case 'h': sendNavAction('/home'); showStatus('Home'); break;
+                    case 'h':
+                        if (e.shiftKey) { toggleSmartHomePanel(); showStatus('Smart Home'); }
+                        else { sendNavAction('/home'); showStatus('Home'); }
+                        break;
                     case 'b': sendNavAction('/back'); showStatus('Back'); break;
                     case 's': sendNavAction('/recents'); showStatus('Recents'); break;
                     case 'f': toggleFullscreen(); break;
@@ -3244,7 +3247,6 @@
                     case 'j': toggleAIAssistant(); break;
                     case 'l': toggleQuickShare(); break;
                     case 't': toggleGesturePanel(); break;
-                    case 'h': toggleSmartHomePanel(); break;
                     default: handled = false;
                 }
                 if (handled) { e.preventDefault(); e.stopPropagation(); return; }

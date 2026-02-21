@@ -15,7 +15,7 @@ API 概览:
   POST /batch                — 批量控制
   GET  /history/{entity_id}  — 历史记录
   POST /template             — HA模板渲染
-  
+
   # 涂鸦直连 (可选)
   GET  /tuya/devices          — 涂鸦设备列表
   POST /tuya/devices/{id}/cmd — 涂鸦设备控制
@@ -428,7 +428,10 @@ async def list_devices(
     room: Optional[str] = Query(None, description="Filter by area/room name"),
 ):
     """获取所有设备列表"""
-    states = await ha.get_states()
+    try:
+        states = await ha.get_states()
+    except Exception:
+        return {"count": 0, "devices": [], "ha_offline": True}
     devices = []
     for s in states:
         d = s["entity_id"].split(".")[0]
@@ -469,7 +472,10 @@ async def control_device(entity_id: str, req: ControlRequest):
 @app.get("/scenes")
 async def list_scenes():
     """获取场景列表"""
-    states = await ha.get_states()
+    try:
+        states = await ha.get_states()
+    except Exception:
+        return {"count": 0, "scenes": [], "ha_offline": True}
     scenes = [
         {
             "id": s["entity_id"],
@@ -494,7 +500,10 @@ async def activate_scene(scene_id: str):
 @app.get("/automations")
 async def list_automations():
     """获取自动化列表"""
-    states = await ha.get_states()
+    try:
+        states = await ha.get_states()
+    except Exception:
+        return {"count": 0, "automations": [], "ha_offline": True}
     autos = [
         {
             "id": s["entity_id"],
@@ -519,7 +528,10 @@ async def trigger_automation(auto_id: str):
 @app.get("/rooms")
 async def list_rooms():
     """获取区域/房间列表（从设备属性推断）"""
-    states = await ha.get_states()
+    try:
+        states = await ha.get_states()
+    except Exception:
+        return {"rooms": [], "ha_offline": True}
     rooms = {}
     for s in states:
         d = s["entity_id"].split(".")[0]
@@ -568,13 +580,19 @@ async def render_template(req: TemplateRequest):
 @app.get("/services")
 async def list_services():
     """获取所有可用服务"""
-    return await ha.get_services()
+    try:
+        return await ha.get_services()
+    except Exception:
+        return {"services": [], "ha_offline": True}
 
 
 @app.get("/config")
 async def get_config():
     """获取 HA 配置"""
-    return await ha.get_config()
+    try:
+        return await ha.get_config()
+    except Exception:
+        return {"ha_offline": True, "error": "Home Assistant is not reachable"}
 
 
 # ==================== 涂鸦直连路由 ====================
@@ -616,7 +634,10 @@ async def tuya_send_command(device_id: str, req: TuyaCommandRequest):
 @app.post("/quick/{action}")
 async def quick_action(action: str, entities: Optional[str] = Query(None)):
     """快捷操作: /quick/all_off, /quick/all_on, /quick/lights_off, etc."""
-    states = await ha.get_states()
+    try:
+        states = await ha.get_states()
+    except Exception:
+        return {"action": action, "affected": 0, "results": [], "ha_offline": True}
 
     if action == "all_off":
         targets = [s["entity_id"] for s in states

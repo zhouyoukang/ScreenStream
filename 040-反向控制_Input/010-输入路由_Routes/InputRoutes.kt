@@ -803,7 +803,7 @@ public fun Route.installInputRoutes() {
             conn.disconnect()
             call.respondText(body, ContentType.Application.Json)
         } catch (e: Exception) {
-            call.respondText(jsonError("Gateway unreachable: ${e.message}"), ContentType.Application.Json, HttpStatusCode.ServiceUnavailable)
+            call.respondText("{\"count\":0,\"devices\":[],\"gateway_offline\":true,\"error\":\"${e.message?.replace("\"", "'") ?: ""}\"}", ContentType.Application.Json)
         }
     }
 
@@ -822,7 +822,7 @@ public fun Route.installInputRoutes() {
             conn.disconnect()
             call.respondText(body, ContentType.Application.Json)
         } catch (e: Exception) {
-            call.respondText(jsonError("Gateway error: ${e.message}"), ContentType.Application.Json, HttpStatusCode.ServiceUnavailable)
+            call.respondText("{\"error\":\"Gateway offline\",\"gateway_offline\":true}", ContentType.Application.Json)
         }
     }
 
@@ -915,7 +915,7 @@ public fun Route.installInputRoutes() {
             conn.disconnect()
             call.respondText(body, ContentType.Application.Json)
         } catch (e: Exception) {
-            call.respondText(jsonError("Gateway unreachable: ${e.message}"), ContentType.Application.Json, HttpStatusCode.ServiceUnavailable)
+            call.respondText("{\"count\":0,\"scenes\":[],\"gateway_offline\":true}", ContentType.Application.Json)
         }
     }
 
