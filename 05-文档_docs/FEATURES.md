@@ -167,6 +167,16 @@
 | **S41 远程浏览器** | Platform前端 | `index.html` toggleRemoteBrowser() | Alt+8 | URL输入→手机打开→提取页面内容 | 8081 |
 | **S42 剪贴板历史** | Platform前端 | `index.html` toggleClipHistory() | Alt+9 | localStorage持久化历史+一键复制到PC | 8081 |
 | **S43 批量执行** | Platform前端 | `index.html` toggleBatchRunner() | Alt+0 | 预设批量操作+自定义JSON+执行日志 | 8081 |
+| **S50 智能家居面板** | Smart Home前端 | `index.html` toggleSmartHomePanel() | Alt+H | 设备列表+状态+开关+亮度滑块+场景+快捷操作 | 8081 |
+| **S50 智能家居网关状态** | API | `InputRoutes.kt` → `/smarthome/status` | — | 检查网关+HA连通性 | 8081/8084 |
+| **S50 智能家居设备列表** | API | `InputRoutes.kt` → `/smarthome/devices` | — | 列出所有HA设备(switch/light/fan/climate等) | 8081/8084 |
+| **S50 智能家居设备控制** | API | `InputRoutes.kt` → `/smarthome/control` | — | toggle/turn_on/turn_off/set_brightness等 | 8081/8084 |
+| **S50 智能家居HA直连** | API | `InputRoutes.kt` → `/smarthome/control/direct` | HA Token | 绕过网关直接调用HA REST API | 8081/8084 |
+| **S50 智能家居场景列表** | API | `InputRoutes.kt` → `/smarthome/scenes` | — | 列出HA场景 | 8081/8084 |
+| **S50 智能家居场景触发** | API | `InputRoutes.kt` → `/smarthome/scenes/{id}/activate` | — | 触发HA场景 | 8081/8084 |
+| **S50 智能家居快捷操作** | API | `InputRoutes.kt` → `/smarthome/quick/{action}` | — | all_off/all_on/lights_off/fans_off | 8081/8084 |
+| **S50 智能家居网关服务** | Python服务 | `100-智能家居_SmartHome/07-网关服务_Gateway/gateway.py` | .env | FastAPI统一网关:HA代理+涂鸦Cloud API+设备归一化 | 8900 |
+| **S50 涂鸦Cloud API** | Python服务 | `gateway.py` TuyaClient | TUYA_CLIENT_ID/SECRET | 涂鸦设备列表/状态/控制(HMAC-SHA256签名) | 8900 |
 
 ## 1) 当前重点功能（按收敛优先级）
 

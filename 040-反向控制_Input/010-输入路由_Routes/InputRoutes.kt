@@ -754,6 +754,217 @@ public fun Route.installInputRoutes() {
         }
     }
 
+    // ==================== Smart Home ====================
+
+    // Smart Home Gateway proxy — forwards to local gateway (port 8900) or direct HA
+    // Configuration: set HA URL via /smarthome/config
+    val smarthomeGatewayUrl = System.getProperty("smarthome.gateway") ?: "http://127.0.0.1:8900"
+    val smarthomeHaUrl = System.getProperty("smarthome.ha_url") ?: "http://192.168.31.228:8123"
+    val smarthomeHaToken = System.getProperty("smarthome.ha_token") ?: ""
+
+    // GET /smarthome/status — check gateway & HA connectivity
+    get("/smarthome/status") {
+        val result = JSONObject()
+        result.put("gateway_url", smarthomeGatewayUrl)
+        result.put("ha_url", smarthomeHaUrl)
+        result.put("ha_configured", smarthomeHaToken.isNotEmpty())
+        // Try to reach gateway
+        try {
+            val url = java.net.URL("$smarthomeGatewayUrl/")
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 3000
+            conn.readTimeout = 3000
+            conn.requestMethod = "GET"
+            val code = conn.responseCode
+            result.put("gateway_reachable", code == 200)
+            if (code == 200) {
+                val body = conn.inputStream.bufferedReader().readText()
+                result.put("gateway_info", JSONObject(body))
+            }
+            conn.disconnect()
+        } catch (e: Exception) {
+            result.put("gateway_reachable", false)
+            result.put("gateway_error", e.message ?: "")
+        }
+        call.respondText(result.toString(), ContentType.Application.Json)
+    }
+
+    // GET /smarthome/devices — list all smart home devices
+    get("/smarthome/devices") {
+        val domain = call.parameters["domain"]
+        try {
+            val urlStr = if (domain != null) "$smarthomeGatewayUrl/devices?domain=$domain"
+                         else "$smarthomeGatewayUrl/devices"
+            val url = java.net.URL(urlStr)
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
+            val body = conn.inputStream.bufferedReader().readText()
+            conn.disconnect()
+            call.respondText(body, ContentType.Application.Json)
+        } catch (e: Exception) {
+            call.respondText(jsonError("Gateway unreachable: ${e.message}"), ContentType.Application.Json, HttpStatusCode.ServiceUnavailable)
+        }
+    }
+
+    // GET /smarthome/devices/{id} — get single device state
+    get("/smarthome/devices/{id}") {
+        val id = call.parameters["id"] ?: run {
+            call.respondText(jsonError("Missing device id"), ContentType.Application.Json, HttpStatusCode.BadRequest)
+            return@get
+        }
+        try {
+            val url = java.net.URL("$smarthomeGatewayUrl/devices/$id")
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
+            val body = conn.inputStream.bufferedReader().readText()
+            conn.disconnect()
+            call.respondText(body, ContentType.Application.Json)
+        } catch (e: Exception) {
+            call.respondText(jsonError("Gateway error: ${e.message}"), ContentType.Application.Json, HttpStatusCode.ServiceUnavailable)
+        }
+    }
+
+    // POST /smarthome/control — control a device via gateway
+    post("/smarthome/control") {
+        try {
+            val reqBody = call.receiveText()
+            val json = JSONObject(reqBody)
+            val entityId = json.getString("entity_id")
+            val action = json.getString("action")
+            val value = json.opt("value")
+            val extra = json.optJSONObject("extra")
+
+            val payload = JSONObject()
+            payload.put("action", action)
+            if (value != null) payload.put("value", value)
+            if (extra != null) payload.put("extra", extra)
+
+            val url = java.net.URL("$smarthomeGatewayUrl/devices/$entityId/control")
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.doOutput = true
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
+            conn.outputStream.write(payload.toString().toByteArray())
+            val body = conn.inputStream.bufferedReader().readText()
+            conn.disconnect()
+            call.respondText(body, ContentType.Application.Json)
+        } catch (e: Exception) {
+            call.respondText(jsonError("Smart home control error: ${e.message}"), ContentType.Application.Json, HttpStatusCode.BadRequest)
+        }
+    }
+
+    // POST /smarthome/control/direct — control device directly via HA REST API (no gateway needed)
+    post("/smarthome/control/direct") {
+        if (smarthomeHaToken.isEmpty()) {
+            call.respondText(jsonError("HA token not configured"), ContentType.Application.Json, HttpStatusCode.ServiceUnavailable)
+            return@post
+        }
+        try {
+            val reqBody = call.receiveText()
+            val json = JSONObject(reqBody)
+            val entityId = json.getString("entity_id")
+            val action = json.optString("action", "toggle")
+            val domain = entityId.split(".")[0]
+
+            val haPayload = JSONObject()
+            haPayload.put("entity_id", entityId)
+            // Pass through extra fields like brightness, temperature, etc.
+            for (key in json.keys()) {
+                if (key !in listOf("entity_id", "action")) {
+                    haPayload.put(key, json.get(key))
+                }
+            }
+
+            val url = java.net.URL("$smarthomeHaUrl/api/services/$domain/$action")
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.setRequestProperty("Authorization", "Bearer $smarthomeHaToken")
+            conn.doOutput = true
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
+            conn.outputStream.write(haPayload.toString().toByteArray())
+            val code = conn.responseCode
+            val body = if (code in 200..299) conn.inputStream.bufferedReader().readText()
+                       else conn.errorStream?.bufferedReader()?.readText() ?: ""
+            conn.disconnect()
+            val result = JSONObject()
+            result.put("ok", code in 200..299)
+            result.put("status", code)
+            result.put("entity_id", entityId)
+            result.put("action", action)
+            call.respondText(result.toString(), ContentType.Application.Json,
+                if (code in 200..299) HttpStatusCode.OK else HttpStatusCode.fromValue(code))
+        } catch (e: Exception) {
+            call.respondText(jsonError("HA direct control error: ${e.message}"), ContentType.Application.Json, HttpStatusCode.BadRequest)
+        }
+    }
+
+    // GET /smarthome/scenes — list scenes via gateway
+    get("/smarthome/scenes") {
+        try {
+            val url = java.net.URL("$smarthomeGatewayUrl/scenes")
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
+            val body = conn.inputStream.bufferedReader().readText()
+            conn.disconnect()
+            call.respondText(body, ContentType.Application.Json)
+        } catch (e: Exception) {
+            call.respondText(jsonError("Gateway unreachable: ${e.message}"), ContentType.Application.Json, HttpStatusCode.ServiceUnavailable)
+        }
+    }
+
+    // POST /smarthome/scenes/{id}/activate — trigger a scene
+    post("/smarthome/scenes/{id}/activate") {
+        val id = call.parameters["id"] ?: run {
+            call.respondText(jsonError("Missing scene id"), ContentType.Application.Json, HttpStatusCode.BadRequest)
+            return@post
+        }
+        try {
+            val url = java.net.URL("$smarthomeGatewayUrl/scenes/$id/activate")
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.doOutput = true
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
+            conn.outputStream.write("{}".toByteArray())
+            val body = conn.inputStream.bufferedReader().readText()
+            conn.disconnect()
+            call.respondText(body, ContentType.Application.Json)
+        } catch (e: Exception) {
+            call.respondText(jsonError("Scene activate error: ${e.message}"), ContentType.Application.Json, HttpStatusCode.BadRequest)
+        }
+    }
+
+    // POST /smarthome/quick/{action} — quick actions: all_off, lights_off, etc.
+    post("/smarthome/quick/{action}") {
+        val action = call.parameters["action"] ?: run {
+            call.respondText(jsonError("Missing action"), ContentType.Application.Json, HttpStatusCode.BadRequest)
+            return@post
+        }
+        try {
+            val url = java.net.URL("$smarthomeGatewayUrl/quick/$action")
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.doOutput = true
+            conn.connectTimeout = 10000
+            conn.readTimeout = 10000
+            conn.outputStream.write("{}".toByteArray())
+            val body = conn.inputStream.bufferedReader().readText()
+            conn.disconnect()
+            call.respondText(body, ContentType.Application.Json)
+        } catch (e: Exception) {
+            call.respondText(jsonError("Quick action error: ${e.message}"), ContentType.Application.Json, HttpStatusCode.BadRequest)
+        }
+    }
+
     // ==================== WebSocket ====================
 
     // WebSocket real-time touch stream for 1:1 mirroring

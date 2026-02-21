@@ -1352,6 +1352,14 @@
                 ['⏹', '停止全部', "menuAction(stopAllMacros)"],
             ]);
 
+            // --- 智能家居 ---
+            s += menuSection('🏠 智能家居', [
+                ['🏠', '设备控制', "menuAction(toggleSmartHomePanel)", 'Alt+H'],
+                ['🌙', '场景切换', "menuAction(showSmartHomeScenes)"],
+                ['🔌', '全部关闭', "menuAction(function(){smartHomeQuick('all_off')})"],
+                ['💡', '全部开灯', "menuAction(function(){smartHomeQuick('lights_on')})"],
+            ]);
+
             // --- 平台工具 ---
             s += menuSection('🚀 平台工具', [
                 ['📱', 'APP启动器', "menuAction(toggleAppLauncher)", 'Alt+1'],
@@ -3236,6 +3244,7 @@
                     case 'j': toggleAIAssistant(); break;
                     case 'l': toggleQuickShare(); break;
                     case 't': toggleGesturePanel(); break;
+                    case 'h': toggleSmartHomePanel(); break;
                     default: handled = false;
                 }
                 if (handled) { e.preventDefault(); e.stopPropagation(); return; }
@@ -4656,9 +4665,14 @@
             p.innerHTML = '<div style="padding:40px;text-align:center;"><div style="font-size:36px;margin-bottom:12px;">⚠️</div><div style="color:rgba(255,255,255,0.6);font-size:14px;">' + (msg || '加载失败，请检查连接') + '</div><div style="margin-top:16px;"><button onclick="closePlatformPanels()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#e0e0e0;padding:8px 20px;border-radius:6px;cursor:pointer;">关闭</button></div></div>';
         }
         function isPlatformPanelOpen() {
-            return s34Visible || s35Visible || s36Visible || s37Visible || s38Visible || s39Visible || s40Visible || s41Visible || s42Visible || s43Visible || s44Visible || s45Visible || s46Visible || s47Visible || s48Visible || s49Visible;
+            return s34Visible || s35Visible || s36Visible || s37Visible || s38Visible || s39Visible || s40Visible || s41Visible || s42Visible || s43Visible || s44Visible || s45Visible || s46Visible || s47Visible || s48Visible || s49Visible || smartHomePanelVisible;
         }
         document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && smartHomePanelVisible) {
+                e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+                hideSmartHomePanel();
+                return;
+            }
             if (e.key === 'Escape' && isPlatformPanelOpen()) {
                 e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
                 closePlatformPanels();
@@ -4730,7 +4744,11 @@
                     h += '<div style="padding:12px;margin-bottom:8px;background:rgba(255,255,255,0.05);border-radius:10px;border-left:3px solid #4a9eff;">';
                     h += '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:11px;color:#4a9eff;font-weight:600;">' + escapeHtml(pkg) + '</span><span style="font-size:10px;color:rgba(255,255,255,0.3);">' + t + '</span></div>';
                     if (n.title) h += '<div style="font-weight:600;font-size:14px;">' + escapeHtml(n.title) + '</div>';
-                    h += '<div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:2px;">' + escapeHtml(n.body || n.text || '') + '</div></div>';
+                    var detail = n.bigText || n.body || n.text || '';
+                    if (detail) h += '<div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:2px;white-space:pre-wrap;">' + escapeHtml(detail) + '</div>';
+                    if (n.textLines && n.textLines.length) { h += '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px;border-top:1px solid rgba(255,255,255,0.08);padding-top:4px;">'; n.textLines.forEach(function (l) { h += '<div>' + escapeHtml(l) + '</div>'; }); h += '</div>'; }
+                    if (n.subText) h += '<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">' + escapeHtml(n.subText) + '</div>';
+                    h += '</div>';
                 });
                 h += '</div>';
                 p.innerHTML = h;
@@ -6406,6 +6424,264 @@
                 this.nextTime += buffer.duration;
             }
         }
+        // ==================== Smart Home Panel ====================
+        var smartHomePanelVisible = false;
+        var smartHomeDevices = [];
+        var smartHomeScenes = [];
+        var smartHomeRefreshTimer = null;
+
+        function getSmartHomeBase() {
+            return getInputApiBase();
+        }
+
+        function toggleSmartHomePanel() {
+            smartHomePanelVisible = !smartHomePanelVisible;
+            var panel = document.getElementById('smartHomePanel');
+            if (!panel) {
+                panel = document.createElement('div');
+                panel.id = 'smartHomePanel';
+                panel.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,10,15,0.97);color:#fff;z-index:10000;font-family:-apple-system,system-ui,sans-serif;overflow-y:auto;padding:16px;';
+                panel.innerHTML = buildSmartHomePanelHTML();
+                document.body.appendChild(panel);
+            }
+            if (smartHomePanelVisible) {
+                panel.style.display = 'block';
+                refreshSmartHomeDevices();
+                if (!smartHomeRefreshTimer) {
+                    smartHomeRefreshTimer = setInterval(refreshSmartHomeDevices, 10000);
+                }
+            } else {
+                panel.style.display = 'none';
+                if (smartHomeRefreshTimer) { clearInterval(smartHomeRefreshTimer); smartHomeRefreshTimer = null; }
+            }
+        }
+
+        function hideSmartHomePanel() {
+            smartHomePanelVisible = false;
+            var panel = document.getElementById('smartHomePanel');
+            if (panel) panel.style.display = 'none';
+            if (smartHomeRefreshTimer) { clearInterval(smartHomeRefreshTimer); smartHomeRefreshTimer = null; }
+        }
+
+        function buildSmartHomePanelHTML() {
+            var s = '';
+            s += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">';
+            s += '<div style="font-size:20px;font-weight:700;">🏠 智能家居</div>';
+            s += '<div>';
+            s += '<button onclick="refreshSmartHomeDevices()" style="background:#333;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;margin-right:8px;font-size:12px;">刷新</button>';
+            s += '<button onclick="hideSmartHomePanel()" style="background:#555;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">关闭 (Esc)</button>';
+            s += '</div></div>';
+
+            // Status bar
+            s += '<div id="shStatus" style="background:rgba(255,255,255,0.05);padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px;color:rgba(255,255,255,0.6);">检查连接...</div>';
+
+            // Quick actions
+            s += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;">';
+            s += shQuickBtn('🔌 全部关', 'all_off', '#e74c3c');
+            s += shQuickBtn('💡 全部开', 'all_on', '#2ecc71');
+            s += shQuickBtn('💡 关灯', 'lights_off', '#e67e22');
+            s += shQuickBtn('🌬️ 关风扇', 'fans_off', '#3498db');
+            s += '</div>';
+
+            // Scenes section
+            s += '<div id="shScenes" style="margin-bottom:16px;display:none;"></div>';
+
+            // Filter tabs
+            s += '<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">';
+            var domains = ['all', 'switch', 'light', 'fan', 'climate', 'cover', 'sensor'];
+            var labels = ['全部', '开关', '灯光', '风扇', '空调', '窗帘', '传感器'];
+            for (var i = 0; i < domains.length; i++) {
+                var active = i === 0 ? 'background:#4a9eff;color:#fff;' : 'background:rgba(255,255,255,0.08);color:#aaa;';
+                s += '<button onclick="filterSmartHomeDevices(\'' + domains[i] + '\',this)" class="sh-filter-btn" style="border:none;padding:6px 14px;border-radius:16px;cursor:pointer;font-size:12px;' + active + '">' + labels[i] + '</button>';
+            }
+            s += '</div>';
+
+            // Device list
+            s += '<div id="shDeviceList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;">加载中...</div>';
+
+            return s;
+        }
+
+        function shQuickBtn(label, action, color) {
+            return '<button onclick="smartHomeQuick(\'' + action + '\')" style="background:' + color + '22;border:1px solid ' + color + '44;color:' + color + ';padding:10px 6px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;">' + label + '</button>';
+        }
+
+        function refreshSmartHomeDevices() {
+            // Check status first
+            fetch(getSmartHomeBase() + '/smarthome/status').then(function (r) { return r.json(); }).then(function (d) {
+                var statusEl = document.getElementById('shStatus');
+                if (statusEl) {
+                    if (d.gateway_reachable) {
+                        statusEl.innerHTML = '✅ 网关已连接 | HA: ' + escapeHtml(d.ha_url || '') + ' | 涂鸦: ' + (d.gateway_info && d.gateway_info.tuya && d.gateway_info.tuya.enabled ? '✅' : '❌');
+                        statusEl.style.borderLeft = '3px solid #2ecc71';
+                    } else {
+                        statusEl.innerHTML = '⚠️ 网关未连接 (' + escapeHtml(d.gateway_url || '') + ') — 请启动 gateway.py' + (d.ha_configured ? ' | HA Token: ✅' : '');
+                        statusEl.style.borderLeft = '3px solid #e67e22';
+                    }
+                }
+            }).catch(function () {
+                var statusEl = document.getElementById('shStatus');
+                if (statusEl) {
+                    statusEl.innerHTML = '❌ 无法连接 ScreenStream API';
+                    statusEl.style.borderLeft = '3px solid #e74c3c';
+                }
+            });
+
+            // Fetch devices from gateway
+            fetch(getSmartHomeBase() + '/smarthome/devices').then(function (r) { return r.json(); }).then(function (d) {
+                smartHomeDevices = d.devices || [];
+                renderSmartHomeDevices(smartHomeDevices);
+            }).catch(function (e) {
+                var list = document.getElementById('shDeviceList');
+                if (list) list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#888;">无法加载设备<br><span style="font-size:11px;">确保智能家居网关已启动 (python gateway.py)</span></div>';
+            });
+
+            // Fetch scenes
+            fetch(getSmartHomeBase() + '/smarthome/scenes').then(function (r) { return r.json(); }).then(function (d) {
+                smartHomeScenes = d.scenes || [];
+                renderSmartHomeScenes();
+            }).catch(function () { });
+        }
+
+        function renderSmartHomeDevices(devices) {
+            var list = document.getElementById('shDeviceList');
+            if (!list) return;
+            if (!devices || devices.length === 0) {
+                list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#888;">暂无设备</div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < devices.length; i++) {
+                var dev = devices[i];
+                var isOn = dev.state === 'on';
+                var domain = dev.domain;
+                var icon = getDeviceIcon(domain, isOn);
+                var bgColor = isOn ? 'rgba(74,158,255,0.12)' : 'rgba(255,255,255,0.04)';
+                var borderColor = isOn ? 'rgba(74,158,255,0.3)' : 'rgba(255,255,255,0.08)';
+                var stateColor = isOn ? '#4a9eff' : '#666';
+                var stateText = getStateText(dev);
+                var clickAction = getDeviceClickAction(dev);
+
+                html += '<div onclick="' + clickAction + '" style="background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:12px;padding:14px 12px;cursor:pointer;transition:all 0.15s;" onmouseenter="this.style.transform=\'scale(1.02)\'" onmouseleave="this.style.transform=\'scale(1)\'">';
+                html += '<div style="font-size:24px;margin-bottom:6px;">' + icon + '</div>';
+                html += '<div style="font-size:13px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(dev.name) + '</div>';
+                html += '<div style="font-size:11px;color:' + stateColor + ';">' + stateText + '</div>';
+
+                // Brightness slider for lights
+                if (domain === 'light' && isOn && dev.brightness != null) {
+                    html += '<div style="margin-top:6px;"><input type="range" min="1" max="255" value="' + dev.brightness + '" onclick="event.stopPropagation()" onchange="shSetBrightness(\'' + dev.id + '\',this.value)" style="width:100%;height:4px;accent-color:#4a9eff;"></div>';
+                }
+                html += '</div>';
+            }
+            list.innerHTML = html;
+        }
+
+        function renderSmartHomeScenes() {
+            var el = document.getElementById('shScenes');
+            if (!el || smartHomeScenes.length === 0) return;
+            el.style.display = 'block';
+            var html = '<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.6);margin-bottom:8px;">🌙 场景</div>';
+            html += '<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;">';
+            for (var i = 0; i < smartHomeScenes.length; i++) {
+                var sc = smartHomeScenes[i];
+                html += '<button onclick="activateScene(\'' + sc.id + '\')" style="background:rgba(155,89,182,0.15);border:1px solid rgba(155,89,182,0.3);color:#bb86fc;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:12px;white-space:nowrap;flex-shrink:0;">' + escapeHtml(sc.name) + '</button>';
+            }
+            html += '</div>';
+            el.innerHTML = html;
+        }
+
+        function getDeviceIcon(domain, isOn) {
+            var icons = {
+                'switch': isOn ? '🔌' : '⭕',
+                'light': isOn ? '💡' : '🔅',
+                'fan': isOn ? '🌀' : '🌬️',
+                'climate': isOn ? '❄️' : '🌡️',
+                'cover': '🪟',
+                'sensor': '📊',
+                'binary_sensor': '📡',
+                'media_player': isOn ? '🔊' : '🔇',
+                'vacuum': isOn ? '🧹' : '🤖',
+                'lock': isOn ? '🔓' : '🔒',
+                'automation': '⚙️',
+                'humidifier': '💧',
+            };
+            return icons[domain] || '📱';
+        }
+
+        function getStateText(dev) {
+            if (dev.domain === 'sensor') return dev.state + (dev.unit ? ' ' + dev.unit : '');
+            if (dev.domain === 'climate') return dev.state + (dev.current_temperature ? ' ' + dev.current_temperature + '°C' : '');
+            if (dev.domain === 'light' && dev.state === 'on' && dev.brightness != null) return '亮度 ' + Math.round(dev.brightness / 255 * 100) + '%';
+            if (dev.domain === 'fan' && dev.state === 'on' && dev.percentage != null) return '风速 ' + dev.percentage + '%';
+            if (dev.domain === 'cover') return dev.current_position != null ? '开度 ' + dev.current_position + '%' : dev.state;
+            return dev.state === 'on' ? '已开启' : dev.state === 'off' ? '已关闭' : dev.state;
+        }
+
+        function getDeviceClickAction(dev) {
+            if (dev.domain === 'sensor' || dev.domain === 'binary_sensor') return '';
+            return "shToggle('" + dev.id + "')";
+        }
+
+        function shToggle(entityId) {
+            var payload = JSON.stringify({ entity_id: entityId, action: 'toggle' });
+            fetch(getSmartHomeBase() + '/smarthome/control', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    showStatus('🏠 ' + entityId.split('.')[1] + ': toggled');
+                    setTimeout(refreshSmartHomeDevices, 500);
+                })
+                .catch(function (e) { showStatus('❌ ' + e.message); });
+        }
+
+        function shSetBrightness(entityId, value) {
+            var payload = JSON.stringify({ entity_id: entityId, action: 'set_brightness', value: parseInt(value) });
+            fetch(getSmartHomeBase() + '/smarthome/control', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload })
+                .then(function () { showStatus('💡 亮度: ' + Math.round(value / 255 * 100) + '%'); })
+                .catch(function (e) { showStatus('❌ ' + e.message); });
+        }
+
+        function smartHomeQuick(action) {
+            showStatus('🏠 执行: ' + action + '...');
+            fetch(getSmartHomeBase() + '/smarthome/quick/' + action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    showStatus('🏠 ' + action + ': ' + (d.affected || 0) + ' 设备');
+                    setTimeout(refreshSmartHomeDevices, 800);
+                })
+                .catch(function (e) { showStatus('❌ ' + e.message); });
+        }
+
+        function activateScene(sceneId) {
+            fetch(getSmartHomeBase() + '/smarthome/scenes/' + encodeURIComponent(sceneId) + '/activate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    showStatus('🌙 场景已激活');
+                    setTimeout(refreshSmartHomeDevices, 800);
+                })
+                .catch(function (e) { showStatus('❌ ' + e.message); });
+        }
+
+        function showSmartHomeScenes() {
+            if (!smartHomePanelVisible) toggleSmartHomePanel();
+        }
+
+        function filterSmartHomeDevices(domain, btn) {
+            // Update button styles
+            var btns = document.querySelectorAll('.sh-filter-btn');
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].style.background = 'rgba(255,255,255,0.08)';
+                btns[i].style.color = '#aaa';
+            }
+            if (btn) { btn.style.background = '#4a9eff'; btn.style.color = '#fff'; }
+
+            if (domain === 'all') {
+                renderSmartHomeDevices(smartHomeDevices);
+            } else {
+                var filtered = smartHomeDevices.filter(function (d) { return d.domain === domain; });
+                renderSmartHomeDevices(filtered);
+            }
+        }
+
     </script>
 </body>
 
