@@ -1,0 +1,22 @@
+{
+  "dashboard": {
+    "host": "127.0.0.1",
+    "port": 9901,
+    "auth_token": "agent-comm-2026",
+    "max_poll_timeout": 300
+  },
+  "bridge": {
+    "timeout_seconds": 86400,
+    "auto_continue_message": "继续",
+    "log_file": "data/bridge-called.log"
+  },
+  "paths": {
+    "dashboard_script": "core/dashboard.py",
+    "data_dir": "data"
+  },
+  "persistence": {
+    "enabled": true,
+    "requests_file": "data/requests.json",
+    "agents_file": "data/agents.json"
+  }
+}
