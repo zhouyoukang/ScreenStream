@@ -919,9 +919,40 @@ def main():
     except KeyboardInterrupt:
         print("\nShutting down...")
         server.shutdown()
+    except Exception as e:
+        _crash_log(f"Server crashed: {e}")
+        raise
     finally:
         _remove_pid()
 
 
+def _crash_log(msg):
+    """Write crash info to data/crash.log for debugging."""
+    try:
+        import traceback
+        os.makedirs(DATA_DIR, exist_ok=True)
+        log_path = os.path.join(DATA_DIR, "crash.log")
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"\n[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
+            traceback.print_exc(file=f)
+    except Exception:
+        pass
+
+
 if __name__ == "__main__":
-    main()
+    # Auto-restart on crash (up to 5 times)
+    max_restarts = 5
+    for attempt in range(max_restarts + 1):
+        try:
+            main()
+            break  # Clean exit
+        except SystemExit:
+            break  # Intentional exit (e.g. duplicate instance)
+        except Exception as e:
+            _crash_log(f"Restart attempt {attempt+1}/{max_restarts}: {e}")
+            if attempt < max_restarts:
+                print(f"Dashboard crashed, restarting ({attempt+1}/{max_restarts})...")
+                time.sleep(2)
+            else:
+                print(f"Dashboard crashed {max_restarts} times, giving up.")
+                raise

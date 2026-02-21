@@ -20,4 +20,13 @@ if %errorlevel% neq 0 (
 echo Starting Dashboard...
 echo Config: %SCRIPT_DIR%config.json
 echo.
-python "%SCRIPT_DIR%core\dashboard.py" %*
+
+REM Use pythonw for background operation (no terminal dependency)
+where pythonw >nul 2>nul
+if %errorlevel% equ 0 (
+    start "" pythonw "%SCRIPT_DIR%core\dashboard.py" %*
+    echo Dashboard started in background. Open http://127.0.0.1:9901
+) else (
+    echo Running in foreground (pythonw not found)...
+    python "%SCRIPT_DIR%core\dashboard.py" %*
+)
