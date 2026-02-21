@@ -115,13 +115,15 @@ adb reverse tcp:8900 tcp:8900
 100-智能家居_SmartHome/
 ├── README.md                  ← 本文件
 └── 07-网关服务_Gateway/
-    ├── gateway.py             ← 主网关(1184行) FastAPI多后端聚合
-    ├── micloud_backend.py     ← 小米云直连(857行) MIoT RPC + 音箱回退
-    ├── ewelink_backend.py     ← 易微联直连(379行) CoolKit v2
+    ├── gateway.py             ← 主网关 FastAPI多后端聚合
+    ├── micloud_backend.py     ← 小米云直连 MIoT RPC + 音箱回退
+    ├── ewelink_backend.py     ← 易微联直连 CoolKit v2
+    ├── wechat_handler.py      ← ★ 微信公众号消息处理模块
     ├── config.example.json    ← 配置模板(提交到仓库)
-    ├── config.json            ← 实际配置(gitignored，首次运行自动从模板创建)
+    ├── config.json            ← 实际配置(gitignored)
     ├── requirements.txt       ← Python依赖
     ├── verify_platforms.py    ← 平台连通性验证
+    ├── test_wechat.py         ← ★ 微信模块本地测试
     ├── test_mina.py           ← Mina API(音箱)连通测试
     └── start.bat              ← 一键启动
 ```

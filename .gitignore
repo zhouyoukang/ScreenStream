@@ -116,11 +116,18 @@ volumes/
 100-智能家居_SmartHome/07-网关服务_Gateway/mina_token.json
 
 # ============================================
-# Large media files (video editing)
+# Large media files (video / audio)
 # ============================================
 *.mkv
 *.mp4
+*.ts
+!*.d.ts
+*.webm
+*.avi
+*.mov
+*.flv
 *.wav
+*.m4a
 matched_temp/
 split_temp/
 sub_temp/
@@ -130,6 +137,20 @@ matched_*.mp4
 burst_final*
 
 # ============================================
+# Release APKs (build outputs, not source)
+# ============================================
+管理/00-归档/发布产物_releases/*.apk
+
+# ============================================
+# Screen recording outputs
+# ============================================
+D:/屏幕录制/
+ai_seg_*
+rough_cut.*
+ffmpeg_*.log
+
+# ============================================
 # Archived projects (moved to 管理/00-归档/)
 # ============================================
 agent-comm/
+screen-check.png

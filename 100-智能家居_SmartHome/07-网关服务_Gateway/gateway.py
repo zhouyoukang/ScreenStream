@@ -57,6 +57,7 @@ from dotenv import load_dotenv
 
 from micloud_backend import MiCloudDirect, load_credentials_standalone, load_credentials_from_ha
 from ewelink_backend import EWeLinkClient
+from wechat_handler import WeChatCommandRouter, parse_xml, text_reply, verify_signature
 import random, string
 
 load_dotenv()
@@ -111,6 +112,12 @@ EWELINK_EMAIL = _ew.get("email", "")
 EWELINK_PASSWORD = _ew.get("password", "")
 EWELINK_REGION = _ew.get("region", "cn")
 EWELINK_COUNTRY_CODE = _ew.get("country_code", "+86")
+
+_wx = CFG.get("wechat", {})
+WECHAT_ENABLED = _wx.get("enabled", False)
+WECHAT_TOKEN = _wx.get("token", "")
+WECHAT_APPID = _wx.get("appid", "")
+WECHAT_APPSECRET = _wx.get("appsecret", "")
 
 MICLOUD_ENABLED = _mi.get("enabled", True)
 MICLOUD_USERNAME = _mi.get("username", "")
@@ -591,6 +598,20 @@ async def lifespan(app: FastAPI):
         backends_ok.append(f"Mina({len(devs)} speakers, {len(online)} online)")
     else:
         logger.warning("Mina token not found at %s", MINA_TOKEN_FILE)
+
+    # 6. WeChat Official Account
+    if WECHAT_ENABLED and WECHAT_TOKEN:
+        wechat_router = WeChatCommandRouter({
+            "micloud": micloud,
+            "ewelink": ewelink,
+            "mina": mina,
+            "scene_macros": SCENE_MACROS,
+            "find_speaker": _find_best_speaker,
+        })
+        app.state.wechat_router = wechat_router
+        backends_ok.append("WeChat")
+    else:
+        app.state.wechat_router = None
 
     logger.info("Gateway ready: %s", " + ".join(backends_ok) if backends_ok else "no backends")
     yield
@@ -1329,6 +1350,84 @@ async def list_speakers():
         "count": len(result),
         "online": sum(1 for s in result if s["isOnline"]),
         "best": str(best["did"]) if best else None,
+    }
+
+
+# ==================== 微信公众号路由 ====================
+
+from fastapi import Request
+from fastapi.responses import PlainTextResponse
+
+
+@app.get("/wx")
+async def wechat_verify(
+    signature: str = Query(""),
+    timestamp: str = Query(""),
+    nonce: str = Query(""),
+    echostr: str = Query(""),
+):
+    """微信服务器 Token 验证 (GET)"""
+    if not WECHAT_ENABLED:
+        raise HTTPException(status_code=503, detail="WeChat not enabled")
+    if verify_signature(WECHAT_TOKEN, signature, timestamp, nonce):
+        return PlainTextResponse(echostr)
+    raise HTTPException(status_code=403, detail="Signature verification failed")
+
+
+@app.post("/wx")
+async def wechat_message(request: Request):
+    """微信消息接收与回复 (POST XML)"""
+    if not WECHAT_ENABLED:
+        raise HTTPException(status_code=503, detail="WeChat not enabled")
+
+    body = await request.body()
+    try:
+        msg = parse_xml(body)
+    except Exception as e:
+        logger.error("WeChat XML parse error: %s", e)
+        return PlainTextResponse("success")
+
+    msg_type = msg.get("MsgType", "")
+    from_user = msg.get("FromUserName", "")
+    to_user = msg.get("ToUserName", "")
+
+    router: Optional[WeChatCommandRouter] = getattr(app.state, "wechat_router", None)
+    if not router:
+        reply = "智能家居网关未就绪，请稍后再试"
+        return PlainTextResponse(text_reply(from_user, to_user, reply), media_type="application/xml")
+
+    reply = ""
+    if msg_type == "text":
+        content = msg.get("Content", "").strip()
+        reply = await router.handle_text(content)
+    elif msg_type == "voice":
+        # 语音消息(开启语音识别后微信自动转文字)
+        recognition = msg.get("Recognition", "").strip().rstrip("。.")
+        if recognition:
+            reply = await router.handle_text(recognition)
+        else:
+            reply = "未识别到语音内容，请重试或发送文字"
+    elif msg_type == "event":
+        event_type = msg.get("Event", "")
+        event_key = msg.get("EventKey", "")
+        reply = await router.handle_event(event_type, event_key)
+    else:
+        reply = "暂不支持该消息类型，请发送文字或语音指令"
+
+    if not reply:
+        return PlainTextResponse("success")
+
+    return PlainTextResponse(text_reply(from_user, to_user, reply), media_type="application/xml")
+
+
+@app.get("/wx/status")
+async def wechat_status():
+    """微信公众号模块状态"""
+    return {
+        "enabled": WECHAT_ENABLED,
+        "token_set": bool(WECHAT_TOKEN),
+        "appid": WECHAT_APPID[:8] + "..." if WECHAT_APPID else "",
+        "router_ready": getattr(app.state, "wechat_router", None) is not None,
     }
 
 

@@ -38,5 +38,12 @@
     "secret": "",
     "region": "cn",
     "_comment": "在 https://iot.tuya.com 注册获取 client_id/secret"
+  },
+  "wechat": {
+    "enabled": false,
+    "token": "",
+    "appid": "",
+    "appsecret": "",
+    "_comment": "微信公众号配置。测试号: https://mp.weixin.qq.com/debug/cgi-bin/sandbox 。token自定义(英文字母+数字), appid/appsecret从测试号页面获取。接口URL填: http://你的公网地址/wx"
   }
 }
