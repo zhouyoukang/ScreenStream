@@ -1,5 +1,0 @@
-data/
-*.log
-*.pyc
-__pycache__/
-test_e2e.py
