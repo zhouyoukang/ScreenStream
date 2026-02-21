@@ -882,12 +882,28 @@ def _remove_pid():
         pass
 
 
+def _is_port_in_use(host, port):
+    """Check if another Dashboard instance is already running."""
+    import socket
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
+            s.connect((host if host != "0.0.0.0" else "127.0.0.1", port))
+            return True
+    except (ConnectionRefusedError, OSError, socket.timeout):
+        return False
+
+
 def main():
     port = PORT
     if "--port" in sys.argv:
         idx = sys.argv.index("--port")
         if idx + 1 < len(sys.argv):
             port = int(sys.argv[idx + 1])
+
+    if _is_port_in_use(HOST, port):
+        print(f"Dashboard already running on port {port}. Exiting.")
+        sys.exit(0)
 
     _write_pid()
     store.load_from_disk()
