@@ -1169,18 +1169,18 @@
                     key: ['POST', '/key'],
                     click: ['POST', '/findclick'],
                     intent: ['POST', '/intent'],
-                    home: ['GET', '/home'],
-                    back: ['GET', '/back'],
-                    recents: ['GET', '/recents'],
-                    wake: ['GET', '/wake'],
-                    lock: ['GET', '/lock'],
-                    screenshot: ['GET', '/screenshot'],
+                    home: ['POST', '/home'],
+                    back: ['POST', '/back'],
+                    recents: ['POST', '/recents'],
+                    wake: ['POST', '/wake'],
+                    lock: ['POST', '/lock'],
+                    screenshot: ['POST', '/screenshot'],
                     scroll_down: ['POST', '/scroll', { direction: 'down' }],
                     scroll_up: ['POST', '/scroll', { direction: 'up' }],
-                    volume_up: ['GET', '/volume/up'],
-                    volume_down: ['GET', '/volume/down'],
-                    notifications: ['GET', '/notifications'],
-                    quicksettings: ['GET', '/quicksettings']
+                    volume_up: ['POST', '/volume/up'],
+                    volume_down: ['POST', '/volume/down'],
+                    notifications: ['POST', '/notifications'],
+                    quicksettings: ['POST', '/quicksettings']
                 };
                 var entry = map[action];
                 if (!entry) return Promise.reject(new Error('Unknown action: ' + action));
@@ -1849,17 +1849,10 @@
             fetch(getInputApiBase() + '/brightness/' + level, { method: 'POST' }).then(function () {
                 showStatus('亮度: ' + level);
             }).catch(function () { });
-        }
+         
 
-        /* ARCHIVED: Screen Off 功能暂时禁用，保留代码供未来参考
-        function toggleScreenOff() {
-            sendNavAction('/screen-off');
-            var streamDiv = document.getElementById('streamDiv');
-            streamDiv.classList.toggle('screen-off-mode');
-            var isActive = streamDiv.classList.contains('screen-off-mode');
-            var btn = document.getElementById('screenOffBtn');
-            btn.style.background = isActive ? "rgba(255, 50, 50, 0.4)" : "";
-            showStatus(isActive ? "Screen Off Mode: ON" : "Screen Off Mode: OFF");
+        /* ARCHIVED: Screen Off 功能暂时禁用，        考
+        function toggleScre                      sendNavAction('/scre                      var streamDiv = document.getElementById('str                      streamDiv.classList.toggle('screen-of                      var isActive = streamDiv.classList.contains('screen-of                      var btn = document.getElementById('screen                      btn.style.background = isActive ? "rgba(255, 50, 50, 0.                      showStatus(isActive ? "Screen Off Mode: ON" : "Screen Off Mod        ;
         }
         */
 
@@ -1971,7 +1964,7 @@
         }
 
         // 初始化
-        updateNavButtons();
+        updateNavBns();
     </script>
 
     <div id="pinDiv" style="visibility: hidden;">
@@ -6682,7 +6675,7 @@
                 var filtered = smartHomeDevices.filter(function (d) { return d.domain === domain; });
                 renderSmartHomeDevices(filtered);
             }
-        }
+    }
 
     </script>
 </body>
