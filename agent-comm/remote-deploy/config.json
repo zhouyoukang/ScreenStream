@@ -1,6 +1,5 @@
 {
   "dashboard": {
-    "bind_host": "0.0.0.0",
     "connect_host": "192.168.10.219",
     "port": 9901,
     "auth_token": "agent-comm-2026",
@@ -12,12 +11,6 @@
     "log_file": "data/bridge-called.log"
   },
   "paths": {
-    "dashboard_script": "core/dashboard.py",
     "data_dir": "data"
-  },
-  "persistence": {
-    "enabled": true,
-    "requests_file": "data/requests.json",
-    "agents_file": "data/agents.json"
   }
 }

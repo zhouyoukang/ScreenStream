@@ -81,12 +81,35 @@ Agent 将在每次回复时自动调用 bridge，请求出现在 Dashboard。
 - 浏览器 Dashboard 页面免认证访问
 - API 调用需要 header 或 `?token=xxx` query param
 
+## 远程 Agent 部署
+
+将 `remote-deploy/` 文件夹复制到远程 Windows 机器，运行 `setup.bat` 即可连接到中央 Dashboard。
+
+### 前置条件
+- 远程机器已安装 Python 3.8+ 且在 PATH 中
+- 网络可达 Dashboard 主机（默认 `192.168.10.219:9901`）
+
+### 步骤
+1. 复制 `remote-deploy/` 到远程机器
+2. 编辑 `config.json` 中的 `connect_host` 为 Dashboard 主机 IP
+3. 双击 `setup.bat`
+4. 重启远程机器的 Windsurf IDE
+
+### config.json 关键字段
+
+| 字段 | 说明 |
+|------|------|
+| `bind_host` | Dashboard 服务监听地址（`0.0.0.0` = 所有接口） |
+| `connect_host` | 客户端连接地址（填 Dashboard 主机的局域网 IP） |
+| `auth_token` | API 认证 token（主机和远程必须一致） |
+
 ## 设计决策
 
 | 决策 | 理由 |
 |------|------|
-| HTTP + Long-polling | 跨 Windows Session 可达，零依赖 |
+| HTTP + Long-polling | 跨 Windows Session / 跨机器可达，零依赖 |
 | HTML 内嵌 Python | 零文件部署，单命令启动 |
 | PRIORITY RULE 注入 | 无法修改 IDE 源码，通过规则文件控制 Agent 行为 |
 | 超时自动继续 | Agent 不会因为人不在而永久阻塞 |
 | JSON 文件持久化 | 简单可靠，Dashboard 重启后恢复历史 |
+| bind/connect 分离 | 服务端绑定 0.0.0.0，客户端连具体 IP |

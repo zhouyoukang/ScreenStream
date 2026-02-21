@@ -48,7 +48,7 @@ def _load_config():
 
 CONFIG = _load_config()
 PORT = CONFIG.get("dashboard", {}).get("port", 9901)
-HOST = CONFIG.get("dashboard", {}).get("host", "127.0.0.1")
+HOST = CONFIG.get("dashboard", {}).get("bind_host", None) or CONFIG.get("dashboard", {}).get("host", "0.0.0.0")
 AUTH_TOKEN = CONFIG.get("dashboard", {}).get("auth_token", "")
 PERSIST_ENABLED = CONFIG.get("persistence", {}).get("enabled", True)
 REQUESTS_FILE = os.path.join(PROJECT_DIR, CONFIG.get("persistence", {}).get("requests_file", "data/requests.json"))
