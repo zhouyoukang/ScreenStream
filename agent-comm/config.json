@@ -1,7 +1,7 @@
 {
   "dashboard": {
     "bind_host": "0.0.0.0",
-    "connect_host": "192.168.10.219",
+    "connect_host": "127.0.0.1",
     "port": 9901,
     "auth_token": "agent-comm-2026",
     "max_poll_timeout": 300

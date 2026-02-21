@@ -1,0 +1,409 @@
+{
+  "name": "Home Assistant Device Control",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ha-control",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-control",
+      "name": "Device Control Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "ha-control"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-action",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "get_status",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-action",
+      "name": "Check Action Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Device Control Webhook').first().json.ha_url || 'http://localhost:8123' }}/api/states/={{ $('Device Control Webhook').first().json.entity_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $('Device Control Webhook').first().json.ha_token || 'your-ha-token' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000,
+          "retry": {
+            "enabled": true,
+            "maxTries": 3
+          }
+        }
+      },
+      "id": "get-device-state",
+      "name": "Get Device State",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-control-action",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "control",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-control",
+      "name": "Check Control Action",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract device domain and determine service\nconst entityId = $input.first().json.entity_id;\nconst command = $input.first().json.command || 'toggle';\nconst haUrl = $input.first().json.ha_url || 'http://localhost:8123';\nconst haToken = $input.first().json.ha_token || 'your-ha-token';\n\nif (!entityId) {\n  throw new Error('entity_id is required');\n}\n\nconst [domain, deviceName] = entityId.split('.');\nif (!domain || !deviceName) {\n  throw new Error('Invalid entity_id format');\n}\n\n// Determine service based on command and domain\nlet service;\nswitch (command.toLowerCase()) {\n  case 'on':\n  case 'turn_on':\n    service = 'turn_on';\n    break;\n  case 'off':\n  case 'turn_off':\n    service = 'turn_off';\n    break;\n  case 'toggle':\n    service = 'toggle';\n    break;\n  default:\n    service = 'toggle';\n}\n\n// Build service data\nconst serviceData = {\n  entity_id: entityId\n};\n\n// Add additional parameters based on device type and command\nif (domain === 'light' && $input.first().json.brightness) {\n  serviceData.brightness = Math.max(0, Math.min(255, parseInt($input.first().json.brightness)));\n}\n\nif (domain === 'light' && $input.first().json.rgb_color) {\n  serviceData.rgb_color = $input.first().json.rgb_color;\n}\n\nif (domain === 'fan' && $input.first().json.percentage) {\n  serviceData.percentage = Math.max(0, Math.min(100, parseInt($input.first().json.percentage)));\n}\n\nreturn {\n  json: {\n    url: `${haUrl}/api/services/${domain}/${service}`,\n    method: 'POST',\n    headers: {\n      'Authorization': `Bearer ${haToken}`,\n      'Content-Type': 'application/json'\n    },\n    body: serviceData,\n    original_request: $input.first().json\n  }\n};"
+      },
+      "id": "prepare-control-request",
+      "name": "Prepare Control Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.Authorization }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "={{ $json.headers['Content-Type'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 10000,
+          "retry": {
+            "enabled": true,
+            "maxTries": 3
+          }
+        }
+      },
+      "id": "execute-control",
+      "name": "Execute Device Control",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Wait for device state to change\nconst entityId = $input.first().json.original_request.entity_id;\nconst haUrl = $input.first().json.original_request.ha_url || 'http://localhost:8123';\nconst haToken = $input.first().json.original_request.ha_token || 'your-ha-token';\n\n// Small delay to allow state change\nawait new Promise(resolve => setTimeout(resolve, 500));\n\nreturn {\n  json: {\n    entity_id: entityId,\n    ha_url: haUrl,\n    ha_token: haToken,\n    control_result: $input.first().json\n  }\n};"
+      },
+      "id": "wait-for-state-change",
+      "name": "Wait for State Change",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.ha_url }}/api/states/={{ $json.entity_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $json.ha_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000,
+          "retry": {
+            "enabled": true,
+            "maxTries": 3
+          }
+        }
+      },
+      "id": "verify-state-change",
+      "name": "Verify State Change",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format successful status response\nconst deviceState = $input.first().json;\n\nreturn {\n  json: {\n    success: true,\n    action: 'get_status',\n    entity_id: deviceState.entity_id,\n    friendly_name: deviceState.attributes?.friendly_name || deviceState.entity_id,\n    current_state: deviceState.state,\n    last_changed: deviceState.last_changed,\n    last_updated: deviceState.last_updated,\n    available: deviceState.state !== 'unavailable',\n    attributes: deviceState.attributes || {},\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-status-response",
+      "name": "Format Status Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format successful control response\nconst originalRequest = $('Prepare Control Request').first().json.original_request;\nconst controlResult = $('Execute Device Control').first().json;\nconst newState = $input.first().json;\n\nreturn {\n  json: {\n    success: true,\n    action: 'control',\n    entity_id: originalRequest.entity_id,\n    command: originalRequest.command,\n    friendly_name: newState.attributes?.friendly_name || originalRequest.entity_id,\n    previous_state: 'unknown', // Could be enhanced to track this\n    current_state: newState.state,\n    state_changed: true,\n    control_response: controlResult,\n    timestamp: new Date().toISOString(),\n    message: `Device ${originalRequest.entity_id} ${originalRequest.command} command executed successfully`\n  }\n};"
+      },
+      "id": "format-control-response",
+      "name": "Format Control Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "status-response",
+      "name": "Status Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "control-response",
+      "name": "Control Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2000, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle errors and format error response\nconst error = $input.first().error || 'Unknown error occurred';\nconst originalRequest = $('Device Control Webhook').first().json;\n\nreturn {\n  json: {\n    success: false,\n    action: originalRequest.action || 'unknown',\n    entity_id: originalRequest.entity_id || 'unknown',\n    error: error.message || error,\n    timestamp: new Date().toISOString(),\n    original_request: originalRequest\n  }\n};"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 600]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 600]
+    }
+  ],
+  "connections": {
+    "Device Control Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check Action Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Action Type": {
+      "main": [
+        [
+          {
+            "node": "Get Device State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Control Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Device State": {
+      "main": [
+        [
+          {
+            "node": "Format Status Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Control Action": {
+      "main": [
+        [
+          {
+            "node": "Prepare Control Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Control Request": {
+      "main": [
+        [
+          {
+            "node": "Execute Device Control",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Device Control": {
+      "main": [
+        [
+          {
+            "node": "Wait for State Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for State Change": {
+      "main": [
+        [
+          {
+            "node": "Verify State Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify State Change": {
+      "main": [
+        [
+          {
+            "node": "Format Control Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Status Response": {
+      "main": [
+        [
+          {
+            "node": "Status Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Control Response": {
+      "main": [
+        [
+          {
+            "node": "Control Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "ha-device-control",
+  "tags": [
+    {
+      "createdAt": "2025-09-28T13:40:00.000Z",
+      "updatedAt": "2025-09-28T13:40:00.000Z",
+      "id": "ha-integration",
+      "name": "Home Assistant"
+    }
+  ]
+}

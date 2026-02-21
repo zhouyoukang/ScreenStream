@@ -1,0 +1,13 @@
+{
+    "workbench.editorAssociations": {
+        "*.md": "default"
+    },
+    "markdown-editor.isDefault": false,
+    "markdown.preview.fontSize": 15,
+    "markdown.preview.lineHeight": 1.8,
+    "markdown.preview.scrollEditorWithPreview": true,
+    "markdown.preview.scrollPreviewWithEditor": true,
+    "markdown.styles": [
+        ".vscode/markdown-preview.css"
+    ]
+}

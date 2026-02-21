@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "pre_user_prompt": [
+      {
+        "command": "python e:/windsurf-intelligence-pack/observatory/conversation_capture.py",
+        "show_output": false
+      }
+    ],
+    "post_cascade_response": [
+      {
+        "command": "python e:/windsurf-intelligence-pack/observatory/conversation_capture.py",
+        "show_output": false
+      }
+    ],
+    "post_mcp_tool_use": [
+      {
+        "command": "python e:/windsurf-intelligence-pack/observatory/conversation_capture.py",
+        "show_output": false
+      }
+    ],
+    "post_setup_worktree": [
+      {
+        "command": "python hooks/setup_worktree.py",
+        "show_output": true
+      }
+    ]
+  }
+}

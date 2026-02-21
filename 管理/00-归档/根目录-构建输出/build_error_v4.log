@@ -1,0 +1,42 @@
+Reusing configuration cache.
+> Task :common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :mjpeg:preBuild UP-TO-DATE
+> Task :common:preBuild UP-TO-DATE
+> Task :mjpeg:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :mjpeg:preDebugBuild UP-TO-DATE
+> Task :common:preDebugBuild UP-TO-DATE
+> Task :mjpeg:generateDebugResValues UP-TO-DATE
+> Task :common:javaPreCompileDebug UP-TO-DATE
+> Task :common:generateDebugResValues UP-TO-DATE
+> Task :mjpeg:generateDebugResources UP-TO-DATE
+> Task :common:generateDebugResources UP-TO-DATE
+> Task :mjpeg:packageDebugResources UP-TO-DATE
+> Task :mjpeg:parseDebugLocalResources UP-TO-DATE
+> Task :common:packageDebugResources UP-TO-DATE
+> Task :mjpeg:generateDebugRFile UP-TO-DATE
+> Task :common:parseDebugLocalResources UP-TO-DATE
+> Task :common:generateDebugRFile UP-TO-DATE
+> Task :common:compileDebugKotlin UP-TO-DATE
+> Task :common:compileDebugJavaWithJavac UP-TO-DATE
+> Task :common:bundleLibCompileToJarDebug UP-TO-DATE
+
+> Task :mjpeg:compileDebugKotlin FAILED
+e: file:///F:/github/AIOT/ScreenStream_v2/mjpeg/src/main/java/info/dvkr/screenstream/mjpeg/internal/HttpServer.kt:501:5 Syntax error: Expecting a top level declaration.
+e: file:///F:/github/AIOT/ScreenStream_v2/mjpeg/src/main/java/info/dvkr/screenstream/mjpeg/internal/HttpServer.kt:502:1 Syntax error: Expecting a top level declaration.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':mjpeg:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 2s
+15 actionable tasks: 1 executed, 14 up-to-date
+Configuration cache entry reused.

@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset=utf-8>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScreenStream</title>
+    <link rel="icon" type="image/x-icon" sizes="any" href="/favicon.ico">
+    <style>
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            border: 0;
+            overflow: hidden;
+            display: block;
+            font-family: sans-serif;
+            font-size: 16px
+        }
+
+        body {
+            background-color: BACKGROUND_COLOR
+        }
+
+        #connectDiv,
+        #pinDiv,
+        #blockedDiv,
+        #errorDiv {
+            min-width: 350px;
+            border-radius: 16px;
+            color: #eee;
+            top: 45%;
+            left: 50%;
+            padding: 30px;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            position: absolute;
+            box-shadow: 0 0 8px 8px rgba(0, 0, 0, .2);
+            background: linear-gradient(#144A74, #001D34);
+        }
+
+        .logo {
+            width: 160px;
+            height: 160px;
+            -webkit-filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, .4));
+            filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, .4));
+        }
+
+        #streamDiv {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 48px;
+            /* 留出底部导航栏空间 */
+            background-color: #000;
+            /* Flexbox 居中 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            /* Prevent Selection */
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        #streamDiv img {
+            /* 移除 absolute 定位 */
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+            /* 禁用选中 */
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        #buttonsDiv {
+            display: none !important;
+        }
+
+        #navBar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            border-top: 1px solid #333;
+        }
+
+
+        #navBar button {
+            background: none;
+            border: none;
+            padding: 8px 20px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        #navBar button:hover {
+            opacity: 1;
+        }
+
+        #navBar button:active {
+            opacity: 0.5;
+        }
+
+        #navBar .divider {
+            width: 1px;
+            height: 28px;
+            background: #444;
+        }
+
+        body {
+            padding-bottom: 48px;
+        }
+
+        #pinDiv input {
+            background-color: #FFF;
+            padding: 4px;
+            width: 4em;
+            font-family: monospace;
+        }
+
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        #controlStatus {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: sans-serif;
+            pointer-events: none;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        input {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+        }
+
+        #pinDiv button {
+            background-color: #32628D;
+            border-radius: 6px;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block
+        }
+
+        #pipStreamDiv video {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            max-height: 100vh;
+            max-height: -webkit-fill-available;
+            max-height: 100dvh;
+            max-width: 100%;
+            z-index: -10;
+        }
+
+        @media screen and (max-width:850px) {
+
+            #connectDiv,
+            #pinDiv,
+            #blockedDiv,
+            #errorDiv {
+                padding: 30px;
+                width: 55%
+            }
+        }
+
+        @media screen and (max-width:650px) {
+
+            #connectDiv,
+            #pinDiv,
+            #blockedDiv,
+            #errorDiv {
+                padding: 30px 20px;
+                width: 85%
+            }
+        }
+
+        .loading {
+            margin: 20px 0 10px 0;
+        }
+
+        .loading span {
+            display: inline-block;
+            vertical-align: middle;
+            width: .6em;
+            height: .6em;
+            margin: .19em;
+            background: #fff;
+            border-radius: .6em;
+            animation: loading 1s infinite alternate
+        }
+
+        .loading span:nth-of-type(2) {
+            background: #fff;
+            animation-delay: .2s
+        }
+
+        .loading span:nth-of-type(3) {
+            background: #fff;
+            animation-delay: .4s
+        }
+
+        .loading span:nth-of-type(4) {
+            background: #fff;
+            animation-delay: .6s
+        }
+
+        .loading span:nth-of-type(5) {
+            background: #fff;
+            animation-delay: .8s
+        }
+
+        .loading span:nth-of-type(6) {
+            background: #fff;
+            animation-delay: 1s
+        }
+
+        .loading span:nth-of-type(7) {
+            background: #fff;
+            animation-delay: 1.2s
+        }
+
+        @keyframes loading {
+            0% {
+                opacity: 0
+            }
+
+            100% {
+                opacity: 1
+            }
+        }
+    </style>
+    <script>
+        "use strict";
+
+        window.DD_LOGS && DD_LOGS.init({
+            clientToken: "pub26fc6543f9239240ed8ae545593f921f",
+            site: "datadoghq.com",
+            forwardConsoleLogs: ["info", "warn", "error"],
+            forwardReports: "all",
+            service: '%DD_SERVICE%'
+        });
+        window.DD_LOGS && DD_LOGS.logger.setHandler(DD_HANDLER);
+        window.DD_LOGS && DD_LOGS.setGlobalContextProperty('version', '%APP_VERSION%');
+    </script>
+</head>
+
+<body>
+    <div id="connectDiv">
+        <img src="logo.svg" class="logo" />
+        <p style="font-weight:500">%CONNECTING%</p>
+        <div class="loading">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div id="streamDiv">
+        <img id="stream" FIT_WINDOW />
+        <canvas id="streamCanvas" style="display: none; width: 100%; height: 100%; object-fit: contain;"></canvas>
+        <video id="videoPlayer" autoplay muted playsinline
+            style="display: none; width: 100%; height: 100%; object-fit: contain;"></video>
+    </div>
+
+    <div id="buttonsDiv">
+        <input type="image" id="fullscreen" style="width:24px;height:24px;margin:4px;"
+            src="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FFF' d='M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z' /%3E%3C/svg%3E"
+            onclick="toggleFullscreen()" title="全屏" />
+        <input type="image" style="width:24px;height:24px;margin:4px;"
+            src="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FFF' d='M3,5V19L11,12M13,19H16V5H13M18,5V19H21V5' /%3E%3C/svg%3E"
+            onclick="toggleStartStop()" title="停止/开始" />
+        <button id="audioToggle" onclick="toggleAudio()"
+            style="margin:4px;background:#333;color:white;border:1px solid #666;border-radius:4px;font-size:10px;padding:2px;">AUDIO:
+            OFF</button>
+    </div>
+
+    <!-- 底部工具栏：5按钮布局（控制模式） -->
+    <div id="navBar">
+        <!-- 最左：模式切换 -->
+        <button id="modeToggle" onclick="toggleNavMode()" title="切换模式">
+            <svg width="24" height="24" viewBox="0 0 24 24">
+                <path fill="#FFF"
+                    d="M12,6V9L16,5L12,1V4A8,8 0 0,0 4,12C4,13.57 4.46,15.03 5.24,16.26L6.7,14.8C6.25,13.97 6,13 6,12A6,6 0 0,1 12,6M18.76,7.74L17.3,9.2C17.74,10.04 18,11 18,12A6,6 0 0,1 12,18V15L8,19L12,23V20A8,8 0 0,0 20,12C20,10.43 19.54,8.97 18.76,7.74Z" />
+            </svg>
+        </button>
+        <!-- 动态按钮1 -->
+        <button id="dynBtn1" onclick="dynBtn1Click()" title="最近任务">
+            <svg id="dynBtn1Icon" width="24" height="24" viewBox="0 0 24 24">
+                <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="#FFF" stroke-width="2" />
+            </svg>
+        </button>
+        <!-- 动态按钮2 -->
+        <button id="dynBtn2" onclick="dynBtn2Click()" title="主页">
+            <svg id="dynBtn2Icon" width="28" height="28" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" fill="none" stroke="#FFF" stroke-width="2" />
+            </svg>
+        </button>
+        <!-- 动态按钮3 -->
+        <button id="dynBtn3" onclick="dynBtn3Click()" title="返回" style="display:block;">
+            <svg id="dynBtn3Icon" width="24" height="24" viewBox="0 0 24 24">
+                <path fill="#FFF" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+            </svg>
+        </button>
+        <!-- 动态按钮4（仅控制模式显示） -->
+        <button id="dynBtn4" onclick="dynBtn4Click()" title="全屏" style="display:none;">
+            <svg id="dynBtn4Icon" width="24" height="24" viewBox="0 0 24 24">
+                <path fill="#FFF"
+                    d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z" />
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        var navMode = 0; // 0=导航模式, 1=控制模式
+
+        function updateNavButtons() {
+            var btn1 = document.getElementById("dynBtn1");
+            var btn2 = document.getElementById("dynBtn2");
+            var btn3 = document.getElementById("dynBtn3");
+            var btn4 = document.getElementById("dynBtn4");
+            var icon1 = document.getElementById("dynBtn1Icon");
+            var icon2 = document.getElementById("dynBtn2Icon");
+            var icon3 = document.getElementById("dynBtn3Icon");
+            var icon4 = document.getElementById("dynBtn4Icon");
+            var modeBtn = document.getElementById("modeToggle");
+
+            if (navMode === 0) {
+                // 导航模式：最近任务 + 主页 + 返回（3个按钮）
+                btn1.title = "最近任务";
+                btn2.title = "主页";
+                btn3.title = "返回";
+                icon1.innerHTML = '<rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="#FFF" stroke-width="2"/>';
+                icon2.innerHTML = '<circle cx="12" cy="12" r="10" fill="none" stroke="#FFF" stroke-width="2"/>';
+                icon3.innerHTML = '<path fill="#FFF" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/>';
+                btn3.style.display = "block";
+                btn4.style.display = "none";
+                modeBtn.style.background = "rgba(255,255,255,0.1)";
+            } else {
+                // 控制模式：画中画 + 音频 + 全屏（3个按钮）
+                btn1.title = "画中画";
+                btn2.title = "音频";
+                btn3.title = "全屏";
+                // 画中画图标
+                icon1.innerHTML = '<path fill="#FFF" d="M19 11h-8v6h8v-6m4 8V5c0-1.12-.9-2-2-2H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2m-2 0H3V4.97h18V19Z"/>';
+                // 音频图标
+                icon2.innerHTML = '<path fill="#FFF" d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>';
+                // 全屏图标
+                icon3.innerHTML = '<path fill="#FFF" d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"/>';
+                btn3.style.display = "block";
+                btn4.style.display = "none"; // 隐藏第4个按钮
+                modeBtn.style.background = "rgba(100,180,255,0.3)";
+            }
+        }
+
+        function toggleNavMode() {
+            navMode = navMode === 0 ? 1 : 0;
+            updateNavButtons();
+        }
+
+        function dynBtn1Click() {
+            if (navMode === 0) {
+                sendNavAction('/recents');
+            } else {
+                togglePiP();
+            }
+        }
+
+        function dynBtn2Click() {
+            if (navMode === 0) {
+                sendNavAction('/home');
+            } else {
+                toggleAudio();
+            }
+        }
+
+        function dynBtn3Click() {
+            if (navMode === 0) {
+                sendNavAction('/back');
+            } else {
+                toggleFullscreen();
+            }
+        }
+
+        function dynBtn4Click() {
+            // 仅在控制模式下可用
+            toggleFullscreen();
+        }
+
+        // 初始化
+        updateNavButtons();
+    </script>
+
+    <div id="pinDiv" style="visibility: hidden;">
+        <img src="logo.svg" class="logo" />
+        <p>%STREAM_REQUIRE_PIN%</p>
+        <form action="" id="pinForm" autocomplete="off">
+            <label for="pin">%ENTER_PIN%</label>
+            <input id="pin" autofocus maxlength="6" pattern="[0-9]{4,6}" required type="password" autocomplete="off">
+            <button id="sendPin" type="submit">%SUBMIT_PIN%</button>
+        </form>
+        <p id="pinWrongMsg" style="color:red;font-weight:700">%WRONG_PIN_MESSAGE%</p>
+    </div>
+
+    <div id="blockedDiv" style="visibility: hidden;">
+        <img src="logo.svg" class="logo" />
+        <p style=color:red;font-weight:600>%ADDRESS_BLOCKED%</p>
+    </div>
+
+    <div id="errorDiv" style="visibility: hidden;">
+        <img src="logo.svg" class="logo" />
+        <p style=color:red;font-weight:600>%ERROR%</p>
+    </div>
+
+    <div id="pipStreamDiv" style="display: none;">
+        <video id="pipStream" autoplay muted playsinline></video>
+    </div>
+
+    <div id="controlStatus"><span style="color:gray">●</span> Connecting...</div>
+
+    <script src="jmuxer.min.js"></script>
+    <script>
+        "use strict";
+
+        // === DEBUG CONSOLE ===
+        var debugDiv = document.createElement('div');
+        debugDiv.style.cssText = "position:fixed;top:0;left:0;width:100%;background:rgba(255,0,0,0.5);color:white;z-index:99999;pointer-events:none;font-size:12px;display:none;";
+        document.body.appendChild(debugDiv);
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            debugDiv.style.display = "block";
+            debugDiv.innerHTML += "Error: " + msg + " at " + lineNo + ":" + columnNo + "<br>";
+            return false;
+        };
+        console.error = function (msg) {
+            debugDiv.style.display = "block";
+            debugDiv.innerHTML += "Err: " + msg + "<br>";
+        };
+        // =====================
+
+        var clientId = RandomString(16);
+        window.DD_LOGS && DD_LOGS.setGlobalContextProperty("clientId", clientId);
+
+        var buttonsDiv = document.getElementById("buttonsDiv");
+
+        var streamDiv = document.getElementById("streamDiv");
+        var streamDiv = document.getElementById("streamDiv");
+        var stream = document.getElementById("stream");
+        var streamCanvas = document.getElementById("streamCanvas");
+        var videoPlayerEl = document.getElementById("videoPlayer");
+        var activeStreamElement = stream; // Default to IMG
+        var connectDiv = document.getElementById("connectDiv");
+        var pinDiv = document.getElementById("pinDiv");
+        var pin = document.getElementById("pin");
+        var sendPin = document.getElementById("sendPin");
+        var pinWrongMsg = document.getElementById("pinWrongMsg");
+        var blockedDiv = document.getElementById("blockedDiv");
+        var errorDiv = document.getElementById("errorDiv");
+        var pipStreamDiv = document.getElementById("pipStreamDiv");
+
+        // Get port from URL or default to 8085
+        var urlParams = new URLSearchParams(window.location.search);
+        var inputApiPort = urlParams.get('input_port') || 8085;
+        var inputApiBase = null;
+
+        // VR fullscreen mode: 
+        // ?vr=1 or ?vr=contain = fit with letterbox (default)
+        // ?vr=fill = stretch to fill (may distort)
+        // ?vr=cover = fill with crop (may cut edges)
+        var vrMode = urlParams.get('vr') || urlParams.get('fullscreen');
+        if (vrMode) {
+            document.body.classList.add('vr-fullscreen');
+            if (vrMode === 'fill') {
+                document.body.classList.add('vr-fill');
+            } else if (vrMode === 'cover') {
+                document.body.classList.add('vr-cover');
+            }
+            // Hide all UI elements in VR mode
+            document.body.style.overflow = 'hidden';
+        }
+        // F11 toggles VR fullscreen mode
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                document.body.classList.toggle('vr-fullscreen');
+            }
+        });
+
+        var isPointerDown = false;
+        var pointerMoved = false;
+        var suppressClickOnce = false;
+        var downPoint = null;
+        var lastPoint = null;
+        var lastPointerSendTs = 0;
+        var pointerThrottleMs = 30;
+
+        function getInputApiBase() {
+            if (inputApiBase) return inputApiBase;
+            // Use the same port as the stream server (control routes are now integrated)
+            inputApiBase = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port;
+            return inputApiBase;
+        }
+
+        function getStreamImagePoint(clientX, clientY) {
+            var rect = activeStreamElement.getBoundingClientRect();
+            var natW, natH;
+
+            // Handle different element types
+            if (activeStreamElement.tagName === 'CANVAS') {
+                natW = activeStreamElement.width;
+                natH = activeStreamElement.height;
+            } else if (activeStreamElement.tagName === 'VIDEO') {
+                natW = activeStreamElement.videoWidth;
+                natH = activeStreamElement.videoHeight;
+            } else {
+                // IMG element
+                natW = activeStreamElement.naturalWidth;
+                natH = activeStreamElement.naturalHeight;
+            }
+
+            if (!rect.width || !rect.height || !natW) return null;
+
+            // Calculate active image area (simulating object-fit: contain)
+            var naturalRatio = natW / natH;
+            var clientRatio = rect.width / rect.height;
+
+            var displayWidth, displayHeight, offsetX, offsetY;
+
+            if (clientRatio > naturalRatio) {
+                // Client is wider (Pillarbox)
+                displayHeight = rect.height;
+                displayWidth = displayHeight * naturalRatio;
+                offsetX = (rect.width - displayWidth) / 2;
+                offsetY = 0;
+            } else {
+                // Client is taller (Letterbox)
+                displayWidth = rect.width;
+                displayHeight = displayWidth / naturalRatio;
+                offsetX = 0;
+                offsetY = (rect.height - displayHeight) / 2;
+            }
+
+            // Coordinates relative to the ACTIVE image area
+            var x = clientX - rect.left - offsetX;
+            var y = clientY - rect.top - offsetY;
+
+            // Clamp and Normalize
+            var nx = x / displayWidth;
+            var ny = y / displayHeight;
+
+            // Optional: Ignore clicks outside the active area? 
+            // The user says "click outside to trigger", so maybe we should clamp?
+            // Clamping is safer.
+            nx = Math.max(0.0, Math.min(1.0, nx));
+            ny = Math.max(0.0, Math.min(1.0, ny));
+
+            var pixelX = Math.round(nx * displayWidth);
+            var pixelY = Math.round(ny * displayHeight);
+
+            return {
+                x: pixelX, y: pixelY,
+                nx: nx, ny: ny,
+                clientX: clientX, clientY: clientY
+            };
+        }
+
+        function showTouchFeedback(x, y) {
+            var dot = document.createElement("div");
+            dot.className = "touch-point";
+            dot.style.left = x + "px";
+            dot.style.top = y + "px";
+            document.body.appendChild(dot);
+            setTimeout(function () { document.body.removeChild(dot); }, 200);
+        }
+
+
+
+        function sendInputJson(path, payload) {
+            var url = getInputApiBase() + path;
+            console.log("[Control] Sending:", url, payload);
+            try {
+                return fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                }).then(function (res) {
+                    console.log("[Control] Response:", res.status, res.statusText);
+                    return res;
+                }).catch(function (err) {
+                    console.error("[Control] Fetch error:", err);
+                });
+            } catch (e) {
+                console.error("[Control] Exception:", e);
+                return null;
+            }
+        }
+
+        function mapButtonsToMask(buttons) {
+            var mask = 0;
+            if (buttons & 1) mask |= 1;
+            if (buttons & 2) mask |= 4;
+            return mask;
+        }
+
+        function sendPointer(mask, x, y) {
+            return sendInputJson("/pointer", { buttonMask: mask, x: Math.round(x), y: Math.round(y) });
+        }
+
+        function sendTap(nx, ny) {
+            return sendInputJson("/tap", { nx: nx, ny: ny });
+        }
+
+        function sendNavAction(action) {
+            try {
+                return fetch(getInputApiBase() + action, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: "{}"
+                });
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // ========== 简化的事件处理：使用 tap/swipe API ==========
+        var touchStartTime = 0;
+        var touchStartPoint = null;
+        var isTouching = false;
+        var tapThreshold = 20; // 这里的阈值需要适配归一化坐标吗？
+        // 不，计算dx/dy还是用像素比较好，或者用归一化距离。
+        // 为了简单，我们可以在事件处理里重新计算像素距离用于阈值判断，或者直接把tapThreshold转换成近似的归一化值？
+        // 其实在 getStreamImagePoint 里我们已经丢失了像素信息吗？不，我们可以保留 rect 信息或者再次获取。
+        // 让我们修改逻辑：在事件处理中保留像素坐标用于判断距离，或者...
+        // 简单点：getStreamImagePoint 返回包含像素x,y和归一化nx,ny的对象
+
+        function sendTap(nx, ny) {
+            return sendInputJson("/tap", { nx: nx, ny: ny });
+        }
+
+        function sendSwipe(nx1, ny1, nx2, ny2, duration) {
+            return sendInputJson("/swipe", {
+                nx1: nx1,
+                ny1: ny1,
+                nx2: nx2,
+                ny2: ny2,
+                duration: duration || 300
+            });
+        }
+
+
+        // 在 streamDiv 上监听事件，这样 img 和 video 都能响应
+        streamDiv.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
+            return false;
+        });
+
+        // 鼠标事件 (仅左键)
+        streamDiv.addEventListener("mousedown", function (e) {
+            if (!enableButtons) return;
+            if (e.button !== 0) return; // 只处理左键
+            var p = getStreamImagePoint(e.clientX, e.clientY);
+            if (!p) return;
+            isTouching = true;
+            touchStartTime = Date.now();
+            touchStartPoint = p;
+            e.preventDefault();
+        });
+
+        window.addEventListener("mouseup", function (e) {
+            if (!enableButtons) return;
+            if (e.button !== 0) return; // 只处理左键
+            if (!isTouching) return;
+            isTouching = false;
+
+            var p = getStreamImagePoint(e.clientX, e.clientY);
+            var endPoint = p || touchStartPoint;
+            var duration = Date.now() - touchStartTime;
+
+            if (!touchStartPoint) return;
+
+            var dx = Math.abs(endPoint.x - touchStartPoint.x);
+            var dy = Math.abs(endPoint.y - touchStartPoint.y);
+
+            if (dx < tapThreshold && dy < tapThreshold) {
+                // 短距离 = 点击 (使用归一化坐标)
+                sendTap(touchStartPoint.nx, touchStartPoint.ny);
+            } else {
+                // 长距离 = 滑动 (使用归一化坐标)
+                sendSwipe(touchStartPoint.nx, touchStartPoint.ny, endPoint.nx, endPoint.ny, Math.min(duration, 500));
+            }
+
+            touchStartPoint = null;
+            e.preventDefault();
+        });
+
+        // 触摸事件
+        streamDiv.addEventListener("touchstart", function (e) {
+            if (!enableButtons) return;
+            if (!e.touches || !e.touches.length) return;
+            var t = e.touches[0];
+            var p = getStreamImagePoint(t.clientX, t.clientY);
+            if (!p) return;
+            isTouching = true;
+            touchStartTime = Date.now();
+            touchStartPoint = p;
+            e.preventDefault();
+        }, { passive: false });
+
+        window.addEventListener("touchend", function (e) {
+            if (!enableButtons) return;
+            if (!isTouching) return;
+            isTouching = false;
+
+            var endPoint = touchStartPoint;
+            if (e.changedTouches && e.changedTouches.length) {
+                var t = e.changedTouches[0];
+                var p = getStreamImagePoint(t.clientX, t.clientY);
+                if (p) endPoint = p;
+            }
+
+            var duration = Date.now() - touchStartTime;
+
+            if (!touchStartPoint) return;
+
+            var dx = Math.abs(endPoint.x - touchStartPoint.x);
+            var dy = Math.abs(endPoint.y - touchStartPoint.y);
+
+            if (dx < tapThreshold && dy < tapThreshold) {
+                // 点击
+                sendTap(touchStartPoint.nx, touchStartPoint.ny);
+            } else {
+                // 滑动
+                sendSwipe(touchStartPoint.nx, touchStartPoint.ny, endPoint.nx, endPoint.ny, Math.min(duration, 500));
+            }
+
+            touchStartPoint = null;
+            e.preventDefault();
+        }, { passive: false });
+
+        // 滚轮事件 (Throttled)
+        var vScrollAccumulator = 0.0;
+        var vScrollTimer = null;
+        var hScrollAccumulator = 0.0;
+        var hScrollTimer = null;
+
+        // Right Click Interaction State
+        var rightClickDownTime = 0;
+        var hasScrolledDuringRightHold = false;
+
+        // Prevent context menu (already handled above, but keep for redundancy)
+        streamDiv.addEventListener("contextmenu", function (e) { e.preventDefault(); }, false);
+
+        streamDiv.addEventListener("mousedown", function (e) {
+            if (e.button === 2) {
+                rightClickDownTime = Date.now();
+                hasScrolledDuringRightHold = false;
+            }
+        });
+
+        streamDiv.addEventListener("mouseup", function (e) {
+            if (e.button === 2) {
+                var duration = Date.now() - rightClickDownTime;
+                // If short click (< 300ms) AND no scroll happened, treat as BACK
+                if (duration < 300 && !hasScrolledDuringRightHold) {
+                    sendInputJson("/back", {});
+                }
+            }
+        });
+
+        // Quest Joystick Support
+        var joystickHCooldown = false;
+        var joystickVCooldown = false;
+        var wheelThreshold = 10;
+        // Joystick Inversion Logic
+        var invertJoystick = localStorage.getItem("joystick_inverted") === "true";
+
+        // Debug & Control Overlay
+        var statusOverlay = document.createElement('div');
+        statusOverlay.style.cssText = "position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#0f0;padding:8px 15px;border-radius:20px;font-family:monospace;z-index:99999;font-size:16px;border:1px solid #0f0;box-shadow:0 0 10px #0f0;display:flex;align-items:center;gap:10px;pointer-events:auto;cursor:pointer;opacity:0;transition:opacity 0.3s;";
+
+        // Status Text
+        var statusText = document.createElement('span');
+        statusText.textContent = "🎮 Joystick Ready";
+        statusOverlay.appendChild(statusText);
+
+        // Invert Button
+        var invertBtn = document.createElement('button');
+        invertBtn.textContent = invertJoystick ? "State: Reversed ⇄" : "State: Normal ➡️";
+        invertBtn.style.cssText = "background:#333;color:#fff;border:1px solid #fff;border-radius:5px;padding:2px 5px;font-size:12px;cursor:pointer;";
+        invertBtn.onclick = function (e) {
+            e.stopPropagation();
+            invertJoystick = !invertJoystick;
+            localStorage.setItem("joystick_inverted", invertJoystick);
+            invertBtn.textContent = invertJoystick ? "State: Reversed ⇄" : "State: Normal ➡️";
+            showStatus("Mode Changed: " + (invertJoystick ? "Reversed" : "Normal"));
+        };
+        statusOverlay.appendChild(invertBtn);
+
+        document.body.appendChild(statusOverlay);
+        var overlayTimer = null;
+
+        function showStatus(text) {
+            statusText.textContent = text;
+            statusOverlay.style.opacity = 1;
+            if (overlayTimer) clearTimeout(overlayTimer);
+            overlayTimer = setTimeout(function () { statusOverlay.style.opacity = 0; }, 2000);
+        }
+
+        // Joystick Accumulator Globals
+        var joyAccumX = 0;
+        var joyAccumY = 0;
+        var joyAccumTimer = null;
+        var joyProcessInterval = 60; // Collect data for 60ms before processing
+
+        window.addEventListener("wheel", function (e) {
+            if (!enableButtons) return;
+            e.preventDefault(); // Prevent default scrolling behavior
+
+            // Mouse Wheel fallback (if not joystick)
+            // We use a high threshold to separate joystick burst from mouse wheel
+            // But here we will accumulate EVERYTHING and decide later.
+
+            // Accumulate Delas
+            joyAccumX += e.deltaX;
+            joyAccumY += e.deltaY;
+
+            // Debounce/Accumulate: Wait for the burst to settle/collect
+            if (joyAccumTimer) clearTimeout(joyAccumTimer);
+            joyAccumTimer = setTimeout(processJoystickAccumulation, joyProcessInterval);
+        }, { passive: false }); // passive: false is important for preventDefault
+
+        function processJoystickAccumulation() {
+            var dx = joyAccumX;
+            var dy = joyAccumY;
+
+            // Reset Accumulator immediately
+            joyAccumX = 0;
+            joyAccumY = 0;
+            joyAccumTimer = null;
+
+            // 0. Status Check (Assuming checkControlStatus is defined elsewhere or not critical)
+            // checkControlStatus(); 
+
+            // 1. Threshold Check (Cumulative)
+            // Need a reasonable threshold sum for a "move"
+            if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
+                // If it's a small movement, treat it as a fine-tune mouse scroll
+                handleFineTuneMouseScroll(dx, dy);
+                return;
+            }
+
+            // 2. Cooldown Checks
+            if (joystickHCooldown || joystickVCooldown) return;
+
+            var axisRatio = 2.0;
+
+            // 3. Analyze Direction based on SUM
+            // Horizontal Dominant
+            if (Math.abs(dx) > Math.abs(dy) * axisRatio) {
+                var isLeftParams = (dx < 0);
+                if (invertJoystick) isLeftParams = !isLeftParams;
+
+                if (isLeftParams) {
+                    showStatus("⬅️ LEFT (Acc)");
+                    // Swipe Right-to-Left (Next Page) - 400ms steady
+                    sendSwipe(0.8, 0.5, 0.2, 0.5, 400);
+                } else {
+                    showStatus("➡️ RIGHT (Acc)");
+                    // Swipe Left-to-Right (Prev Page) - 400ms steady
+                    sendSwipe(0.2, 0.5, 0.8, 0.5, 400);
+                }
+
+                // Cooldown
+                joystickHCooldown = true;
+                setTimeout(function () { joystickHCooldown = false; }, 450);
+                return;
+            }
+
+            // Vertical Dominant
+            if (Math.abs(dy) > Math.abs(dx) * axisRatio) {
+                if (dy < 0) {
+                    showStatus("⬆️ UP (Acc)");
+                    sendSwipe(0.5, 0.4, 0.5, 0.6, 50);
+                } else {
+                    showStatus("⬇️ DOWN (Acc)");
+                    sendSwipe(0.5, 0.6, 0.5, 0.4, 50);
+                }
+
+                joystickVCooldown = true;
+                setTimeout(function () { joystickVCooldown = false; }, 100);
+                return;
+            }
+        }
+
+        // Helper function for fine-tune mouse scrolling
+        function handleFineTuneMouseScroll(deltaX, deltaY) {
+            // This logic is adapted from the original "Mouse Interaction (Low Delta or Right Click)"
+            // but now it's for small wheel movements not classified as joystick.
+            var p = getStreamImagePoint(event.clientX, event.clientY); // Use the last known event clientX/Y
+            if (!p) return;
+
+            // Check right click hold
+            var isRightHold = (event.buttons & 2) === 2; // Use the last known event buttons
+
+            if (isRightHold) {
+                hasScrolledDuringRightHold = true;
+                // Horizontal Scroll (Mouse Fine-tune)
+                var delta = deltaY > 0 ? -0.15 : 0.15;
+                var targetNx = Math.max(0.0, Math.min(1.0, p.nx + delta));
+                sendSwipe(p.nx, p.ny, targetNx, p.ny, 100);
+            }
+        }
+
+
+
+        // ========== 键盘输入处理 ==========
+        // 创建隐藏的输入框用于捕获中文输入
+        var hiddenInput = document.createElement('textarea');
+        hiddenInput.id = 'hiddenKeyboardInput';
+        hiddenInput.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
+        hiddenInput.setAttribute('autocomplete', 'off');
+        hiddenInput.setAttribute('autocorrect', 'off');
+        hiddenInput.setAttribute('autocapitalize', 'off');
+        document.body.appendChild(hiddenInput);
+
+        var isComposing = false; // IME 输入法组合状态
+
+        // 点击画面时聚焦隐藏输入框
+        stream.addEventListener('click', function () {
+            if (enableButtons) {
+                hiddenInput.focus();
+            }
+        });
+
+        // IME 开始组合（中文输入开始）
+        hiddenInput.addEventListener('compositionstart', function () {
+            isComposing = true;
+        });
+
+        // IME 组合结束（中文输入完成）
+        hiddenInput.addEventListener('compositionend', function (e) {
+            isComposing = false;
+            if (e.data && e.data.length > 0) {
+                sendInputJson("/text", { text: e.data });
+            }
+            hiddenInput.value = ''; // 清空
+        });
+
+        // 普通输入事件（英文字符直接输入）
+        hiddenInput.addEventListener('input', function (e) {
+            if (isComposing) return; // IME 组合中，等待 compositionend
+            if (e.data && e.data.length > 0) {
+                sendInputJson("/text", { text: e.data });
+            }
+            hiddenInput.value = ''; // 清空
+        });
+
+        // 特殊按键处理
+        hiddenInput.addEventListener('keydown', function (e) {
+            // Ctrl 组合键处理
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key.toLowerCase()) {
+                    case 'a': // Ctrl+A 全选
+                        sendInputJson("/key", { keysym: 0xFF6A, down: true }); // XK_Select
+                        e.preventDefault();
+                        return;
+                    case 'c': // Ctrl+C 复制
+                        sendInputJson("/key", { keysym: 0xFF63, down: true }); // XK_Insert (copy)
+                        e.preventDefault();
+                        return;
+                    case 'v': // Ctrl+V 粘贴
+                        // 尝试从剪贴板读取并发送文本
+                        navigator.clipboard.readText().then(function (text) {
+                            if (text && text.length > 0) {
+                                sendInputJson("/text", { text: text });
+                            }
+                        }).catch(function () {
+                            // 剪贴板访问失败，发送粘贴按键
+                            sendInputJson("/key", { keysym: 0xFFFF, down: true });
+                        });
+                        e.preventDefault();
+                        return;
+                    case 'x': // Ctrl+X 剪切
+                        sendInputJson("/key", { keysym: 0xFF6B, down: true }); // XK_Cut
+                        e.preventDefault();
+                        return;
+                    case 'z': // Ctrl+Z 撤销
+                        sendInputJson("/key", { keysym: 0xFF65, down: true }); // XK_Undo
+                        e.preventDefault();
+                        return;
+                }
+            }
+
+            // 特殊按键处理
+            switch (e.key) {
+                case 'Backspace':
+                    sendInputJson("/key", { keysym: 0xFF08, down: true });
+                    e.preventDefault();
+                    return;
+                case 'Enter':
+                    sendInputJson("/key", { keysym: 0xFF0D, down: true });
+                    e.preventDefault();
+                    return;
+                case 'Escape':
+                    // 同时发送 Escape keysym 和 back 操作
+                    sendInputJson("/key", { keysym: 0xFF1B, down: true });
+                    sendNavAction('/back');
+                    e.preventDefault();
+                    return;
+                case 'Tab':
+                    sendInputJson("/key", { keysym: 0xFF09, down: true });
+                    e.preventDefault();
+                    return;
+                case 'ArrowUp':
+                    sendInputJson("/key", { keysym: 0xFF52, down: true });
+                    e.preventDefault();
+                    return;
+                case 'ArrowDown':
+                    sendInputJson("/key", { keysym: 0xFF54, down: true });
+                    e.preventDefault();
+                    return;
+                case 'ArrowLeft':
+                    sendInputJson("/key", { keysym: 0xFF51, down: true });
+                    e.preventDefault();
+                    return;
+                case 'ArrowRight':
+                    sendInputJson("/key", { keysym: 0xFF53, down: true });
+                    e.preventDefault();
+                    return;
+                case 'Delete':
+                    sendInputJson("/key", { keysym: 0xFFFF, down: true });
+                    e.preventDefault();
+                    return;
+                case 'Home':
+                    sendInputJson("/key", { keysym: 0xFF50, down: true });
+                    e.preventDefault();
+                    return;
+                case 'End':
+                    sendInputJson("/key", { keysym: 0xFF57, down: true });
+                    e.preventDefault();
+                    return;
+            }
+        });
+
+        // 全局键盘监听（当隐藏输入框未聚焦时）
+        document.addEventListener("keydown", function (e) {
+            if (!enableButtons) return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                // 允许隐藏输入框的事件，阻止其他输入框
+                if (e.target.id !== 'hiddenKeyboardInput') return;
+            }
+
+            // Escape 全局可用
+            if (e.key === 'Escape') {
+                sendNavAction('/back');
+                e.preventDefault();
+                return;
+            }
+
+            // 如果不是在隐藏输入框内，聚焦它
+            if (e.target.id !== 'hiddenKeyboardInput') {
+                hiddenInput.focus();
+            }
+        });
+
+
+        var enableButtons = true; // Default to true for remote control
+        var buttonsHideFunction = function buttonsHideFunction() {
+            buttonsDiv.style.visibility = "hidden";
+        };
+
+        var hideTimeout = setTimeout(buttonsHideFunction, 1500);
+        function configureButtons(enable) {
+            if (enableButtons != enable) {
+                enableButtons = enable;
+                if (enableButtons) {
+                    buttonsDiv.style.visibility = "visible";
+                    hideTimeout = setTimeout(buttonsHideFunction, 1500);
+                } else {
+                    clearTimeout(hideTimeout);
+                    buttonsDiv.style.visibility = "hidden";
+                }
+            }
+        }
+        // Prevent selection GLOBALLY
+        document.addEventListener('selectstart', function (e) {
+            if (e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        stream.addEventListener("dragstart", function (e) { e.preventDefault(); return false; });
+        stream.setAttribute("draggable", "false");
+
+
+
+        function configureFitWindow(enable) {
+            // 在 Flexbox 布局下，我们只需要控制 max-width/max-height 来限制图片
+            // 无论是适应窗口还是原始大小，Flexbox 都会负责居中
+            if (enable) {
+                stream.style.maxWidth = "100%";
+                stream.style.maxHeight = "100%";
+            } else {
+                stream.style.maxWidth = "none";
+                stream.style.maxHeight = "none";
+            }
+        }
+        if (!document.pictureInPictureEnabled) {
+            // PiP not supported
+        }
+
+        window.onmousemove = function () {
+            if (!enableButtons) return;
+            buttonsDiv.style.visibility = "visible";
+            clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(buttonsHideFunction, 1000);
+        };
+
+        var fullscreenInput = document.getElementById("fullscreen");
+
+        function isFullscreen() {
+            return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
+        }
+
+        function fullScreenHandler() {
+            if (isFullscreen()) fullscreenInput.src = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FFF' d='M14,14H19V16H16V19H14V14M5,14H10V19H8V16H5V14M8,5H10V10H5V8H8V5M19,8V10H14V5H16V8H19Z' /%3E%3C/svg%3E"; else fullscreenInput.src = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FFF' d='M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z' /%3E%3C/svg%3E";
+        }
+
+        function isFullscreenEnabled() {
+            return document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled || false;
+        }
+
+        // Accessibility/Input Service Status Check
+        function checkControlStatus() {
+            var el = document.getElementById("controlStatus");
+            if (!el) return;
+
+            fetch(getInputApiBase() + "/status")
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.connected) {
+                        el.innerHTML = '<span style="color:#0f0;text-shadow:0 0 5px #0f0">●</span> Control Active';
+                        el.style.borderColor = "rgba(0, 255, 0, 0.3)";
+                    } else {
+                        el.innerHTML = '<span style="color:#f00;text-shadow:0 0 5px #f00">●</span> View Only';
+                        el.style.borderColor = "rgba(255, 0, 0, 0.3)";
+                    }
+                })
+                .catch(function (e) {
+                    el.innerHTML = '<span style="color:gray">●</span> Offline';
+                    el.style.borderColor = "rgba(100, 100, 100, 0.3)";
+                });
+        }
+
+        // Check status every 3 seconds
+        setInterval(checkControlStatus, 3000);
+        // Initial check after short delay to ensure port logic is ready
+        setTimeout(checkControlStatus, 500);
+
+
+        if (isFullscreenEnabled()) {
+            document.addEventListener("fullscreenchange", fullScreenHandler);
+            document.addEventListener("webkitfullscreenchange", fullScreenHandler);
+            document.addEventListener("mozfullscreenchange", fullScreenHandler);
+            document.addEventListener("MSFullscreenChange", fullScreenHandler);
+        } else {
+            fullscreenInput.style.visibility = "hidden";
+        }
+
+        function fullScreen(element) {
+            if (element.requestFullscreen) element.requestFullscreen(); else if (element.webkitRequestFullscreen) element.webkitRequestFullscreen(); else if (element.mozRequestFullScreen) element.mozRequestFullScreen(); else if (element.msRequestFullscreen) element.msRequestFullscreen();
+        }
+
+        function fullScreenExit() {
+            if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); else if (document.mozCancelFullScreen) document.mozCancelFullScreen(); else if (document.msExitFullscreen) document.msExitFullscreen();
+        }
+
+        function toggleFullscreen() {
+            isFullscreen() ? fullScreenExit() : fullScreen(document.documentElement);
+        }
+
+        function toggleStartStop() {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", window.location.origin + "/start-stop", true);
+            xmlHttp.send(null);
+        }
+
+        sendPin.addEventListener("click", function (e) {
+            e.preventDefault();
+            var pinHash = SHA256(clientId + pin.value);
+            if (websocket) websocket.send(JSON.stringify({ type: "PIN", data: pinHash }));
+        });
+
+        var websocket = null;
+        var showStreamTimeoutId = null;
+        var MJPEGErrorCounter = 0;
+
+        function connect() {
+            connectDiv.style.visibility = "visible";
+            pinDiv.style.visibility = "hidden";
+            blockedDiv.style.visibility = "hidden";
+            pinWrongMsg.style.visibility = "inherit";
+            streamDiv.style.visibility = "hidden";
+            errorDiv.style.visibility = "hidden";
+            stream.src = "";
+
+            websocket = new WebsocketHeartbeat("ws://" + window.location.host + "/socket?clientId=" + clientId);
+
+            websocket.onopen = function () {
+                websocket.send(JSON.stringify({ type: "CONNECT" }));
+                connectDiv.style.visibility = "hidden";
+            };
+
+            websocket.onreconnect = function () {
+                connectDiv.style.visibility = "visible";
+                pinDiv.style.visibility = "hidden";
+                blockedDiv.style.visibility = "hidden";
+                pinWrongMsg.style.visibility = "inherit";
+                streamDiv.style.visibility = "hidden";
+                errorDiv.style.visibility = "hidden";
+                stream.src = "";
+                MJPEGErrorCounter = 0;
+
+                clearTimeout(showStreamTimeoutId);
+
+                if (document.pictureInPictureElement) {
+                    document.exitPictureInPicture();
+                }
+            };
+
+            websocket.onmessage = function (msg) {
+
+                var message = JSON.parse(msg.data);
+                if (message.type === "HEARTBEAT") return;
+
+                window.DD_LOGS && DD_LOGS.logger.debug("websocket.onmessage", { data: msg.data });
+
+                if (message.type === "STREAM_ADDRESS") {
+                    pinDiv.style.visibility = "hidden";
+                    blockedDiv.style.visibility = "hidden";
+                    pinWrongMsg.style.visibility = "inherit";
+
+                    var sc = (message.data && typeof message.data.streamCodec !== 'undefined') ? message.data.streamCodec : 0;
+                    setStreamCodec(sc);
+                    showStream(message.data.streamAddress + ("?clientId=" + clientId), sc);
+                    configureButtons(message.data.enableButtons);
+
+                    // Auto-start Audio by Default (User Request)
+                    if (!audioPlayer) {
+                        console.log("Auto-starting audio...");
+                        toggleAudio();
+                    }
+                    return;
+                }
+
+                if (message.type === "UNAUTHORIZED") {
+                    if (message.data === "ADDRESS_BLOCKED") {
+                        pinDiv.style.visibility = "hidden";
+                        blockedDiv.style.visibility = "visible";
+                        pinWrongMsg.style.visibility = "inherit";
+                        return;
+                    }
+
+                    pinDiv.style.visibility = "visible";
+                    blockedDiv.style.visibility = "hidden";
+
+                    if (message.data === "WRONG_PIN") {
+                        pin.value = "";
+                        pinWrongMsg.style.visibility = "visible";
+                    } else {
+                        pinWrongMsg.style.visibility = "hidden";
+                        if (pin.value) sendPin.click();
+                    }
+                    return;
+                }
+
+                if (message.type === "RELOAD") {
+                    location.reload();
+                    return;
+                }
+
+                if (message.type === "SETTINGS") {
+                    document.body.style.backgroundColor = message.data.backColor;
+                    configureButtons(message.data.enableButtons);
+                    configureFitWindow(message.data.fitWindow);
+                    if (message.data && typeof message.data.streamCodec !== 'undefined') {
+                        setStreamCodec(message.data.streamCodec);
+                    }
+                    return;
+                }
+
+                window.DD_LOGS && DD_LOGS.logger.error("websocket.onmessage. Unknown data:", { message: msg.data });
+            };
+        }
+
+        var currentStreamCodec = 0; // 0=MJPEG, 1=H264, 2=H265
+        var videoPlayer = null;
+
+        var currentStreamCodec = 0; // 0=MJPEG, 1=H264, 2=H265
+        var videoPlayer = null;
+        // var webCodecsSupported = typeof window.VideoDecoder !== 'undefined'; // No longer needed
+
+
+        // Show toast notification
+        function showToast(message, duration) {
+            var toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:#fff;padding:16px 24px;border-radius:8px;z-index:10000;font-size:14px;max-width:80%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(function () { toast.remove(); }, duration || 5000);
+        }
+
+        function setStreamCodec(codec) {
+            currentStreamCodec = codec || 0;
+            // var btn = document.getElementById('h264Toggle');
+            // if (btn) btn.style.display = 'none';
+
+            // jMuxer works over HTTP, no HTTPS check needed.
+            if (currentStreamCodec !== 0) {
+                // console.warn("[VideoPlayer] Switched to H264/H265 (jMuxer)");
+            }
+
+            if (currentStreamCodec === 0) {
+                stopVideo();
+                streamCanvas.style.display = 'none';
+                if (videoPlayerEl) videoPlayerEl.style.display = 'none';
+                stream.style.display = 'block';
+                activeStreamElement = stream;
+            } else {
+                stream.style.display = 'none';
+                streamCanvas.style.display = 'none';
+                if (videoPlayerEl) videoPlayerEl.style.display = 'block';
+                activeStreamElement = videoPlayerEl;
+            }
+        }
+
+        function startVideo(codec) {
+            if (!videoPlayer) videoPlayer = new VideoPlayer('videoPlayer');
+            videoPlayer.start(codec);
+        }
+
+        function stopVideo() {
+            if (videoPlayer) videoPlayer.stop();
+        }
+
+        function showStream(url, codec) {
+            streamDiv.style.visibility = "hidden";
+            stream.src = "";
+            errorDiv.style.visibility = "hidden";
+            clearTimeout(showStreamTimeoutId);
+
+            var useCodec = (typeof codec !== 'undefined') ? codec : currentStreamCodec;
+
+            if (useCodec === 0) {
+                new Promise(function (resolve, reject) {
+                    window.DD_LOGS && DD_LOGS.logger.debug("showStream", { mode: "mjpeg", streamAddress: url });
+                    stream.onload = function () {
+                        stream.onload = null; stream.onerror = null; resolve();
+                    };
+                    stream.onerror = function (e) {
+                        stream.onerror = null; stream.onload = null; reject(e);
+                    };
+                    stream.src = url;
+                }).then(function () {
+                    MJPEGErrorCounter = 0;
+                    streamDiv.style.visibility = "visible";
+                    window.DD_LOGS && DD_LOGS.logger.debug("showStream", { mode: "mjpeg", result: "ok" });
+                })["catch"](function () {
+                    window.DD_LOGS && DD_LOGS.logger.debug("showStream", { mode: "mjpeg", result: "error" });
+                    MJPEGErrorCounter++;
+                    if (MJPEGErrorCounter > 5) {
+                        streamDiv.style.visibility = "visible";
+                        var splitUrl = url.split(".mjpeg");
+                        var baseUrl = splitUrl[0] + ".jpeg" + splitUrl[1] + "&t=";
+                        setInterval(function () { stream.src = baseUrl + Math.random(); }, 500);
+                    } else {
+                        showStreamTimeoutId = setTimeout(function () { return showStream(url, useCodec); }, 200);
+                    }
+                });
+            } else {
+                MJPEGErrorCounter = 0;
+                stream.src = "";
+                streamDiv.style.visibility = "visible";
+                startVideo(useCodec);
+            }
+        }
+
+        var drawTimeoutId = null;
+
+        function togglePiP() {
+            if (document.pictureInPictureElement) {
+                document.exitPictureInPicture();
+                return;
+            }
+
+            // PiP is supported for MJPEG mode only.
+            if (currentStreamCodec !== 0) return;
+
+            var canvas = document.createElement("canvas");
+            canvas.style.display = "none";
+            pipStreamDiv.appendChild(canvas);
+
+            var videoElement = document.createElement("video");
+            videoElement.controls = false;
+            videoElement.muted = true;
+            videoElement.autoplay = true;
+            videoElement.srcObject = canvas.captureStream();
+
+            var context = canvas.getContext("2d");
+            var drawMJPEGStream = function drawMJPEGStream() {
+                var naturalWidth = stream.naturalWidth;
+                var naturalHeight = stream.naturalHeight;
+                if (canvas.width != naturalWidth || canvas.height != naturalHeight) {
+                    canvas.width = naturalWidth;
+                    canvas.height = naturalHeight;
+                }
+                context.drawImage(stream, 0, 0);
+                drawTimeoutId = setTimeout(drawMJPEGStream, 32);
+            };
+
+            videoElement.addEventListener("leavepictureinpicture", function () {
+                clearTimeout(drawTimeoutId);
+                while (pipStreamDiv.firstChild) pipStreamDiv.removeChild(pipStreamDiv.lastChild);
+                videoElement.srcObject = null;
+            });
+
+            videoElement.addEventListener("loadedmetadata", function () {
+                videoElement.requestPictureInPicture()["catch"](function (error) {
+                    clearTimeout(drawTimeoutId);
+                    window.DD_LOGS && DD_LOGS.logger.error("PiP.requestPictureInPicture:", { message: error });
+                    while (pipStreamDiv.firstChild) pipStreamDiv.removeChild(pipStreamDiv.lastChild);
+                    // buttonPiP.style.display = "none";
+                    videoElement.srcObject = null;
+                });
+            });
+
+            pipStreamDiv.appendChild(videoElement);
+            drawMJPEGStream();
+        }
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", connect);
+        } else {
+            connect();
+        }
+
+        // https://github.com/zimv/websocket-heartbeat-js
+        function WebsocketHeartbeat(url) {
+            this.opts = { url: url, pingTimeout: 1000, pongTimeout: 1000, reconnectTimeout: 2000, pingMsg: JSON.stringify({ type: "HEARTBEAT" }) };
+            this.ws = null;
+
+            this.onclose = function () { };
+            this.onerror = function () { };
+            this.onopen = function () { };
+            this.onmessage = function () { };
+            this.onreconnect = function () { };
+
+            this.createWebSocket();
+        }
+        WebsocketHeartbeat.prototype.createWebSocket = function () {
+            var _this = this;
+
+            try {
+                this.ws = new WebSocket(this.opts.url);
+                this.ws.onclose = function (e) {
+                    _this.onclose(e);
+                    _this.reconnect();
+                };
+                this.ws.onerror = function (e) {
+                    _this.onerror(e);
+                    _this.reconnect();
+                };
+                this.ws.onopen = function (e) {
+                    _this.onopen(e);
+                    _this.heartCheck();
+                };
+                this.ws.onmessage = function (event) {
+                    _this.onmessage(event);
+                    _this.heartCheck();
+                };
+            } catch (e) {
+                this.onerror(e);
+                this.reconnect();
+            }
+        };
+        WebsocketHeartbeat.prototype.reconnect = function () {
+            var _this2 = this;
+
+            if (this.lockReconnect || this.forbidReconnect) return;
+            this.lockReconnect = true;
+            this.onreconnect();
+            setTimeout(function () {
+                _this2.createWebSocket();
+                _this2.lockReconnect = false;
+            }, this.opts.reconnectTimeout);
+        };
+        WebsocketHeartbeat.prototype.send = function (msg) {
+            if (this.ws.readyState === WebSocket.OPEN) this.ws.send(msg);
+        };
+        WebsocketHeartbeat.prototype.heartCheck = function () {
+            var _this3 = this;
+
+            clearTimeout(this.pingTimeoutId);
+            clearTimeout(this.pongTimeoutId);
+
+            if (this.forbidReconnect) return;
+            this.pingTimeoutId = setTimeout(function () {
+                if (_this3.ws.readyState === WebSocket.OPEN) _this3.ws.send(_this3.opts.pingMsg);
+                _this3.pongTimeoutId = setTimeout(function () {
+                    _this3.ws.onclose = null;
+                    try {
+                        _this3.ws.close();
+                    } catch (ignore) { }
+                    _this3.reconnect();
+                }, _this3.opts.pongTimeout);
+            }, this.opts.pingTimeout);
+        };
+        WebsocketHeartbeat.prototype.close = function () {
+            this.forbidReconnect = true;
+            clearTimeout(this.pingTimeoutId);
+            clearTimeout(this.pongTimeoutId);
+            this.ws.onclose = null;
+            try {
+                this.ws.close();
+            } catch (ignore) { }
+        };
+
+        // https://github.com/username1565/sha256
+        function SHA256(ascii) {
+            function rightRotate(value, amount) {
+                return value >>> amount | value << 32 - amount;
+            }
+
+            var maxWord = Math.pow(2, 32);
+            var i, j;
+            var result = "";
+            var asciiBitLength = ascii["length"] * 8;
+            var words = [],
+                hash = [],
+                k = [];
+            var primeCounter = 0;
+
+            var isComposite = {};
+            for (var candidate = 2; primeCounter < 64; candidate++) {
+                if (!isComposite[candidate]) {
+                    for (i = 0; i < 313; i += candidate) {
+                        isComposite[i] = candidate;
+                    }
+                    hash[primeCounter] = Math.pow(candidate, .5) * maxWord | 0;
+                    k[primeCounter++] = Math.pow(candidate, 1 / 3) * maxWord | 0;
+                }
+            }
+
+            ascii += "\x80";
+            while (ascii["length"] % 64 - 56) ascii += "\x00";
+            for (i = 0; i < ascii["length"]; i++) {
+                j = ascii.charCodeAt(i);
+                if (j >> 8) return;
+                words[i >> 2] |= j << (3 - i) % 4 * 8;
+            }
+            words[words["length"]] = asciiBitLength / maxWord | 0;
+            words[words["length"]] = asciiBitLength;
+
+            for (j = 0; j < words["length"];) {
+                var w = words.slice(j, j += 16);
+                var oldHash = hash;
+                hash = hash.slice(0, 8);
+
+                for (i = 0; i < 64; i++) {
+                    var w15 = w[i - 15],
+                        w2 = w[i - 2];
+
+                    var a = hash[0],
+                        e = hash[4];
+                    var temp1 = hash[7] + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) + (e & hash[5] ^ ~e & hash[6]) + k[i] + (w[i] = i < 16 ? w[i] : w[i - 16] + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ w15 >>> 3) + w[i - 7] + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ w2 >>> 10) | 0);
+                    var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) + (a & hash[1] ^ a & hash[2] ^ hash[1] & hash[2]);
+
+                    hash = [temp1 + temp2 | 0].concat(hash);
+                    hash[4] = hash[4] + temp1 | 0;
+                }
+
+                for (i = 0; i < 8; i++) {
+                    hash[i] = hash[i] + oldHash[i] | 0;
+                }
+            }
+
+            for (i = 0; i < 8; i++) {
+                for (j = 3; j + 1; j--) {
+                    var b = hash[i] >> j * 8 & 255;
+                    result += (b < 16 ? 0 : "") + b.toString(16);
+                }
+            }
+            return result;
+        }
+
+        function RandomString(length) {
+            var result = "";
+            var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var charactersLength = characters.length;
+            for (var i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+
+        // ===== VideoPlayer: jMuxer H264/H265 Player =====
+        var audioPlayer = null;
+
+        class VideoPlayer {
+            constructor(elementId) {
+                this.elementId = elementId;
+                this.jmuxer = null;
+                this.ws = null;
+                this.activeCodec = 0;
+            }
+
+            initJMuxer() {
+                if (this.jmuxer) {
+                    try { this.jmuxer.destroy(); } catch (e) { }
+                }
+                // Initialize jMuxer
+                // debug: true for troubleshooting
+                try {
+                    this.jmuxer = new JMuxer({
+                        node: this.elementId,
+                        mode: 'video',
+                        flushingTime: 100, // Increased buffer for public network stability
+                        fps: 30,
+                        clearBuffer: false, // Don't clear buffer aggressively
+                        debug: false,
+                        onError: function (data) {
+                            console.error('jMuxer error:', data);
+                        }
+                    });
+                } catch (e) {
+                    console.error("JMuxer init failed:", e);
+                    showToast("JMuxer Init Failed: " + e, 10000);
+                }
+            }
+
+            start(streamCodec) {
+                // 1=H264, 2=H265
+                this.activeCodec = streamCodec || 1;
+                console.log("[VideoPlayer] start() called with codec:", this.activeCodec);
+
+                if (this.ws) {
+                    this.stop();
+                }
+
+                // Initialize jMuxer
+                this.initJMuxer();
+
+                var protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+                var port = window.location.port;
+                var endpoint = (this.activeCodec === 2) ? "/stream/h265" : "/stream/h264";
+                var wsUrl = protocol + "//" + window.location.hostname + ":" + port + endpoint + "?clientId=" + clientId;
+                console.log("[VideoPlayer] Connecting to WebSocket:", wsUrl);
+
+                this.ws = new WebSocket(wsUrl);
+                this.ws.binaryType = "arraybuffer";
+
+                var self = this;
+                this.ws.onopen = function () {
+                    console.log("[VideoPlayer] WebSocket connected!");
+
+                    // Start live sync monitoring
+                    self.startLiveSync();
+                };
+                this.ws.onmessage = function (event) {
+                    self.handleFrame(event.data);
+                };
+                this.ws.onclose = function (e) {
+                    console.log("[VideoPlayer] WebSocket closed. Code: " + e.code + " Reason: " + e.reason);
+                    if (e.code !== 1000) {
+                        // Display non-normal closure codes on screen
+                        var debugDiv = document.querySelector('div[style*="background:rgba(255,0,0,0.5)"]');
+                        if (debugDiv) {
+                            debugDiv.style.display = "block";
+                            debugDiv.innerHTML += "WS Closed: " + e.code + " " + e.reason + "<br>";
+                        }
+                    }
+                    self.stopLiveSync();
+                };
+                this.ws.onerror = function (e) {
+                    // Try to extract any message, though usually empty
+                    console.error("[VideoPlayer] WebSocket error:", e);
+                    var msg = "Unknown Error";
+                    if (e.message) msg = e.message;
+
+                    var debugDiv = document.querySelector('div[style*="background:rgba(255,0,0,0.5)"]');
+                    if (debugDiv) {
+                        debugDiv.style.display = "block";
+                        debugDiv.innerHTML += "WS Error: " + msg + "<br>";
+                    }
+                };
+            }
+
+            startLiveSync() {
+                var self = this;
+                var videoEl = document.getElementById(this.elementId);
+
+                // Relaxed Live Sync to prevent black screen issues
+                this.liveSyncInterval = setInterval(function () {
+                    if (!videoEl || videoEl.paused) return;
+
+                    var buffered = videoEl.buffered;
+                    if (buffered.length > 0) {
+                        var bufferEnd = buffered.end(buffered.length - 1);
+                        var currentTime = videoEl.currentTime;
+                        var lag = bufferEnd - currentTime;
+
+                        // Seek if lag > 0.5s
+                        if (lag > 0.5) {
+                            console.log("[LiveSync] Lag " + lag.toFixed(3) + "s, seeking");
+                            videoEl.currentTime = bufferEnd;
+                        }
+                    }
+                }, 500);
+            }
+
+            stopLiveSync() {
+                if (this.liveSyncInterval) {
+                    clearInterval(this.liveSyncInterval);
+                    this.liveSyncInterval = null;
+                }
+            }
+
+            handleFrame(data) {
+                if (!this.jmuxer) return;
+                var view = new DataView(data);
+                var type = view.getUint8(0);
+                // Header is 9 bytes: Type (1) + Timestamp (8)
+                // jMuxer expects raw NALs.
+                // For H264, skip the header.
+                var nalData = new Uint8Array(data, 9);
+
+                // jMuxer feed method takes { video: Uint8Array, duration: int }
+                // We can't easily extract duration from just NALs without parsing, 
+                // but jMuxer might be able to infer or we generally pass something reasonable.
+                // Actually jMuxer example: jmuxer.feed({ video: data, duration: 500 });
+                // We'll pass the raw data. 
+
+                // Note: The incoming stream has NAL units. 
+                // Config frame (type 0) contains SPS/PPS. jMuxer needs them.
+                // Key/Delta frames contain the slice.
+
+                // Debug: Check first frame format
+                if (!this.debugDataShown) {
+                    this.debugDataShown = true;
+                    var hex = "";
+                    var len = Math.min(8, nalData.length);
+                    for (var i = 0; i < len; i++) {
+                        var b = nalData[i].toString(16);
+                        if (b.length < 2) b = "0" + b;
+                        hex += b + " ";
+                    }
+                    console.log("[VideoPlayer] First NAL data:", hex);
+                    showToast("Rx:" + nalData.length + " Header:" + hex, 5000);
+                }
+
+                this.jmuxer.feed({
+                    video: nalData
+                });
+            }
+
+            stop() {
+                if (this.ws) {
+                    this.ws.onmessage = null;
+                    this.ws.onclose = null;
+                    this.ws.onerror = null;
+                    try { this.ws.close(); } catch (e) { }
+                    this.ws = null;
+                }
+                if (this.jmuxer) {
+                    try { this.jmuxer.destroy(); } catch (e) { }
+                    this.jmuxer = null;
+                }
+            }
+        }
+
+        // ===== toggleH264 (manual toggle, now mostly unused due to auto-switching) =====
+        function toggleH264() {
+            // This function is now deprecated since the server controls the codec.
+            console.log("H264 toggle is controlled by server settings.");
+        }
+
+        // ===== Audio =====
+        function toggleAudio() {
+            var btn = document.getElementById('audioToggle');
+            if (audioPlayer) {
+                audioPlayer.stop();
+                audioPlayer = null;
+                btn.innerText = "AUDIO: OFF";
+                btn.style.backgroundColor = "#333";
+            } else {
+                audioPlayer = new AudioPlayer();
+                audioPlayer.start();
+                btn.innerText = "AUDIO: ON";
+                btn.style.backgroundColor = "#e74c3c";
+            }
+        }
+
+        class AudioPlayer {
+            constructor() {
+                this.socket = null;
+                this.ctx = null;
+                this.nextTime = 0;
+                this.running = false;
+            }
+            start() {
+                this.running = true;
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext({ sampleRate: 48000 });
+
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                this.socket = new WebSocket(protocol + '//' + window.location.host + '/stream/audio');
+                this.socket.binaryType = 'arraybuffer';
+
+                this.socket.onmessage = (e) => {
+                    if (!this.running) return;
+                    this.handleAudio(e.data);
+                };
+                this.socket.onopen = () => console.log("Audio Connected");
+                this.socket.onclose = () => console.log("Audio Disconnected");
+            }
+            stop() {
+                this.running = false;
+                if (this.socket) this.socket.close();
+                if (this.ctx) this.ctx.close();
+            }
+            handleAudio(data) {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+
+                const int16 = new Int16Array(data);
+                const float32 = new Float32Array(int16.length);
+                for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768.0;
+
+                const left = new Float32Array(float32.length / 2);
+                const right = new Float32Array(float32.length / 2);
+                for (let i = 0; i < left.length; i++) {
+                    left[i] = float32[2 * i];
+                    right[i] = float32[2 * i + 1];
+                }
+
+                const buffer = this.ctx.createBuffer(2, left.length, 48000);
+                buffer.copyToChannel(left, 0);
+                buffer.copyToChannel(right, 1);
+
+                const source = this.ctx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(this.ctx.destination);
+
+                if (this.nextTime < this.ctx.currentTime) this.nextTime = this.ctx.currentTime;
+                source.start(this.nextTime);
+                this.nextTime += buffer.duration;
+            }
+        }
+    </script>
+</body>
+
+</html>

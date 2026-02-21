@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Smart Home Gateway — 统一智能家居 API 网关
-以 Home Assistant 为核心中枢，同时支持直连涂鸦/易微联等平台
+支持双模式:
+  - direct: 直连小米云 API (MiCloud)，不依赖 HA
+  - ha: 以 Home Assistant 为中枢
 端口: 8900
 
 API 概览:
@@ -13,8 +15,14 @@ API 概览:
   POST /scenes/{id}/activate — 触发场景
   GET  /rooms                — 房间/区域列表
   POST /batch                — 批量控制
-  GET  /history/{entity_id}  — 历史记录
-  POST /template             — HA模板渲染
+  GET  /history/{entity_id}  — 历史记录 (HA mode only)
+  POST /template             — HA模板渲染 (HA mode only)
+  POST /quick/{action}       — 快捷操作: all_off, lights_off, etc.
+
+  # MiCloud 直连 (direct mode)
+  GET  /micloud/status        — MiCloud 连接状态
+  POST /micloud/rpc           — 原始 MIoT RPC 调用
+  POST /micloud/tts           — 小爱音箱 TTS
 
   # 涂鸦直连 (可选)
   GET  /tuya/devices          — 涂鸦设备列表
@@ -31,13 +39,19 @@ import asyncio
 from typing import Optional, Any
 from contextlib import asynccontextmanager
 
+import logging
+import argparse
+
 import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
+from micloud_backend import MiCloudDirect, load_credentials_from_ha
+
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 # ============================================================
 # Configuration
@@ -57,6 +71,13 @@ TUYA_BASE_URLS = {
 
 GATEWAY_HOST = os.getenv("GATEWAY_HOST", "0.0.0.0")
 GATEWAY_PORT = int(os.getenv("GATEWAY_PORT", "8900"))
+
+# Mode: "direct" (MiCloud direct) or "ha" (Home Assistant proxy)
+GATEWAY_MODE = os.getenv("GATEWAY_MODE", "direct")
+
+# MiCloud config
+HA_CONFIG_PATH = os.getenv("HA_CONFIG_PATH", r"E:\HassWP\config")
+MIOT_SPEC_DIR = os.path.join(HA_CONFIG_PATH, ".storage", "xiaomi_miot")
 
 
 # ============================================================
@@ -379,23 +400,34 @@ def build_service_call(entity_id: str, req: ControlRequest) -> tuple:
 # ============================================================
 ha = HAClient(HA_URL, HA_TOKEN)
 tuya = TuyaClient(TUYA_CLIENT_ID, TUYA_SECRET, TUYA_REGION)
+micloud: Optional[MiCloudDirect] = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await ha.init()
+    global micloud
+    if GATEWAY_MODE == "direct":
+        creds = load_credentials_from_ha(HA_CONFIG_PATH)
+        if creds:
+            micloud = MiCloudDirect(creds, spec_dir=MIOT_SPEC_DIR)
+            micloud.init()
+            logger.info("MiCloud direct mode: %d devices loaded", len(micloud._devices))
+        else:
+            logger.warning("No MiCloud credentials found, falling back to HA mode")
+    if GATEWAY_MODE == "ha" or not micloud:
+        await ha.init()
     if tuya.enabled:
         try:
             await tuya.init()
         except Exception as e:
-            print(f"[WARN] Tuya init failed: {e}")
+            logger.warning("Tuya init failed: %s", e)
     yield
     await ha.close()
     await tuya.close()
 
 app = FastAPI(
     title="Smart Home Gateway",
-    version="1.0.0",
-    description="统一智能家居 API 网关 — HA 中枢 + 直连平台",
+    version="2.0.0",
+    description="统一智能家居 API 网关 — MiCloud 直连 + HA 代理双模式",
     lifespan=lifespan,
 )
 
@@ -412,13 +444,21 @@ app.add_middleware(
 
 @app.get("/")
 async def gateway_status():
-    ha_status = await ha.check()
     result = {
         "gateway": "Smart Home Gateway",
-        "version": "1.0.0",
-        "ha": ha_status,
+        "version": "2.0.0",
+        "mode": GATEWAY_MODE,
         "tuya": {"enabled": tuya.enabled},
     }
+    if micloud:
+        result["micloud"] = {
+            "connected": True,
+            "devices": len(micloud._devices),
+            "specs": len(micloud._specs),
+            "user_id": micloud.credentials.get("user_id", ""),
+        }
+    if GATEWAY_MODE == "ha" or not micloud:
+        result["ha"] = await ha.check()
     return result
 
 
@@ -428,6 +468,10 @@ async def list_devices(
     room: Optional[str] = Query(None, description="Filter by area/room name"),
 ):
     """获取所有设备列表"""
+    if micloud:
+        devices = micloud.get_devices(domain=domain)
+        return {"count": len(devices), "devices": devices, "mode": "direct"}
+    # HA fallback
     try:
         states = await ha.get_states()
     except Exception:
@@ -445,12 +489,17 @@ async def list_devices(
             if room.lower() not in (area or "").lower():
                 continue
         devices.append(dev)
-    return {"count": len(devices), "devices": devices}
+    return {"count": len(devices), "devices": devices, "mode": "ha"}
 
 
 @app.get("/devices/{entity_id}")
 async def get_device(entity_id: str):
     """获取单个设备详情"""
+    if micloud:
+        device = micloud.get_device(entity_id)
+        if device:
+            return device
+        raise HTTPException(status_code=404, detail=f"Device not found: {entity_id}")
     try:
         state = await ha.get_state(entity_id)
         return normalize_device(state)
@@ -461,6 +510,12 @@ async def get_device(entity_id: str):
 @app.post("/devices/{entity_id}/control")
 async def control_device(entity_id: str, req: ControlRequest):
     """控制设备"""
+    if micloud:
+        result = micloud.control_device(entity_id, req.action, req.value, req.extra)
+        if not result.get("ok"):
+            raise HTTPException(status_code=400, detail=result.get("error", "Control failed"))
+        return {"ok": True, "entity_id": entity_id, "action": req.action, "mode": "direct", **result}
+    # HA fallback
     domain, service, data = build_service_call(entity_id, req)
     try:
         result = await ha.call_service(domain, service, data)
@@ -634,6 +689,9 @@ async def tuya_send_command(device_id: str, req: TuyaCommandRequest):
 @app.post("/quick/{action}")
 async def quick_action(action: str, entities: Optional[str] = Query(None)):
     """快捷操作: /quick/all_off, /quick/all_on, /quick/lights_off, etc."""
+    if micloud:
+        return micloud.quick_action(action)
+    # HA fallback
     try:
         states = await ha.get_states()
     except Exception:
@@ -670,12 +728,105 @@ async def quick_action(action: str, entities: Optional[str] = Query(None)):
     return {"action": action, "affected": len(results), "results": results}
 
 
+# ==================== MiCloud 直连路由 ====================
+
+class RpcRequest(BaseModel):
+    did: str
+    siid: int
+    piid: Optional[int] = None
+    aiid: Optional[int] = None
+    value: Optional[Any] = None
+    params: Optional[list] = None
+
+class TtsRequest(BaseModel):
+    text: str
+    speaker: Optional[str] = None  # did of speaker, or auto-select
+
+
+@app.get("/micloud/status")
+async def micloud_status():
+    """MiCloud 连接状态"""
+    if not micloud:
+        return {"connected": False, "mode": GATEWAY_MODE}
+    return {
+        "connected": True,
+        "user_id": micloud.credentials.get("user_id", ""),
+        "devices": len(micloud._devices),
+        "specs": len(micloud._specs),
+        "last_refresh": micloud._last_refresh,
+    }
+
+
+@app.post("/micloud/rpc")
+async def micloud_rpc(req: RpcRequest):
+    """原始 MIoT RPC 调用"""
+    if not micloud:
+        raise HTTPException(status_code=503, detail="MiCloud not available")
+    if req.aiid is not None:
+        result = micloud._rpc_execute_action(req.did, req.siid, req.aiid, req.params)
+        return {"ok": result.get("code") == 0, "result": result}
+    elif req.value is not None and req.piid is not None:
+        ok = micloud._rpc_set_property(req.did, req.siid, req.piid, req.value)
+        return {"ok": ok}
+    elif req.piid is not None:
+        vals = micloud._rpc_get_properties([{"did": req.did, "siid": req.siid, "piid": req.piid}])
+        return {"ok": True, "result": vals}
+    else:
+        raise HTTPException(status_code=400, detail="Must provide piid (get/set) or aiid (action)")
+
+
+@app.post("/micloud/tts")
+async def micloud_tts(req: TtsRequest):
+    """小爱音箱 TTS"""
+    if not micloud:
+        raise HTTPException(status_code=503, detail="MiCloud not available")
+    # 找音箱设备
+    speakers = [d for d in micloud._devices if "speaker" in d.get("model", "").lower()]
+    if req.speaker:
+        target = next((d for d in speakers if str(d["did"]) == req.speaker), None)
+    else:
+        target = speakers[0] if speakers else None
+    if not target:
+        raise HTTPException(status_code=404, detail="No speaker found")
+    did = str(target["did"])
+    result = micloud.control_device(did, "play_text", req.text)
+    return {"ok": result.get("ok", False), "speaker": target.get("name", ""), "did": did, **result}
+
+
+@app.post("/micloud/refresh")
+async def micloud_refresh():
+    """刷新设备列表"""
+    if not micloud:
+        raise HTTPException(status_code=503, detail="MiCloud not available")
+    micloud.refresh_devices()
+    return {"ok": True, "devices": len(micloud._devices)}
+
+
 # ============================================================
 # Entry point
 # ============================================================
 if __name__ == "__main__":
     import uvicorn
-    print(f"Starting Smart Home Gateway on {GATEWAY_HOST}:{GATEWAY_PORT}")
-    print(f"  HA: {HA_URL}")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+
+    parser = argparse.ArgumentParser(description="Smart Home Gateway")
+    parser.add_argument("--mode", choices=["direct", "ha"], default=GATEWAY_MODE,
+                        help="Backend mode: direct (MiCloud) or ha (Home Assistant)")
+    parser.add_argument("--port", type=int, default=GATEWAY_PORT)
+    parser.add_argument("--host", default=GATEWAY_HOST)
+    args = parser.parse_args()
+
+    GATEWAY_MODE = args.mode
+    GATEWAY_PORT = args.port
+    GATEWAY_HOST = args.host
+
+    print(f"Smart Home Gateway v2.0.0")
+    print(f"  Mode: {GATEWAY_MODE}")
+    print(f"  Listen: {GATEWAY_HOST}:{GATEWAY_PORT}")
+    if GATEWAY_MODE == "direct":
+        print(f"  MiCloud: credentials from {HA_CONFIG_PATH}")
+        print(f"  MIoT specs: {MIOT_SPEC_DIR}")
+    else:
+        print(f"  HA: {HA_URL}")
     print(f"  Tuya: {'enabled' if tuya.enabled else 'disabled'}")
     uvicorn.run(app, host=GATEWAY_HOST, port=GATEWAY_PORT)

@@ -1,0 +1,39 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as no cached configuration is available for tasks: :app:assembleFDroidDebug
+
+> Configure project :app
+w: file:///E:/github/AIOT/ScreenStream_v2/010-%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2%E4%B8%8E%E4%BA%A4%E4%BA%92_UI/build.gradle.kts:55:9: 'jvmTarget: String' is deprecated. Please migrate to the compilerOptions DSL. More details are here: https://kotl.in/u1r8ln
+
+> Configure project :common
+w: file:///E:/github/AIOT/ScreenStream_v2/070-%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD_Infrastructure/build.gradle.kts:29:9: 'jvmTarget: String' is deprecated. Please migrate to the compilerOptions DSL. More details are here: https://kotl.in/u1r8ln
+e: file:///E:/github/AIOT/ScreenStream_v2/070-%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD_Infrastructure/build.gradle.kts:51:52: Unresolved reference: ktx
+e: file:///E:/github/AIOT/ScreenStream_v2/070-%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD_Infrastructure/build.gradle.kts:57:30: Unresolved reference: androidx
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Build file 'E:\github\AIOT\ScreenStream_v2\070-基础设施_Infrastructure\build.gradle.kts' line: 29
+
+* What went wrong:
+Script compilation errors:
+
+  Line 29:         jvmTarget = "1.8"
+                   ^ 'jvmTarget: String' is deprecated. Please migrate to the compilerOptions DSL. More details are here: https://kotl.in/u1r8ln
+
+  Line 51:     implementation(libs.androidx.lifecycle.runtime.ktx)
+                                                              ^ Unresolved reference: ktx
+
+  Line 57:     implementation(libs.koin.androidx.compose)
+                                        ^ Unresolved reference: androidx
+
+3 errors
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 28s
+Configuration cache entry stored.

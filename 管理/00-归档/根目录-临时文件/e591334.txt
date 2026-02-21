@@ -1,0 +1,56 @@
+commit e591334f3c08892dd19e408a14c5271f0601d24b
+Author: zhouyoukang <3228675807@qq.com>
+Date:   Thu Jan 1 05:11:32 2026 +0800
+
+    v20: Fix all directions (Joystick/Scroll adhere to PC logic), cleanup PiP
+
+diff --git a/mjpeg/src/main/assets/index.html b/mjpeg/src/main/assets/index.html
+index 10b300b..4e1f6ab 100644
+--- a/mjpeg/src/main/assets/index.html
++++ b/mjpeg/src/main/assets/index.html
+@@ -940,7 +940,7 @@
+         // Version Indicator (User Verification)
+         var verDiv = document.createElement('div');
+         verDiv.style.cssText = "position:fixed;bottom:5px;right:5px;color:rgba(255,255,255,0.3);font-size:10px;pointer-events:none;z-index:9999;";
+-        verDiv.innerText = "v18 (Mouse Wheel Invert)";
++        verDiv.innerText = "v20 (Fix All Directions)";
+         document.body.appendChild(verDiv);
+ 
+         // Debug Status for Input
+@@ -1040,9 +1040,9 @@
+                     sendSwipe(0.385, 0.5, 0.615, 0.5, 100);
+                 }
+             } else if (angle >= 45 && angle < 135) {
+-                // 下方向 (90° 中心) - 摇杆向下推 = 内容向上滚 = 屏幕从上往下滑
++                // 下方向 (90° 中心) - 摇杆向下推 = 内容向上滚(看下面) = 屏幕从下往上滑
+                 showStatus("⬇️ DOWN");
+-                sendSwipe(0.5, 0.475, 0.5, 0.525, 50);  // 恢复原版距离和时间
++                sendSwipe(0.5, 0.525, 0.5, 0.475, 50);
+             } else if (angle >= 135 && angle < 225) {
+                 // 左方向 (180° 中心)
+                 var isRight = invertJoystick;
+@@ -1054,9 +1054,9 @@
+                     sendSwipe(0.615, 0.5, 0.385, 0.5, 100);
+                 }
+             } else {
+-                // 上方向 (270° 中心, 225°~315°) - 摇杆向上推 = 内容向下滚 = 屏幕从下往上滑
++                // 上方向 (270° 中心, 225°~315°) - 摇杆向上推 = 内容向下滚(看上面) = 屏幕从上往下滑
+                 showStatus("⬆️ UP");
+-                sendSwipe(0.5, 0.525, 0.5, 0.475, 50);  // 恢复原版距离和时间
++                sendSwipe(0.5, 0.475, 0.5, 0.525, 50);
+             }
+         }
+ 
+@@ -1080,9 +1080,9 @@
+                 var targetNx = Math.max(0.0, Math.min(1.0, p.nx + delta));
+                 sendSwipe(p.nx, p.ny, targetNx, p.ny, 100);
+             } else {
+-                // 如果觉得反了，就把这里的正负号反过来
+-                // 原来: deltaY > 0 ? 0.05 : -0.05 (向下滑 ->看上面) -> 用户反馈反了
+-                // 现在: deltaY > 0 ? -0.05 : 0.05 (向上滑 ->看下面)
++                // 统一修复:
++                // 滚轮向下 (deltaY > 0) -> 内容向上滚(看下面) -> 屏幕从下往上滑 -> EndY < StartY
++                // vDelta 应该是负数
+                 var vDelta = deltaY > 0 ? -0.05 : 0.05;
+                 sendSwipe(p.nx, p.ny, p.nx, Math.max(0.0, Math.min(1.0, p.ny + vDelta)), 100);
+             }

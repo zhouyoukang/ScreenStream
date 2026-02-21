@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Agent Observer - 多Agent可观测面板</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root { --bg: #0a0a0f; --surface: #14141f; --surface2: #1e1e2e; --border: #2a2a3a; --text: #e0e0e8; --text2: #8888a0; --accent: #6366f1; --green: #22c55e; --red: #ef4444; --yellow: #eab308; --orange: #f97316; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 24px; }
+h1 { font-size: 20px; margin-bottom: 8px; }
+h1 span { color: var(--accent); }
+.subtitle { color: var(--text2); font-size: 13px; margin-bottom: 24px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 16px; }
+
+.agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.agent-header { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.agent-name { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.agent-header .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+.badge-active { background: rgba(34,197,94,0.15); color: var(--green); }
+.badge-stale { background: rgba(234,179,8,0.15); color: var(--yellow); }
+.badge-dead { background: rgba(239,68,68,0.15); color: var(--red); }
+
+.agent-body { padding: 14px 18px; }
+.agent-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; border-bottom: 1px solid rgba(42,42,58,0.5); }
+.agent-row:last-child { border-bottom: none; }
+.agent-row .label { color: var(--text2); }
+.agent-row .value { font-family: monospace; }
+
+.timeline { padding: 14px 18px; border-top: 1px solid var(--border); max-height: 200px; overflow-y: auto; }
+.timeline h4 { font-size: 12px; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+.tl-item { display: flex; gap: 10px; padding: 4px 0; font-size: 12px; }
+.tl-time { color: var(--text2); font-family: monospace; white-space: nowrap; min-width: 70px; }
+.tl-msg { line-height: 1.4; }
+.tl-msg.error { color: var(--red); }
+.tl-msg.success { color: var(--green); }
+.tl-msg.warn { color: var(--yellow); }
+
+/* Register Form */
+.register-section { margin-top: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.register-section h3 { font-size: 14px; margin-bottom: 12px; }
+.form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.form-row input, .form-row select { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text); font-size: 13px; flex: 1; }
+.form-row button { padding: 8px 20px; background: var(--accent); border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.form-row button:hover { opacity: 0.9; }
+
+/* Heartbeat animation */
+@keyframes heartbeat { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+.pulse { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.pulse-green { background: var(--green); animation: heartbeat 2s infinite; }
+.pulse-yellow { background: var(--yellow); animation: heartbeat 3s infinite; }
+.pulse-red { background: var(--red); }
+
+/* Anxiety Meter */
+.anxiety-section { margin-top: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.anxiety-bar { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.anxiety-fill { height: 100%; border-radius: 4px; transition: width 1s, background 1s; }
+.anxiety-label { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--text2); }
+</style>
+</head>
+<body>
+
+<h1><span>Agent</span> Observer</h1>
+<p class="subtitle">多Agent可观测面板 — 消除信息黑洞，降低焦虑</p>
+
+<div class="grid" id="agent-grid"></div>
+
+<div class="anxiety-section">
+  <h3>信息焦虑指标</h3>
+  <p style="font-size:12px;color:var(--text2);margin-top:4px">基于Agent最后活跃时间计算。超过30s=警告，超过2min=焦虑，超过5min=需干预</p>
+  <div class="anxiety-bar"><div class="anxiety-fill" id="anxiety-fill" style="width:0%;background:var(--green)"></div></div>
+  <div class="anxiety-label"><span>平静</span><span>关注</span><span>焦虑</span><span>需干预</span></div>
+</div>
+
+<div class="register-section">
+  <h3>注册/更新 Agent 心跳</h3>
+  <div class="form-row">
+    <input id="reg-name" placeholder="Agent名称 (如: Cascade-周)">
+    <select id="reg-role">
+      <option value="developer">开发者</option>
+      <option value="recorder">视频录制</option>
+      <option value="reviewer">审查者</option>
+      <option value="researcher">研究者</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <input id="reg-task" placeholder="当前任务描述">
+    <select id="reg-status">
+      <option value="working">工作中</option>
+      <option value="waiting">等待中</option>
+      <option value="blocked">阻塞</option>
+      <option value="done">完成</option>
+    </select>
+    <button onclick="registerAgent()">发送心跳</button>
+  </div>
+  <div class="form-row">
+    <input id="reg-message" placeholder="进度消息 (可选)">
+    <select id="reg-msg-type">
+      <option value="">普通</option>
+      <option value="success">成功</option>
+      <option value="warn">警告</option>
+      <option value="error">错误</option>
+    </select>
+    <button onclick="sendMessage()">发消息</button>
+  </div>
+</div>
+
+<script>
+// === Agent Registry (localStorage-based cross-tab communication) ===
+const REGISTRY_KEY = 'agent-observer-registry';
+const MESSAGES_KEY = 'agent-observer-messages';
+
+function getRegistry() {
+  try { return JSON.parse(localStorage.getItem(REGISTRY_KEY) || '{}'); } catch { return {}; }
+}
+function getMessages() {
+  try { return JSON.parse(localStorage.getItem(MESSAGES_KEY) || '{}'); } catch { return {}; }
+}
+
+function registerAgent() {
+  const name = document.getElementById('reg-name').value.trim();
+  if (!name) return;
+  const registry = getRegistry();
+  registry[name] = {
+    name,
+    role: document.getElementById('reg-role').value,
+    task: document.getElementById('reg-task').value,
+    status: document.getElementById('reg-status').value,
+    lastHeartbeat: Date.now(),
+    startTime: registry[name]?.startTime || Date.now()
+  };
+  localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry));
+  render();
+}
+
+function sendMessage() {
+  const name = document.getElementById('reg-name').value.trim();
+  if (!name) return;
+  const messages = getMessages();
+  if (!messages[name]) messages[name] = [];
+  messages[name].push({
+    time: Date.now(),
+    text: document.getElementById('reg-message').value,
+    type: document.getElementById('reg-msg-type').value || 'info'
+  });
+  // Keep last 50 messages per agent
+  if (messages[name].length > 50) messages[name] = messages[name].slice(-50);
+  localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+  document.getElementById('reg-message').value = '';
+
+  // Also update heartbeat
+  const registry = getRegistry();
+  if (registry[name]) {
+    registry[name].lastHeartbeat = Date.now();
+    localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry));
+  }
+  render();
+}
+
+function getAgentState(agent) {
+  const elapsed = (Date.now() - agent.lastHeartbeat) / 1000;
+  if (elapsed < 30) return { class: 'badge-active', label: '活跃', pulse: 'pulse-green' };
+  if (elapsed < 120) return { class: 'badge-stale', label: '静默', pulse: 'pulse-yellow' };
+  return { class: 'badge-dead', label: '失联', pulse: 'pulse-red' };
+}
+
+function formatElapsed(ms) {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return s + 's';
+  if (s < 3600) return Math.floor(s/60) + 'm' + (s%60) + 's';
+  return Math.floor(s/3600) + 'h' + Math.floor((s%3600)/60) + 'm';
+}
+
+function render() {
+  const registry = getRegistry();
+  const messages = getMessages();
+  const grid = document.getElementById('agent-grid');
+
+  const agents = Object.values(registry).sort((a,b) => b.lastHeartbeat - a.lastHeartbeat);
+
+  if (agents.length === 0) {
+    grid.innerHTML = '<div style="color:var(--text2);padding:40px;text-align:center;grid-column:1/-1">暂无Agent注册。在下方注册一个Agent开始监控。<br><br>提示：每个Windsurf窗口的Agent可以通过localStorage共享心跳。<br>在另一个标签页打开此页面即可看到实时状态。</div>';
+    return;
+  }
+
+  grid.innerHTML = agents.map(agent => {
+    const state = getAgentState(agent);
+    const agentMsgs = (messages[agent.name] || []).slice(-10).reverse();
+    const elapsed = Date.now() - agent.lastHeartbeat;
+    const uptime = Date.now() - agent.startTime;
+
+    return `
+      <div class="agent-card">
+        <div class="agent-header">
+          <div class="agent-name"><span class="pulse ${state.pulse}"></span> ${agent.name}</div>
+          <span class="badge ${state.class}">${state.label}</span>
+        </div>
+        <div class="agent-body">
+          <div class="agent-row"><span class="label">角色</span><span class="value">${agent.role}</span></div>
+          <div class="agent-row"><span class="label">任务</span><span class="value">${agent.task || '-'}</span></div>
+          <div class="agent-row"><span class="label">状态</span><span class="value">${agent.status}</span></div>
+          <div class="agent-row"><span class="label">最后心跳</span><span class="value">${formatElapsed(elapsed)} 前</span></div>
+          <div class="agent-row"><span class="label">运行时长</span><span class="value">${formatElapsed(uptime)}</span></div>
+        </div>
+        ${agentMsgs.length ? `
+        <div class="timeline">
+          <h4>最近消息</h4>
+          ${agentMsgs.map(m => `
+            <div class="tl-item">
+              <span class="tl-time">${new Date(m.time).toLocaleTimeString('zh-CN',{hour12:false})}</span>
+              <span class="tl-msg ${m.type}">${m.text}</span>
+            </div>
+          `).join('')}
+        </div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  // Update anxiety meter
+  const worstElapsed = Math.max(...agents.map(a => Date.now() - a.lastHeartbeat));
+  updateAnxiety(worstElapsed);
+}
+
+function updateAnxiety(worstElapsedMs) {
+  const fill = document.getElementById('anxiety-fill');
+  const s = worstElapsedMs / 1000;
+  let pct, color;
+  if (s < 30) { pct = (s/30)*25; color = 'var(--green)'; }
+  else if (s < 120) { pct = 25 + ((s-30)/90)*25; color = 'var(--yellow)'; }
+  else if (s < 300) { pct = 50 + ((s-120)/180)*25; color = 'var(--orange)'; }
+  else { pct = 75 + Math.min((s-300)/300, 1)*25; color = 'var(--red)'; }
+  fill.style.width = Math.min(pct, 100) + '%';
+  fill.style.background = color;
+}
+
+// === Auto-refresh ===
+setInterval(render, 2000);
+render();
+
+// === Listen for storage events from other tabs ===
+window.addEventListener('storage', e => {
+  if (e.key === REGISTRY_KEY || e.key === MESSAGES_KEY) render();
+});
+
+// === Public API for programmatic use ===
+window.AgentObserver = {
+  heartbeat: (name, data) => {
+    const registry = getRegistry();
+    registry[name] = { ...registry[name], ...data, name, lastHeartbeat: Date.now(), startTime: registry[name]?.startTime || Date.now() };
+    localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry));
+  },
+  message: (name, text, type='info') => {
+    const messages = getMessages();
+    if (!messages[name]) messages[name] = [];
+    messages[name].push({ time: Date.now(), text, type });
+    localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+  },
+  getAll: () => getRegistry(),
+  clear: () => { localStorage.removeItem(REGISTRY_KEY); localStorage.removeItem(MESSAGES_KEY); render(); }
+};
+</script>
+</body>
+</html>

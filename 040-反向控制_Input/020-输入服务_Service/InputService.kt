@@ -2166,6 +2166,14 @@ public class InputService : AccessibilityService() {
                 Intent(action)
             }
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (params.optBoolean("clearTask", false)) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            }
+            if (params.optBoolean("clearTop", false)) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+            val flagsInt = params.optInt("flags", 0)
+            if (flagsInt != 0) intent.addFlags(flagsInt)
 
             if (type.isNotEmpty()) intent.setType(type)
             if (pkg.isNotEmpty() && cls.isNotEmpty()) {
@@ -2328,11 +2336,24 @@ public class InputService : AccessibilityService() {
             val texts = mutableListOf<String>()
             event.text?.forEach { texts.add(it.toString()) }
             entry.put("text", texts.joinToString(" | "))
+            event.contentDescription?.let { entry.put("contentDescription", it.toString()) }
             val parcel = event.parcelableData
             if (parcel is android.app.Notification) {
-                entry.put("title", parcel.extras?.getString("android.title") ?: "")
-                entry.put("body", parcel.extras?.getCharSequence("android.text")?.toString() ?: "")
-                entry.put("subText", parcel.extras?.getCharSequence("android.subText")?.toString() ?: "")
+                val extras = parcel.extras
+                entry.put("title", extras?.getString("android.title") ?: "")
+                entry.put("body", extras?.getCharSequence("android.text")?.toString() ?: "")
+                entry.put("subText", extras?.getCharSequence("android.subText")?.toString() ?: "")
+                extras?.getCharSequence("android.bigText")?.let { entry.put("bigText", it.toString()) }
+                extras?.getCharSequence("android.summaryText")?.let { entry.put("summaryText", it.toString()) }
+                extras?.getCharSequence("android.infoText")?.let { entry.put("infoText", it.toString()) }
+                extras?.getCharSequenceArray("android.textLines")?.let { lines ->
+                    val arr = org.json.JSONArray()
+                    lines.forEach { line -> arr.put(line.toString()) }
+                    entry.put("textLines", arr)
+                }
+                parcel.tickerText?.let { entry.put("ticker", it.toString()) }
+                entry.put("category", parcel.category ?: "")
+                entry.put("priority", parcel.priority)
             }
             synchronized(notificationHistory) {
                 notificationHistory.add(0, entry)

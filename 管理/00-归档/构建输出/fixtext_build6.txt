@@ -1,0 +1,31 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as no cached configuration is available for tasks: :app:assembleFDroidDebug
+
+> Configure project :app
+w: file:///E:/github/AIOT/ScreenStream_v2/010-%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2%E4%B8%8E%E4%BA%A4%E4%BA%92_UI/build.gradle.kts:55:9: 'jvmTarget: String' is deprecated. Please migrate to the compilerOptions DSL. More details are here: https://kotl.in/u1r8ln
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Configuration cache entry stored.
+Build file 'E:\github\AIOT\ScreenStream_v2\010-用户界面与交互_UI\build.gradle.kts' line: 99
+
+* What went wrong:
+Cannot convert the provided notation to an object of type Dependency: org.gradle.accessors.dm.LibrariesForLibs$KoinAndroidLibraryAccessors@69d64fa3.
+The following types/formats are supported:
+  - String or CharSequence values, for example 'org.gradle:gradle-core:1.0'.
+  - Maps, for example [group: 'org.gradle', name: 'gradle-core', version: '1.0'].
+  - FileCollections, for example files('some.jar', 'someOther.jar').
+  - Projects, for example project(':some:project:path').
+  - ClassPathNotation, for example gradleApi().
+
+Comprehensive documentation on dependency notations is available in DSL reference for DependencyHandler type.
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 28s

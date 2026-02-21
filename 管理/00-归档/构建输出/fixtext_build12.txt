@@ -1,0 +1,258 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as no cached configuration is available for tasks: :app:assembleFDroidDebug
+> Task :webrtc:preBuild UP-TO-DATE
+> Task :input:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :common:preBuild UP-TO-DATE
+> Task :webrtc:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :rtsp:preBuild UP-TO-DATE
+> Task :mjpeg:preBuild UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :mjpeg:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :input:preBuild UP-TO-DATE
+> Task :rtsp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :common:preDebugBuild UP-TO-DATE
+> Task :rtsp:preDebugBuild UP-TO-DATE
+> Task :mjpeg:preDebugBuild UP-TO-DATE
+> Task :app:preFDroidDebugBuild UP-TO-DATE
+> Task :input:preDebugBuild UP-TO-DATE
+> Task :webrtc:preDebugBuild UP-TO-DATE
+> Task :app:mergeFDroidDebugNativeDebugMetadata NO-SOURCE
+> Task :common:generateDebugResValues UP-TO-DATE
+> Task :webrtc:generateDebugResValues UP-TO-DATE
+> Task :input:writeDebugAarMetadata UP-TO-DATE
+> Task :app:generateFDroidDebugResValues UP-TO-DATE
+> Task :mjpeg:writeDebugAarMetadata UP-TO-DATE
+> Task :webrtc:writeDebugAarMetadata UP-TO-DATE
+> Task :app:createFDroidDebugCompatibleScreenManifests UP-TO-DATE
+> Task :input:generateDebugResValues UP-TO-DATE
+> Task :mjpeg:generateDebugResValues UP-TO-DATE
+> Task :app:generateFDroidDebugBuildConfig UP-TO-DATE
+> Task :rtsp:generateDebugResValues UP-TO-DATE
+> Task :rtsp:writeDebugAarMetadata UP-TO-DATE
+> Task :common:writeDebugAarMetadata UP-TO-DATE
+> Task :input:processDebugManifest UP-TO-DATE
+> Task :common:processDebugManifest UP-TO-DATE
+> Task :webrtc:generateDebugResources UP-TO-DATE
+> Task :common:generateDebugResources UP-TO-DATE
+> Task :mjpeg:generateDebugResources UP-TO-DATE
+> Task :input:extractDeepLinksDebug UP-TO-DATE
+> Task :common:extractDeepLinksDebug UP-TO-DATE
+> Task :mjpeg:extractDeepLinksDebug UP-TO-DATE
+> Task :rtsp:generateDebugResources UP-TO-DATE
+> Task :input:generateDebugResources UP-TO-DATE
+> Task :mjpeg:processDebugManifest UP-TO-DATE
+> Task :rtsp:extractDeepLinksDebug UP-TO-DATE
+> Task :common:javaPreCompileDebug UP-TO-DATE
+> Task :input:javaPreCompileDebug UP-TO-DATE
+> Task :webrtc:extractDeepLinksDebug UP-TO-DATE
+> Task :rtsp:processDebugManifest UP-TO-DATE
+> Task :input:generateDebugBuildConfig UP-TO-DATE
+> Task :common:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateFDroidDebugResources UP-TO-DATE
+> Task :webrtc:processDebugManifest UP-TO-DATE
+> Task :mjpeg:generateDebugBuildConfig UP-TO-DATE
+> Task :mjpeg:javaPreCompileDebug UP-TO-DATE
+> Task :rtsp:generateDebugBuildConfig UP-TO-DATE
+> Task :rtsp:javaPreCompileDebug UP-TO-DATE
+> Task :webrtc:javaPreCompileDebug UP-TO-DATE
+> Task :app:javaPreCompileFDroidDebug UP-TO-DATE
+> Task :webrtc:generateDebugBuildConfig UP-TO-DATE
+> Task :common:mergeDebugShaders UP-TO-DATE
+> Task :webrtc:mergeDebugShaders UP-TO-DATE
+> Task :rtsp:mergeDebugShaders UP-TO-DATE
+> Task :input:mergeDebugShaders UP-TO-DATE
+> Task :app:mergeFDroidDebugShaders UP-TO-DATE
+> Task :mjpeg:mergeDebugShaders UP-TO-DATE
+> Task :common:packageDebugResources UP-TO-DATE
+> Task :mjpeg:packageDebugResources UP-TO-DATE
+> Task :rtsp:packageDebugResources UP-TO-DATE
+> Task :common:compileDebugLibraryResources UP-TO-DATE
+> Task :app:packageFDroidDebugResources UP-TO-DATE
+> Task :mjpeg:compileDebugLibraryResources UP-TO-DATE
+> Task :webrtc:packageDebugResources UP-TO-DATE
+> Task :input:packageDebugResources UP-TO-DATE
+> Task :mjpeg:compileDebugShaders NO-SOURCE
+> Task :input:compileDebugLibraryResources UP-TO-DATE
+> Task :rtsp:compileDebugLibraryResources UP-TO-DATE
+> Task :common:compileDebugShaders NO-SOURCE
+> Task :common:generateDebugAssets UP-TO-DATE
+> Task :input:compileDebugShaders NO-SOURCE
+> Task :input:generateDebugAssets UP-TO-DATE
+> Task :mjpeg:generateDebugAssets UP-TO-DATE
+> Task :input:mergeDebugAssets UP-TO-DATE
+> Task :rtsp:compileDebugShaders NO-SOURCE
+> Task :rtsp:generateDebugAssets UP-TO-DATE
+> Task :webrtc:compileDebugShaders NO-SOURCE
+> Task :rtsp:mergeDebugAssets UP-TO-DATE
+> Task :app:compileFDroidDebugShaders NO-SOURCE
+> Task :webrtc:compileDebugLibraryResources UP-TO-DATE
+> Task :webrtc:generateDebugAssets UP-TO-DATE
+> Task :app:generateFDroidDebugAssets UP-TO-DATE
+> Task :app:extractDeepLinksFDroidDebug
+> Task :app:mergeFDroidDebugJniLibFolders UP-TO-DATE
+> Task :common:mergeDebugJniLibFolders UP-TO-DATE
+> Task :common:mergeDebugNativeLibs NO-SOURCE
+> Task :common:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :input:mergeDebugJniLibFolders UP-TO-DATE
+> Task :input:mergeDebugNativeLibs NO-SOURCE
+> Task :webrtc:mergeDebugAssets
+> Task :mjpeg:mergeDebugJniLibFolders UP-TO-DATE
+> Task :mjpeg:mergeDebugNativeLibs NO-SOURCE
+> Task :mjpeg:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :rtsp:mergeDebugJniLibFolders UP-TO-DATE
+> Task :rtsp:mergeDebugNativeLibs NO-SOURCE
+> Task :rtsp:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :input:copyDebugJniLibsProjectOnly
+> Task :mjpeg:mergeDebugAssets
+> Task :app:validateSigningFDroidDebug UP-TO-DATE
+> Task :app:writeFDroidDebugSigningConfigVersions UP-TO-DATE
+> Task :app:writeFDroidDebugAppMetadata UP-TO-DATE
+> Task :common:mergeDebugAssets
+> Task :webrtc:mergeDebugJniLibFolders UP-TO-DATE
+> Task :webrtc:mergeDebugNativeLibs NO-SOURCE
+> Task :common:parseDebugLocalResources
+> Task :rtsp:parseDebugLocalResources
+> Task :webrtc:parseDebugLocalResources
+> Task :app:mapFDroidDebugSourceSetPaths
+> Task :rtsp:generateDebugRFile
+> Task :common:generateDebugRFile
+> Task :webrtc:generateDebugRFile
+> Task :input:parseDebugLocalResources
+> Task :app:checkFDroidDebugAarMetadata
+> Task :webrtc:copyDebugJniLibsProjectOnly
+> Task :mjpeg:parseDebugLocalResources
+> Task :app:parseFDroidDebugLocalResources
+> Task :input:generateDebugRFile
+> Task :app:mergeFDroidDebugAssets
+> Task :app:compressFDroidDebugAssets
+> Task :mjpeg:generateDebugRFile
+> Task :app:checkFDroidDebugDuplicateClasses
+> Task :app:processFDroidDebugMainManifest
+> Task :app:processFDroidDebugManifest
+> Task :app:processFDroidDebugManifestForPackage
+> Task :app:mergeFDroidDebugNativeLibs
+> Task :app:desugarFDroidDebugFileDependencies
+
+> Task :app:stripFDroidDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libdatastore_shared_counter.so. Run with --info option to learn more.
+
+> Task :app:mergeFDroidDebugResources
+> Task :common:compileDebugKotlin
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:9:38 Unresolved reference 'settings'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:20:94 Unresolved reference 'AppSettings'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:27:77 Unresolved reference 'data'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:28:10 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:28:14 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:28:19 Unresolved reference 'streamingModule'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:28:37 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:28:37 Not enough information to infer type argument for 'T'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:28:44 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:31:21 Unresolved reference 'updateData'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:31:34 Unresolved reference 'copy'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleManager.kt:40:47 Unresolved reference 'data'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:13:38 Unresolved reference 'notification'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:23:39 Unresolved reference 'NotificationHelper'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:23:58 Property delegate must have a 'getValue(StreamingModuleService, KProperty1<StreamingModuleService, ERROR CLASS: Symbol not found for NotificationHelper>)' method. None of the following functions is applicable:
+fun <T> Lazy<T>.getValue(thisRef: Any?, property: KProperty<*>): T
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:23:61 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:23:61 Not enough information to infer type argument for 'T'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:23:61 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:23:61 Not enough information to infer type argument for 'T'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:66:47 Unresolved reference 'createForegroundNotification'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:84:32 Unresolved reference 'notificationPermissionGranted'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:89:32 Unresolved reference 'errorNotificationsEnabled'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:94:47 Unresolved reference 'getErrorNotification'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:95:28 Unresolved reference 'showNotification'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/010-模块管理_ModuleManager/module/StreamingModuleService.kt:101:28 Unresolved reference 'cancelNotification'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/020-依赖注入_DI/CommonKoinModule.kt:4:38 Unresolved reference 'settings'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/020-依赖注入_DI/CommonKoinModule.kt:5:38 Unresolved reference 'settings'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/020-依赖注入_DI/CommonKoinModule.kt:11:5 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/020-依赖注入_DI/CommonKoinModule.kt:11:37 Unresolved reference 'AppSettingsImpl'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/020-依赖注入_DI/CommonKoinModule.kt:11:53 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/020-依赖注入_DI/CommonKoinModule.kt:11:62 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/020-依赖注入_DI/CommonKoinModule.kt:11:68 Unresolved reference 'AppSettings'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/020-依赖注入_DI/CommonKoinModule.kt:11:68 Argument type mismatch: actual type is 'KClass<ERROR CLASS: Unresolved name: AppSettings>', but 'KClass<uninferred S (of fun <S : Any> KoinDefinition<out S>.bind)>' was expected.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/020-依赖注入_DI/CommonKoinModule.kt:12:47 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/030-通用工具_Utils/extensions.kt:16:8 Unresolved reference 'io'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/030-通用工具_Utils/extensions.kt:27:18 Unresolved reference 'QrCode'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/030-通用工具_Utils/extensions.kt:27:42 Unresolved reference 'QrCode'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/AppLogger.kt:23:12 Unresolved reference 'jakewharton'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/AppLogger.kt:24:31 Unresolved reference 'R'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/AppLogger.kt:75:51 Unresolved reference 'R'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/AppLogger.kt:80:13 Unresolved reference 'ProcessPhoenix'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/AppLogger.kt:90:51 Unresolved reference 'R'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/AppLogger.kt:95:13 Unresolved reference 'ProcessPhoenix'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/AppLogger.kt:120:69 Unresolved reference 'R'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/CollectingLogsUi.kt:34:31 Unresolved reference 'R'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/CollectingLogsUi.kt:57:44 Unresolved reference 'R'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/CollectingLogsUi.kt:73:52 Unresolved reference 'R'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/CollectingLogsUi.kt:86:52 Unresolved reference 'R'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/CollectingLogsUi.kt:100:52 Unresolved reference 'R'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/CollectingLogsUi.kt:108:52 Unresolved reference 'R'.
+e: file:///E:/github/AIOT/ScreenStream_v2/070-基础设施_Infrastructure/040-日志系统_Logging/logger/CollectingLogsUi.kt:136:61 Unresolved reference 'R'.
+
+> Task :common:compileDebugKotlin FAILED
+> Task :app:mergeExtDexFDroidDebug
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-handler\4.2.2.Final\275d0b1fdb5110fcbb6ab64c91688e1a01083c66\netty-handler-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/handler/ssl/util/OpenJdkSelfSignedCertGenerator;->generate(Ljava/lang/String;Ljava/security/KeyPair;Ljava/security/SecureRandom;Ljava/util/Date;Ljava/util/Date;Ljava/lang/String;)[Ljava/lang/String;
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/CleanerJava9;->freeDirectBufferStatic(Ljava/nio/ByteBuffer;)V
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/PlatformDependent0;-><clinit>()V
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/PlatformDependent0;->getIsVirtualThreadMethodHandle()Ljava/lang/invoke/MethodHandle;
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/PlatformDependent0;->isVirtualThread(Ljava/lang/Thread;)Z
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/PlatformDependent0;->alignSlice(Ljava/nio/ByteBuffer;I)Ljava/nio/ByteBuffer;
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/PlatformDependent0;->allocateUninitializedArray(I)[B
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/PlatformDependent0;->newDirectBuffer(JI)Ljava/nio/ByteBuffer;
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/CleanerJava9$2;->run()Ljava/lang/Throwable;
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/CleanerJava9$1;->run()Ljava/lang/Object;
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/PlatformDependent;->estimateMaxDirectMemory()J
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/PlatformDependent0$6;->run()Ljava/lang/Object;
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/CleanerJava24;->allocate(I)Lio/netty/util/internal/CleanableDirectBuffer;
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/CleanerJava6;-><clinit>()V
+ERROR: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar: D8: MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O (--min-api 26): Lio/netty/util/internal/CleanerJava6;->freeDirectBuffer0(Ljava/nio/ByteBuffer;)V
+
+> Task :app:mergeExtDexFDroidDebug FAILED
+
+FAILURE: Build completed with 2 failures.
+
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':common:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+2: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:mergeExtDexFDroidDebug'.
+> Could not resolve all files for configuration ':app:FDroidDebugRuntimeClasspath'.
+   > Failed to transform netty-handler-4.2.2.Final.jar (io.netty:netty-handler:4.2.2.Final) to match attributes {artifactType=android-dex, dexing-component-attributes=ComponentSpecificParameters(minSdkVersion=21, debuggable=true, enableCoreLibraryDesugaring=false, enableGlobalSynthetics=true, enableApiModeling=false, dependenciesClassesAreInstrumented=false, asmTransformComponent=null, useJacocoTransformInstrumentation=false, enableDesugaring=true, needsClasspath=true, useFullClasspath=false, componentIfUsingFullClasspath=null), org.gradle.category=library, org.gradle.libraryelements=jar, org.gradle.status=release, org.gradle.usage=java-runtime}.
+      > Execution failed for DexingWithClasspathTransform: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-handler\4.2.2.Final\275d0b1fdb5110fcbb6ab64c91688e1a01083c66\netty-handler-4.2.2.Final.jar.
+         > Error while dexing.
+           Increase the minSdkVersion to 26 or above.
+
+   > Failed to transform netty-common-4.2.2.Final.jar (io.netty:netty-common:4.2.2.Final) to match attributes {artifactType=android-dex, dexing-component-attributes=ComponentSpecificParameters(minSdkVersion=21, debuggable=true, enableCoreLibraryDesugaring=false, enableGlobalSynthetics=true, enableApiModeling=false, dependenciesClassesAreInstrumented=false, asmTransformComponent=null, useJacocoTransformInstrumentation=false, enableDesugaring=true, needsClasspath=true, useFullClasspath=false, componentIfUsingFullClasspath=null), org.gradle.category=library, org.gradle.libraryelements=jar, org.gradle.status=release, org.gradle.usage=java-runtime}.
+      > Execution failed for DexingWithClasspathTransform: C:\Users\zhouyoukang\.gradle\caches\modules-2\files-2.1\io.netty\netty-common\4.2.2.Final\58b152807286691ec7caaa3ed4124f10ff640cde\netty-common-4.2.2.Final.jar.
+         > Error while dexing.
+           Increase the minSdkVersion to 26 or above.
+
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+BUILD FAILED in 2m 38s
+102 actionable tasks: 31 executed, 71 up-to-date
+Configuration cache entry stored.

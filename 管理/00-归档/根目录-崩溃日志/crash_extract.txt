@@ -1,0 +1,46 @@
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: FATAL EXCEPTION: main
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: Process: info.dvkr.screenstream.dev, PID: 31612
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: java.lang.RuntimeException: Unable to get provider com.google.android.gms.ads.MobileAdsInitProvider: java.lang.IllegalStateException: 
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: ******************************************************************************
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: * Invalid application ID. Follow instructions here:                          *
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: * https://goo.gle/admob-android-update-manifest                              *
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: * to find your app ID.                                                       *
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: * Google Ad Manager publishers should follow instructions here:              *
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: * https://goo.gle/ad-manager-android-update-manifest.                        *
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: ******************************************************************************
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9026)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:8536)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8191)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2642)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:282)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:387)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9500)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:600)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1005)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: Caused by: java.lang.IllegalStateException: 
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: ******************************************************************************
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: * Invalid application ID. Follow instructions here:                          *
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: * https://goo.gle/admob-android-update-manifest                              *
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: * to find your app ID.                                                       *
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: * Google Ad Manager publishers should follow instructions here:              *
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: * https://goo.gle/ad-manager-android-update-manifest.                        *
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: ******************************************************************************
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at com.google.android.gms.ads.internal.client.zzez.attachInfo(com.google.android.gms:play-services-ads-api@@24.5.0:12)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at com.google.android.gms.ads.MobileAdsInitProvider.attachInfo(com.google.android.gms:play-services-ads-api@@24.5.0:1)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9021)
+12-28 15:43:20.370 31612 31612 E AndroidRuntime: 	... 11 more
+12-28 15:43:20.377  3140  5491 W OplusEapManager handleErrorInfo sendEvent: : info.dvkr.screenstream.dev happenedcrash
+12-28 15:43:20.384  3140 31650 I DropBoxManagerService: add tag=data_app_crash isTagEnabled=true flags=0x2
+12-28 15:43:20.386  3140  5491 W ActivityTaskManager:   Force finishing activity info.dvkr.screenstream.dev/info.dvkr.screenstream.SingleActivity
+12-28 15:43:20.387  4465  4493 V WindowManagerShell: Transition requested (#3447): android.os.BinderProxy@8990139 TransitionRequestInfo { type = CLOSE, triggerTask = null, pipTask = null, remoteTransition = null, displayChange = null, flags = 16, debugId = 3447 }
+12-28 15:43:20.388  3140  5491 D ActivityRecordExtImpl: skipPrepareAppTransitionForZoom false
+12-28 15:43:20.388  3140  5491 D ActivityTaskManager: setAppVisibility(Token{dfb2b73 ActivityRecord{ed705c4 u0 info.dvkr.screenstream.dev/info.dvkr.screenstream.SingleActivity t12538 f}}}, visible=false): mNextAppTransitionRequests=[], mNextAppTransitionFlags=,mAppTransitionState=APP_STATE_IDLE visible=true mVisibleRequested=true

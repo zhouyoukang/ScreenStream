@@ -1,0 +1,514 @@
+--------- beginning of crash
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: FATAL EXCEPTION: main
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: Process: info.dvkr.screenstream.dev, PID: 23222
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: java.lang.RuntimeException: Unable to get provider com.google.android.gms.ads.MobileAdsInitProvider: java.lang.IllegalStateException: 
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: ******************************************************************************
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: * Invalid application ID. Follow instructions here:                          *
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: * https://goo.gle/admob-android-update-manifest                              *
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: * to find your app ID.                                                       *
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: * Google Ad Manager publishers should follow instructions here:              *
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: * https://goo.gle/ad-manager-android-update-manifest.                        *
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: ******************************************************************************
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9026)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:8536)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8191)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2642)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:282)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:387)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9500)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:600)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1005)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: Caused by: java.lang.IllegalStateException: 
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: ******************************************************************************
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: * Invalid application ID. Follow instructions here:                          *
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: * https://goo.gle/admob-android-update-manifest                              *
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: * to find your app ID.                                                       *
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: * Google Ad Manager publishers should follow instructions here:              *
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: * https://goo.gle/ad-manager-android-update-manifest.                        *
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: ******************************************************************************
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at com.google.android.gms.ads.internal.client.zzez.attachInfo(com.google.android.gms:play-services-ads-api@@24.5.0:12)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at com.google.android.gms.ads.MobileAdsInitProvider.attachInfo(com.google.android.gms:play-services-ads-api@@24.5.0:1)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9021)
+01-01 15:08:32.220 23222 23222 E AndroidRuntime: 	... 11 more
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: FATAL EXCEPTION: main
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: Process: info.dvkr.screenstream.dev, PID: 26035
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: java.lang.RuntimeException: Unable to get provider com.google.android.gms.ads.MobileAdsInitProvider: java.lang.IllegalStateException: 
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: ******************************************************************************
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: * Invalid application ID. Follow instructions here:                          *
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: * https://goo.gle/admob-android-update-manifest                              *
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: * to find your app ID.                                                       *
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: * Google Ad Manager publishers should follow instructions here:              *
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: * https://goo.gle/ad-manager-android-update-manifest.                        *
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: ******************************************************************************
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9026)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:8536)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8191)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2642)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:282)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:387)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9500)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:600)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1005)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: Caused by: java.lang.IllegalStateException: 
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: ******************************************************************************
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: * Invalid application ID. Follow instructions here:                          *
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: * https://goo.gle/admob-android-update-manifest                              *
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: * to find your app ID.                                                       *
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: * Google Ad Manager publishers should follow instructions here:              *
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: * https://goo.gle/ad-manager-android-update-manifest.                        *
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: ******************************************************************************
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at com.google.android.gms.ads.internal.client.zzez.attachInfo(com.google.android.gms:play-services-ads-api@@24.5.0:12)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at com.google.android.gms.ads.MobileAdsInitProvider.attachInfo(com.google.android.gms:play-services-ads-api@@24.5.0:1)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9021)
+01-01 15:23:09.900 26035 26035 E AndroidRuntime: 	... 11 more
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: FATAL EXCEPTION: main
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: Process: info.dvkr.screenstream.dev, PID: 26167
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: java.lang.RuntimeException: Unable to get provider com.google.android.gms.ads.MobileAdsInitProvider: java.lang.IllegalStateException: 
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: ******************************************************************************
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: * Invalid application ID. Follow instructions here:                          *
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: * https://goo.gle/admob-android-update-manifest                              *
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: * to find your app ID.                                                       *
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: * Google Ad Manager publishers should follow instructions here:              *
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: * https://goo.gle/ad-manager-android-update-manifest.                        *
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: ******************************************************************************
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9026)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:8536)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8191)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2642)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:282)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:387)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9500)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:600)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1005)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: Caused by: java.lang.IllegalStateException: 
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: ******************************************************************************
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: * Invalid application ID. Follow instructions here:                          *
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: * https://goo.gle/admob-android-update-manifest                              *
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: * to find your app ID.                                                       *
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: * Google Ad Manager publishers should follow instructions here:              *
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: * https://goo.gle/ad-manager-android-update-manifest.                        *
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: ******************************************************************************
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at com.google.android.gms.ads.internal.client.zzez.attachInfo(com.google.android.gms:play-services-ads-api@@24.5.0:12)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at com.google.android.gms.ads.MobileAdsInitProvider.attachInfo(com.google.android.gms:play-services-ads-api@@24.5.0:1)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9021)
+01-01 15:23:10.765 26167 26167 E AndroidRuntime: 	... 11 more
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: FATAL EXCEPTION: main
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: Process: info.dvkr.screenstream.dev, PID: 29660
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: java.lang.RuntimeException: Unable to start service info.dvkr.screenstream.webrtc.WebRtcModuleService@650f40e with Intent { cmp=info.dvkr.screenstream.dev/info.dvkr.screenstream.webrtc.WebRtcModuleService (has extras) mCallingUid=10601 }: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5539)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleServiceArgs(Unknown Source:0)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2719)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:282)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:387)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9500)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:600)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1005)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:290)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcStreamingModule.onServiceStart$webrtc_debug(WebRtcStreamingModule.kt:152)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcModuleService.onStartCommand(WebRtcModuleService.kt:62)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5521)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	... 9 more
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope]'
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:282)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$3(WebRtcKoinModule.kt:46)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$fxjqDbNM1OxoHjUyGAa43VhQAAU(Unknown Source:0)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda4.invoke(D8$$SyntheticClass:0)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	... 27 more
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: Caused by: java.lang.NumberFormatException: For input string: ""
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:754)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:869)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment.<init>(WebRtcEnvironment.kt:10)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$2(WebRtcKoinModule.kt:27)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$Z5rngJWBlLyikxc1xc-WOndr4S4(Unknown Source:0)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:23.220 29660 29660 E AndroidRuntime: 	... 46 more
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: FATAL EXCEPTION: main
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: Process: info.dvkr.screenstream.dev, PID: 7441
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: java.lang.RuntimeException: Unable to start service info.dvkr.screenstream.webrtc.WebRtcModuleService@f4ca489 with Intent { cmp=info.dvkr.screenstream.dev/info.dvkr.screenstream.webrtc.WebRtcModuleService (has extras) mCallingUid=10601 }: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5539)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleServiceArgs(Unknown Source:0)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2719)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:282)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:387)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9500)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:600)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1005)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:290)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcStreamingModule.onServiceStart$webrtc_debug(WebRtcStreamingModule.kt:152)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcModuleService.onStartCommand(WebRtcModuleService.kt:62)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5521)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	... 9 more
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope]'
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:24.349  7441  7441 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:282)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$3(WebRtcKoinModule.kt:46)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$fxjqDbNM1OxoHjUyGAa43VhQAAU(Unknown Source:0)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda4.invoke(D8$$SyntheticClass:0)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	... 27 more
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: Caused by: java.lang.NumberFormatException: For input string: ""
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:754)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:869)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment.<init>(WebRtcEnvironment.kt:10)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$2(WebRtcKoinModule.kt:27)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$Z5rngJWBlLyikxc1xc-WOndr4S4(Unknown Source:0)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:24.357  7441  7441 E AndroidRuntime: 	... 46 more
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: FATAL EXCEPTION: main
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: Process: info.dvkr.screenstream.dev, PID: 7576
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: java.lang.RuntimeException: Unable to start service info.dvkr.screenstream.webrtc.WebRtcModuleService@9520045 with Intent { cmp=info.dvkr.screenstream.dev/info.dvkr.screenstream.webrtc.WebRtcModuleService (has extras) mCallingUid=10601 }: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5539)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleServiceArgs(Unknown Source:0)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2719)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:282)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:387)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9500)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:600)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1005)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:290)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcStreamingModule.onServiceStart$webrtc_debug(WebRtcStreamingModule.kt:152)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcModuleService.onStartCommand(WebRtcModuleService.kt:62)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5521)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	... 9 more
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope]'
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:25.343  7576  7576 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:282)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$3(WebRtcKoinModule.kt:46)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$fxjqDbNM1OxoHjUyGAa43VhQAAU(Unknown Source:0)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda4.invoke(D8$$SyntheticClass:0)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	... 27 more
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: Caused by: java.lang.NumberFormatException: For input string: ""
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:754)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:869)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment.<init>(WebRtcEnvironment.kt:10)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$2(WebRtcKoinModule.kt:27)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$Z5rngJWBlLyikxc1xc-WOndr4S4(Unknown Source:0)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:25.348  7576  7576 E AndroidRuntime: 	... 46 more
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: FATAL EXCEPTION: main
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: Process: info.dvkr.screenstream.dev, PID: 7703
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: java.lang.RuntimeException: Unable to start service info.dvkr.screenstream.webrtc.WebRtcModuleService@9ecc924 with Intent { cmp=info.dvkr.screenstream.dev/info.dvkr.screenstream.webrtc.WebRtcModuleService (has extras) mCallingUid=10601 }: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5539)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleServiceArgs(Unknown Source:0)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2719)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:282)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:387)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9500)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:600)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1005)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:290)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcStreamingModule.onServiceStart$webrtc_debug(WebRtcStreamingModule.kt:152)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcModuleService.onStartCommand(WebRtcModuleService.kt:62)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5521)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	... 9 more
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope]'
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:27.995  7703  7703 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:282)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$3(WebRtcKoinModule.kt:46)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$fxjqDbNM1OxoHjUyGAa43VhQAAU(Unknown Source:0)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda4.invoke(D8$$SyntheticClass:0)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	... 27 more
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: Caused by: java.lang.NumberFormatException: For input string: ""
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:754)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:869)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment.<init>(WebRtcEnvironment.kt:10)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$2(WebRtcKoinModule.kt:27)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$Z5rngJWBlLyikxc1xc-WOndr4S4(Unknown Source:0)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:27.997  7703  7703 E AndroidRuntime: 	... 46 more
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: FATAL EXCEPTION: main
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: Process: info.dvkr.screenstream.dev, PID: 7808
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: java.lang.RuntimeException: Unable to start service info.dvkr.screenstream.webrtc.WebRtcModuleService@4f2cc8d with Intent { cmp=info.dvkr.screenstream.dev/info.dvkr.screenstream.webrtc.WebRtcModuleService (has extras) mCallingUid=10601 }: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5539)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleServiceArgs(Unknown Source:0)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2719)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:282)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:387)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9500)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:600)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1005)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:290)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcStreamingModule.onServiceStart$webrtc_debug(WebRtcStreamingModule.kt:152)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcModuleService.onStartCommand(WebRtcModuleService.kt:62)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5521)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	... 9 more
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope]'
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:30.278  7808  7808 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:282)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$3(WebRtcKoinModule.kt:46)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$fxjqDbNM1OxoHjUyGAa43VhQAAU(Unknown Source:0)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda4.invoke(D8$$SyntheticClass:0)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	... 27 more
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: Caused by: java.lang.NumberFormatException: For input string: ""
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:754)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:869)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment.<init>(WebRtcEnvironment.kt:10)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$2(WebRtcKoinModule.kt:27)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$Z5rngJWBlLyikxc1xc-WOndr4S4(Unknown Source:0)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:30.284  7808  7808 E AndroidRuntime: 	... 46 more
+--------- beginning of main
+01-01 15:43:35.469  8015  8015 I InputService: onServiceConnected - InputService is now active
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: FATAL EXCEPTION: main
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: Process: info.dvkr.screenstream.dev, PID: 8015
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: java.lang.RuntimeException: Unable to start service info.dvkr.screenstream.webrtc.WebRtcModuleService@8e0fe67 with Intent { cmp=info.dvkr.screenstream.dev/info.dvkr.screenstream.webrtc.WebRtcModuleService (has extras) mCallingUid=10601 }: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5539)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleServiceArgs(Unknown Source:0)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2719)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:282)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:387)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9500)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:600)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1005)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope,binds:info.dvkr.screenstream.webrtc.internal.WebRtcStreamingService]'
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:290)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcStreamingModule.onServiceStart$webrtc_debug(WebRtcStreamingModule.kt:152)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcModuleService.onStartCommand(WebRtcModuleService.kt:62)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5521)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	... 9 more
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: Caused by: org.koin.core.error.InstanceCreationException: Could not create instance for '[Scoped: 'info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment',scope:info.dvkr.screenstream.webrtc.WebRtcKoinScope]'
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:56)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get$lambda$1(ScopedInstanceFactory.kt:63)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.$r8$lambda$Czf80o2pqkYLRo9fYIJ_ej2B-To(Unknown Source:0)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.mp.KoinPlatformTools.synchronized(KoinPlatformTools.kt:36)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.ScopedInstanceFactory.get(ScopedInstanceFactory.kt:61)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.registry.InstanceRegistry.resolveInstance$koin_core(InstanceRegistry.kt:132)
+01-01 15:43:36.146  8015  8015 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromRegistry(CoreResolver.kt:87)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull(CoreResolver.kt:74)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContextOrNull$default(CoreResolver.kt:72)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at org.koin.core.resolution.CoreResolver.resolveFromContext(CoreResolver.kt:69)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveFromContext(Scope.kt:319)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at org.koin.core.scope.Scope.stackParametersCall(Scope.kt:282)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolveInstance(Scope.kt:268)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at org.koin.core.scope.Scope.resolve(Scope.kt:241)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at org.koin.core.scope.Scope.get(Scope.kt:223)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$3(WebRtcKoinModule.kt:46)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$fxjqDbNM1OxoHjUyGAa43VhQAAU(Unknown Source:0)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda4.invoke(D8$$SyntheticClass:0)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	... 27 more
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: Caused by: java.lang.NumberFormatException: For input string: ""
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:754)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at java.lang.Long.parseLong(Long.java:869)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.internal.WebRtcEnvironment.<init>(WebRtcEnvironment.kt:10)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.WebRtcKoinModule$lambda$5$lambda$4$lambda$2(WebRtcKoinModule.kt:27)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt.$r8$lambda$Z5rngJWBlLyikxc1xc-WOndr4S4(Unknown Source:0)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at info.dvkr.screenstream.webrtc.WebRtcKoinModuleKt$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	at org.koin.core.instance.InstanceFactory.create(InstanceFactory.kt:49)
+01-01 15:43:36.147  8015  8015 E AndroidRuntime: 	... 46 more
+01-01 15:43:38.273  8143  8143 I InputService: onServiceConnected - InputService is now active

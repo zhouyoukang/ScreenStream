@@ -1,0 +1,341 @@
+{
+  "name": "🏠 智能家居AI协调器 - 增强版",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "smart-home/control",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-main",
+      "name": "🌐 智能控制入口",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "smart-home-ai"
+    },
+    {
+      "parameters": {
+        "functionCode": "// 🤖 AI增强的指令解析和验证\nconst input = $json;\n\n// 支持的控制类型\nconst controlTypes = {\n  voice: '语音控制',\n  text: '文本控制',\n  automation: '自动化触发',\n  schedule: '定时任务',\n  sensor: '传感器触发'\n};\n\n// 支持的设备类别\nconst deviceCategories = {\n  light: { type: 'light', domain: 'light', actions: ['turn_on', 'turn_off', 'toggle', 'brightness', 'color'] },\n  climate: { type: 'climate', domain: 'climate', actions: ['turn_on', 'turn_off', 'set_temperature', 'set_mode'] },\n  switch: { type: 'switch', domain: 'switch', actions: ['turn_on', 'turn_off', 'toggle'] },\n  fan: { type: 'fan', domain: 'fan', actions: ['turn_on', 'turn_off', 'set_speed'] },\n  cover: { type: 'cover', domain: 'cover', actions: ['open_cover', 'close_cover', 'stop_cover'] },\n  media_player: { type: 'media_player', domain: 'media_player', actions: ['play', 'pause', 'stop', 'volume_up', 'volume_down'] }\n};\n\n// AI自然语言处理（简化版，可集成真正的NLP）\nfunction parseNaturalLanguage(text) {\n  const lower = text.toLowerCase();\n  let intent = {};\n  \n  // 识别动作\n  if (lower.includes('打开') || lower.includes('开启') || lower.includes('turn on')) {\n    intent.action = 'turn_on';\n  } else if (lower.includes('关闭') || lower.includes('关掉') || lower.includes('turn off')) {\n    intent.action = 'turn_off';\n  } else if (lower.includes('切换') || lower.includes('toggle')) {\n    intent.action = 'toggle';\n  }\n  \n  // 识别设备类型\n  if (lower.includes('灯') || lower.includes('light')) {\n    intent.device_type = 'light';\n  } else if (lower.includes('空调') || lower.includes('climate') || lower.includes('ac')) {\n    intent.device_type = 'climate';\n  } else if (lower.includes('开关') || lower.includes('switch')) {\n    intent.device_type = 'switch';\n  } else if (lower.includes('窗帘') || lower.includes('curtain') || lower.includes('cover')) {\n    intent.device_type = 'cover';\n  }\n  \n  // 识别位置\n  const rooms = ['客厅', '卧室', '厨房', '卫生间', '书房', 'living room', 'bedroom', 'kitchen'];\n  for (const room of rooms) {\n    if (lower.includes(room)) {\n      intent.room = room;\n      break;\n    }\n  }\n  \n  return intent;\n}\n\n// 验证和处理输入\nlet command = {\n  timestamp: new Date().toISOString(),\n  request_id: `REQ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,\n  source: input.source || 'manual',\n  ha_url: input.ha_url || process.env.HA_URL || 'http://localhost:8123',\n  ha_token: input.ha_token || process.env.HA_TOKEN,\n  user: input.user || 'system'\n};\n\n// 智能解析\nif (input.natural_language || input.voice_text) {\n  // AI自然语言处理\n  const nlpResult = parseNaturalLanguage(input.natural_language || input.voice_text);\n  command = { ...command, ...nlpResult, nl_input: input.natural_language || input.voice_text };\n} else {\n  // 结构化命令\n  command.device_type = input.device_type;\n  command.action = input.action;\n  command.entity_id = input.entity_id;\n  command.room = input.room;\n}\n\n// 参数处理\nif (input.parameters) {\n  command.parameters = input.parameters;\n}\n\n// 验证必填字段\nif (!command.action && !command.nl_input) {\n  throw new Error('必须提供 action 或 natural_language 指令');\n}\n\n// 获取设备信息\nif (command.device_type && deviceCategories[command.device_type]) {\n  command.device_info = deviceCategories[command.device_type];\n}\n\n// AI优先级评估\ncommand.priority = input.priority || (command.source === 'automation' ? 'high' : 'normal');\n\n// 场景识别\nif (input.scene) {\n  command.scene = input.scene;\n  command.is_scene = true;\n}\n\nreturn { json: command };"
+      },
+      "id": "ai-command-parser",
+      "name": "🤖 AI指令解析器",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "is-scene",
+              "leftValue": "={{ $json.is_scene }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-is-scene",
+      "name": "❓ 场景还是设备?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.ha_url }}/api/services/scene/turn_on",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.ha_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "entity_id",
+              "value": "=scene.{{ $json.scene }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000,
+          "retry": {
+            "enabled": true,
+            "maxTries": 3,
+            "waitBetweenTries": 1000
+          }
+        }
+      },
+      "id": "activate-scene",
+      "name": "🎬 激活场景",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.ha_url }}/api/services/{{ $json.device_info.domain }}/{{ $json.action }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.ha_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "entity_id",
+              "value": "={{ $json.entity_id || $json.device_info.domain + '.' + ($json.room ? $json.room + '_' : '') + $json.device_type }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000,
+          "retry": {
+            "enabled": true,
+            "maxTries": 3,
+            "waitBetweenTries": 1000
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": false
+            }
+          }
+        }
+      },
+      "id": "control-device",
+      "name": "🎛️ 控制设备",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 📊 智能日志和分析\nconst command = $('🤖 AI指令解析器').item.json;\nconst response = $json;\n\nconst log = {\n  request_id: command.request_id,\n  timestamp: command.timestamp,\n  completed_at: new Date().toISOString(),\n  execution_time: Date.now() - new Date(command.timestamp).getTime(),\n  user: command.user,\n  source: command.source,\n  command_type: command.is_scene ? 'scene' : 'device_control',\n  device_type: command.device_type,\n  action: command.action,\n  scene: command.scene,\n  nl_input: command.nl_input,\n  entity_id: command.entity_id,\n  room: command.room,\n  priority: command.priority,\n  success: response.statusCode >= 200 && response.statusCode < 300,\n  status_code: response.statusCode,\n  response_body: response.body\n};\n\n// AI学习数据（可存储用于改进）\nlog.learning_data = {\n  user_pattern: `${command.user}_${command.device_type}_${command.action}`,\n  time_of_day: new Date().getHours(),\n  day_of_week: new Date().getDay(),\n  frequency: 1  // 可累加\n};\n\nreturn { json: log };"
+      },
+      "id": "create-log",
+      "name": "📊 智能日志",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO smart_home_logs (request_id, timestamp, user, source, command_type, device_type, action, scene, nl_input, entity_id, room, success, execution_time, learning_data) VALUES ('{{ $json.request_id }}', '{{ $json.timestamp }}', '{{ $json.user }}', '{{ $json.source }}', '{{ $json.command_type }}', '{{ $json.device_type }}', '{{ $json.action }}', '{{ $json.scene }}', '{{ $json.nl_input }}', '{{ $json.entity_id }}', '{{ $json.room }}', {{ $json.success }}, {{ $json.execution_time }}, '{{ JSON.stringify($json.learning_data) }}')",
+        "options": {}
+      },
+      "id": "save-log",
+      "name": "💾 保存日志",
+      "type": "n8n-nodes-base.sqlite",
+      "typeVersion": 1,
+      "position": [1340, 200],
+      "credentials": {
+        "sqlite": {
+          "id": "smart-home-db",
+          "name": "Smart Home Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": {{ $json.success }},\n  \"request_id\": \"{{ $json.request_id }}\",\n  \"message\": \"{{ $json.success ? '执行成功' : '执行失败' }}\",\n  \"command\": {\n    \"type\": \"{{ $json.command_type }}\",\n    \"device_type\": \"{{ $json.device_type }}\",\n    \"action\": \"{{ $json.action }}\",\n    \"scene\": \"{{ $json.scene }}\",\n    \"natural_language\": \"{{ $json.nl_input }}\"\n  },\n  \"execution_time_ms\": {{ $json.execution_time }},\n  \"timestamp\": \"{{ $json.completed_at }}\"\n}",
+        "options": {}
+      },
+      "id": "response-webhook",
+      "name": "✅ 成功响应",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 🚨 错误处理和通知\nconst error = $json.error || $json;\nconst command = $('🤖 AI指令解析器').item.json;\n\nconst errorLog = {\n  request_id: command.request_id,\n  timestamp: new Date().toISOString(),\n  user: command.user,\n  command: JSON.stringify(command),\n  error_message: error.message || String(error),\n  error_stack: error.stack || '',\n  retry_count: 0\n};\n\nreturn { json: errorLog };"
+      },
+      "id": "handle-error",
+      "name": "🚨 错误处理",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1120, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"request_id\": \"{{ $json.request_id }}\",\n  \"error\": \"{{ $json.error_message }}\",\n  \"timestamp\": \"{{ $json.timestamp }}\"\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "error-response",
+      "name": "❌ 错误响应",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 500]
+    }
+  ],
+  "connections": {
+    "🌐 智能控制入口": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI指令解析器",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI指令解析器": {
+      "main": [
+        [
+          {
+            "node": "❓ 场景还是设备?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❓ 场景还是设备?": {
+      "main": [
+        [
+          {
+            "node": "🎬 激活场景",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🎛️ 控制设备",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎬 激活场景": {
+      "main": [
+        [
+          {
+            "node": "📊 智能日志",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎛️ 控制设备": {
+      "main": [
+        [
+          {
+            "node": "📊 智能日志",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 智能日志": {
+      "main": [
+        [
+          {
+            "node": "💾 保存日志",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "✅ 成功响应",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "error-handler"
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "smart-home-ai-orchestrator"
+  },
+  "tags": [
+    {
+      "name": "智能家居",
+      "id": "smart-home"
+    },
+    {
+      "name": "AI增强",
+      "id": "ai-enhanced"
+    },
+    {
+      "name": "自动化",
+      "id": "automation"
+    },
+    {
+      "name": "Home Assistant",
+      "id": "home-assistant"
+    }
+  ],
+  "pinData": {},
+  "id": "smart-home-ai-orchestrator"
+}
+
+
+
+
+

@@ -1,0 +1,12 @@
+<resources>
+    <!--BitmapNotification-->
+    <string name="image_generator_press_start">Auf dem Gerät START tippen</string>
+    <string name="image_generator_go_to_new_address">Bitte neue Adresse aufrufen</string>
+    <string name="image_generator_reload_this_page">Bitte laden Sie die Seite neu</string>
+
+    <!--HTML text-->
+    <string name="html_stream_require_pin">Dieser Stream benötigt einen Pin für den Zugriff</string>
+    <string name="html_enter_pin">Pin eingeben:\u0020</string>
+    <string name="html_submit_text">Senden</string>
+    <string name="html_wrong_pin">Falscher Pin!</string>
+</resources>

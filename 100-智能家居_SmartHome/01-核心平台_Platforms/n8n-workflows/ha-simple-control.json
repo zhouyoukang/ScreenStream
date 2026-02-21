@@ -1,0 +1,137 @@
+{
+  "name": "HA Simple Control",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ha-control",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "HA Control Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "ha-control"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Home Assistant 设备控制脚本\nconst webhookData = $input.first().json;\n\n// 提取参数\nconst action = webhookData.action || 'get_status';\nconst entityId = webhookData.entity_id;\nconst command = webhookData.command || 'toggle';\nconst haUrl = webhookData.ha_url || 'http://localhost:8123';\nconst haToken = webhookData.ha_token || 'REDACTED_HA_TOKEN_4';\n\nif (!entityId) {\n  return [{\n    json: {\n      success: false,\n      error: 'entity_id is required',\n      timestamp: new Date().toISOString()\n    }\n  }];\n}\n\n// 准备HTTP请求参数\nlet requestUrl, requestMethod, requestData;\n\nif (action === 'get_status') {\n  // 获取设备状态\n  requestUrl = `${haUrl}/api/states/${entityId}`;\n  requestMethod = 'GET';\n  requestData = null;\n} else if (action === 'control') {\n  // 控制设备\n  const domain = entityId.split('.')[0];\n  let service;\n  \n  if (command === 'on') {\n    service = 'turn_on';\n  } else if (command === 'off') {\n    service = 'turn_off';\n  } else if (command === 'toggle') {\n    service = 'toggle';\n  } else {\n    service = command; // 允许自定义服务\n  }\n  \n  requestUrl = `${haUrl}/api/services/${domain}/${service}`;\n  requestMethod = 'POST';\n  requestData = {\n    entity_id: entityId\n  };\n} else {\n  return [{\n    json: {\n      success: false,\n      error: 'Invalid action. Use \"get_status\" or \"control\"',\n      timestamp: new Date().toISOString()\n    }\n  }];\n}\n\n// 返回请求参数\nreturn [{\n  json: {\n    requestUrl,\n    requestMethod,\n    requestData,\n    haToken,\n    originalAction: action,\n    entityId,\n    command\n  }\n}];"
+      },
+      "id": "prepare-request",
+      "name": "Prepare Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.requestUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.haToken }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "jsonBody": "={{ $json.requestData ? JSON.stringify($json.requestData) : '' }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "ha-request",
+      "name": "HA API Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 处理Home Assistant API响应\nconst requestData = $input.first().json;\nconst haResponse = requestData.body ? JSON.parse(requestData.body) : requestData;\n\nconst originalAction = $('Prepare Request').first().json.originalAction;\nconst entityId = $('Prepare Request').first().json.entityId;\nconst command = $('Prepare Request').first().json.command;\n\nlet response;\n\nif (originalAction === 'get_status') {\n  // 状态查询响应\n  if (haResponse.entity_id) {\n    response = {\n      success: true,\n      action: 'get_status',\n      entity_id: haResponse.entity_id,\n      current_state: haResponse.state,\n      friendly_name: haResponse.attributes?.friendly_name || entityId,\n      last_changed: haResponse.last_changed,\n      attributes: haResponse.attributes,\n      timestamp: new Date().toISOString()\n    };\n  } else {\n    response = {\n      success: false,\n      error: 'Device not found or API error',\n      entity_id: entityId,\n      timestamp: new Date().toISOString()\n    };\n  }\n} else if (originalAction === 'control') {\n  // 控制命令响应\n  if (Array.isArray(haResponse) && haResponse.length > 0) {\n    const deviceState = haResponse[0];\n    response = {\n      success: true,\n      action: 'control',\n      command: command,\n      entity_id: deviceState.entity_id,\n      current_state: deviceState.state,\n      friendly_name: deviceState.attributes?.friendly_name || entityId,\n      message: `Device ${command} command executed successfully`,\n      timestamp: new Date().toISOString()\n    };\n  } else {\n    response = {\n      success: true,\n      action: 'control',\n      command: command,\n      entity_id: entityId,\n      message: `Command ${command} sent to ${entityId}`,\n      timestamp: new Date().toISOString()\n    };\n  }\n} else {\n  response = {\n    success: false,\n    error: 'Unknown action type',\n    timestamp: new Date().toISOString()\n  };\n}\n\nreturn [{ json: response }];"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "webhook-response",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "HA Control Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Request": {
+      "main": [
+        [
+          {
+            "node": "HA API Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HA API Request": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "ha-simple-control",
+  "tags": ["home-assistant", "smart-home", "device-control"]
+}

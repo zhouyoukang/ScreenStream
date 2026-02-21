@@ -121,6 +121,8 @@ internal class HttpServer(
     private val favicon: ByteArray = context.getFileFromAssets("favicon.ico")
     private val logoSvg: ByteArray = context.getFileFromAssets("logo.svg")
     private val jmuxerJs: ByteArray = context.getFileFromAssets("jmuxer.min.js")
+    private val voiceHtml: ByteArray = context.getFileFromAssets("voice.html")
+    private val voiceJs: ByteArray = context.getFileFromAssets("voice.js")
     private val baseIndexHtml = String(context.getFileFromAssets("index.html"), StandardCharsets.UTF_8)
         .replace("%CONNECTING%", context.getString(R.string.mjpeg_html_stream_connecting))
         .replace("%STREAM_REQUIRE_PIN%", context.getString(R.string.mjpeg_html_stream_require_pin))
@@ -386,6 +388,14 @@ internal class HttpServer(
             get("favicon.ico") { call.respondBytes(favicon, ContentType.Image.XIcon) }
             get("logo.svg") { call.respondBytes(logoSvg, ContentType.Image.SVG) }
             get("jmuxer.min.js") { call.respondBytes(jmuxerJs, ContentType.parse("application/javascript")) }
+            get("voice.html") {
+                call.response.headers.append(HttpHeaders.CacheControl, "no-store, no-cache, must-revalidate, max-age=0")
+                call.respondBytes(voiceHtml, ContentType.Text.Html)
+            }
+            get("voice.js") {
+                call.response.headers.append(HttpHeaders.CacheControl, "no-store, no-cache, must-revalidate, max-age=0")
+                call.respondBytes(voiceJs, ContentType.parse("application/javascript"))
+            }
             get("start-stop") {
                 if (mjpegSettings.data.value.htmlEnableButtons && serverData.enablePin.not())
                     sendEvent(MjpegStreamingService.InternalEvent.StartStopFromWebPage)

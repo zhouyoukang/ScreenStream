@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8>
+    <title>Screen Stream</title>
+    <link href="/favicon.png" rel="shortcut icon" type="image/x-icon">
+    <style>
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            border: 0;
+            overflow: hidden;
+            display: block;
+            font-family: sans-serif
+        }
+
+        body {
+            background: BACKGROUND_COLOR
+        }
+
+        img {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            max-height: 100vh;
+            max-width: 100%
+        }
+
+        div {
+            visibility: hidden;
+            top: 16px;
+            left: 16px;
+            width: 100%;
+            text-align: center;
+            position: absolute;
+            z-index: 9999;
+        }
+
+        input {
+            background-color: #19769F;
+            padding: 4px;
+        }
+    </style>
+</head>
+
+<body onmousemove="onMouseMove()">
+    <img id="stream" src="SCREEN_STREAM_ADDRESS" onerror="streamFallback()" />
+    <div id="buttons">
+        <input type="image" id="fullscreen" src="/fullscreen-on.png" onclick="toggleFullscreen()" />
+        <input type="image" src="/start-stop.png" onclick="toggleStartStop()" />
+    </div>
+    <script>
+        if ("undefined" != typeof history.pushState) { var o = { Title: "Screen Stream", Url: "/" }; history.pushState(o, o.Title, o.Url) }
+
+        var enableButtons = ENABLE_BUTTONS;
+        if (enableButtons) document.getElementById('buttons').style.visibility = 'visible';
+        var buttonsHideFunction = function () { document.getElementById('buttons').style.visibility = 'hidden'; }
+        var hideTimeout = setTimeout(buttonsHideFunction, 1500);
+
+        function onMouseMove() {
+            if (!enableButtons) return
+            document.getElementById('buttons').style.visibility = 'visible';
+            clearTimeout(hideTimeout)
+            hideTimeout = setTimeout(buttonsHideFunction, 1000);
+        }
+
+        function isFullscreen() {
+            return document.webkitIsFullScreen || document.mozFullScreen || false;
+        }
+
+        function fullScreenHandler() {
+            var fullscreenInput = document.getElementById("fullscreen");
+            if (isFullscreen()) fullscreenInput.src = "/fullscreen-off.png"; else fullscreenInput.src = "/fullscreen-on.png";
+        }
+
+        function streamFallback() { //mjpeg -> jpeg fallback
+            var baseurl = "SCREEN_STREAM_ADDRESS".split(".mjpeg")[0];
+
+            function streamStillUpdate() { // refresh the image
+                stream.src = baseurl + ".jpeg?t=" + Math.random();
+            }
+
+            setInterval(streamStillUpdate, 500);
+        }
+
+        setTimeout( function () { // check if the mjpeg image could be loaded, otherwise use the jpeg fallback
+            if (!document.getElementById("stream").complete) streamFallback();
+        }, 2000);
+
+        document.addEventListener("fullscreenchange", fullScreenHandler);
+        document.addEventListener("webkitfullscreenchange", fullScreenHandler);
+        document.addEventListener("mozfullscreenchange", fullScreenHandler);
+        document.addEventListener("MSFullscreenChange", fullScreenHandler);
+
+        function toggleFullscreen() {
+            var element = document.documentElement;
+            element.requestFullScreen = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || function () { return false; };
+            document.cancelFullScreen = document.cancelFullScreen || document.webkitCancelFullScreen || document.mozCancelFullScreen || function () { return false; };
+            isFullscreen() ? document.cancelFullScreen() : element.requestFullScreen();
+        }
+
+        function toggleStartStop() {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", window.location.origin + "/start-stop", true);
+            xmlHttp.send(null);
+        }
+    </script>
+</body>
+
+</html>

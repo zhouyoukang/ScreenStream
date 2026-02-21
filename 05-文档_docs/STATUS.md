@@ -1,14 +1,14 @@
 # ScreenStream_v2 状态面板（STATUS）
 
 > 本文件用于“现在到哪了 / 下一步做什么 / 风险在哪里”。
-> 最后更新：2026-02-13
+> 最后更新：2026-02-20
 
 ## 0) 权威入口
 
 - docs 权威入口：`05-文档_docs/README.md`
 - ADR 目录：`05-文档_docs/adr/`
-- Windsurf 规则：`.windsurf/rules/`（6 个结构化规则）
-- Windsurf Skills：`.windsurf/skills/`（5 个项目技能）
+- Windsurf 规则：`.windsurf/rules/`（7 个结构化规则）
+- Windsurf Skills：`.windsurf/skills/`（8 个项目技能）
 - 全局规则：`~/.codeium/windsurf/memories/global_rules.md`（AI 可自动编辑）
 
 ## 1) 当前主线目标（P0）
@@ -26,14 +26,26 @@
 
 ### AI 配置体系（v4.0）
 - **全局规则**：`global_rules.md` v4.0（PREDICT/ESCALATION/Context Engineering/MCP限制/Windsurf新功能/双输出原则）
-- **项目规则**：`.windsurf/rules/` 6 个文件（soul v4.0 精简75% / execution-engine v4.0 精简69% / project-structure / kotlin-android / frontend-html / build-deploy）
+- **项目规则**：`.windsurf/rules/` 7 个文件（soul / execution-engine / project-structure / kotlin-android / frontend-html / build-deploy / agent-communication）
 - **AGENTS.md**：8 个目录级指令文件
-- **Skills**：7 项目 + 23 全局
-- **Hooks**：已清空（Python/Node.js可用，PowerShell绝对禁止）
+- **Skills**：8 项目（含 agent-phone-control）+ 23 全局
+- **Hooks**：3 个 Python hooks（conversation_capture）；PowerShell绝对禁止
 
 ### 文档体系
 - `05-文档_docs/` 下 14 个权威文档
 - ADR 目录 + 合并/归档清单
+
+### 架构清理（2026-02-20）
+- ✅ 删除空占位目录 `030-数据传输_Transport/`（3个空子目录）、`060-设备适配_Device/`
+- ✅ 删除废弃目录 `06-技能_skills/`（已被 `.windsurf/skills/` 替代）
+- ✅ 删除 `.windsurf/intelligence/`（9个过时研究文件，已被 `.windsurf/rules/` 替代）
+- ✅ 删除 `.windsurf/fix-global-hooks.ps1`（过时脚本）
+- ✅ 删除 JVM 崩溃日志 `hs_err_pid*.log`、过时备份 `.windsurfrules.backup/.optimized`
+- ✅ 修复 `.windsurfrules` 文档不一致（rules 6→7, skills 7→8, hooks 描述更新）
+- ✅ 修复 `STATUS.md` 权威入口计数（rules 6→7, skills 5→8）
+- ✅ 发现并解决 Oppo HANS 进程冻结问题（添加电池白名单 + stay_on_while_plugged_in）
+- ✅ API 全量验证 21/21 通过（11 GET + 10 POST）
+- ✅ 浏览器 MCP Web UI 连接验证通过
 
 ### 本轮代码改进（2026-02-13）
 

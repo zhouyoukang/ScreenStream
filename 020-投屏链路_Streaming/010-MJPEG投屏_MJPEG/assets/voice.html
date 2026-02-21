@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Command Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0b0b1a;
+            --card: #151530;
+            --card2: #1c1c40;
+            --accent: #00d4ff;
+            --accent2: #7c4dff;
+            --ok: #00e676;
+            --warn: #ffa726;
+            --err: #ff5252;
+            --txt: #e8e8f0;
+            --txt2: #7a7a9a;
+            --radius: 14px
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            color: var(--txt);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        body {
+            display: flex;
+            flex-direction: column
+        }
+
+        .dash {
+            background: linear-gradient(135deg, #0d1030, #151540);
+            padding: 12px 14px;
+            flex-shrink: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06)
+        }
+
+        .dash-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            flex-wrap: wrap
+        }
+
+        .di {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--txt2)
+        }
+
+        .di .v {
+            color: var(--txt);
+            font-weight: 600
+        }
+
+        .di .v.ok {
+            color: var(--ok)
+        }
+
+        .di .v.warn {
+            color: var(--warn)
+        }
+
+        .di .v.err {
+            color: var(--err)
+        }
+
+        .bb {
+            display: inline-block;
+            width: 26px;
+            height: 9px;
+            border: 1px solid var(--txt2);
+            border-radius: 3px;
+            vertical-align: middle;
+            margin-right: 3px;
+            overflow: hidden;
+            position: relative
+        }
+
+        .bb:after {
+            content: "";
+            position: absolute;
+            right: -3px;
+            top: 2px;
+            width: 2px;
+            height: 4px;
+            background: var(--txt2);
+            border-radius: 0 1px 1px 0
+        }
+
+        .bf {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s
+        }
+
+        .bf.ok {
+            background: var(--ok)
+        }
+
+        .bf.warn {
+            background: var(--warn)
+        }
+
+        .bf.err {
+            background: var(--err)
+        }
+
+        .bf.chg {
+            animation: cpulse 1.2s infinite
+        }
+
+        @keyframes cpulse {
+
+            0%,
+            100% {
+                opacity: .6
+            }
+
+            50% {
+                opacity: 1
+            }
+        }
+
+        .ca {
+            display: inline-block;
+            animation: cflash .8s infinite
+        }
+
+        @keyframes cflash {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .2
+            }
+        }
+
+        .nb {
+            background: var(--err);
+            color: #fff;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 8px;
+            font-weight: 600
+        }
+
+        .live {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--ok);
+            animation: livep 1s infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 4px
+        }
+
+        @keyframes livep {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .4;
+                transform: scale(.7)
+            }
+        }
+
+        .live.off {
+            background: var(--err);
+            animation: none
+        }
+
+        .dash-r2 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 4px
+        }
+
+        .dash-app {
+            font-size: 11px;
+            color: var(--accent);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 60%
+        }
+
+        .dash-ts {
+            font-size: 9px;
+            color: var(--txt2);
+            opacity: .6
+        }
+
+        .dash-act {
+            font-size: 10px;
+            color: var(--txt2);
+            margin-top: 2px;
+            min-height: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .rp {
+            animation: rpulse .4s
+        }
+
+        @keyframes rpulse {
+            0% {
+                opacity: .5
+            }
+
+            100% {
+                opacity: 1
+            }
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 12px 80px;
+            -webkit-overflow-scrolling: touch
+        }
+
+        .sec {
+            margin-bottom: 14px
+        }
+
+        .st {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 6px;
+            padding-left: 2px
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 7px
+        }
+
+        .tile {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 12px 6px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .12s;
+            border: 1px solid transparent;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+            overflow: hidden
+        }
+
+        .tile:active {
+            background: var(--card2);
+            border-color: var(--accent);
+            transform: scale(.95)
+        }
+
+        .tile .ic {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 4px
+        }
+
+        .tile .lb {
+            font-size: 10px;
+            color: var(--txt2);
+            line-height: 1.2;
+            display: block
+        }
+
+        .tile.run:after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--ok);
+            animation: bk 1s infinite
+        }
+
+        @keyframes bk {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .2
+            }
+        }
+
+        .ir {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 7px
+        }
+
+        .ir input {
+            flex: 1;
+            background: var(--card);
+            border: 1px solid #2a2a50;
+            border-radius: 10px;
+            padding: 9px 12px;
+            color: var(--txt);
+            font-size: 14px;
+            outline: none
+        }
+
+        .ir input:focus {
+            border-color: var(--accent)
+        }
+
+        .ir button {
+            background: var(--accent);
+            border: none;
+            border-radius: 10px;
+            padding: 9px 14px;
+            color: #000;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            flex-shrink: 0
+        }
+
+        .ov {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, .6);
+            display: none;
+            align-items: flex-end;
+            justify-content: center
+        }
+
+        .ov.show {
+            display: flex
+        }
+
+        .pnl {
+            background: var(--bg);
+            border-radius: 18px 18px 0 0;
+            width: 100%;
+            max-width: 540px;
+            max-height: 75vh;
+            overflow-y: auto;
+            padding: 14px 16px 20px;
+            animation: su .2s ease-out;
+            -webkit-overflow-scrolling: touch
+        }
+
+        @keyframes su {
+            from {
+                transform: translateY(100%)
+            }
+
+            to {
+                transform: translateY(0)
+            }
+        }
+
+        .pnl .ph {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px
+        }
+
+        .pnl .pt {
+            font-size: 15px;
+            font-weight: 600
+        }
+
+        .pnl .px {
+            background: var(--card);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            color: var(--txt2);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .pnl .pb {
+            font-size: 13px;
+            line-height: 1.6
+        }
+
+        .rr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .04)
+        }
+
+        .rr:last-child {
+            border-bottom: none
+        }
+
+        .rl {
+            color: var(--txt2);
+            font-size: 12px
+        }
+
+        .rv {
+            font-weight: 500;
+            font-size: 13px
+        }
+
+        .rv.ok {
+            color: var(--ok)
+        }
+
+        .rv.warn {
+            color: var(--warn)
+        }
+
+        .rv.err {
+            color: var(--err)
+        }
+
+        .rc {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 6px
+        }
+
+        .rct {
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 4px
+        }
+
+        .ni {
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .04)
+        }
+
+        .ni:last-child {
+            border-bottom: none
+        }
+
+        .ni .np {
+            font-size: 10px;
+            color: var(--accent)
+        }
+
+        .ni .nt {
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 1px
+        }
+
+        .ni .nb2 {
+            font-size: 11px;
+            color: var(--txt2);
+            margin-top: 1px
+        }
+
+        .si {
+            padding: 3px 0;
+            font-size: 12px
+        }
+
+        .si.ck {
+            color: var(--accent);
+            cursor: pointer
+        }
+
+        .ag {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 5px;
+            max-height: 50vh;
+            overflow-y: auto
+        }
+
+        .ai {
+            background: var(--card2);
+            border-radius: 8px;
+            padding: 7px;
+            font-size: 11px;
+            cursor: pointer;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .ai:active {
+            background: var(--accent);
+            color: #000
+        }
+
+        .cs {
+            padding: 3px 0 3px 8px;
+            border-left: 2px solid var(--accent);
+            margin: 3px 0;
+            font-size: 12px
+        }
+
+        .cs.ok {
+            border-left-color: var(--ok)
+        }
+
+        .cs.fail {
+            border-left-color: var(--err)
+        }
+
+        .mt {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 10px 8px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .12s;
+            border: 1px solid transparent;
+            position: relative
+        }
+
+        .mt:active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent)
+        }
+
+        .mt .mn {
+            font-size: 11px;
+            font-weight: 500;
+            margin-bottom: 2px
+        }
+
+        .mt .ms {
+            font-size: 9px;
+            color: var(--txt2)
+        }
+
+        .vf {
+            position: fixed;
+            bottom: 18px;
+            right: 18px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none;
+            color: #fff;
+            font-size: 22px;
+            cursor: pointer;
+            z-index: 50;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s
+        }
+
+        .vf:active {
+            transform: scale(.9)
+        }
+
+        .vf.on {
+            animation: vp 1.5s infinite
+        }
+
+        @keyframes vp {
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(0, 212, 255, .3)
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(0, 212, 255, .5)
+            }
+        }
+
+        .tst {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 40, .95);
+            color: #fff;
+            padding: 7px 18px;
+            border-radius: 18px;
+            font-size: 12px;
+            z-index: 200;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .2s;
+            border: 1px solid rgba(255, 255, 255, .08)
+        }
+
+        .tst.show {
+            opacity: 1
+        }
+
+        .ld {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--accent);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: sp .6s linear infinite;
+            vertical-align: middle;
+            margin-left: 3px
+        }
+
+        @keyframes sp {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        @media(min-width:480px) {
+            .grid {
+                grid-template-columns: repeat(5, 1fr)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dash" id="dash">
+        <div class="dash-row">
+            <div class="di"><span id="dBat">--</span></div>
+            <div class="di"><span id="dNet">--</span></div>
+            <div class="di"><span id="dNot"></span></div>
+            <div class="di"><span id="dClk">--:--</span></div>
+            <div class="di"><span class="live off" id="dLive"></span><span id="dSt" class="v">...</span></div>
+        </div>
+        <div class="dash-r2">
+            <div class="dash-app" id="dApp">loading...</div>
+            <div class="dash-ts" id="dTs"></div>
+        </div>
+        <div class="dash-act" id="dAct"></div>
+    </div>
+    <div class="content">
+        <div class="sec">
+            <div class="ir"><input type="text" id="cmdIn" placeholder="输入指令..." enterkeyhint="send"><button
+                    onclick="sendCmd()">GO</button></div>
+        </div>
+        <div class="sec">
+            <div class="st">Device</div>
+            <div class="grid">
+                <div class="tile" onclick="doInfo()"><span class="ic">📊</span><span class="lb">设备详情</span></div>
+                <div class="tile" onclick="doBat()"><span class="ic">🔋</span><span class="lb">电池</span></div>
+                <div class="tile" onclick="doNotif()"><span class="ic">🔔</span><span class="lb">通知</span></div>
+                <div class="tile" onclick="doScreen()"><span class="ic">👁</span><span class="lb">读屏幕</span></div>
+                <div class="tile" onclick="doFg()"><span class="ic">📱</span><span class="lb">前台APP</span></div>
+                <div class="tile" onclick="doApps()"><span class="ic">📋</span><span class="lb">应用列表</span></div>
+                <div class="tile" onclick="doClip()"><span class="ic">📎</span><span class="lb">剪贴板</span></div>
+            </div>
+        </div>
+        <div class="sec">
+            <div class="st">Navigation</div>
+            <div class="grid">
+                <div class="tile" onclick="nav('home')"><span class="ic">🏠</span><span class="lb">桌面</span></div>
+                <div class="tile" onclick="nav('back')"><span class="ic">↩️</span><span class="lb">返回</span></div>
+                <div class="tile" onclick="nav('recents')"><span class="ic">📑</span><span class="lb">最近</span></div>
+                <div class="tile" onclick="nav('notifications')"><span class="ic">📥</span><span class="lb">通知栏</span>
+                </div>
+                <div class="tile" onclick="nav('quicksettings')"><span class="ic">⚙️</span><span class="lb">快捷设置</span>
+                </div>
+            </div>
+        </div>
+        <div class="sec">
+            <div class="st">System</div>
+            <div class="grid">
+                <div class="tile" onclick="vol(1)"><span class="ic">🔊</span><span class="lb">音量+</span></div>
+                <div class="tile" onclick="vol(-1)"><span class="ic">🔉</span><span class="lb">音量-</span></div>
+                <div class="tile" onclick="bri(200)"><span class="ic">🔆</span><span class="lb">亮度+</span></div>
+                <div class="tile" onclick="bri(30)"><span class="ic">🔅</span><span class="lb">亮度-</span></div>
+                <div class="tile" onclick="toggleFlash()"><span class="ic">🔦</span><span class="lb">手电筒</span></div>
+                <div class="tile" onclick="post('/wake','已唤醒')"><span class="ic">☀️</span><span class="lb">唤醒</span>
+                </div>
+                <div class="tile" onclick="post('/lock','已锁屏')"><span class="ic">🔒</span><span class="lb">锁屏</span>
+                </div>
+                <div class="tile" onclick="rotateScreen()"><span class="ic">🔄</span><span class="lb">旋转</span></div>
+                <div class="tile" onclick="nlc('静音')"><span class="ic">🔇</span><span class="lb">静音</span></div>
+                <div class="tile" onclick="nlc('截图')"><span class="ic">📸</span><span class="lb">截图</span></div>
+                <div class="tile" onclick="nlc('找手机')"><span class="ic">📢</span><span class="lb">找手机</span></div>
+            </div>
+        </div>
+        <div class="sec">
+            <div class="st">AI &amp; Smart</div>
+            <div class="grid">
+                <div class="tile" onclick="doVt()"><span class="ic">🌳</span><span class="lb">View树</span></div>
+                <div class="tile" onclick="post('/dismiss','弹窗已处理')"><span class="ic">❌</span><span
+                        class="lb">关弹窗</span></div>
+                <div class="tile" onclick="doWi()"><span class="ic">🪟</span><span class="lb">窗口信息</span></div>
+            </div>
+        </div>
+        <div class="sec">
+            <div class="st">Interactive</div>
+            <div class="ir"><input type="text" id="ckIn" placeholder="点击目标文字"><button onclick="doFc()">点击</button></div>
+            <div class="ir"><input type="text" id="txIn" placeholder="输入文字到手机"><button onclick="doTx()">输入</button>
+            </div>
+            <div class="ir"><input type="text" id="apIn" placeholder="打开APP (微信/设置/...)"><button
+                    onclick="doOa()">打开</button></div>
+        </div>
+        <div class="sec">
+            <div class="st">Macros <span id="mCnt" style="font-size:10px;color:var(--txt2);text-transform:none"></span>
+            </div>
+            <div class="grid" id="mG">
+                <div style="color:var(--txt2);font-size:11px;grid-column:1/-1">loading...</div>
+            </div>
+        </div>
+    </div>
+    <div class="ov" id="ov" onclick="if(event.target===this)cp()">
+        <div class="pnl">
+            <div class="ph">
+                <div class="pt" id="pT">Result</div><button class="px" onclick="cp()">&#215;</button>
+            </div>
+            <div class="pb" id="pB"></div>
+        </div>
+    </div>
+    <button class="vf" id="vf" onclick="tv()">🎤</button>
+    <div class="tst" id="tst"></div>
+    <script src="voice.js"></script>
+</body>
+
+</html>
