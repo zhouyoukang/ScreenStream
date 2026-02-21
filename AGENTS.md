@@ -1,25 +1,27 @@
-﻿# ScreenStream_v2 项目指令
+# ScreenStream_v2 项目指令
 
-Android 屏幕投屏+远程控制+AI Brain+宏系统+AI工具箱 应用。当前版本 **v32+**，72 个功能点。
+**核心目的**：通过PC浏览器远程操控Android手机的一切功能。
+150+ 功能 · 70+ API · AI Brain · 宏系统 · 10个平台面板。
+
+## 项目结构（整合后）
+
+| 目录 | 模块 | 职责 |
+|------|------|------|
+| `010-用户界面与交互_UI/` | `:app` | Android主APP |
+| `020-投屏链路_Streaming/` | `:mjpeg` `:rtsp` `:webrtc` | 投屏引擎 + HTTP服务器 + 前端 |
+| `040-反向控制_Input/` | `:input` | **核心**：70+ API路由 + AccessibilityService |
+| `070-基础设施_Infrastructure/` | `:common` | 模块管理/DI/工具/日志 |
+| `080-配置管理_Settings/` | — | 全局+模块配置 |
+| `090-构建与部署_Build/` | — | Gradle构建 + 部署脚本 |
+| `100-智能家居_SmartHome/` | — | 智能家居网关：HA代理+涂鸦Cloud API |
+| `tools/ai-phone-control/` | — | AI操控手机：phone_lib.py + 3测试 + 实测发现 |
+| `05-文档_docs/` | — | 12个核心文档 + adr/ |
+| `管理/` | — | 归档（非核心项目/过时文档/历史产物） |
 
 ## 核心原则
-- 修改任何文件前，先确认影响的关联模块（前后端必须同步）
-- 输入路由（InputRoutes.kt）由 MJPEG HttpServer 共享挂载
+- 修改前先确认关联模块（前后端必须同步）
+- InputRoutes.kt 由 MJPEG HttpServer 共享挂载
 - 端口固定：Gateway:8080 MJPEG:8081 RTSP:8082 WebRTC:8083 Input:8084
-- 端口/入口/鉴权变更 → 先写 ADR (`05-文档_docs/adr/`)
-
-## 技术栈
-- **语言**: Kotlin (Android) + HTML/JS (前端)
-- **框架**: Ktor (HTTP), AccessibilityService (输入控制), WebSocket (实时触控)
-- **构建**: Gradle, FDroid flavor, `dev-deploy.ps1` 一键部署
-- **投屏**: MJPEG / H264 / H265 over HTTP/WebSocket, RTSP, WebRTC
-
-## 能力矩阵（v32）
-- **投屏**：MJPEG/H264/H265 + 音频流
-- **基础控制**：触控/滑动/键盘/导航/文本输入
-- **系统控制**（v30）：音量/锁屏/通知栏/快捷设置
-- **远程协助**（v31）：唤醒/截屏/电源/亮度/长按/双击/滚动/捏合/打开APP/设备信息/剪贴板
-- **AI Brain**（v32）：View树分析/语义化点击/节点搜索/智能关闭弹窗/WebSocket实时触控
 
 ## 关键文件
 - **路由**: `040-反向控制_Input/010-输入路由_Routes/InputRoutes.kt`
@@ -27,20 +29,12 @@ Android 屏幕投屏+远程控制+AI Brain+宏系统+AI工具箱 应用。当前
 - **前端**: `020-投屏链路_Streaming/010-MJPEG投屏_MJPEG/assets/index.html`
 - **HTTP**: `020-投屏链路_Streaming/010-MJPEG投屏_MJPEG/mjpeg/internal/HttpServer.kt`
 - **部署**: `090-构建与部署_Build/dev-deploy.ps1`
+- **架构**: `CORE.md`（底层逻辑/数据流/API分类/面板索引）
 
 ## 文档入口
-`05-文档_docs/README.md` → `STATUS.md` → `MODULES.md` → `FEATURES.md` → `VISION.md`
+`CORE.md` → `05-文档_docs/FEATURES.md` → `STATUS.md` → `MODULES.md`
 
-## 多Agent并行（Worktree 架构）
-
-**并行开发使用 Windsurf Worktree 模式**：每个 Cascade 在独立 git worktree 中工作，物理隔离。
-
-### 操作
-1. 新开 Cascade 对话 → 底部右下角切换 **Worktree 模式** → 发任务
-2. Agent 在隔离副本中工作，不影响主工作区
-3. 完成后点 **Merge** 合并回主分支
-
-### 仍需遵守
+## 硬约束
 - **构建串行**: 同时只有1个Agent执行Gradle构建
 - **设备独占**: 同一Android设备同时只有1个Agent操作ADB
 - **Zone 0冻结**: 禁止修改 ~/.codeium/windsurf/ 下任何文件

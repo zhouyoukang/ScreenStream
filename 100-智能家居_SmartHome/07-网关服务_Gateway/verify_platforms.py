@@ -2,9 +2,11 @@
 """
 智能家居平台连通性验证脚本
 验证: Gateway / Home Assistant / 涂鸦 / ScreenStream 智能家居路由
+自动从 config.json 读取配置。
 """
 
 import sys
+import os
 import json
 import time
 
@@ -15,12 +17,21 @@ except ImportError:
     sys.exit(1)
 
 # ============================================================
-# Configuration — 按需修改
+# Configuration — 从 config.json 自动加载
 # ============================================================
-GATEWAY_URL = "http://127.0.0.1:8900"
-HA_URL = "http://192.168.31.228:8123"
-HA_TOKEN = ""  # 填入你的 HA Long-Lived Token
-SS_URL = ""    # ScreenStream API URL, e.g. http://192.168.31.100:8086
+_CFG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+_CFG = {}
+if os.path.exists(_CFG_PATH):
+    with open(_CFG_PATH, encoding="utf-8") as _f:
+        _CFG = json.load(_f)
+
+_gw = _CFG.get("gateway", {})
+_ha = _CFG.get("ha", {})
+
+GATEWAY_URL = f"http://127.0.0.1:{_gw.get('port', 8900)}"
+HA_URL = _ha.get("url", "http://192.168.31.228:8123")
+HA_TOKEN = _ha.get("token", "")
+SS_URL = os.getenv("SS_URL", "")  # ScreenStream API URL, e.g. http://192.168.31.100:8086
 
 PASS = "\033[92m PASS \033[0m"
 FAIL = "\033[91m FAIL \033[0m"

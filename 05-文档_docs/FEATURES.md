@@ -160,7 +160,7 @@
 | **S34 APP启动器** | Platform前端 | `index.html` toggleAppLauncher() | Alt+1 | 应用网格+搜索+一键启动，调用/intent | 8081 |
 | **S35 通知中心** | Platform前端 | `index.html` toggleNotifCenter() | Alt+2 | 实时通知流+5s自动刷新+按APP分组 | 8081 |
 | **S36 屏幕阅读器** | Platform前端 | `index.html` toggleScreenReader() | Alt+3 | 提取屏幕文本+可点击元素列表+一键点击 | 8081 |
-| **S37 快捷指令** | Platform前端 | `index.html` toggleQuickActions() | Alt+4 | 12个预设(拨号/相机/设置/微信等)+自定义+URL | 8081 |
+| **S37 快捷指令** | Platform前端 | `index.html` toggleQuickActions() | Alt+4 | 18个国内APP(4组)+20个场景联动(6类)+变量引擎(prompt/textVar/dataVar)+进度条+取消+分组显示+自定义 | 8081 |
 | **S38 设备仪表盘** | Platform前端 | `index.html` toggleDevDashboard() | Alt+5 | 电池/存储/网络/屏幕/系统/当前APP卡片 | 8081 |
 | **S39 工作流编排** | Platform前端 | `index.html` toggleWorkflowBuilder() | Alt+6 | 可视化步骤链：打开APP→等待→点击→读取 | 8081 |
 | **S40 应用监控** | Platform前端 | `index.html` toggleAppMonitor() | Alt+7 | 3s轮询前台应用+切换历史记录 | 8081 |
@@ -182,12 +182,9 @@
 
 - **输入链路统一（入口/端口/鉴权）**
   - 状态：ADR 已落地（Phase-2 待代码收敛）
-  - refs：`docs/adr/ADR-20260210-input-http-entrypoints.md`
+  - refs：`adr/ADR-20260210-input-http-entrypoints.md`
 - **主线合并（Quest/上游差异开关化）**
   - 状态：清单已落地，待逐条登记
-  - refs：`docs/MERGE_ARCHIVE_CHECKLIST.md`
-- **发布验收（减少漏项）**
-  - refs：`skills/skill-ssv2-release-checklist/`
 
 ## 2) 护栏
 

@@ -18,7 +18,7 @@ trigger: always_on
 - Gateway: 8080 | MJPEG: 8081 | RTSP: 8082 | WebRTC: 8083 | Input: 8084
 
 ## 权威文档入口
-1. `05-文档_docs/README.md` → 2. `MODULES.md` → 3. `FEATURES.md` → 4. `PROCESS.md`
+1. `CORE.md` → 2. `05-文档_docs/FEATURES.md` → 3. `STATUS.md` → 4. `MODULES.md`
 
 ## 模块间依赖
 - 向上依赖：应用层可依赖通用组件

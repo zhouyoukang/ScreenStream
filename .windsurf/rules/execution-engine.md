@@ -1,4 +1,4 @@
-﻿---
+---
 trigger: always_on
 ---
 
@@ -10,7 +10,7 @@ trigger: always_on
 - 同一文件用 `multi_edit` 一次完成
 
 ## 终端规则（Windows）
-- Shell 设为 `"Windows PowerShell"`（5.1），启用 `shellIntegration`
+- Shell 设为 `"PowerShell"`（pwsh 7+），原生 UTF-8，启用 `shellIntegration`
 - 优先文件工具（`read_file`/`edit`/`find_by_name`/`grep_search`）替代终端
 - 命令拆短（3-6条），禁止长管道/并行命令组
 - 卡顿/超时 → 立即切换文件工具方案

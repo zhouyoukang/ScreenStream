@@ -63,6 +63,16 @@ else {
     Ok "AccessibilityService 已处于启用状态"
 }
 
+# 4.5. 授权 UsageStats 权限（需 Magisk root，用于微信等阻止 AccessibilityService 的APP前台检测）
+Log "授权 UsageStats 权限..."
+$suResult = & $ADB shell "su -c `"appops set $PKG android:get_usage_stats allow`"" 2>&1
+if ($LASTEXITCODE -eq 0) {
+    Ok "UsageStats 权限已授权（via Magisk root）"
+}
+else {
+    Log "UsageStats 授权失败（需 Magisk root），微信前台检测可能不可用"
+}
+
 # 5. 唤醒屏幕 + 配置端口 + 启动应用（全自动，无需手动操作）
 $TARGET_PORT = 8086
 Log "唤醒屏幕..."

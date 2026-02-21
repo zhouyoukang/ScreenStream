@@ -51,6 +51,12 @@ keystore.properties
 captures/
 
 # ============================================
+# Python
+# ============================================
+__pycache__/
+*.pyc
+
+# ============================================
 # JVM crash / lock / pid
 # ============================================
 hs_err_pid*.log
@@ -103,6 +109,13 @@ volumes/
 050-音频处理_Audio/010-音频中心_AudioCenter/references/
 
 # ============================================
+# Smart Home Gateway credentials & cache
+# ============================================
+100-智能家居_SmartHome/07-网关服务_Gateway/config.json
+100-智能家居_SmartHome/07-网关服务_Gateway/.xiaomi_token_cache.json
+100-智能家居_SmartHome/07-网关服务_Gateway/mina_token.json
+
+# ============================================
 # Large media files (video editing)
 # ============================================
 *.mkv
@@ -115,3 +128,8 @@ bilibili_publish/
 final_output*
 matched_*.mp4
 burst_final*
+
+# ============================================
+# Archived projects (moved to 管理/00-归档/)
+# ============================================
+agent-comm/

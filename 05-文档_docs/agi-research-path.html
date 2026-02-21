@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15天AGI研究路径 — ScreenStream</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e0e0e8;
+    --text2: #8888a0;
+    --accent: #6c5ce7;
+    --accent2: #a29bfe;
+    --green: #00b894;
+    --red: #ff6b6b;
+    --yellow: #ffeaa7;
+    --blue: #74b9ff;
+    --orange: #f0932b;
+    --pink: #fd79a8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--accent); color: #fff; }
+  a { color: var(--accent2); text-decoration: none; }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    background: radial-gradient(ellipse at 50% 0%, rgba(108,92,231,0.15) 0%, transparent 60%);
+    padding: 2rem;
+    position: relative;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent2), var(--blue), var(--green));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+  .hero .subtitle {
+    font-size: 1.1rem; color: var(--text2); margin-bottom: 2rem;
+  }
+  .hero-stats {
+    display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 3rem;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem 1.8rem;
+    min-width: 140px;
+    transition: transform 0.2s, border-color 0.3s;
+  }
+  .stat-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+  .stat-card .num {
+    font-size: 2rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent2), var(--green));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .stat-card .label { font-size: 0.85rem; color: var(--text2); }
+  .scroll-hint {
+    position: absolute; bottom: 2rem;
+    animation: bounce 2s infinite;
+    color: var(--text2); font-size: 1.5rem;
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+
+  /* Nav */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 0; overflow-x: auto;
+    padding: 0 1rem;
+  }
+  .nav a {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.85rem; color: var(--text2);
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .nav a:hover, .nav a.active { color: var(--accent2); border-bottom-color: var(--accent); }
+
+  /* Sections */
+  .section {
+    max-width: 960px; margin: 0 auto;
+    padding: 4rem 1.5rem 2rem;
+  }
+  .section h2 {
+    font-size: 1.8rem; font-weight: 700;
+    margin-bottom: 0.3rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .section h2 .icon { font-size: 1.4rem; }
+  .section .desc { color: var(--text2); margin-bottom: 2rem; font-size: 0.95rem; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 2.5rem; }
+  .timeline::before {
+    content: ''; position: absolute; left: 0.7rem; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--accent), var(--green), var(--blue), var(--orange));
+  }
+  .tl-item {
+    position: relative; margin-bottom: 2rem;
+    padding: 1.2rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+  }
+  .tl-item:hover { border-color: var(--accent); box-shadow: 0 0 20px rgba(108,92,231,0.1); }
+  .tl-item::before {
+    content: '';
+    position: absolute; left: -2.15rem; top: 1.5rem;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+  }
+  .tl-item.phase-a::before { background: var(--accent); }
+  .tl-item.phase-b::before { background: var(--red); }
+  .tl-item.phase-c::before { background: var(--blue); }
+  .tl-item.phase-d::before { background: var(--green); }
+  .tl-item.phase-e::before { background: var(--orange); }
+  .tl-date { font-size: 0.8rem; color: var(--text2); margin-bottom: 0.3rem; }
+  .tl-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .tl-body {
+    font-size: 0.9rem; color: var(--text2);
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s;
+  }
+  .tl-item.open .tl-body { max-height: 2000px; padding-top: 0.8rem; }
+  .tl-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .tag {
+    font-size: 0.7rem; padding: 0.15rem 0.5rem;
+    border-radius: 20px; font-weight: 600;
+  }
+  .tag-feat { background: rgba(108,92,231,0.2); color: var(--accent2); }
+  .tag-fix  { background: rgba(255,107,107,0.2); color: var(--red); }
+  .tag-sec  { background: rgba(255,234,167,0.2); color: var(--yellow); }
+  .tag-iot  { background: rgba(0,184,148,0.2); color: var(--green); }
+  .tag-arch { background: rgba(116,185,255,0.2); color: var(--blue); }
+  .tag-insight { background: rgba(253,121,168,0.2); color: var(--pink); }
+
+  /* Problems table */
+  .problems-grid {
+    display: grid; gap: 1rem;
+  }
+  .problem-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    transition: border-color 0.3s;
+    cursor: pointer;
+  }
+  .problem-card:hover { border-color: var(--accent); }
+  .problem-card .severity {
+    display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    margin-right: 0.4rem;
+  }
+  .sev-fatal { background: var(--red); }
+  .sev-sec { background: var(--yellow); }
+  .sev-compat { background: var(--green); }
+  .sev-net { background: var(--blue); }
+  .sev-method { background: var(--pink); }
+  .problem-card .p-title { font-weight: 700; font-size: 0.95rem; }
+  .problem-card .p-detail {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s ease;
+    font-size: 0.85rem; color: var(--text2);
+  }
+  .problem-card.open .p-detail { max-height: 600px; padding-top: 0.8rem; }
+  .p-row { display: flex; gap: 0.5rem; margin-bottom: 0.3rem; }
+  .p-label { font-weight: 600; color: var(--text); min-width: 4em; }
+
+  /* Insights */
+  .insight-chain {
+    display: flex; flex-direction: column; gap: 0;
+    position: relative;
+    padding-left: 1.5rem;
+  }
+  .insight-chain::before {
+    content: ''; position: absolute; left: 0.55rem; top: 1rem; bottom: 1rem;
+    width: 2px; background: var(--accent);
+  }
+  .insight-item {
+    position: relative;
+    padding: 1rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s;
+  }
+  .insight-item:hover { border-color: var(--accent); transform: translateX(4px); }
+  .insight-item::before {
+    content: '';
+    position: absolute; left: -1.15rem; top: 50%;
+    transform: translateY(-50%);
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent2);
+    border: 2px solid var(--bg);
+  }
+  .insight-num { font-size: 0.75rem; color: var(--accent2); font-weight: 700; }
+  .insight-text { font-size: 0.95rem; }
+
+  /* Blockers */
+  .blocker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+  .blocker-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .blocker-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--blue));
+  }
+  .blocker-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .blocker-card h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+  .blocker-card p { font-size: 0.85rem; color: var(--text2); margin-bottom: 0.8rem; }
+  .blocker-card .solution {
+    font-size: 0.8rem; padding: 0.5rem 0.8rem;
+    background: rgba(108,92,231,0.1);
+    border-radius: 8px; color: var(--accent2);
+  }
+
+  /* Architecture */
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.5;
+    color: var(--accent2);
+  }
+
+  /* Pyramid */
+  .pyramid {
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    margin: 2rem 0;
+  }
+  .pyramid-level {
+    padding: 0.8rem 1.5rem;
+    text-align: center;
+    border: 1px solid var(--border);
+    font-size: 0.85rem;
+    transition: all 0.3s;
+    cursor: default;
+  }
+  .pyramid-level:hover { transform: scale(1.03); }
+  .pyr-l3 { width: 50%; background: rgba(253,121,168,0.15); border-radius: 8px 8px 0 0; color: var(--pink); }
+  .pyr-l2 { width: 65%; background: rgba(116,185,255,0.15); color: var(--blue); }
+  .pyr-l1 { width: 80%; background: rgba(0,184,148,0.15); color: var(--green); }
+  .pyr-l0 { width: 95%; background: rgba(108,92,231,0.15); border-radius: 0 0 8px 8px; color: var(--accent2); }
+
+  /* Filter */
+  .filter-bar {
+    display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+  }
+  .filter-btn {
+    padding: 0.4rem 1rem; border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--text2);
+    font-size: 0.8rem; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent); color: var(--accent2);
+    background: rgba(108,92,231,0.1);
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center; padding: 3rem 1rem;
+    color: var(--text2); font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+    margin-top: 4rem;
+  }
+  .footer .quote {
+    font-style: italic; font-size: 1rem;
+    color: var(--text); margin-bottom: 1rem;
+    max-width: 600px; margin-left: auto; margin-right: auto;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .hero-stats { gap: 0.8rem; }
+    .stat-card { min-width: 100px; padding: 0.8rem 1rem; }
+    .stat-card .num { font-size: 1.5rem; }
+    .section { padding: 3rem 1rem 1rem; }
+    .timeline { padding-left: 2rem; }
+    .blocker-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Scroll anim */
+  .fade-in {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  /* Code block */
+  code {
+    background: var(--surface2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>十五日造器记</h1>
+  <p class="subtitle">ScreenStream AGI 研究路径 &mdash; 2026.02.07 ~ 02.21</p>
+  <div class="hero-stats">
+    <div class="stat-card"><div class="num">48</div><div class="label">Git 提交</div></div>
+    <div class="stat-card"><div class="num">150+</div><div class="label">功能登记</div></div>
+    <div class="stat-card"><div class="num">70+</div><div class="label">API 端点</div></div>
+    <div class="stat-card"><div class="num">18</div><div class="label">问题解决</div></div>
+    <div class="stat-card"><div class="num">77/77</div><div class="label">测试通过</div></div>
+  </div>
+  <div class="scroll-hint">&#8595;</div>
+</section>
+
+<!-- Nav -->
+<nav class="nav" id="nav">
+  <a href="#timeline">时间线</a>
+  <a href="#architecture">架构</a>
+  <a href="#problems">问题 &amp; 解决</a>
+  <a href="#insights">洞察链</a>
+  <a href="#pyramid">四层金字塔</a>
+  <a href="#blockers">当前卡点</a>
+  <a href="#epilogue">跋</a>
+</nav>
+
+<!-- Timeline -->
+<section class="section" id="timeline">
+  <h2><span class="icon">&#128337;</span> 演进时间线</h2>
+  <p class="desc">点击展开每个节点的详细内容</p>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">全部</button>
+    <button class="filter-btn" data-filter="phase-a">Phase A 基础堆叠</button>
+    <button class="filter-btn" data-filter="phase-b">Phase B 安全+范式</button>
+    <button class="filter-btn" data-filter="phase-c">Phase C 语义自动化</button>
+    <button class="filter-btn" data-filter="phase-d">Phase D Agent Brain</button>
+    <button class="filter-btn" data-filter="phase-e">Phase E 多设备+IoT</button>
+  </div>
+
+  <div class="timeline" id="timelineList">
+
+    <div class="tl-item phase-a fade-in" data-phase="phase-a">
+      <div class="tl-date">02-13 上午 &middot; Day 1</div>
+      <div class="tl-title">v30 系统控制 + v31 远程协助 16 API</div>
+      <div class="tl-body">
+        <p><strong>v30</strong>：音量控制、锁屏、系统控制导航模式。此为"手之延伸"。</p>
+        <p><strong>v31</strong>：唤醒、截屏、电源、亮度、增强手势(4个)、应用管理(5个)，共16个新路由。此为"臂之延伸"。</p>
+        <p>编译部署验证全部通过。设备 OnePlus NE2210, Android 15。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-feat">+16 API</span>
+        <span class="tag tag-feat">v30→v31</span>
+      </div>
+    </div>
+
+    <div class="tl-item phase-a fade-in" data-phase="phase-a">
+      <div class="tl-date">02-13 下午 &middot; Day 1</div>
+      <div class="tl-title">v32 AI Brain — View树 + 语义操作 + WebSocket实时触控</div>
+      <div class="tl-body">
+        <p>核心突破：<strong>7个View树分析方法</strong> + <strong>7个新路由</strong>（/viewtree /windowinfo /findclick /dismiss /findnodes /settext /ws/touch）</p>
+        <p>WebSocket实时触控流：延迟从 ~100ms 降到 ~10ms。手机端自动检测→全屏沉浸模式。</p>
+        <p>此为<strong>"脑之初成"</strong>——AI可以"看到"并"理解"手机界面。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-feat">AI Brain</span>
+        <span class="tag tag-feat">WebSocket</span>
+        <span class="tag tag-arch">三层架构</span>
+      </div>
+    </div>
+
+    <div class="tl-item phase-a fade-in" data-phase="phase-a">
+      <div class="tl-date">02-13 晚 &middot; Day 1</div>
+      <div class="tl-title">宏系统 MVP + UX重设计 + 72条功能</div>
+      <div class="tl-body">
+        <p><strong>MacroEngine</strong>：CRUD + 运行 + 内联执行(含loop) + 停止 + 循环 + 执行日志，11个API路由。</p>
+        <p><strong>UX重设计</strong>：6模式→固定3键 + 分类命令菜单(5大类)。scrcpy兼容快捷键。glassmorphism CSS。</p>
+        <p><strong>VISION.md</strong>：5阶段演进路线（投屏→远程→自动化→AI Agent→超级助理）</p>
+        <p>是日共<strong>6次编译部署</strong>，全部通过。功能从16→72条。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-feat">宏系统</span>
+        <span class="tag tag-feat">UX重设计</span>
+        <span class="tag tag-insight">VISION</span>
+      </div>
+    </div>
+
+    <div class="tl-item phase-a fade-in" data-phase="phase-a">
+      <div class="tl-date">02-13 &middot; Day 1 (额外)</div>
+      <div class="tl-title">&#9888; PowerShell Hooks 全局卡死事件</div>
+      <div class="tl-body">
+        <p><strong>事故</strong>：全局 hooks.json 中置 PowerShell 钩子，每条终端命令前启 PS 子进程。干扰终端提示符检测，<strong>所有窗口终端卡死</strong>。</p>
+        <p>经4次反复（创建→清空→恢复→再清空），以备份文件为铁证确认根因。</p>
+        <p><strong>铁律</strong>：PowerShell hooks 绝对禁止。永世不赦。Python/Node.js hooks 安全可用。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-fix">致命Bug</span>
+        <span class="tag tag-sec">全局配置</span>
+      </div>
+    </div>
+
+    <div class="tl-item phase-b fade-in" data-phase="phase-b">
+      <div class="tl-date">02-14 &middot; Day 2</div>
+      <div class="tl-title">S33 远程文件管理器 + 批量小模块 → 150条功能</div>
+      <div class="tl-body">
+        <p><strong>S33</strong>（大模块）：后端11方法、12个REST端点、前端400+行全屏面板。安全沙箱 + 递归搜索 + 图片预览 + 剪切复制 + 批量上传。</p>
+        <p><strong>批量小模块</strong>：画面工具(M12)、效率工具(M15)、宏导出导入(M16)、截屏增强(M18)。</p>
+        <p><strong>闭环铁律</strong>：Phase 3→4→5→5.5 必须连续执行，禁止停下询问。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-feat">S33 文件管理</span>
+        <span class="tag tag-feat">+12 API</span>
+        <span class="tag tag-insight">闭环铁律</span>
+      </div>
+    </div>
+
+    <div class="tl-item phase-b fade-in" data-phase="phase-b">
+      <div class="tl-date">02-15 凌晨 &middot; Day 3</div>
+      <div class="tl-title">安全五轮修复 + 项目重构 010-090</div>
+      <div class="tl-body">
+        <p><strong>XSS 5轮</strong>：8+面板动态数据统一 escapeHtml()。完整 &amp;&lt;&gt;"' 转义。</p>
+        <p><strong>路径穿越 3处</strong>：renameFile / saveFile / upload 拒绝含 /\.. 的参数。</p>
+        <p><strong>信息泄露</strong>：HttpServer异常→固定"500"。<strong>PIN</strong>：kotlin.random→SecureRandom。</p>
+        <p><strong>资源泄漏</strong>：BitmapCapture / H264Encoder / AudioStreamer 修复。</p>
+        <p>项目从旧目录结构重构为 010-090 模块化体系。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-sec">XSS ×5轮</span>
+        <span class="tag tag-sec">路径穿越</span>
+        <span class="tag tag-arch">项目重构</span>
+      </div>
+    </div>
+
+    <div class="tl-item phase-b fade-in" data-phase="phase-b">
+      <div class="tl-date">02-15 &middot; Day 3</div>
+      <div class="tl-title">&#10024; 范式转换 — 从"造功能"到"调度APP"</div>
+      <div class="tl-body">
+        <p><strong>核心洞察</strong>：手机上每个APP = 几千人-年的工程。ScreenStream 已有 AccessibilityService + AI Brain = 90% 基础设施。所缺者仅四块拼图（~200行Kotlin）：</p>
+        <ul style="margin:0.5rem 0 0.5rem 1.5rem;color:var(--text);">
+          <li><code>/intent</code> — 发送任意Intent（口：令万APP开门）</li>
+          <li><code>/screen/text</code> — 提取屏幕文本（目：读万APP之面）</li>
+          <li><code>/wait</code> — 等待条件出现（耐：候万APP之应）</li>
+          <li><code>/notifications/read</code> — 读取通知（耳：闻万APP之声）</li>
+        </ul>
+        <p><strong>此四API，使工具变为平台。</strong></p>
+        <p>继而造 S34-S43 共10个平台面板（Alt+1 至 Alt+0）。三次编译，40/40 API×3。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-insight">范式转换</span>
+        <span class="tag tag-feat">Platform Layer</span>
+        <span class="tag tag-feat">10个面板</span>
+      </div>
+    </div>
+
+    <div class="tl-item phase-c fade-in" data-phase="phase-c">
+      <div class="tl-date">02-18 &middot; Day 6</div>
+      <div class="tl-title">自然语言 → 手机执行 + 双层命令分发</div>
+      <div class="tl-body">
+        <p>技术演进链：</p>
+        <ol style="margin:0.5rem 0 0 1.5rem;color:var(--text);">
+          <li>DevControlReceiver + 语义自动化demo → 概念可行</li>
+          <li>WiFi开关demo → 跨屏幕顺序语义自动化可行</li>
+          <li><code>/command</code> 自然语言命令 → 关键词匹配 → 执行</li>
+          <li>复合命令 + SSE流 → 多步操作实时反馈</li>
+          <li><strong>双层分发</strong>：快速路径（关键词直达）+ Agent路径（LLM推理）</li>
+        </ol>
+        <p>修复：find-and-navigate 焦点丢失 + HOME 优先级错误。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-feat">自然语言命令</span>
+        <span class="tag tag-feat">SSE流</span>
+        <span class="tag tag-feat">双层分发</span>
+      </div>
+    </div>
+
+    <div class="tl-item phase-d fade-in" data-phase="phase-d">
+      <div class="tl-date">02-20 &middot; Day 8</div>
+      <div class="tl-title">Agent Brain 基础设施 + GitHub开源清理</div>
+      <div class="tl-body">
+        <p>以 <strong>Cascade 本身作为LLM</strong>，构建 observe→think→act→verify 循环：</p>
+        <p style="font-family:monospace;color:var(--green);margin:0.5rem 0;">
+          Observe(/screen/text) → Think(Cascade) → Act(/findclick) → Verify(/wait)
+        </p>
+        <p>此乃 <strong>AGI 操控手机的最小可运行架构</strong>。</p>
+        <p>GitHub清理：删除160+内部文件，重写专业README。V13视频管线。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-feat">Agent Brain</span>
+        <span class="tag tag-arch">AGI循环</span>
+      </div>
+    </div>
+
+    <div class="tl-item phase-e fade-in" data-phase="phase-e">
+      <div class="tl-date">02-21 上午 &middot; Day 9</div>
+      <div class="tl-title">agent-comm v2.0 多Agent通信</div>
+      <div class="tl-body">
+        <p>远程桌面跨会话控制：ScheduledTask + SID。崩溃恢复 + pythonw后台模式 + E2E验证。</p>
+        <p>支持多Cascade实例在独立git worktree中并行工作。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-feat">多Agent</span>
+        <span class="tag tag-feat">远程控制</span>
+      </div>
+    </div>
+
+    <div class="tl-item phase-e fade-in" data-phase="phase-e">
+      <div class="tl-date">02-21 下午 &middot; Day 9</div>
+      <div class="tl-title">S50 智能家居 — 163实体 + 音箱语音代理</div>
+      <div class="tl-body">
+        <p><strong>Gateway 网关</strong>（FastAPI, 939行）：聚合 MiCloud + eWeLink + Tuya 三后端。</p>
+        <p>小米163实体/24设备接入。前端面板 Alt+Shift+H。</p>
+        <p><strong>核心发现——音箱语音代理</strong>：MiCloud直连24台设备23台offline，但通过1台在线的小爱音箱Pro2发送语音指令，音箱在家庭WiFi内代理执行，控制灯带/筒灯/风扇等"离线"设备。</p>
+        <p><strong>只要1台音箱在线，全屋设备皆可远程控制。</strong></p>
+        <p>测试总计：<strong>77/77 = 100%</strong>。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-iot">智能家居</span>
+        <span class="tag tag-insight">音箱代理</span>
+        <span class="tag tag-feat">163实体</span>
+      </div>
+    </div>
+
+    <div class="tl-item phase-e fade-in" data-phase="phase-e">
+      <div class="tl-date">02-21 &middot; Day 9</div>
+      <div class="tl-title">phone_lib 整合 + 29项实战发现 (P1-P29)</div>
+      <div class="tl-body">
+        <p>从25文件(理论过重)精简到<strong>6文件</strong>：README + phone_lib.py + 3测试 + FINDINGS.md</p>
+        <p>四层金字塔验证：L0(29/29) + L1(6/6) + findByText(12/12) + 复杂联动(5/5, 43步86%零AI)</p>
+        <p>实战发现：微信反无障碍(P21)、剪贴板Android 10+限制(P22)、force-stop禁用无障碍(P23)、OPPO安全拦截(P24-P26)、京东反自动化(P28)等。</p>
+      </div>
+      <div class="tl-tags">
+        <span class="tag tag-arch">整合精简</span>
+        <span class="tag tag-fix">P21-P29</span>
+        <span class="tag tag-insight">四层金字塔</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Architecture -->
+<section class="section" id="architecture">
+  <h2><span class="icon">&#9881;</span> 系统架构</h2>
+  <p class="desc">从投屏工具到AGI手机控制平台的三层架构</p>
+
+  <div class="arch-diagram fade-in">
+PC(浏览器/Cascade)
+   │
+   ├── HTTP/WebSocket ──→ Ktor Server (手机:8081)
+   │                        │
+   │                        ├── InputRoutes.kt (70+ 路由)
+   │                        │     ├── 基础控制 /tap /swipe /key /text
+   │                        │     ├── AI Brain  /viewtree /findclick /command
+   │                        │     ├── 平台层   /intent /screen/text /wait
+   │                        │     ├── 宏系统   /macro/*
+   │                        │     ├── 文件管理 /files/*
+   │                        │     └── 智能家居 /smarthome/*
+   │                        │
+   │                        └── InputService.kt (AccessibilityService)
+   │                              ├── 触控/键盘注入
+   │                              ├── View树分析 + 语义操作
+   │                              ├── 通知监控
+   │                              └── 宏引擎 (MacroEngine)
+   │
+   ├── MJPEG/H264/H265 ←── MediaProjection (屏幕采集)
+   │
+   └── Smart Home Gateway (8900)
+         ├── MiCloud (24设备)
+         ├── eWeLink (Sonoff×5)
+         └── Tuya (待配置)
+
+Agent 循环:
+  Observe ──→ Think ──→ Act ──→ Verify
+  /screen/text  Cascade   /findclick  /wait
+  </div>
+</section>
+
+<!-- Problems -->
+<section class="section" id="problems">
+  <h2><span class="icon">&#128736;</span> 问题与解决方案</h2>
+  <p class="desc">18个关键问题，按严重度分类。点击展开详情。</p>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" data-pfilter="all">全部 (18)</button>
+    <button class="filter-btn" data-pfilter="fatal">&#128308; 致命 (3)</button>
+    <button class="filter-btn" data-pfilter="sec">&#128993; 安全 (5)</button>
+    <button class="filter-btn" data-pfilter="compat">&#128994; 兼容 (5)</button>
+    <button class="filter-btn" data-pfilter="net">&#128309; 网络 (4)</button>
+    <button class="filter-btn" data-pfilter="method">&#128996; 方法论 (1)</button>
+  </div>
+
+  <div class="problems-grid" id="problemsList">
+
+    <div class="problem-card fade-in" data-sev="fatal">
+      <div class="p-title"><span class="severity sev-fatal"></span>#1 PowerShell Hooks 全局终端卡死</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">根因</span>hooks.json 中 PowerShell 钩子干扰终端提示符检测</div>
+        <div class="p-row"><span class="p-label">解决</span>清除所有 PS hooks，立铁律禁止。Python/Node.js 安全可用</div>
+        <div class="p-row"><span class="p-label">教训</span>全局配置修改前必须：影响评估 → 备份 → 验证</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="fatal">
+      <div class="p-title"><span class="severity sev-fatal"></span>#2 微信反无障碍三重阻止 (P21)</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">根因</span>rootInActiveWindow / getWindows / 事件 全部 blocked</div>
+        <div class="p-row"><span class="p-label">解决</span>三层回退：getWindows → UsageStatsManager → event_cache</div>
+        <div class="p-row"><span class="p-label">教训</span>核心接口必须有降级路径</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="fatal">
+      <div class="p-title"><span class="severity sev-fatal"></span>#3 force-stop 禁用 AccessibilityService (P23)</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">根因</span>Android 系统在 force-stop 时自动从 enabled 列表移除</div>
+        <div class="p-row"><span class="p-label">解决</span>部署脚本自动 settings put 重新启用，已集成到 dev-deploy.ps1</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="sec">
+      <div class="p-title"><span class="severity sev-sec"></span>#4 XSS 注入 (5轮修复)</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">范围</span>8+ 面板动态数据未转义：宏/设备信息/通知/应用监控/WebSocket</div>
+        <div class="p-row"><span class="p-label">解决</span>统一 escapeHtml()，完整 &amp;&lt;&gt;"' 转义</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="sec">
+      <div class="p-title"><span class="severity sev-sec"></span>#5 路径穿越 (3处)</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">范围</span>renameFile / saveFile / upload 参数含 /\.. 可写任意路径</div>
+        <div class="p-row"><span class="p-label">解决</span>拒绝含路径分隔符的参数 + sanitizePath 沙箱</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="sec">
+      <div class="p-title"><span class="severity sev-sec"></span>#6 信息泄露 — HttpServer 异常堆栈</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">解决</span>StatusPages 异常处理改为固定 "500: Internal Server Error"</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="sec">
+      <div class="p-title"><span class="severity sev-sec"></span>#7 PIN 可预测 (kotlin.random)</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">解决</span>替换为 java.security.SecureRandom</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="sec">
+      <div class="p-title"><span class="severity sev-sec"></span>#8 媒体管线资源泄漏</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">范围</span>BitmapCapture 每帧泄漏 / H264Encoder callback 异常导致停滞 / AudioStreamer 未释放</div>
+        <div class="p-row"><span class="p-label">解决</span>try-finally + recycle() + releaseOutputBuffer</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="compat">
+      <div class="p-title"><span class="severity sev-compat"></span>#9 OPPO 安全拦截 APP 启动 (P24-P26)</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">现象</span>com.oplus.securitypermission 弹窗拦截部分APP</div>
+        <div class="p-row"><span class="p-label">解决</span>monkey 命令走 shell 权限绕过。回退链：openapp → Intent MAIN → dismiss → 记录OEM限制</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="compat">
+      <div class="p-title"><span class="severity sev-compat"></span>#10 剪贴板 Android 10+ 后台限制 (P22)</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">根因</span>AccessibilityService 后台服务无法读取 primaryClip</div>
+        <div class="p-row"><span class="p-label">解决</span>写入时同步缓存到 cachedClipboardText，读取返回缓存值</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="compat">
+      <div class="p-title"><span class="severity sev-compat"></span>#11 端口不固定 (P1)</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">解决</span>扫描 8080-8099 找 /status 响应，dev-deploy.ps1 自动探测</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="compat">
+      <div class="p-title"><span class="severity sev-compat"></span>#12 京东反自动化 (P28)</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">现象</span>ADB input tap + AccessibilityService 触发安全验证</div>
+        <div class="p-row"><span class="p-label">结论</span>无法自动绕过。需人工完成一次后短期内不再触发</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="compat">
+      <div class="p-title"><span class="severity sev-compat"></span>#13 拼多多搜索框定位 (P29)</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">根因</span>原 tap 坐标偏低 20px</div>
+        <div class="p-row"><span class="p-label">解决</span>调整为 (570,170) 匹配实际 bounds 中心</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="net">
+      <div class="p-title"><span class="severity sev-net"></span>#14 MiCloud 2FA 阻断</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">解决</span>从 HA 缓存提取 xiaomiio session token，绕过 2FA 登录</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="net">
+      <div class="p-title"><span class="severity sev-net"></span>#15 Windows 系统代理阻断 MiCloud</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">根因</span>127.0.0.1:7897 代理阻断 account.xiaomi.com</div>
+        <div class="p-row"><span class="p-label">解决</span>NO_PROXY=account.xiaomi.com,api.io.mi.com</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="net">
+      <div class="p-title"><span class="severity sev-net"></span>#16 isOnline 误判</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">根因</span>GET code=0 只是缓存响应，非真实在线状态</div>
+        <div class="p-row"><span class="p-label">解决</span>改用 isOnline 字段精确判断设备实际状态</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="net">
+      <div class="p-title"><span class="severity sev-net"></span>#17 错误码 -704030023 误读</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">真相</span>property_read_only（属性只读），非 device_offline</div>
+        <div class="p-row"><span class="p-label">解决</span>新增错误码映射表</div>
+      </div>
+    </div>
+
+    <div class="problem-card fade-in" data-sev="method">
+      <div class="p-title"><span class="severity sev-method"></span>#18 理论过重实践不足 (Phone Agent)</div>
+      <div class="p-detail">
+        <div class="p-row"><span class="p-label">现象</span>25个文件、22个文档，但可用功能 0 个</div>
+        <div class="p-row"><span class="p-label">教训</span>验证 ≠ 交付；后端 ≠ 前端；文档 ≠ 功能</div>
+        <div class="p-row"><span class="p-label">解决</span>整合为 6 文件，四层金字塔验证全部通过</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Insights -->
+<section class="section" id="insights">
+  <h2><span class="icon">&#128161;</span> 洞察链</h2>
+  <p class="desc">从15天演进中提炼的7个核心洞察，环环相扣</p>
+
+  <div class="insight-chain">
+    <div class="insight-item fade-in">
+      <div class="insight-num">洞察 1</div>
+      <div class="insight-text"><strong>AccessibilityService = 触发器 + 条件 + 动作</strong> 三合一。一器三用，乃全系统基石。</div>
+    </div>
+    <div class="insight-item fade-in">
+      <div class="insight-num">洞察 2</div>
+      <div class="insight-text"><strong>手机APP是最好的"功能库"</strong>，不必自己造。每个APP = 千人-年工程。</div>
+    </div>
+    <div class="insight-item fade-in">
+      <div class="insight-num">洞察 3</div>
+      <div class="insight-text"><strong>四个平台API使工具变为平台</strong>：/intent（口）、/screen/text（目）、/wait（耐）、/notifications（耳）</div>
+    </div>
+    <div class="insight-item fade-in">
+      <div class="insight-num">洞察 4</div>
+      <div class="insight-text"><strong>AI是可选加速层</strong>，90%日常需求 L0+L1 零AI可解。35/36项核心功能脱离AI完全可用。</div>
+    </div>
+    <div class="insight-item fade-in">
+      <div class="insight-num">洞察 5</div>
+      <div class="insight-text"><strong>observe → think → act → verify</strong> 乃 AGI 操控手机的最小可运行架构。</div>
+    </div>
+    <div class="insight-item fade-in">
+      <div class="insight-num">洞察 6</div>
+      <div class="insight-text"><strong>音箱语音代理 = 远程控制万能钥匙</strong>。1台在线音箱穿透设备"离线"限制，控全屋。</div>
+    </div>
+    <div class="insight-item fade-in">
+      <div class="insight-num">洞察 7</div>
+      <div class="insight-text"><strong>最大化可达性，最小化依赖</strong> — 四层金字塔是最优成本结构。</div>
+    </div>
+  </div>
+</section>
+
+<!-- Pyramid -->
+<section class="section" id="pyramid">
+  <h2><span class="icon">&#9650;</span> 四层金字塔</h2>
+  <p class="desc">AI是可选加速层，不是必要依赖。实测验证通过。</p>
+
+  <div class="pyramid fade-in">
+    <div class="pyramid-level pyr-l3">
+      <strong>L3: 自主Agent</strong> &mdash; 监控循环+决策+自愈<br>
+      <small>覆盖 2% | 需大模型 | 5/5 Agent任务通过</small>
+    </div>
+    <div class="pyramid-level pyr-l2">
+      <strong>L2: LLM推理</strong> &mdash; 自然语言 → 操作序列<br>
+      <small>覆盖 8% | 需小模型 | /command 验证通过</small>
+    </div>
+    <div class="pyramid-level pyr-l1">
+      <strong>L1: 组合序列</strong> &mdash; 多步确定性流程<br>
+      <small>覆盖 20% | 零AI | 6/6 + 复杂联动 5/5 (43步)</small>
+    </div>
+    <div class="pyramid-level pyr-l0">
+      <strong>L0: 原子API</strong> &mdash; 单个HTTP调用<br>
+      <small>覆盖 70% | 零AI | 29/29 = 100% | curl即可</small>
+    </div>
+  </div>
+
+  <div style="text-align:center;color:var(--text2);margin-top:1rem;font-size:0.9rem;">
+    L0+L1 覆盖 90% 日常需求（零成本） &middot; 35/36项核心功能脱离AI完全可用
+  </div>
+</section>
+
+<!-- Blockers -->
+<section class="section" id="blockers">
+  <h2><span class="icon">&#9888;</span> 当前卡点与建议</h2>
+  <p class="desc">四个待突破的方向</p>
+
+  <div class="blocker-grid">
+    <div class="blocker-card fade-in">
+      <h3>&#129504; LLM 集成缺失</h3>
+      <p><code>/command</code> 仅关键词匹配，Agent Brain 有基础设施但缺"think"能力。L2-L3 能力受限。</p>
+      <div class="solution">&#10148; 接入 DeepSeek / 本地 Ollama 作为推理层，完成 observe→<strong>think</strong>→act→verify 闭环</div>
+    </div>
+    <div class="blocker-card fade-in">
+      <h3>&#128190; 持久化工作流</h3>
+      <p>宏系统已文件持久化，但 S39 工作流编排只有前端 localStorage。</p>
+      <div class="solution">&#10148; 将 S39 工作流 JSON 同步到后端 MacroEngine，获得触发器支持</div>
+    </div>
+    <div class="blocker-card fade-in">
+      <h3>&#127760; 公网远程</h3>
+      <p>WiFi ADB 仅限局域网。MiCloud 可远程控家居，但 ScreenStream 本体不可远程。</p>
+      <div class="solution">&#10148; Tailscale（零配置 VPN）或 Cloudflare Tunnel 穿透</div>
+    </div>
+    <div class="blocker-card fade-in">
+      <h3>&#128241; 多设备支持</h3>
+      <p>当前只能操控 1 台手机。agent-comm 有多Agent通信但未集成到主流程。</p>
+      <div class="solution">&#10148; phone_lib.py 多实例 Phone(port=8086) + Phone(port=8087)</div>
+    </div>
+  </div>
+</section>
+
+<!-- Epilogue -->
+<section class="section" id="epilogue">
+  <h2><span class="icon">&#128220;</span> 跋</h2>
+  <div class="fade-in" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;font-size:0.95rem;line-height:2;">
+    <p style="color:var(--text2);margin-bottom:1rem;">古人云：「工欲善其事，必先利其器。」</p>
+    <p>今之造器者，以十五日之功，自投屏小器起，至AGI操控手机之原型成。</p>
+    <p>其间遇 PowerShell 卡死之祸、XSS 五轮之患、OEM 拦截之阻、2FA 封锁之困，皆一一克之。</p>
+    <p style="margin-top:1rem;">所验证者，非止一技，乃一路径也：</p>
+    <blockquote style="border-left:3px solid var(--accent);padding-left:1rem;margin:1rem 0;color:var(--accent2);font-weight:600;">
+      以浏览器为界面，以 AccessibilityService 为手足，以 HTTP API 为神经，以 AI 为可选之脑——此四者合，则手机万APP皆为我用。
+    </blockquote>
+    <p style="text-align:right;color:var(--text2);margin-top:1.5rem;">丙午年二月廿一日</p>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="quote">"最大化可达性，最小化依赖。"</div>
+  <p>ScreenStream &middot; 15天AGI研究路径 &middot; 48 commits &middot; 150+ features &middot; 70+ APIs</p>
+</footer>
+
+<script>
+// Toggle timeline items
+document.querySelectorAll('.tl-item').forEach(item => {
+  item.addEventListener('click', () => item.classList.toggle('open'));
+});
+
+// Toggle problem cards
+document.querySelectorAll('.problem-card').forEach(card => {
+  card.addEventListener('click', () => card.classList.toggle('open'));
+});
+
+// Timeline filter
+document.querySelectorAll('[data-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const f = btn.dataset.filter;
+    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tl-item').forEach(item => {
+      item.style.display = (f === 'all' || item.dataset.phase === f) ? '' : 'none';
+    });
+  });
+});
+
+// Problem filter
+document.querySelectorAll('[data-pfilter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const f = btn.dataset.pfilter;
+    document.querySelectorAll('[data-pfilter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.problem-card').forEach(card => {
+      card.style.display = (f === 'all' || card.dataset.sev === f) ? '' : 'none';
+    });
+  });
+});
+
+// Nav active state
+const sections = document.querySelectorAll('.section');
+const navLinks = document.querySelectorAll('.nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+    }
+  });
+}, { rootMargin: '-40% 0px -40% 0px' });
+sections.forEach(s => observer.observe(s));
+
+// Fade in on scroll
+const fadeObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      fadeObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+
+// Smooth scroll
+document.querySelectorAll('.nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>

@@ -28,6 +28,7 @@ import android.view.inputmethod.InputMethodManager
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import android.graphics.Rect
 import android.hardware.display.DisplayManager
 import android.view.Display
@@ -77,16 +78,26 @@ public class InputService : AccessibilityService() {
     private var isKeyShiftDown = false
     private var isKeyEscDown = false
 
+    // Cached foreground package from accessibility events (fallback when rootInActiveWindow is null, e.g. WeChat)
+    @Volatile private var lastForegroundPackage: String = ""
+    @Volatile private var lastForegroundClass: String = ""
+
+    // Cached clipboard text (Android 10+ restricts background clipboard reads)
+    @Volatile private var cachedClipboardText: String? = null
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
         // Capture notification events for the Platform Layer
         if (event.eventType == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
             onNotificationEvent(event)
         }
-        // Detect foreground app changes for macro triggers
+        // Detect foreground app changes for macro triggers + cache for /foreground fallback
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val pkg = event.packageName?.toString() ?: ""
+            val cls = event.className?.toString() ?: ""
             if (pkg.isNotEmpty()) {
+                lastForegroundPackage = pkg
+                lastForegroundClass = cls
                 MacroEngine.instance.onAppSwitch(pkg)
             }
         }
@@ -595,6 +606,7 @@ public class InputService : AccessibilityService() {
         try {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.setPrimaryClip(ClipData.newPlainText(text, text))
+            cachedClipboardText = text  // Cache for Android 10+ background read restriction
         } catch (e: Exception) {
             Log.e(TAG, "setClipboard failed: ${e.message}")
         }
@@ -1220,10 +1232,11 @@ public class InputService : AccessibilityService() {
     public fun getClipboardText(): String? {
         return try {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.primaryClip?.getItemAt(0)?.text?.toString()
+            // Android 10+ restricts background clipboard reads; try system first, fall back to cache
+            clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: cachedClipboardText
         } catch (e: Exception) {
             Log.e(TAG, "getClipboard failed: ${e.message}")
-            null
+            cachedClipboardText
         }
     }
 
@@ -1574,11 +1587,70 @@ public class InputService : AccessibilityService() {
                 json.put("packageName", root.packageName?.toString() ?: "")
                 json.put("className", root.className?.toString() ?: "")
                 try { root.recycle() } catch (_: Exception) {}
+            } else {
+                // Fallback 1: scan accessible windows for the top app window
+                var found = false
+                try {
+                    for (w in windows) {
+                        if (w.type == AccessibilityWindowInfo.TYPE_APPLICATION) {
+                            val wRoot = w.root
+                            if (wRoot != null) {
+                                val pkg = wRoot.packageName?.toString() ?: ""
+                                if (pkg.isNotEmpty()) {
+                                    json.put("packageName", pkg)
+                                    json.put("className", wRoot.className?.toString() ?: "")
+                                    json.put("source", "windows_scan")
+                                    found = true
+                                    try { wRoot.recycle() } catch (_: Exception) {}
+                                    break
+                                }
+                                try { wRoot.recycle() } catch (_: Exception) {}
+                            }
+                        }
+                    }
+                } catch (_: Exception) {}
+                // Fallback 2: UsageStatsManager (most accurate — queries actual system foreground)
+                if (!found) {
+                    val pkg = getForegroundPackageViaUsageStats()
+                    if (pkg.isNotEmpty()) {
+                        json.put("packageName", pkg)
+                        json.put("source", "usage_stats")
+                        found = true
+                    }
+                }
+                // Fallback 3: use cached package from accessibility events (may be stale)
+                if (!found && lastForegroundPackage.isNotEmpty()) {
+                    json.put("packageName", lastForegroundPackage)
+                    json.put("className", lastForegroundClass)
+                    json.put("source", "event_cache")
+                    found = true
+                }
             }
         } catch (e: Exception) {
             json.put("error", e.message ?: "unknown")
         }
         return json
+    }
+
+    private fun getForegroundPackageViaUsageStats(): String {
+        return try {
+            val usm = getSystemService(Context.USAGE_STATS_SERVICE) as? android.app.usage.UsageStatsManager
+                ?: return ""
+            val now = System.currentTimeMillis()
+            val events = usm.queryEvents(now - 5000, now)
+            var lastPkg = ""
+            val event = android.app.usage.UsageEvents.Event()
+            while (events.hasNextEvent()) {
+                events.getNextEvent(event)
+                if (event.eventType == android.app.usage.UsageEvents.Event.ACTIVITY_RESUMED) {
+                    lastPkg = event.packageName ?: ""
+                }
+            }
+            lastPkg
+        } catch (e: Exception) {
+            Log.w(TAG, "UsageStats fallback failed: ${e.message}")
+            ""
+        }
     }
 
     // ==================== Kill Foreground App ====================
@@ -2213,8 +2285,46 @@ public class InputService : AccessibilityService() {
      * Extract ALL visible text from current screen - structured data extraction from any APP
      */
     public fun extractScreenText(): JSONObject {
-        val root = rootInActiveWindow
-            ?: return JSONObject().put("ok", false).put("error", "No active window")
+        var root = rootInActiveWindow
+        var fallbackPkg = ""
+        if (root == null) {
+            // Fallback 1: scan accessible windows for an app window root
+            try {
+                for (w in windows) {
+                    if (w.type == AccessibilityWindowInfo.TYPE_APPLICATION) {
+                        val wRoot = w.root
+                        if (wRoot != null) {
+                            val pkg = wRoot.packageName?.toString() ?: ""
+                            if (pkg.isNotEmpty()) {
+                                root = wRoot  // Use this window's root for text extraction
+                                fallbackPkg = pkg
+                                break
+                            }
+                            try { wRoot.recycle() } catch (_: Exception) {}
+                        }
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+        if (root == null) {
+            // Fallback 2: determine package via UsageStatsManager (most accurate), then event cache
+            var pkg = fallbackPkg
+            var source = if (pkg.isNotEmpty()) "windows_scan" else "none"
+            if (pkg.isEmpty()) {
+                pkg = getForegroundPackageViaUsageStats()
+                if (pkg.isNotEmpty()) source = "usage_stats"
+            }
+            if (pkg.isEmpty() && lastForegroundPackage.isNotEmpty()) {
+                pkg = lastForegroundPackage
+                source = "event_cache"
+            }
+            return JSONObject().put("ok", true)
+                .put("package", pkg)
+                .put("texts", JSONArray()).put("clickables", JSONArray())
+                .put("textCount", 0).put("clickableCount", 0)
+                .put("source", source)
+                .put("note", "rootInActiveWindow is null (app may block accessibility)")
+        }
         try {
             val json = JSONObject()
             json.put("ok", true)

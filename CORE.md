@@ -1,0 +1,154 @@
+# ScreenStream — 核心架构
+
+> **核心目的**：通过PC浏览器远程操控Android手机的一切功能
+> 投屏画面 · 触控操作 · 系统控制 · APP深度操控 · AI自然语言命令 · 宏自动化
+
+---
+
+## 底层逻辑
+
+```
+用户(PC浏览器) ──HTTP/WS──→ Ktor Server(手机) ──→ AccessibilityService ──→ Android系统
+     ↑                           ↓
+     └── MJPEG/H264/H265 ←── MediaProjection(屏幕采集)
+```
+
+**三层架构**：
+1. **传输层** — MJPEG/RTSP/WebRTC 将屏幕画面推送到浏览器
+2. **控制层** — 70+ REST API 通过 AccessibilityService 注入触控/键盘/手势
+3. **智能层** — AI Brain 解析 View 树，实现语义化操作和自然语言命令
+
+**核心依赖关系**：
+- `InputRoutes.kt` 定义所有API路由，由 MJPEG `HttpServer.kt` 共享挂载
+- `InputService.kt` 是 AccessibilityService 实现，所有设备操控的唯一入口
+- `index.html` 是PC端唯一前端，6400行包含投屏+控制+10个平台面板
+
+---
+
+## 核心文件夹（8个）
+
+| 目录 | Gradle模块 | 核心职责 | 关键文件 |
+|------|-----------|---------|---------|
+| `010-用户界面与交互_UI/` | `:app` | Android主APP（SingleActivity入口） | `AndroidManifest.xml`, `AppActivity.kt` |
+| `020-投屏链路_Streaming/` | `:mjpeg` `:rtsp` `:webrtc` | 投屏引擎 + HTTP服务器 + 前端 | `HttpServer.kt`, `index.html`, `voice.html` |
+| `040-反向控制_Input/` | `:input` | **核心价值**：70+ API + AccessibilityService | `InputRoutes.kt`, `InputService.kt`, `MacroEngine.kt` |
+| `070-基础设施_Infrastructure/` | `:common` | 模块管理/DI/工具/日志 | `StreamingModule.kt`, `CommonKoinModule.kt` |
+| `080-配置管理_Settings/` | — | 全局+各模块配置接口 | `AppSettings.kt`, `InputSettings.kt` |
+| `090-构建与部署_Build/` | — | Gradle构建 + ADB部署脚本 | `dev-deploy.ps1`, `api-verify.ps1` |
+| `100-智能家居_SmartHome/` | — | 智能家居网关：HA代理+涂鹦Cloud API | `gateway.py`, `config.json` |
+| `tools/ai-phone-control/` | — | AI操控手机：phone_lib.py + 测试集 + 实测发现 | `phone_lib.py`, `README.md`, `FINDINGS.md` |
+
+---
+
+## 数据流
+
+### 投屏流（手机→PC）
+```
+MediaProjection → BitmapCapture → [MJPEG|H264Encoder|H265Encoder]
+  → HttpServer(Ktor) → WebSocket/HTTP → 浏览器 canvas 渲染
+```
+
+### 控制流（PC→手机）
+```
+浏览器事件(鼠标/键盘/触控) → fetch/WebSocket → InputRoutes.kt(路由分发)
+  → InputService.kt(AccessibilityService) → Android GestureDescription/KeyEvent 注入
+```
+
+### AI Agent 循环
+```
+Observe: GET /screen/text → 屏幕文本+可点击元素
+Think:   LLM推理（外部）
+Act:     POST /findclick {text:"目标"} → 语义查找+点击
+Verify:  GET /wait?text=预期结果 → 轮询View树确认
+```
+
+---
+
+## API 分类（70+ 端点）
+
+| 类别 | 端点数 | 代表端点 |
+|------|--------|---------|
+| **基础控制** | 8 | `/tap` `/swipe` `/key` `/text` `/longpress` `/doubletap` `/scroll` `/pinch` |
+| **导航** | 5 | `/home` `/back` `/recents` `/notifications` `/quicksettings` |
+| **系统控制** | 15 | `/volume` `/brightness` `/lock` `/wake` `/screenshot` `/flashlight` `/rotate` |
+| **设备信息** | 8 | `/status` `/deviceinfo` `/apps` `/clipboard` `/foreground` `/notifications/read` |
+| **AI Brain** | 9 | `/viewtree` `/screen/text` `/findclick` `/findnodes` `/dismiss` `/command` |
+| **宏系统** | 11 | `/macro/list` `/macro/create` `/macro/run/{id}` `/macro/run-inline` |
+| **文件管理** | 12 | `/files/list` `/files/upload` `/files/download` `/files/search` |
+| **平台层** | 4 | `/intent` `/screen/text` `/wait` `/notifications/read` |
+
+---
+
+## 前端面板（index.html 6400行）
+
+| 快捷键 | 面板 | 数据源API |
+|--------|------|----------|
+| Alt+1 | APP启动器 | `/apps` + `/intent` |
+| Alt+2 | 通知中心 | `/notifications/read` |
+| Alt+3 | 屏幕阅读器 | `/screen/text` |
+| Alt+4 | 快捷指令 | `/intent` (12预设) |
+| Alt+5 | 设备仪表盘 | `/deviceinfo` |
+| Alt+6 | 工作流编排 | 多API组合 |
+| Alt+7 | 应用监控 | `/foreground` (3s轮询) |
+| Alt+8 | 远程浏览器 | `/intent` + `/screen/text` |
+| Alt+9 | 剪贴板历史 | `/clipboard` |
+| Alt+0 | 批量执行 | 任意API批量 |
+| Alt+E | 文件管理器 | `/files/*` |
+| Alt+M | 命令菜单 | 全部操作快捷入口 |
+| Alt+/ | AI命令栏 | `/command` |
+
+---
+
+## 构建与部署
+
+```powershell
+# 一键部署（编译→推送→安装→启动→端口转发→API验证）
+.\090-构建与部署_Build\dev-deploy.ps1
+
+# 手动步骤
+.\gradlew :app:assembleFdroidDebug                    # 编译
+adb install -r 010-*/build/outputs/apk/fdroid/debug/*.apk  # 安装
+adb forward tcp:8086 tcp:8086                          # 端口转发
+curl http://127.0.0.1:8086/status                      # 验证
+```
+
+**端口分配**（固定，禁止冲突）：
+| 服务 | 端口 |
+|------|------|
+| Gateway | 8080 |
+| MJPEG | 8081 |
+| RTSP | 8082 |
+| WebRTC | 8083 |
+| Input | 8084 |
+
+> 实际端口取决于启动时分配（8080-8099范围），`dev-deploy.ps1` 自动探测。
+
+---
+
+## 文档精简索引
+
+| 文档 | 内容 |
+|------|------|
+| `05-文档_docs/FEATURES.md` | 150+ 条功能登记（权威功能清单） |
+| `05-文档_docs/STATUS.md` | 开发状态追踪 |
+| `05-文档_docs/MODULES.md` | 模块清单与端口映射 |
+| `05-文档_docs/ARCHITECTURE_v32.md` | v32 三层架构详解 |
+| `05-文档_docs/USER_GUIDE_v32plus.md` | 最新综合使用指南 |
+| `05-文档_docs/VISION.md` | 5阶段演进路线 |
+| `05-文档_docs/MJPEG_CORE_MAP.md` | MJPEG核心代码地图 |
+| `tools/ai-phone-control/README.md` | AI操控手机完整指南+API速查 |
+
+---
+
+## 归档说明
+
+以下内容已移至 `管理/00-归档/`，不再出现在主工作区：
+
+| 归档分类 | 内容 | 原因 |
+|---------|------|------|
+| 根目录散落文件 | WORKSPACE_AUDIT, IMPLEMENTATION_SUMMARY, test_status.py, 截图, docker-compose | 一次性产物/不属于核心 |
+| presentation/ | 视频制作项目（B站发布、字幕、剪辑脚本） | 独立项目，非核心APP |
+| api-services/ | 独立API服务伴侣项目 | 独立Gradle项目 |
+| 050-音频处理_Audio/ | 音频中心子项目 | 独立方向 |
+| 过时文档(20个) | v31指南、需求分析v2、重构策略、合并清单等 | 已被新文档替代 |
+| tools辅助 | vision-bridge, shared-knowledge, screen-capture-bridge | 非核心工具 |

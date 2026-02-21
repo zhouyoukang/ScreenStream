@@ -1,0 +1,43 @@
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ],
+      "command": "npx",
+      "disabled": false
+    },
+    "context7": {
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ],
+      "command": "npx",
+      "disabled": false
+    },
+    "github": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "command": "npx",
+      "disabled": false
+    },
+    "fetch": {
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "command": "uvx",
+      "disabled": false
+    },
+    "playwright": {
+      "args": [
+        "-y",
+        "@playwright/mcp"
+      ],
+      "command": "npx",
+      "disabled": false
+    }
+  }
+}
