@@ -150,6 +150,18 @@ rough_cut.*
 ffmpeg_*.log
 
 # ============================================
+# Native libraries (WebRTC etc, use Gradle dependency)
+# ============================================
+*.so
+
+# ============================================
+# Presentation / slides / screenshots (non-source)
+# ============================================
+presentation/
+**/presentation/
+**/screenshot*.png
+
+# ============================================
 # Archived projects (moved to 管理/00-归档/)
 # ============================================
 agent-comm/
