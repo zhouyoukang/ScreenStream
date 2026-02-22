@@ -59,24 +59,34 @@ def verify_signature(token: str, signature: str, timestamp: str, nonce: str) -> 
 # 命令解析引擎
 # ============================================================
 
-# 设备名称别名映射 → entity_id 前缀匹配关键词
+# 设备名称别名映射 → 用户输入关键词 : 设备名称中的匹配关键词
+# MiCloud 设备用数字 DID (如 531616941)，匹配靠设备名称
 DEVICE_ALIASES = {
     # 灯
-    "灯带": "light.philips_strip",
-    "飞利浦灯带": "light.philips_strip",
-    "rgb灯": "light.philips_strip",
-    "技嘉rgb": "light.b650m",
-    "电脑灯": "light.b650m",
-    "主机灯": "light.b650m",
+    "灯带": "灯带",
+    "飞利浦灯带": "灯带",
+    "rgb灯": "灯带",
+    "筒灯": "筒灯",
+    "床底灯": "床底灯",
     # 风扇
-    "风扇": "fan.dmaker",
-    "电风扇": "fan.dmaker",
-    # 开关
-    "四号开关": "switch.sonoff_10022dede9",
-    "五号开关": "switch.sonoff_10022dedc7",
-    "中央插头": "switch.sonoff_10022cf71d",
-    "户外插头": "switch.sonoff_100235142b",
-    "床插头": "switch.sonoff_10022cf6a2",
+    "风扇": "风扇",
+    "电风扇": "风扇",
+    "落地扇": "循环落地扇",
+    # 音箱
+    "音箱": "音箱",
+    "小爱": "小爱",
+    # 开关(编号)
+    "一号": "一号",
+    "二号": "二号",
+    "三号": "三号",
+    # 家电
+    "电饭煲": "电饭煲",
+    "电热毯": "电热毯",
+    "晾衣机": "晾衣机",
+    "充电器": "充电器",
+    # 摄像头
+    "摄像头": "摄像机",
+    "摄像机": "摄像机",
 }
 
 # 场景宏别名
@@ -140,7 +150,7 @@ class WeChatCommandRouter:
         # 6. 设备控制（打开/关闭 + 设备名）
         ctrl = self._parse_device_control(text)
         if ctrl:
-            return await self._control_device(ctrl["entity_prefix"], ctrl["action"], ctrl["value"])
+            return await self._control_device(ctrl["name_keyword"], ctrl["action"], ctrl["value"])
 
         # 7. 音箱语音代理（直接转发自然语言给小爱）
         if text.startswith("小爱") or text.startswith("语音"):
@@ -283,7 +293,7 @@ class WeChatCommandRouter:
         return f"播报失败: {result.get('error', '未知错误')}"
 
     def _parse_device_control(self, text: str) -> Optional[dict]:
-        """解析设备控制命令: '打开灯带' → {entity_prefix, action, value}"""
+        """解析设备控制命令: '打开灯带' → {name_keyword, action, value}"""
         action = None
         remaining = text
 
@@ -308,40 +318,56 @@ class WeChatCommandRouter:
         if not action or not remaining:
             return None
 
-        # 匹配设备别名
-        entity_prefix = DEVICE_ALIASES.get(remaining.lower()) or DEVICE_ALIASES.get(remaining)
-        if entity_prefix:
-            return {"entity_prefix": entity_prefix, "action": action, "value": None}
+        # 匹配设备别名 → 设备名称关键词
+        name_keyword = DEVICE_ALIASES.get(remaining.lower()) or DEVICE_ALIASES.get(remaining)
+        if name_keyword:
+            return {"name_keyword": name_keyword, "action": action, "value": None}
 
-        return None
+        # 没有别名也直接尝试用原文匹配设备名
+        return {"name_keyword": remaining, "action": action, "value": None}
 
-    async def _control_device(self, entity_prefix: str, action: str, value=None) -> str:
-        """通过前缀匹配控制设备"""
+    def _find_device_by_name(self, keyword: str) -> Optional[tuple]:
+        """按名称关键词在所有后端中查找设备，返回 (backend_name, device_id, device_info)"""
         micloud = self.gw.get("micloud")
         ewelink = self.gw.get("ewelink")
 
-        # 在 MiCloud 中查找
         if micloud:
             for eid, dev in micloud._device_map.items():
-                if eid.startswith(entity_prefix) or entity_prefix in eid:
-                    result = micloud.control_device(eid, action, value)
-                    name = dev.get("name", eid)
-                    if result.get("ok"):
-                        emoji = "🟢" if action == "turn_on" else "⚪" if action == "turn_off" else "🔄"
-                        return f"{emoji} {name}: {'已打开' if action == 'turn_on' else '已关闭' if action == 'turn_off' else '已切换'}"
-                    return f"❌ {name}: {result.get('error', '控制失败')}"
+                name = dev.get("name", "")
+                if keyword in name or name in keyword:
+                    return ("micloud", eid, dev)
 
-        # 在 eWeLink 中查找
         if ewelink and ewelink.at:
-            for eid in ewelink._device_map:
-                if eid.startswith(entity_prefix) or entity_prefix in eid:
-                    result = await ewelink.control_device(eid, action, value)
-                    if result.get("ok"):
-                        emoji = "🟢" if action == "turn_on" else "⚪"
-                        return f"{emoji} 已{'打开' if action == 'turn_on' else '关闭'}: {eid}"
-                    return f"❌ 控制失败: {result.get('error', '?')}"
+            for eid, dev in ewelink._device_map.items():
+                name = dev.get("name", "")
+                if keyword in name or name in keyword:
+                    return ("ewelink", eid, dev)
 
-        return f"未找到匹配的设备: {entity_prefix}"
+        return None
+
+    async def _control_device(self, name_keyword: str, action: str, value=None) -> str:
+        """通过名称关键词匹配并控制设备"""
+        found = self._find_device_by_name(name_keyword)
+        if not found:
+            return f"未找到匹配'{name_keyword}'的设备"
+
+        backend, eid, dev = found
+        name = dev.get("name", eid)
+
+        if backend == "micloud":
+            micloud = self.gw.get("micloud")
+            result = micloud.control_device(eid, action, value)
+        elif backend == "ewelink":
+            ewelink = self.gw.get("ewelink")
+            result = await ewelink.control_device(eid, action, value)
+        else:
+            return f"未知后端: {backend}"
+
+        if result.get("ok"):
+            emoji = "🟢" if action == "turn_on" else "⚪" if action == "turn_off" else "🔄"
+            action_text = "已打开" if action == "turn_on" else "已关闭" if action == "turn_off" else "已切换"
+            return f"{emoji} {name}: {action_text}"
+        return f"❌ {name}: {result.get('error', '控制失败')}"
 
     async def _voice_proxy(self, command: str) -> str:
         """通过音箱代理执行自然语言命令"""

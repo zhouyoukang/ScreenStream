@@ -192,6 +192,41 @@ WiFi开关(`/quicksettings`+findclick) · 蓝牙(Intent) · 音量(`/volume`) ·
 - **淘宝**：findclick"搜索栏"直接命中，最顺畅
 - **拼多多**：ADB tap(570,170) 策略有效
 
+### P28: 全平台自动化比价实战（2026-02-22）
+
+**目标**：遍历手机全部购物APP搜索"降噪耳机"，提取价格，锁定最优。
+
+**成功平台（4/9）**：
+| 平台 | 方法 | 倍思M3s价格 | 关键技巧 |
+|------|------|------------|---------|
+| 淘宝 | `search_in_app` findclick"搜索栏" | ¥150.46 | 最顺畅 |
+| 京东 | `search_in_app` → 验证拦截 → `back()` → `click("搜索")` | ¥150.70 | 验证页后back可绕过 |
+| 拼多多 | `search_in_app` ADB tap(570,170) | ¥159 | 双策略有效 |
+| 得物 | `click("后台下载")` 绕过升级弹窗 → ADB tap+text搜索 | ¥148~299 | 升级弹窗可dismiss |
+
+**失败平台（5/9）及根因**：
+| 平台 | 根因 | 可解？ |
+|------|------|--------|
+| 慢慢买 | 联通一键登录的协议checkbox不在accessibility tree | 需手动勾选 |
+| 1688 | WebView验证码拦截 | 需手动 |
+| 京东极速版 | 安全验证拦截（同京东主APP） | 同京东绕过法 |
+| 闲鱼 | 全WebView渲染，accessibility tree只有图片URL | 架构限制 |
+| 抖音商城 | 剪贴板粘贴(keyevent 279)未生效，搜索框定位失败 | 需换输入策略 |
+
+**关键发现**：
+- APP内搜索展示的是"综合推荐"价，**不是全网最低价**
+- 识货网(shihuo.cn)严选店铺价比APP直搜低10-20元（天猫/京东¥140 vs APP直搜¥150）
+- **比价最优路径**：先用识货网/慢慢买查全网底价 → 再到对应平台下单
+- `adb shell input text` 只能输入ASCII，中文搜索需用 `clipboard_write` + 粘贴
+- keyevent 279(粘贴)在部分APP不生效，需要改用 `input keyevent --longpress 29`(Ctrl+V) 或 AccessibilityService输入
+
+### P29: WebView重应用的accessibility限制
+
+闲鱼、1688等全WebView渲染的APP，`/screen/text` 返回的是DOM元素ID而非可读文本。
+- 表现：texts全是图片URL和CSS类名，无商品标题/价格
+- 原因：WebView内容不走Android原生accessibility tree
+- **解决方向**：用 `/viewtree` 的 `webview=true` 参数（如果实现），或用ADB dumpsys获取WebView内容
+
 ## 架构级差距（未来方向）
 
 | 差距 | 描述 | 影响 |
