@@ -133,6 +133,69 @@ adb reverse tcp:8900 tcp:8900
 - **前端**: `020-投屏链路_Streaming/010-MJPEG投屏_MJPEG/assets/index.html`
 - **快捷键**: Alt+Shift+H
 
+## 微信公众号控制 (NEW)
+
+通过微信公众号发送文字/语音消息远程控制智能家居。
+
+### 架构
+```
+微信用户 → 微信服务器 → POST /wx (XML) → Gateway → MiCloud/eWeLink/音箱 → 设备
+```
+
+### 支持的命令
+
+| 类型 | 示例 |
+|------|------|
+| 设备控制 | 打开灯带 / 关闭风扇 / 关闭床插头 |
+| 状态查询 | 状态 / 设备列表 |
+| 场景模式 | 回家模式 / 睡眠模式 / 工作模式 |
+| 快捷操作 | 全部关闭 / 关灯 / 开灯 |
+| 音箱播报 | 说 你好世界 |
+| 自然语言 | 任意文字→自动转发给小爱音箱 |
+| 语音消息 | 微信语音→自动识别→执行命令 |
+
+### 部署步骤
+
+#### 1. 申请微信测试号 (免费，无需企业资质)
+1. 访问 https://mp.weixin.qq.com/debug/cgi-bin/sandbox
+2. 用微信扫码登录
+3. 记录页面上的 `appID` 和 `appsecret`
+
+#### 2. 配置 config.json
+```json
+"wechat": {
+    "enabled": true,
+    "token": "smarthome2026",
+    "appid": "从测试号页面复制",
+    "appsecret": "从测试号页面复制"
+}
+```
+
+#### 3. 公网暴露 (ngrok)
+```bash
+# 安装: https://ngrok.com/download
+ngrok http 8900
+# 获得公网URL，如: https://xxxx.ngrok-free.app
+```
+
+#### 4. 配置测试号回调
+- 在测试号页面「接口配置信息」填入:
+  - URL: `https://xxxx.ngrok-free.app/wx`
+  - Token: `smarthome2026` (与config.json一致)
+- 点击「提交」，验证通过即完成
+
+#### 5. 扫码关注测试号
+- 测试号页面底部二维码 → 微信扫码关注
+- 发送「帮助」测试
+
+### 微信公众号 API
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/wx` | 微信Token验证 |
+| POST | `/wx` | 消息接收与回复 |
+| GET | `/wx/status` | 模块状态 |
+
 ### 已验证路径 (2026-02-21)
 | 路径 | 验证 | 核心价值 |
 |------|------|---------|

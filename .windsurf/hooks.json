@@ -11,12 +11,6 @@
         "command": "python e:/windsurf-intelligence-pack/observatory/conversation_capture.py",
         "show_output": false
       }
-    ],
-    "post_setup_worktree": [
-      {
-        "command": "python hooks/setup_worktree.py",
-        "show_output": true
-      }
     ]
   }
 }

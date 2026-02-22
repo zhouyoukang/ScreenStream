@@ -28,3 +28,8 @@ Start-Sleep -Seconds 2
 - 编译产物路径: `010-用户界面与交互_UI\build\outputs\apk\FDroid\debug\app-FDroid-debug.apk`
 - `pm install -S` 需要精确的文件字节数
 - 构建前确认设备已连接: `adb devices`
+- **P23**: `force-stop` 会禁用 AccessibilityService，重启后必须恢复:
+  ```powershell
+  $current = & adb shell settings get secure enabled_accessibility_services
+  & adb shell settings put secure enabled_accessibility_services "${current}:info.dvkr.screenstream.dev/info.dvkr.screenstream.input.InputService"
+  ```

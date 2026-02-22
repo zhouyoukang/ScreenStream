@@ -13,7 +13,7 @@
 | `070-基础设施_Infrastructure/` | `:common` | 模块管理/DI/工具/日志 |
 | `080-配置管理_Settings/` | — | 全局+模块配置 |
 | `090-构建与部署_Build/` | — | Gradle构建 + 部署脚本 |
-| `100-智能家居_SmartHome/` | — | 智能家居网关：HA代理+涂鸦Cloud API |
+| `100-智能家居_SmartHome/` | — | 智能家居网关：MiCloud直连+eWeLink+涂鸦+HA |
 | `tools/ai-phone-control/` | — | AI操控手机：phone_lib.py + 3测试 + 实测发现 |
 | `05-文档_docs/` | — | 12个核心文档 + adr/ |
 | `管理/` | — | 归档（非核心项目/过时文档/历史产物） |
