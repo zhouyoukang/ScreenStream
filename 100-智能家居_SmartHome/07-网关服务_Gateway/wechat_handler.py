@@ -13,6 +13,7 @@
   帮助:     "帮助" "help" "?"
 """
 
+import asyncio
 import hashlib
 import time
 import re
@@ -214,7 +215,7 @@ class WeChatCommandRouter:
         return "\n".join(lines)
 
     async def _execute_scene(self, scene_key: str) -> str:
-        """执行场景宏"""
+        """执行场景宏 — 立即返回确认，后台异步执行（避免微信5秒超时）"""
         macros = self.gw.get("scene_macros", {})
         scene = macros.get(scene_key)
         if not scene:
@@ -229,18 +230,19 @@ class WeChatCommandRouter:
         if not target:
             return "没有在线音箱，无法执行场景"
 
-        did = str(target["did"])
-        results = []
-        import asyncio
-        for cmd in scene["commands"]:
-            result = micloud.control_device(did, "execute_command", cmd, {"silent": True})
-            ok = result.get("ok", False)
-            results.append(f"  {'✅' if ok else '❌'} {cmd}")
-            await asyncio.sleep(2)
+        # 场景宏含多个命令+sleep，总耗时可能>5秒 → 后台执行
+        async def _run_scene():
+            did = str(target["did"])
+            for cmd in scene["commands"]:
+                try:
+                    micloud.control_device(did, "execute_command", cmd, {"silent": True})
+                except Exception as e:
+                    logger.error("Scene command '%s' failed: %s", cmd, e)
+                await asyncio.sleep(2)
 
-        ok_count = sum(1 for r in results if "✅" in r)
-        header = f"🎬 {scene['name']} ({ok_count}/{len(results)})\n"
-        return header + "\n".join(results)
+        asyncio.create_task(_run_scene())
+        steps = " → ".join(scene["commands"])
+        return f"🎬 {scene['name']} 执行中...\n{steps}"
 
     def _parse_quick_action(self, text: str) -> Optional[str]:
         """解析快捷操作"""

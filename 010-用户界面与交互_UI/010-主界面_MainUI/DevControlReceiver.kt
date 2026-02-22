@@ -5,7 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import info.dvkr.screenstream.mjpeg.settings.MjpegSettings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import info.dvkr.screenstream.ui.AccessibilityAutoEnable
 import org.koin.core.context.GlobalContext
 
 /**
@@ -16,8 +20,9 @@ import org.koin.core.context.GlobalContext
  *   adb shell am broadcast -a com.screenstream.DEV_CONTROL --ei port 8086 -n info.dvkr.screenstream.dev/info.dvkr.screenstream.DevControlReceiver
  *
  * Parameters:
- *   --ei port <int>       Set HTTP server port (1025-65535, default 8080)
- *   --ez start_app <bool> Launch SingleActivity (default true)
+ *   --ei port <int>        Set HTTP server port (1025-65535, default 8080)
+ *   --ez start_app <bool>  Launch SingleActivity (default true)
+ *   --ez skip_a11y <bool>  Skip AccessibilityService auto-enable (default false)
  */
 public class DevControlReceiver : BroadcastReceiver() {
 
@@ -51,7 +56,24 @@ public class DevControlReceiver : BroadcastReceiver() {
             }
         }
 
-        // 2. Launch app if requested (default: true)
+        // 2. Auto-enable AccessibilityService (Root → Shizuku → skip)
+        val skipA11y = intent.getBooleanExtra("skip_a11y", false)
+        if (!skipA11y) {
+            try {
+                if (!info.dvkr.screenstream.ui.AccessibilityAutoEnable.isAccessibilityEnabled(context)) {
+                    kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        val result = info.dvkr.screenstream.ui.AccessibilityAutoEnable.enable(context)
+                        Log.i(TAG, "A11y auto-enable: ${result.method} → ${result.message}")
+                    }
+                } else {
+                    Log.i(TAG, "AccessibilityService already enabled")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "A11y auto-enable failed: ${e.message}")
+            }
+        }
+
+        // 3. Launch app if requested (default: true)
         val startApp = intent.getBooleanExtra("start_app", true)
         if (startApp) {
             try {

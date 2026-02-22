@@ -1,1 +1,5 @@
 local.properties
+090-构建与部署_Build/android-sdk/
+090-构建与部署_Build/temp-build/
+090-构建与部署_Build/gradle/
+管理/00-归档/

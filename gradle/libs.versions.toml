@@ -19,6 +19,7 @@ androidx-datastore-preferences = "1.1.7"
 compose-bom = "2025.07.00"
 
 process-phoenix = "3.0.0"
+shizuku = "13.1.5"
 xlog = "1.11.1"
 qrcodegen = "1.8.0"
 
@@ -72,6 +73,8 @@ androidx-compose-material3-adaptive-layout = { module = "androidx.compose.materi
 androidx-compose-material3-adaptive-navigation = { module = "androidx.compose.material3.adaptive:adaptive-navigation"  }
 
 processPhoenix = { module = "com.jakewharton:process-phoenix", version.ref = "process-phoenix" }
+shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
+shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
 xlog = { module = "com.elvishew:xlog", version.ref = "xlog" }
 nayuki-qrcodegen = { module = "io.nayuki:qrcodegen", version.ref = "qrcodegen" }
 

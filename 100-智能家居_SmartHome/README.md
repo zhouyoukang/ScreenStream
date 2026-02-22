@@ -123,9 +123,12 @@ adb reverse tcp:8900 tcp:8900
     ├── config.json            ← 实际配置(gitignored)
     ├── requirements.txt       ← Python依赖
     ├── verify_platforms.py    ← 平台连通性验证
-    ├── test_wechat.py         ← ★ 微信模块本地测试
-    ├── test_mina.py           ← Mina API(音箱)连通测试
-    └── start.bat              ← 一键启动
+    ├── test_wechat.py         ← ★ 微信模块离线单元测试
+    ├── test_wx_live.py        ← 微信模块在线测试(需运行中Gateway)
+    ├── test_wx_public.py      ← 微信公网URL端到端测试
+    ├── ha_inventory.py        ← HA实体盘点(一次性脚本, 可删除)
+    ├── start.bat              ← 一键启动
+    └── start_wechat.bat       ← Gateway + Cloudflare隧道一键启动
 ```
 
 ### ScreenStream 集成点

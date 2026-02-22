@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-微信公众号模块本地测试 — 不需要微信服务器，直接模拟 XML 请求
+微信公众号模块离线单元测试 — 不需要微信服务器，不需要运行中的 Gateway
 
 用法:
-  python test_wechat.py           # 测试签名验证 + 模拟消息
-  python test_wechat.py --live    # 连接运行中的 Gateway 测试
+  python test_wechat.py
+
+在线测试请使用:
+  python test_wx_live.py           # 本地 Gateway 在线测试
+  python test_wx_public.py <URL>   # 公网 URL 端到端测试
 """
 
-import sys
 import time
 import hashlib
 
@@ -155,56 +157,9 @@ print(f"  设备别名: {len(DEVICE_ALIASES)} 个")
 print(f"  场景别名: {len(SCENE_ALIASES)} 个")
 
 # ============================================================
-# 6. Live 测试 (可选, 需运行中的 Gateway)
-# ============================================================
-if "--live" in sys.argv:
-    print("\n=== 6. Live Gateway 测试 ===")
-    try:
-        import httpx
-    except ImportError:
-        print("  [SKIP] httpx not installed")
-        sys.exit(0)
-
-    GW = "http://127.0.0.1:8900"
-
-    # 测试微信状态端点
-    try:
-        r = httpx.get(f"{GW}/wx/status", timeout=5)
-        d = r.json()
-        print(f"  [{'PASS' if r.status_code == 200 else 'FAIL'}] /wx/status: enabled={d.get('enabled')}, router={d.get('router_ready')}")
-    except Exception as e:
-        print(f"  [FAIL] /wx/status: {e}")
-
-    # 模拟微信签名验证
-    test_token = "smarthome"  # 需与 config.json 中一致
-    ts = str(int(time.time()))
-    nc = "test_nonce"
-    tmp = sorted([test_token, ts, nc])
-    sig = hashlib.sha1("".join(tmp).encode()).hexdigest()
-    try:
-        r = httpx.get(f"{GW}/wx", params={"signature": sig, "timestamp": ts, "nonce": nc, "echostr": "echo_ok"}, timeout=5)
-        print(f"  [{'PASS' if r.text == 'echo_ok' else 'FAIL'}] GET /wx 签名验证: {r.status_code} → {r.text[:30]}")
-    except Exception as e:
-        print(f"  [FAIL] GET /wx: {e}")
-
-    # 模拟消息
-    msg_xml = f"""<xml>
-<ToUserName><![CDATA[gh_test]]></ToUserName>
-<FromUserName><![CDATA[test_user]]></FromUserName>
-<CreateTime>{int(time.time())}</CreateTime>
-<MsgType><![CDATA[text]]></MsgType>
-<Content><![CDATA[帮助]]></Content>
-<MsgId>123456</MsgId>
-</xml>"""
-    try:
-        r = httpx.post(f"{GW}/wx", content=msg_xml.encode(), headers={"Content-Type": "application/xml"}, timeout=10)
-        print(f"  [{'PASS' if '命令列表' in r.text else 'FAIL'}] POST /wx 文本消息: {r.status_code}, len={len(r.text)}")
-    except Exception as e:
-        print(f"  [FAIL] POST /wx: {e}")
-
-# ============================================================
 # Summary
 # ============================================================
 print("\n" + "=" * 50)
-print("  微信公众号模块测试完成!")
+print("  微信公众号模块离线测试完成!")
+print("  在线测试: python test_wx_live.py")
 print("=" * 50)

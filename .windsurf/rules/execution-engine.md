@@ -14,6 +14,30 @@ trigger: always_on
 - 优先文件工具（`read_file`/`edit`/`find_by_name`/`grep_search`）替代终端
 - 命令拆短（3-6条），禁止长管道/并行命令组
 - 卡顿/超时 → 立即切换文件工具方案
+- **非阻塞命令超时30s**：WaitMsBeforeAsync后若无输出，立即放弃换方案
+
+## 防卡顿铁律（递归扫描 = 项目头号杀手）
+> 本项目含 android-sdk(~1GB)、管理/00-归档/(500+项)、.git/(大历史)，无界递归必卡。
+
+**绝对禁止的命令模式**：
+- `Get-ChildItem -Recurse` 无 `-Exclude`/`-Path` 限定
+- `dir -r`、`ls -R` 扫描项目根目录
+- `find . -type f` 无 `-maxdepth` 或 `-not -path` 排除
+- 任何对项目根目录的递归大小统计/文件搜索
+
+**必须使用的替代方案**：
+| 需求 | 禁止 | 应该用 |
+|------|------|--------|
+| 查找文件 | `Get-ChildItem -Recurse` | `find_by_name` 工具（内置50条上限） |
+| 搜索内容 | `Select-String -Recurse` | `grep_search` 工具（自动排除gitignore） |
+| 查看目录 | `dir -r` | `list_dir` 工具 |
+| 大文件定位 | 递归+Where-Object过滤 | `find_by_name` + 指定子目录 |
+| git操作 | 无限制的git log/diff | `git log -n 20`、`git diff --stat` |
+
+**如果必须用终端递归**（极罕见）：
+- 必须排除：`-Exclude android-sdk,00-归档,.git,.gradle,build`
+- 必须限深：`-Depth 3` 或 `-maxdepth 3`
+- 必须非阻塞 + 30s超时检查
 
 ## Hooks 策略
 - **Python/Node.js hooks**：安全可用（日志、格式化、安全检查）
@@ -92,6 +116,8 @@ trigger: always_on
 - 禁止在最后一步调用可能超时的工具
 - 禁止以"需要APK测试"为由中断API开发
 - 禁止不按权威入口顺序查找信息（`05-文档_docs/README.md` → `MODULES.md` → `FEATURES.md`）
+- **禁止对项目根目录执行无界递归扫描**（Get-ChildItem -Recurse / dir -r / find -type f）
+- **禁止运行可能超过30s的终端命令而不设非阻塞+超时检查**
 
 ## 多Agent隔离（Worktree 架构）
 

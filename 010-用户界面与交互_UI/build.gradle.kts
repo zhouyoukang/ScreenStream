@@ -61,7 +61,7 @@ android {
         getByName("main") {
             java.setSrcDirs(listOf(
                 "010-主界面_MainUI",
-                "020-设置界面_SettingsUI", 
+                "020-设置界面_SettingsUI",
                 "030-通知系统_Notifications",
                 "040-瓦片服务_Tiles",
                 "050-通用组件_CommonUI",
@@ -100,4 +100,7 @@ dependencies {
     implementation(libs.koin.android)
 
     implementation(libs.processPhoenix)
+
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
 }

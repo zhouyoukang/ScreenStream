@@ -58,6 +58,8 @@
 | 宏删除 | API | `InputRoutes.kt` → `/macro/delete/{id}` → `MacroEngine` | — | `curl POST /macro/delete/xxx` | 8081/8084 |
 | 宏运行状态 | API | `InputRoutes.kt` → `/macro/running` → `MacroEngine` | — | `curl GET /macro/running` | 8081/8084 |
 | 宏执行日志 | API | `InputRoutes.kt` → `/macro/log/{id}` → `MacroEngine` | — | `curl GET /macro/log/xxx` | 8081/8084 |
+| 无障碍状态查询 | API | `InputRoutes.kt` → `/a11y/status` | — | `curl GET /a11y/status` | 8081/8084 |
+| 无障碍自动启用 | API | `InputRoutes.kt` → `/a11y/enable` → Root(su) | ROOT | `curl POST /a11y/enable` | 8081/8084 |
 | 分类命令菜单 | Web UI 底部栏 | `index.html` toggleCommandMenu() | — | 点击☰按钮或Alt+M | 8081 |
 | scrcpy兼容快捷键 | Web UI 键盘 | `index.html` keydown handler | — | Alt+H/B/S/F/↑↓/N/P/O/C/M | 8081 |
 | 中键=HOME | Web UI 鼠标 | `index.html` mousedown button===1 | — | 中键点击投屏画面 | 8081 |

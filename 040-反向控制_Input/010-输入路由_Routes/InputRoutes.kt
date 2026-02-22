@@ -34,6 +34,25 @@ private suspend fun RoutingContext.requireInputService(block: suspend (InputServ
     }
 }
 
+private fun execShell(vararg cmd: String): String {
+    val process = Runtime.getRuntime().exec(cmd)
+    val output = process.inputStream.bufferedReader().readText()
+    process.waitFor()
+    process.destroy()
+    return output
+}
+
+private fun detectA11yMethod(): String {
+    return try {
+        val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
+        val ok = process.waitFor() == 0
+        process.destroy()
+        if (ok) "root" else "manual"
+    } catch (_: Exception) {
+        "manual"
+    }
+}
+
 public fun Route.installInputRoutes() {
     get("/status") {
         val json = JSONObject().apply {
@@ -972,6 +991,48 @@ public fun Route.installInputRoutes() {
             call.respondText(body, ContentType.Application.Json)
         } catch (e: Exception) {
             call.respondText(jsonError("Quick action error: ${e.message}"), ContentType.Application.Json, HttpStatusCode.BadRequest)
+        }
+    }
+
+    // ==================== Accessibility ====================
+
+    get("/a11y/status") {
+        val svc = InputService.instance
+        val json = JSONObject().apply {
+            put("connected", svc != null)
+            put("enabled", InputService.isConnected())
+            put("method_available", detectA11yMethod())
+        }
+        call.respondText(json.toString(), ContentType.Application.Json)
+    }
+
+    post("/a11y/enable") {
+        try {
+            val pkg = call.application.environment.config.propertyOrNull("ktor.application.id")?.getString()
+                ?: "info.dvkr.screenstream.dev"
+            val component = "$pkg/info.dvkr.screenstream.input.InputService"
+
+            val current = execShell("su", "-c", "settings get secure enabled_accessibility_services").trim()
+            if (component in current) {
+                call.respondText(
+                    JSONObject().put("ok", true).put("message", "Already enabled").toString(),
+                    ContentType.Application.Json
+                )
+                return@post
+            }
+
+            val newValue = if (current == "null" || current.isBlank()) component else "$current:$component"
+            execShell("su", "-c", "settings put secure enabled_accessibility_services $newValue")
+            execShell("su", "-c", "settings put secure accessibility_enabled 1")
+
+            val verify = execShell("su", "-c", "settings get secure enabled_accessibility_services").trim()
+            val success = component in verify
+            call.respondText(
+                JSONObject().put("ok", success).put("method", "root").put("message", if (success) "Enabled via root" else "Enable failed").toString(),
+                ContentType.Application.Json
+            )
+        } catch (e: Exception) {
+            call.respondText(jsonError("A11y enable error: ${e.message}"), ContentType.Application.Json, HttpStatusCode.InternalServerError)
         }
     }
 
