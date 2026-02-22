@@ -73,11 +73,8 @@ replay_pid*.log
 
 # ============================================
 # Build logs (local temp)
+# >> build_log/error/log/current_build moved to .git/info/exclude
 # ============================================
-build_log.txt
-build_error.txt
-log.txt
-current_build.txt
 temp_gh_*
 
 # ============================================
@@ -110,17 +107,15 @@ volumes/
 
 # ============================================
 # Smart Home Gateway credentials & cache
+# >> Moved to .git/info/exclude (allow AI Agent read)
 # ============================================
-100-智能家居_SmartHome/07-网关服务_Gateway/config.json
-100-智能家居_SmartHome/07-网关服务_Gateway/.xiaomi_token_cache.json
-100-智能家居_SmartHome/07-网关服务_Gateway/mina_token.json
 
 # ============================================
 # Large media files (video / audio)
 # ============================================
 *.mkv
 *.mp4
-*.ts
+# *.ts moved to .git/info/exclude (conflicts with TypeScript)
 !*.d.ts
 *.webm
 *.avi
@@ -156,13 +151,13 @@ ffmpeg_*.log
 
 # ============================================
 # Presentation / slides / screenshots (non-source)
+# >> screenshot*.png moved to .git/info/exclude
 # ============================================
 presentation/
 **/presentation/
-**/screenshot*.png
 
 # ============================================
 # Archived projects (moved to 管理/00-归档/)
 # ============================================
 agent-comm/
-screen-check.png
+# screen-check.png moved to .git/info/exclude
