@@ -1,6 +1,6 @@
 import http.server, json, os, urllib.parse, sys
 
-DOCS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '05-文档_docs')
+DOCS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '文档')
 VIEWER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'md-viewer.html')
 
 class Handler(http.server.SimpleHTTPRequestHandler):

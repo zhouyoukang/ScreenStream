@@ -19,19 +19,19 @@ rootProject.name = "ScreenStream_v2"
 
 // 新的功能模块结构
 include(":app")
-project(":app").projectDir = file("010-用户界面与交互_UI")
+project(":app").projectDir = file("用户界面")
 
-include(":common") 
-project(":common").projectDir = file("070-基础设施_Infrastructure")
+include(":common")
+project(":common").projectDir = file("基础设施")
 
 include(":mjpeg")
-project(":mjpeg").projectDir = file("020-投屏链路_Streaming/010-MJPEG投屏_MJPEG")
+project(":mjpeg").projectDir = file("投屏链路/MJPEG投屏")
 
 include(":rtsp")
-project(":rtsp").projectDir = file("020-投屏链路_Streaming/020-RTSP投屏_RTSP")
+project(":rtsp").projectDir = file("投屏链路/RTSP投屏")
 
 include(":webrtc")
-project(":webrtc").projectDir = file("020-投屏链路_Streaming/030-WebRTC投屏_WebRTC")
+project(":webrtc").projectDir = file("投屏链路/WebRTC投屏")
 
 include(":input")
-project(":input").projectDir = file("040-反向控制_Input")
+project(":input").projectDir = file("反向控制")

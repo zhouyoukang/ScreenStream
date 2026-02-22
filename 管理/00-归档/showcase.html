@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ScreenStream v2 - 成果展示</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+h1{text-align:center;font-size:2.2em;margin:20px 0 5px;background:linear-gradient(135deg,#58a6ff,#bc8cff,#f778ba);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{text-align:center;color:#8b949e;font-size:1.1em;margin-bottom:30px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:24px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;transition:transform .2s,border-color .3s}
+.card:hover{transform:translateY(-2px);border-color:#58a6ff}
+.card h3{font-size:1.1em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h3 .icon{font-size:1.4em}
+.stats-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px}
+.stat{background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:10px 16px;text-align:center;flex:1;min-width:100px}
+.stat .num{font-size:1.8em;font-weight:700;color:#58a6ff}
+.stat .label{font-size:.75em;color:#8b949e;margin-top:2px}
+.stat.green .num{color:#3fb950}
+.stat.purple .num{color:#bc8cff}
+.stat.orange .num{color:#d29922}
+.stat.pink .num{color:#f778ba}
+.progress-bar{height:6px;background:#21262d;border-radius:3px;margin:6px 0;overflow:hidden}
+.progress-bar .fill{height:100%;border-radius:3px;transition:width 1s ease}
+.fill-green{background:linear-gradient(90deg,#238636,#3fb950)}
+.fill-blue{background:linear-gradient(90deg,#1f6feb,#58a6ff)}
+.fill-purple{background:linear-gradient(90deg,#8957e5,#bc8cff)}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.9em}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid #21262d}
+th{color:#8b949e;font-weight:600;font-size:.8em;text-transform:uppercase}
+td{color:#c9d1d9}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.75em;font-weight:600}
+.badge-green{background:rgba(63,185,80,.15);color:#3fb950}
+.badge-yellow{background:rgba(210,153,34,.15);color:#d29922}
+.badge-red{background:rgba(248,81,73,.15);color:#f85149}
+.badge-blue{background:rgba(88,166,255,.15);color:#58a6ff}
+.live-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3fb950;margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.section-title{font-size:1.4em;margin:30px 0 16px;padding-bottom:8px;border-bottom:1px solid #21262d;display:flex;align-items:center;gap:10px}
+.api-demo{background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:12px;font-family:'Cascadia Code','Fira Code',monospace;font-size:.85em;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.api-demo .key{color:#ff7b72}
+.api-demo .val{color:#a5d6ff}
+.api-demo .str{color:#a5d6ff}
+.api-demo .num{color:#79c0ff}
+.api-demo .bool{color:#ffa657}
+#devicePanel .api-demo{max-height:300px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:768px){.two-col{grid-template-columns:1fr}}
+.smarthome-devices{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.sh-dev{background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:8px 12px;font-size:.85em;display:flex;align-items:center;gap:6px}
+.sh-dev.online{border-color:#238636}
+.sh-dev .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-on{background:#3fb950}
+.dot-off{background:#484f58}
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#21262d}
+.timeline-item{position:relative;margin-bottom:16px;padding-left:16px}
+.timeline-item::before{content:'';position:absolute;left:-20px;top:6px;width:12px;height:12px;border-radius:50%;background:#1f6feb;border:2px solid #0d1117}
+.timeline-item .date{font-size:.8em;color:#8b949e}
+.timeline-item .event{font-size:.95em;margin-top:2px}
+.footer{text-align:center;color:#484f58;padding:30px 0;font-size:.85em}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>ScreenStream v2 — 项目成果总览</h1>
+  <p class="subtitle">PC浏览器远程操控Android手机 · 70+ API · AI Brain · 智能家居集成</p>
+
+  <!-- 核心指标 -->
+  <div class="stats-row" style="margin-bottom:24px">
+    <div class="stat green"><div class="num" id="apiCount">70+</div><div class="label">API 端点</div></div>
+    <div class="stat purple"><div class="num">29/29</div><div class="label">L0 原子测试</div></div>
+    <div class="stat"><div class="num">6/6</div><div class="label">L1 组合测试</div></div>
+    <div class="stat green"><div class="num">5/5</div><div class="label">复杂联动(43步)</div></div>
+    <div class="stat orange"><div class="num">24</div><div class="label">智能家居设备</div></div>
+    <div class="stat pink"><div class="num" id="uptimeVal">-</div><div class="label">设备运行时间</div></div>
+  </div>
+
+  <!-- 实时设备信息 -->
+  <div class="section-title">📱 实时设备状态 <span class="live-indicator"></span><span style="font-size:.7em;color:#3fb950">LIVE</span></div>
+  <div class="grid" id="devicePanel">
+    <div class="card">
+      <h3><span class="icon">📊</span> 设备信息</h3>
+      <div class="api-demo" id="deviceInfo">加载中...</div>
+    </div>
+    <div class="card">
+      <h3><span class="icon">🌳</span> 屏幕视图树 (depth=3)</h3>
+      <div class="api-demo" id="viewTree">加载中...</div>
+    </div>
+  </div>
+
+  <!-- 测试成果 -->
+  <div class="section-title">🧪 测试验证成果</div>
+  <div class="grid">
+    <div class="card">
+      <h3><span class="icon">⚡</span> API测试覆盖</h3>
+      <table>
+        <tr><th>层级</th><th>测试</th><th>结果</th><th>通过率</th></tr>
+        <tr><td>L0 原子API</td><td>29项</td><td><span class="badge badge-green">29/29</span></td><td>100%</td></tr>
+        <tr><td>L1 组合序列</td><td>6项</td><td><span class="badge badge-green">6/6</span></td><td>100%</td></tr>
+        <tr><td>L2 AI命令</td><td>1项</td><td><span class="badge badge-green">1/1</span></td><td>100%</td></tr>
+        <tr><td>Agent多步</td><td>5项</td><td><span class="badge badge-green">5/5</span></td><td>100%</td></tr>
+        <tr><td>复杂联动</td><td>43步</td><td><span class="badge badge-green">5/5</span></td><td>86%零AI</td></tr>
+        <tr><td>findByText</td><td>12项</td><td><span class="badge badge-green">12/12</span></td><td>100%</td></tr>
+        <tr><td>APP深度操控</td><td>15项</td><td><span class="badge badge-yellow">12/15</span></td><td>80%</td></tr>
+      </table>
+      <div style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;font-size:.85em"><span>总体通过率</span><span style="color:#3fb950;font-weight:700">70/73 = 95.9%</span></div>
+        <div class="progress-bar"><div class="fill fill-green" style="width:95.9%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="icon">🔬</span> 关键发现 (P1-P31)</h3>
+      <table>
+        <tr><th>ID</th><th>发现</th><th>状态</th></tr>
+        <tr><td>P3</td><td>信任模型T0全量感知有效</td><td><span class="badge badge-green">验证</span></td></tr>
+        <tr><td>P16</td><td>通知监控=零依赖核心能力</td><td><span class="badge badge-green">验证</span></td></tr>
+        <tr><td>P20</td><td>ADB+API混合模式最优</td><td><span class="badge badge-green">验证</span></td></tr>
+        <tr><td>P21</td><td>微信三重阻止→三层回退修复</td><td><span class="badge badge-blue">已修复</span></td></tr>
+        <tr><td>P22</td><td>剪贴板Android10+限制→缓存</td><td><span class="badge badge-blue">已修复</span></td></tr>
+        <tr><td>P28</td><td>9APP比价: 4成功/5失败(OEM)</td><td><span class="badge badge-yellow">部分</span></td></tr>
+        <tr><td>P29</td><td>WebView APP无法读取文本</td><td><span class="badge badge-red">限制</span></td></tr>
+        <tr><td>P31</td><td>phone_lib重构后全部验证通过</td><td><span class="badge badge-green">验证</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- API能力矩阵 -->
+  <div class="section-title">🎯 API 能力矩阵 (70+ 端点)</div>
+  <div class="grid">
+    <div class="card">
+      <h3><span class="icon">👆</span> 触控与手势</h3>
+      <div class="smarthome-devices">
+        <div class="sh-dev"><span class="badge badge-green">POST</span> /tap</div>
+        <div class="sh-dev"><span class="badge badge-green">POST</span> /swipe</div>
+        <div class="sh-dev"><span class="badge badge-green">POST</span> /longpress</div>
+        <div class="sh-dev"><span class="badge badge-green">POST</span> /doubletap</div>
+        <div class="sh-dev"><span class="badge badge-green">POST</span> /scroll</div>
+        <div class="sh-dev"><span class="badge badge-green">POST</span> /pinch</div>
+        <div class="sh-dev"><span class="badge badge-green">POST</span> /pointer</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="icon">🔑</span> 系统操作</h3>
+      <div class="smarthome-devices">
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /home</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /back</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /recents</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /notifications</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /quicksettings</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /lock</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /wake</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /screenshot</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /power</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="icon">🧠</span> AI Brain (语义层)</h3>
+      <div class="smarthome-devices">
+        <div class="sh-dev"><span class="badge badge-green">GET</span> /viewtree</div>
+        <div class="sh-dev"><span class="badge badge-green">GET</span> /windowinfo</div>
+        <div class="sh-dev"><span class="badge badge-green">POST</span> /findclick</div>
+        <div class="sh-dev"><span class="badge badge-green">POST</span> /findnodes</div>
+        <div class="sh-dev"><span class="badge badge-green">POST</span> /settext</div>
+        <div class="sh-dev"><span class="badge badge-green">POST</span> /dismiss</div>
+        <div class="sh-dev"><span class="badge badge-green">GET</span> /screen/text</div>
+        <div class="sh-dev"><span class="badge badge-green">GET</span> /foreground</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="icon">📱</span> 设备管理</h3>
+      <div class="smarthome-devices">
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /openapp</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /openurl</div>
+        <div class="sh-dev"><span class="badge badge-blue">GET</span> /deviceinfo</div>
+        <div class="sh-dev"><span class="badge badge-blue">GET</span> /apps</div>
+        <div class="sh-dev"><span class="badge badge-blue">GET/POST</span> /clipboard</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /text</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /key</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /brightness</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /volume</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /flashlight</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /vibrate</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /findphone</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /media/*</div>
+        <div class="sh-dev"><span class="badge badge-blue">POST</span> /dnd</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 智能家居 -->
+  <div class="section-title">🏠 智能家居集成</div>
+  <div class="grid">
+    <div class="card">
+      <h3><span class="icon">🌐</span> 三条零成本路径</h3>
+      <table>
+        <tr><th>路径</th><th>方式</th><th>能力</th><th>状态</th></tr>
+        <tr><td>MiCloud MIoT</td><td>HA session</td><td>13功能 / 24设备</td><td><span class="badge badge-green">✅</span></td></tr>
+        <tr><td>音箱语音代理</td><td>execute_command</td><td>17指令</td><td><span class="badge badge-green">✅</span></td></tr>
+        <tr><td>Mina API</td><td>micoapi token</td><td>TTS / 音量 / 播放</td><td><span class="badge badge-green">✅</span></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3><span class="icon">💬</span> 微信公众号控制</h3>
+      <table>
+        <tr><th>测试</th><th>结果</th></tr>
+        <tr><td>离线单元测试</td><td><span class="badge badge-green">11/11</span></td></tr>
+        <tr><td>Gateway在线测试</td><td><span class="badge badge-green">8/8</span></td></tr>
+        <tr><td>自然输入测试</td><td><span class="badge badge-green">63种输入</span></td></tr>
+        <tr><td>体验优化</td><td><span class="badge badge-blue">12个黑洞已修复</span></td></tr>
+      </table>
+      <div style="margin-top:8px;font-size:.85em;color:#8b949e">
+        命令解析链：帮助→状态→场景宏→舒适意图→快捷操作→TTS→设备控制→小爱代理→兜底
+      </div>
+    </div>
+    <div class="card" style="grid-column:span 2">
+      <h3><span class="icon">📡</span> 设备矩阵 (24台)</h3>
+      <div class="smarthome-devices" id="shDevices">
+        <div class="sh-dev"><div class="dot dot-off"></div>💡 灯带</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🔌 筒灯</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🔌 一号</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🔌 二号</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🔌 三号</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🔌 床底灯</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🔌 手机充电器</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🌀 落地扇</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>👔 晾衣机pro</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🌡️ 电热毯</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🔊 小爱触屏音箱</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🔊 Redmi触屏Pro 8寸</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🔊 Sound</div>
+        <div class="sh-dev"><div class="dot dot-off"></div>🔊 小爱音箱Pro</div>
+        <div class="sh-dev online"><div class="dot dot-on"></div>🔊 小爱音箱Pro2</div>
+      </div>
+      <div style="margin-top:12px;font-size:.85em;color:#8b949e">
+        🟢 在线: 1 (Pro2) · ⚪ 离线(未通电): 14+ · 场景: 回家/离家/睡眠/观影/工作
+      </div>
+    </div>
+  </div>
+
+  <!-- 性能数据 -->
+  <div class="section-title">⚡ 性能指标</div>
+  <div class="grid">
+    <div class="card">
+      <h3><span class="icon">🚀</span> API响应时间</h3>
+      <table>
+        <tr><th>操作</th><th>响应时间</th><th>说明</th></tr>
+        <tr><td>/status</td><td style="color:#3fb950">&lt;5ms</td><td>连接状态</td></tr>
+        <tr><td>/windowinfo</td><td style="color:#3fb950">~5ms</td><td>窗口信息</td></tr>
+        <tr><td>/screen/text</td><td style="color:#3fb950">10-30ms</td><td>屏幕文本</td></tr>
+        <tr><td>/viewtree (d=4)</td><td style="color:#58a6ff">20-50ms</td><td>视图树</td></tr>
+        <tr><td>/tap, /swipe</td><td style="color:#3fb950">50-100ms</td><td>触控操作</td></tr>
+        <tr><td>/viewtree (d=8)</td><td style="color:#58a6ff">50-200ms</td><td>标准深度</td></tr>
+        <tr><td>TTS播报</td><td style="color:#d29922">~267ms</td><td>小爱音箱</td></tr>
+        <tr><td>语音代理</td><td style="color:#d29922">~286ms</td><td>命令执行</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3><span class="icon">📐</span> 架构概览</h3>
+      <div style="font-size:.9em;line-height:1.8">
+        <div><span class="badge badge-blue">Kotlin</span> Android APP (ScreenStream)</div>
+        <div style="padding-left:20px">├── <span class="badge badge-green">Ktor</span> HTTP Server (端口8086)</div>
+        <div style="padding-left:20px">├── <span class="badge badge-green">AccessibilityService</span> 输入控制</div>
+        <div style="padding-left:20px">├── <span class="badge badge-green">MediaProjection</span> 屏幕捕获</div>
+        <div style="padding-left:20px">└── <span class="badge badge-green">WebSocket</span> H.264流 + 触控</div>
+        <div style="margin-top:8px"><span class="badge badge-blue">Python</span> Phone 控制库</div>
+        <div style="padding-left:20px">├── phone_lib.py (Phone类)</div>
+        <div style="padding-left:20px">├── agent_demo.py (Agent示例)</div>
+        <div style="padding-left:20px">└── complex_scenarios.py (联动场景)</div>
+        <div style="margin-top:8px"><span class="badge badge-blue">Python</span> 智能家居网关</div>
+        <div style="padding-left:20px">├── gateway.py (路由 1182行)</div>
+        <div style="padding-left:20px">├── 6个后端模块 (MiCloud/eWeLink/HA/Mina/Tuya/WeChat)</div>
+        <div style="padding-left:20px">└── wechat_handler.py (公众号控制)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 二手书助手 -->
+  <div class="section-title">📚 二手书助手系统</div>
+  <div class="grid">
+    <div class="card">
+      <h3><span class="icon">🛒</span> 系统规模</h3>
+      <div class="stats-row">
+        <div class="stat green"><div class="num">133+</div><div class="label">API端点</div></div>
+        <div class="stat purple"><div class="num">154</div><div class="label">书籍种类</div></div>
+        <div class="stat"><div class="num">559</div><div class="label">库存册数</div></div>
+        <div class="stat orange"><div class="num">139</div><div class="label">采购订单</div></div>
+      </div>
+      <div class="stats-row">
+        <div class="stat pink"><div class="num">¥7,924</div><div class="label">总采购成本</div></div>
+        <div class="stat green"><div class="num">¥31,315</div><div class="label">营收估算</div></div>
+        <div class="stat"><div class="num">43/43</div><div class="label">动态测试通过</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="icon">✅</span> 前端页面验证</h3>
+      <table>
+        <tr><th>页面</th><th>功能</th><th>状态</th></tr>
+        <tr><td>📊 仪表盘</td><td>营收KPI+缺货TOP10</td><td><span class="badge badge-green">✅</span></td></tr>
+        <tr><td>🛒 采购订单</td><td>CRUD+筛选+图片</td><td><span class="badge badge-green">✅</span></td></tr>
+        <tr><td>📦 库存查询</td><td>97种/1844册搜索</td><td><span class="badge badge-green">✅</span></td></tr>
+        <tr><td>🔍 智能匹配</td><td>OCR+截图粘贴</td><td><span class="badge badge-green">✅</span></td></tr>
+        <tr><td>🧾 三鲜订单</td><td>对账面板</td><td><span class="badge badge-green">✅</span></td></tr>
+        <tr><td>💰 成本看板</td><td>47种/均价¥10.65</td><td><span class="badge badge-green">✅</span></td></tr>
+        <tr><td>📊 库存看板</td><td>缺口/盈余统计</td><td><span class="badge badge-yellow">⚠️ iframe</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">
+    ScreenStream v2 · OnePlus NE2210 · Android 15 (API 35) · 生成于 <span id="genTime"></span>
+  </div>
+</div>
+
+<script>
+document.getElementById('genTime').textContent = new Date().toLocaleString('zh-CN');
+
+// 加载实时设备信息
+async function loadDeviceInfo() {
+  try {
+    const r = await fetch('http://localhost:8086/deviceinfo');
+    const d = await r.json();
+    const el = document.getElementById('deviceInfo');
+    el.textContent = JSON.stringify(d, null, 2);
+    // 更新uptime
+    if (d.uptimeFormatted) {
+      document.getElementById('uptimeVal').textContent = d.uptimeFormatted;
+    }
+  } catch(e) {
+    document.getElementById('deviceInfo').textContent = '连接失败: ' + e.message;
+  }
+}
+
+async function loadViewTree() {
+  try {
+    const r = await fetch('http://localhost:8086/viewtree?depth=3');
+    const d = await r.json();
+    document.getElementById('viewTree').textContent = JSON.stringify(d, null, 2);
+  } catch(e) {
+    document.getElementById('viewTree').textContent = '连接失败: ' + e.message;
+  }
+}
+
+loadDeviceInfo();
+loadViewTree();
+setInterval(loadDeviceInfo, 10000);
+</script>
+</body>
+</html>

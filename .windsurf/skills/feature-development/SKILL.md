@@ -86,15 +86,15 @@ routing {
 ## 文件位置速查
 | 功能 | 文件路径 |
 |------|---------|
-| 输入路由 | `040-反向控制_Input/010-输入路由_Routes/InputRoutes.kt` |
-| 输入服务 | `040-反向控制_Input/020-输入服务_Service/InputService.kt` |
-| 输入设置 | `040-反向控制_Input/020-输入服务_Service/InputSettings.kt` |
-| HTTP 服务 | `020-投屏链路_Streaming/010-MJPEG投屏_MJPEG/mjpeg/internal/HttpServer.kt` |
-| 前端页面 | `020-投屏链路_Streaming/010-MJPEG投屏_MJPEG/assets/index.html` |
-| 前端脚本 | `020-投屏链路_Streaming/010-MJPEG投屏_MJPEG/assets/dev/script.js` |
-| Koin DI | `040-反向控制_Input/030-HTTP服务器_HttpServer/InputKoinModule.kt` |
-| 模块设置 | `070-基础设施_Infrastructure/030-通用工具_Utils/ModuleSettings.kt` |
-| 应用入口 | `010-用户界面与交互_UI/src/main/kotlin/.../SingleActivity.kt` |
+| 输入路由 | `反向控制/输入路由/InputRoutes.kt` |
+| 输入服务 | `反向控制/输入服务/InputService.kt` |
+| 输入设置 | `反向控制/输入服务/InputSettings.kt` |
+| HTTP 服务 | `投屏链路/MJPEG投屏/mjpeg/internal/HttpServer.kt` |
+| 前端页面 | `投屏链路/MJPEG投屏/assets/index.html` |
+| 前端脚本 | `投屏链路/MJPEG投屏/assets/dev/script.js` |
+| Koin DI | `反向控制/HTTP服务器/InputKoinModule.kt` |
+| 模块设置 | `基础设施/030-通用工具_Utils/ModuleSettings.kt` |
+| 应用入口 | `用户界面/src/main/kotlin/.../SingleActivity.kt` |
 
 ## ⚠️ 关键教训（铁律）
 

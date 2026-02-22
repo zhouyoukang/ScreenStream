@@ -1,4 +1,4 @@
-﻿---
+---
 trigger: always_on
 ---
 
@@ -91,7 +91,7 @@ trigger: always_on
 - 禁止网络错误默默跳过不反馈
 - 禁止在最后一步调用可能超时的工具
 - 禁止以"需要APK测试"为由中断API开发
-- 禁止不按权威入口顺序查找信息（`05-文档_docs/README.md` → `MODULES.md` → `FEATURES.md`）
+- 禁止不按权威入口顺序查找信息（`文档/README.md` → `MODULES.md` → `FEATURES.md`）
 
 ## 多Agent隔离（Worktree 架构）
 

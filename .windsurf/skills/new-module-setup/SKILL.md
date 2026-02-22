@@ -46,5 +46,5 @@ project(":<module-name>").projectDir = file("<目录路径>")
 新端口从 8085 开始分配，必须在 `project-structure` 规则中登记。
 
 ### 5. 文档更新
-- `05-文档_docs/MODULES.md` — 添加新模块说明
-- `05-文档_docs/README.md` — 更新项目概览
+- `文档/MODULES.md` — 添加新模块说明
+- `文档/README.md` — 更新项目概览

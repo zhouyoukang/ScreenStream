@@ -42,10 +42,10 @@
 
 ### 文档/技能/归档（管理层）
 
-- `05-文档_docs`
-  - 入口：`05-文档_docs/README.md`
-  - 中文项目地图：`05-文档_docs/PROJECT_MAP_CN.md`
-  - ADR：`05-文档_docs/adr/`
+- `文档`
+  - 入口：`文档/README.md`
+  - 中文项目地图：`文档/PROJECT_MAP_CN.md`
+  - ADR：`文档/adr/`
 - `06-技能_skills`
   - 入口：`06-技能_skills/README.md`
 - `管理/00-归档`

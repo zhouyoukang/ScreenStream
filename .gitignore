@@ -96,9 +96,9 @@ volumes/
 # ============================================
 # Android SDK (1GB, local only)
 # ============================================
-090-构建与部署_Build/android-sdk/
-090-构建与部署_Build/temp-build/
-090-构建与部署_Build/gradle/
+构建部署/android-sdk/
+构建部署/temp-build/
+构建部署/gradle/
 
 # ============================================
 # Embedded git repos
@@ -107,8 +107,11 @@ volumes/
 
 # ============================================
 # Smart Home Gateway credentials & cache
-# >> Moved to .git/info/exclude (allow AI Agent read)
+# NOTE: Also in .git/info/exclude (allows AI Agent read_file access)
 # ============================================
+智能家居/**/config.json
+智能家居/**/.xiaomi_token_cache.json
+智能家居/**/mina_token.json
 
 # ============================================
 # Large media files (video / audio)
@@ -157,7 +160,60 @@ presentation/
 **/presentation/
 
 # ============================================
+# One-time scripts & temp files (root clutter prevention)
+# ============================================
+wx_*.png
+wx_*.py
+wx_*.json
+downloaded_files/
+agent-comm/
+
+# ============================================
 # Archived projects (moved to 管理/00-归档/)
 # ============================================
-agent-comm/
-# screen-check.png moved to .git/info/exclude
+
+# ============================================
+# External project links (Junction points)
+# ============================================
+# --- 学业项目 ---
+srt论文项目/
+二手书项目/
+三创赛项目/
+复习考试/
+# --- AI 生态 ---
+浏览器自动化/
+AI操控研究/
+AI规则体系/
+MIGPT/
+MIGPT-Easy/
+Dify/
+MaxKB/
+N8N/
+N8N工作流/
+RSS/
+HA卡片/
+# --- 创客硬件 ---
+3D打印/
+PCB设计/
+OpenSCAD/
+轮毂电机/
+# --- 内容与工具 ---
+视频制作/
+微信公众号/
+电脑管理/
+SpaceDesk/
+VR网站/
+IPv6/
+旅行计划/
+
+# ============================================
+# Python virtual environment
+# ============================================
+.venv/
+venv/
+
+# ============================================
+# Device screenshots (non-source)
+# ============================================
+构建部署/vivo-screen*.png
+构建部署/*.png

@@ -19,7 +19,7 @@ globs: ["**/*.kt", "**/AndroidManifest.xml", "**/build.gradle.kts"]
 
 ## Android 构建
 - JAVA_HOME: `C:\Program Files\Processing\app\resources\jdk`
-- ANDROID_SDK_ROOT: `090-构建与部署_Build\android-sdk`
+- ANDROID_SDK_ROOT: `构建部署\android-sdk`
 - 构建命令: `gradlew assembleFDroidDebug --no-configuration-cache`
 - 包名: `info.dvkr.screenstream.dev`
 - 主Activity: `info.dvkr.screenstream.SingleActivity`

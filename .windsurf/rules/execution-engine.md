@@ -19,13 +19,7 @@ trigger: always_on
 ## 防卡顿铁律（递归扫描 = 项目头号杀手）
 > 本项目含 android-sdk(~1GB)、管理/00-归档/(500+项)、.git/(大历史)，无界递归必卡。
 
-**绝对禁止的命令模式**：
-- `Get-ChildItem -Recurse` 无 `-Exclude`/`-Path` 限定
-- `dir -r`、`ls -R` 扫描项目根目录
-- `find . -type f` 无 `-maxdepth` 或 `-not -path` 排除
-- 任何对项目根目录的递归大小统计/文件搜索
-
-**必须使用的替代方案**：
+**禁止无界递归，必须用替代工具**：
 | 需求 | 禁止 | 应该用 |
 |------|------|--------|
 | 查找文件 | `Get-ChildItem -Recurse` | `find_by_name` 工具（内置50条上限） |
@@ -34,10 +28,7 @@ trigger: always_on
 | 大文件定位 | 递归+Where-Object过滤 | `find_by_name` + 指定子目录 |
 | git操作 | 无限制的git log/diff | `git log -n 20`、`git diff --stat` |
 
-**如果必须用终端递归**（极罕见）：
-- 必须排除：`-Exclude android-sdk,00-归档,.git,.gradle,build`
-- 必须限深：`-Depth 3` 或 `-maxdepth 3`
-- 必须非阻塞 + 30s超时检查
+**极罕见终端递归**：必须排除 `android-sdk,00-归档,.git,.gradle,build` + 限深3 + 非阻塞
 
 ## Hooks 策略
 - **Python/Node.js hooks**：安全可用（日志、格式化、安全检查）
@@ -93,31 +84,77 @@ trigger: always_on
 - 用户完成操作后 → 自动继续工作流（不需重复指令）
 - 每次自愈记录到 Memory，下次同类中断直接跳过诊断
 
+## 网络请求（零弹窗工具链）
+> `read_url_content`/`mcp2_fetch` 弹窗是二进制硬编码，无法关闭。**禁止使用**。
+
+| 需求 | 工具 |
+|------|------|
+| 网页/HTML | `Invoke-WebRequest -UseBasicParsing` + regex strip |
+| JSON API | `Invoke-RestMethod` |
+| JS渲染SPA | Playwright `browser_navigate`+`browser_snapshot` |
+| 搜索 | `search_web` |
+| 库文档 | context7 `query-docs` |
+| GitHub | github `get_file_contents` |
+
+```powershell
+# HTML抓取（已加入 allowlist，自动执行）
+(Invoke-WebRequest -Uri "<URL>" -UseBasicParsing).Content -replace '<script[^>]*>[\s\S]*?</script>','' -replace '<[^>]+>',' ' -replace '\s+',' '
+```
+
 ## 网络故障
 1. 第一次失败 → 换URL重试
 2. 连续2次失败 → 立即反馈用户："可能需要VPN"
 
 ## 进化闭环
-```
-发现问题 → 分析根因 → 解决 → 固化为规则/Skill/Memory
-```
-| 类型 | 固化位置 |
-|------|---------|
-| 行为规则 | `.windsurf/rules/*.md` |
-| 操作流程 | `.windsurf/skills/*/SKILL.md` |
-| 标准流程 | `.windsurf/workflows/*.md` |
-| 经验知识 | `create_memory` |
+发现→分析→解决→固化（规则→rules/ | 流程→skills/ | 标准→workflows/ | 知识→Memory）
+
+## 对话结束协议（ask_user_question）
+
+> 每次任务完成后，**必须调用 `ask_user_question`** 引导用户选择下一步。
+> 这是用户体验的关键触点——对话不应突然终止，而应自然过渡。
+
+### 触发条件（全部满足才触发）
+1. 任务有**明确产出物**（代码修改/文档/修复/分析报告）
+2. **不在** /dev 管线 Phase 3→5.5 连续执行中
+3. 用户**没有在同一消息中**给出下一步指令
+4. **不是纯问答**（回答问题后不触发）
+
+### 选项设计原则
+- **4个选项**，`allowMultiple: false`
+- 选项来源：**优先从当前目录的 AGENTS.md「对话结束选项」中选取**
+- 如果无模块级选项，使用通用模板：
+
+| 位置 | 模式 | 说明 |
+|------|------|------|
+| 选项1 | **继续深化** | 当前任务的自然延伸（最可能的下一步） |
+| 选项2 | **验证测试** | 编译/运行/curl/浏览器验证 |
+| 选项3 | **关联任务** | 相关但不同的工作 |
+| 选项4 | **收尾提交** | 文档更新/git commit/总结 |
+
+### 选项文案规范
+- **label**: ≤15字，动词开头（如"编译部署验证"、"更新文档"）
+- **description**: 1句话说清做什么，≤40字
+- 选项必须**具体可执行**，禁止模糊的"继续"或"其他"
+
+### 禁止触发的场景
+- /dev 管线 Phase 3→5.5 连续执行中（闭环铁律）
+- 用户消息已包含下一步指令
+- 上一轮刚触发过 ask（防连续循环）
+- 纯问答对话（用户问→AI答→结束）
+- 修复Bug的中间诊断步骤
+
+### 稳定性保障
+- ask_user_question 调用失败 → 降级为文本列出选项（不阻塞对话）
+- 用户不选任何选项直接打字 → 按用户新指令执行（不重复ask）
+- 用户选了选项 → 立即执行对应任务，不再确认
 
 ## 严禁
-- 禁止说「我做不到」而不先搜索
+- 禁止说“我做不到”而不先搜索
 - 禁止有价值发现不记录Memory
 - 禁止只改单文件忽略关联影响
-- 禁止网络错误默默跳过不反馈
 - 禁止在最后一步调用可能超时的工具
 - 禁止以"需要APK测试"为由中断API开发
-- 禁止不按权威入口顺序查找信息（`05-文档_docs/README.md` → `MODULES.md` → `FEATURES.md`）
-- **禁止对项目根目录执行无界递归扫描**（Get-ChildItem -Recurse / dir -r / find -type f）
-- **禁止运行可能超过30s的终端命令而不设非阻塞+超时检查**
+- 禁止不按权威入口顺序查找信息（`文档/README.md` → `MODULES.md` → `FEATURES.md`）
 
 ## 多Agent隔离（Worktree 架构）
 

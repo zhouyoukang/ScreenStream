@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Remote Desktop Control</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    body {
+      background: #0f0f1a;
+      color: #e0e0e0;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden
+    }
+
+    .header {
+      background: #16213e;
+      padding: 5px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #333;
+      flex-shrink: 0
+    }
+
+    .header h1 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a9eff;
+      white-space: nowrap
+    }
+
+    .header .status {
+      font-size: 10px;
+      color: #888
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 3px;
+      flex-shrink: 0
+    }
+
+    .dot.on {
+      background: #4ade80
+    }
+
+    .dot.off {
+      background: #f87171
+    }
+
+    .header .controls {
+      margin-left: auto;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .hctl {
+      background: #1a1a2e;
+      border: 1px solid #444;
+      color: #e0e0e0;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 10px
+    }
+
+    .hbtn {
+      background: #2a2a4a;
+      border: 1px solid #444;
+      color: #e0e0e0;
+      padding: 2px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 10px;
+      white-space: nowrap
+    }
+
+    .hbtn:hover {
+      background: #3a3a5a
+    }
+
+    .hbtn.primary {
+      background: #1d4ed8;
+      border-color: #1d4ed8
+    }
+
+    .hbtn.primary:hover {
+      background: #2563eb
+    }
+
+    .hbtn.active {
+      background: #16a34a;
+      border-color: #16a34a
+    }
+
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden
+    }
+
+    .canvas-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      position: relative;
+      cursor: crosshair
+    }
+
+    .canvas-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none
+    }
+
+    .canvas-wrap .coords {
+      position: absolute;
+      bottom: 4px;
+      right: 8px;
+      font-size: 10px;
+      color: #555;
+      pointer-events: none
+    }
+
+    .canvas-wrap .drag-line {
+      position: absolute;
+      border: 1px dashed #4a9eff;
+      pointer-events: none;
+      z-index: 10
+    }
+
+    .sidebar {
+      width: 280px;
+      background: #16213e;
+      border-left: 1px solid #333;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #333;
+      flex-shrink: 0
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 5px 2px;
+      font-size: 10px;
+      cursor: pointer;
+      color: #888;
+      border-bottom: 2px solid transparent;
+      transition: all .15s
+    }
+
+    .tab:hover {
+      color: #ccc;
+      background: #1a1a2e
+    }
+
+    .tab.active {
+      color: #4a9eff;
+      border-bottom-color: #4a9eff
+    }
+
+    .panel {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    .panel.active {
+      display: flex
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px
+    }
+
+    .section-title {
+      font-size: 10px;
+      color: #666;
+      text-transform: uppercase;
+      margin: 6px 0 4px;
+      letter-spacing: .5px
+    }
+
+    .section-title:first-child {
+      margin-top: 0
+    }
+
+    .win-item {
+      font-size: 11px;
+      padding: 3px 6px;
+      cursor: pointer;
+      border-radius: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 1px 0
+    }
+
+    .win-item:hover {
+      background: #2a2a4a
+    }
+
+    .win-item.active {
+      background: #1d4ed8;
+      color: #fff
+    }
+
+    .sbtn {
+      background: #2a2a4a;
+      border: 1px solid #444;
+      color: #ccc;
+      padding: 2px 6px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 10px
+    }
+
+    .sbtn:hover {
+      background: #4a4a6a
+    }
+
+    .sbtn.danger {
+      background: #6b2020;
+      border-color: #844
+    }
+
+    .shortcuts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px
+    }
+
+    .proc-item {
+      display: flex;
+      align-items: center;
+      font-size: 10px;
+      padding: 2px 4px;
+      border-radius: 2px;
+      cursor: default
+    }
+
+    .proc-item:hover {
+      background: #2a2a4a
+    }
+
+    .proc-item .pname {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .proc-item .pmem {
+      color: #888;
+      margin: 0 6px;
+      white-space: nowrap
+    }
+
+    .proc-item .pkill {
+      color: #f87171;
+      cursor: pointer;
+      font-size: 9px;
+      opacity: 0;
+      transition: opacity .15s
+    }
+
+    .proc-item:hover .pkill {
+      opacity: 1
+    }
+
+    .shell-wrap {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden
+    }
+
+    .shell-output {
+      flex: 1;
+      overflow-y: auto;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 11px;
+      padding: 6px;
+      background: #0a0a14;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #aaa
+    }
+
+    .shell-input {
+      display: flex;
+      border-top: 1px solid #333
+    }
+
+    .shell-input input {
+      flex: 1;
+      background: #0a0a14;
+      border: none;
+      color: #4ade80;
+      padding: 5px 8px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 11px;
+      outline: none
+    }
+
+    .shell-input button {
+      background: #1d4ed8;
+      border: none;
+      color: #fff;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 10px
+    }
+
+    .clip-area {
+      width: 100%;
+      min-height: 80px;
+      background: #0a0a14;
+      border: 1px solid #333;
+      color: #e0e0e0;
+      padding: 6px;
+      font-size: 11px;
+      resize: vertical;
+      border-radius: 3px;
+      font-family: system-ui
+    }
+
+    .sys-card {
+      background: #1a1a2e;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 6px
+    }
+
+    .sys-card .label {
+      font-size: 10px;
+      color: #666;
+      text-transform: uppercase
+    }
+
+    .sys-card .value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4a9eff;
+      margin-top: 2px
+    }
+
+    .sys-card .bar {
+      height: 4px;
+      background: #333;
+      border-radius: 2px;
+      margin-top: 4px;
+      overflow: hidden
+    }
+
+    .sys-card .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .3s
+    }
+
+    .input-bar {
+      background: #16213e;
+      border-top: 1px solid #333;
+      padding: 4px 10px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-shrink: 0
+    }
+
+    .input-bar input {
+      flex: 1;
+      background: #1a1a2e;
+      border: 1px solid #444;
+      color: #e0e0e0;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 11px
+    }
+
+    .input-bar button {
+      background: #1d4ed8;
+      border: none;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px
+    }
+
+    .log {
+      max-height: 60px;
+      overflow-y: auto;
+      font-size: 9px;
+      color: #555;
+      padding: 3px 6px;
+      border-top: 1px solid #222;
+      flex-shrink: 0
+    }
+
+    .log div {
+      padding: 1px 0
+    }
+
+    .log .ok {
+      color: #4ade80
+    }
+
+    .log .err {
+      color: #f87171
+    }
+
+    .log .warn {
+      color: #facc15
+    }
+
+    .search-box {
+      width: 100%;
+      background: #1a1a2e;
+      border: 1px solid #444;
+      color: #e0e0e0;
+      padding: 3px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      margin-bottom: 4px
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      font-size: 10px;
+      padding: 3px 4px;
+      border-radius: 2px;
+      cursor: pointer;
+      gap: 4px
+    }
+
+    .file-item:hover {
+      background: #2a2a4a
+    }
+
+    .file-item .fi {
+      width: 14px;
+      text-align: center;
+      flex-shrink: 0
+    }
+
+    .file-item .fn {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .file-item .fs {
+      color: #666;
+      font-size: 9px;
+      white-space: nowrap
+    }
+
+    .file-item .fd {
+      color: #f87171;
+      cursor: pointer;
+      font-size: 9px;
+      opacity: 0;
+      margin-left: 2px
+    }
+
+    .file-item:hover .fd {
+      opacity: 1
+    }
+
+    .breadcrumb {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      margin-bottom: 4px;
+      font-size: 10px
+    }
+
+    .breadcrumb span {
+      color: #4a9eff;
+      cursor: pointer;
+      padding: 1px 3px;
+      border-radius: 2px
+    }
+
+    .breadcrumb span:hover {
+      background: #2a2a4a
+    }
+
+    .svc-item {
+      display: flex;
+      align-items: center;
+      font-size: 10px;
+      padding: 2px 4px;
+      gap: 4px
+    }
+
+    .svc-item:hover {
+      background: #2a2a4a;
+      border-radius: 2px
+    }
+
+    .svc-item .sn {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .svc-item .ss {
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 2px
+    }
+
+    .ss.run {
+      background: #16a34a33;
+      color: #4ade80
+    }
+
+    .ss.stop {
+      background: #dc262633;
+      color: #f87171
+    }
+
+    .power-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+      margin: 4px 0
+    }
+
+    .power-grid button {
+      padding: 6px 4px;
+      font-size: 10px
+    }
+
+    @media (max-width: 800px) {
+      .sidebar {
+        width: 220px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>Remote Desktop</h1>
+    <span class="dot" id="dot"></span>
+    <span class="status" id="status">connecting...</span>
+    <div class="controls">
+      <input id="agentUrl" class="hctl" value="" style="width:160px" placeholder="Agent URL">
+      <button class="hbtn" onclick="connect()">Connect</button>
+      <select id="fps" class="hctl" onchange="setFps()">
+        <option value="500">2fps</option>
+        <option value="1000" selected>1fps</option>
+        <option value="2000">0.5fps</option>
+        <option value="5000">0.2fps</option>
+      </select>
+      <button class="hbtn" onclick="captureOnce()">Snap</button>
+      <button class="hbtn" id="keyCapBtn" onclick="toggleKeyCapture()">Keys: OFF</button>
+      <button class="hbtn" id="dragBtn" onclick="toggleDragMode()">Drag: OFF</button>
+      <span id="guardStatus" class="hbtn" onclick="toggleGuard()" title="Click to toggle MouseGuard">Guard: ?</span>
+      <button class="hbtn" onclick="toggleSidebar()">Panel</button>
+      <button class="hbtn" onclick="toggleFullscreen()">Full</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="canvas-wrap" id="canvasWrap">
+      <img id="screen" alt="Remote Desktop">
+      <div class="coords" id="coords"></div>
+      <div class="drag-line" id="dragLine" style="display:none"></div>
+    </div>
+    <div class="sidebar" id="sidebar">
+      <div class="tabs">
+        <div class="tab active" data-panel="pWin" title="Windows">Win</div>
+        <div class="tab" data-panel="pKeys" title="Shortcuts">Keys</div>
+        <div class="tab" data-panel="pFiles" title="Files">Files</div>
+        <div class="tab" data-panel="pProc" title="Processes">Proc</div>
+        <div class="tab" data-panel="pClip" title="Clipboard">Clip</div>
+        <div class="tab" data-panel="pShell" title="Shell">Shell</div>
+        <div class="tab" data-panel="pSys" title="System">Sys</div>
+      </div>
+      <!-- Windows Panel -->
+      <div class="panel active" id="pWin">
+        <div class="panel-body">
+          <div style="display:flex;gap:3px;margin-bottom:4px">
+            <button class="sbtn" onclick="refreshWindows()">Refresh</button>
+            <button class="sbtn" onclick="winAction('maximize')">Max</button>
+            <button class="sbtn" onclick="winAction('minimize')">Min</button>
+            <button class="sbtn" onclick="winAction('restore')">Res</button>
+            <button class="sbtn danger" onclick="winAction('close')">X</button>
+          </div>
+          <div id="winList"></div>
+        </div>
+      </div>
+      <!-- Shortcuts Panel -->
+      <div class="panel" id="pKeys">
+        <div class="panel-body">
+          <div class="section-title">IDE</div>
+          <div class="shortcuts">
+            <button class="sbtn" onclick="sendHotkey(['ctrl','shift','p'])">Cmd Palette</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','p'])">Quick Open</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','s'])">Save</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','shift','grave'])">Terminal</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','b'])">Sidebar</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','j'])">Panel</button>
+          </div>
+          <div class="section-title">Edit</div>
+          <div class="shortcuts">
+            <button class="sbtn" onclick="sendKey('enter')">Enter</button>
+            <button class="sbtn" onclick="sendKey('escape')">Esc</button>
+            <button class="sbtn" onclick="sendKey('tab')">Tab</button>
+            <button class="sbtn" onclick="sendKey('backspace')">Bksp</button>
+            <button class="sbtn" onclick="sendKey('delete')">Del</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','z'])">Undo</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','shift','z'])">Redo</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','a'])">All</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','c'])">Copy</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','v'])">Paste</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','x'])">Cut</button>
+          </div>
+          <div class="section-title">Navigate</div>
+          <div class="shortcuts">
+            <button class="sbtn" onclick="sendKey('up')">↑</button>
+            <button class="sbtn" onclick="sendKey('down')">↓</button>
+            <button class="sbtn" onclick="sendKey('left')">←</button>
+            <button class="sbtn" onclick="sendKey('right')">→</button>
+            <button class="sbtn" onclick="sendKey('home')">Home</button>
+            <button class="sbtn" onclick="sendKey('end')">End</button>
+            <button class="sbtn" onclick="sendKey('pageup')">PgUp</button>
+            <button class="sbtn" onclick="sendKey('pagedown')">PgDn</button>
+          </div>
+          <div class="section-title">System</div>
+          <div class="shortcuts">
+            <button class="sbtn" onclick="sendHotkey(['alt','f4'])">Close Win</button>
+            <button class="sbtn" onclick="sendHotkey(['alt','tab'])">Alt+Tab</button>
+            <button class="sbtn" onclick="sendHotkey(['win','d'])">Desktop</button>
+            <button class="sbtn" onclick="sendHotkey(['win','e'])">Explorer</button>
+            <button class="sbtn" onclick="sendHotkey(['win','l'])">Lock</button>
+            <button class="sbtn" onclick="sendHotkey(['ctrl','shift','escape'])">TaskMgr</button>
+            <button class="sbtn" onclick="sendHotkey(['win','r'])">Run</button>
+            <button class="sbtn" onclick="sendKey('printscreen')">PrtSc</button>
+          </div>
+          <div class="section-title">Scroll</div>
+          <div class="shortcuts">
+            <button class="sbtn" onclick="remoteScroll(5)">Scroll↑</button>
+            <button class="sbtn" onclick="remoteScroll(-5)">Scroll↓</button>
+            <button class="sbtn" onclick="remoteScroll(20)">Page↑</button>
+            <button class="sbtn" onclick="remoteScroll(-20)">Page↓</button>
+          </div>
+          <div class="section-title">Volume</div>
+          <div class="shortcuts">
+            <button class="sbtn" onclick="sendKey('volumeup')">Vol+</button>
+            <button class="sbtn" onclick="sendKey('volumedown')">Vol-</button>
+            <button class="sbtn" onclick="postApi('/volume',{mute:true})">Mute</button>
+          </div>
+        </div>
+      </div>
+      <!-- Files Panel -->
+      <div class="panel" id="pFiles">
+        <div class="panel-body">
+          <div style="display:flex;gap:3px;margin-bottom:4px">
+            <input class="search-box" id="filePath" value="C:\\" onkeydown="if(event.key==='Enter')browseDir()"
+              style="margin:0">
+            <button type="button" class="sbtn" onclick="browseDir()">Go</button>
+            <button type="button" class="sbtn" onclick="fileUp()">Up</button>
+          </div>
+          <div class="breadcrumb" id="fileBread"></div>
+          <div id="fileList" style="max-height:calc(100vh - 220px);overflow-y:auto"></div>
+          <div style="margin-top:6px;display:flex;gap:3px">
+            <button class="sbtn" onclick="downloadScreenshot()">Save Screenshot</button>
+          </div>
+        </div>
+      </div>
+      <!-- Processes Panel -->
+      <div class="panel" id="pProc">
+        <div class="panel-body">
+          <div style="display:flex;gap:3px;margin-bottom:4px">
+            <input class="search-box" id="procSearch" placeholder="Filter processes..." oninput="filterProcs()">
+          </div>
+          <div style="display:flex;gap:3px;margin-bottom:4px">
+            <button class="sbtn" onclick="refreshProcesses()">Refresh</button>
+            <span style="font-size:10px;color:#666;line-height:22px" id="procCount">0 processes</span>
+          </div>
+          <div id="procList" style="max-height:calc(100vh - 200px);overflow-y:auto"></div>
+        </div>
+      </div>
+      <!-- Clipboard Panel -->
+      <div class="panel" id="pClip">
+        <div class="panel-body">
+          <div class="section-title">Remote Clipboard</div>
+          <div style="display:flex;gap:3px;margin-bottom:6px">
+            <button class="sbtn" onclick="readClipboard()">Read</button>
+            <button class="sbtn" onclick="writeClipboard()">Write</button>
+            <button class="sbtn" onclick="syncClipboard()">Sync PC→Remote</button>
+          </div>
+          <textarea class="clip-area" id="clipText" placeholder="Clipboard content will appear here..."></textarea>
+          <div class="section-title" style="margin-top:8px">Quick Paste</div>
+          <div style="font-size:10px;color:#666;margin-bottom:4px">Write text above, then click "Write" to set remote
+            clipboard, or "Sync" to copy from your PC</div>
+        </div>
+      </div>
+      <!-- Shell Panel -->
+      <div class="panel" id="pShell">
+        <div class="shell-wrap">
+          <div class="shell-output" id="shellOutput">Remote Shell Ready\n$ </div>
+          <div class="shell-input">
+            <input id="shellInput" placeholder="Enter command..." onkeydown="if(event.key==='Enter')execShell()">
+            <button onclick="execShell()">Run</button>
+          </div>
+        </div>
+      </div>
+      <!-- System Info Panel -->
+      <div class="panel" id="pSys">
+        <div class="panel-body" id="sysInfo">
+          <button class="sbtn" onclick="refreshSysInfo()" style="margin-bottom:6px">Refresh All</button>
+          <div id="sysCards"></div>
+          <div class="section-title" style="margin-top:8px">Power</div>
+          <div class="power-grid">
+            <button class="sbtn" onclick="doPower('lock')">Lock</button>
+            <button class="sbtn" onclick="doPower('sleep')">Sleep</button>
+            <button class="sbtn" onclick="doPower('logoff')">Logoff</button>
+            <button class="sbtn" onclick="doPower('restart')">Restart</button>
+            <button class="sbtn danger" onclick="doPower('shutdown')">Shutdown</button>
+            <button class="sbtn" onclick="doPower('cancel')">Cancel</button>
+          </div>
+          <div class="section-title" style="margin-top:8px">Network</div>
+          <div id="netInfo" style="font-size:10px;color:#aaa">Click Refresh</div>
+          <div class="section-title" style="margin-top:8px">Services</div>
+          <div style="display:flex;gap:3px;margin-bottom:4px">
+            <input class="search-box" id="svcSearch" placeholder="Filter services..." oninput="filterSvcs()"
+              style="margin:0">
+            <button class="sbtn" onclick="refreshServices()">Load</button>
+          </div>
+          <div id="svcList" style="max-height:200px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="input-bar">
+    <input id="typeInput" placeholder="Type text → Enter to send to remote..."
+      onkeydown="if(event.key==='Enter'){sendText(this.value);this.value='';}">
+    <button
+      onclick="sendText(document.getElementById('typeInput').value);document.getElementById('typeInput').value='';">Send</button>
+  </div>
+  <div class="log" id="log"></div>
+
+  <script>
+    // === State ===
+    let baseUrl = '', pollTimer = null, pollMs = 1000, connected = false;
+    let keyCapture = false, dragMode = false, isDragging = false;
+    let imgW = 0, imgH = 0, screenW = 0, screenH = 0;
+    let windows = [], selectedHwnd = null, allProcs = [];
+    let dragStart = null;
+    let clickTimer = null; // debounce single vs double click
+
+    const $ = id => document.getElementById(id);
+    const dot = $('dot'), statusEl = $('status'), screenImg = $('screen');
+    const logEl = $('log'), coordsEl = $('coords'), dragLine = $('dragLine');
+
+    // === Tabs ===
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        $(tab.dataset.panel).classList.add('active');
+      };
+    });
+
+    // === Logging ===
+    function log(msg, cls) {
+      const d = document.createElement('div');
+      d.className = cls || '';
+      d.textContent = new Date().toLocaleTimeString() + ' ' + msg;
+      logEl.appendChild(d);
+      logEl.scrollTop = logEl.scrollHeight;
+      if (logEl.children.length > 200) logEl.removeChild(logEl.firstChild);
+    }
+
+    // === API ===
+    async function api(method, path, data) {
+      const opts = { method, headers: {} };
+      if (data) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(data); }
+      return await fetch(baseUrl + path, opts);
+    }
+    async function postApi(path, data) {
+      if (!connected) return;
+      try { const r = await api('POST', path, data); const d = await r.json(); log(path + ': ' + (d.ok ? 'ok' : JSON.stringify(d)), d.ok ? 'ok' : 'err'); } catch (e) { log(path + ' error: ' + e.message, 'err'); }
+    }
+
+    // === Connection ===
+    async function connect() {
+      baseUrl = $('agentUrl').value.replace(/\/+$/, '');
+      try {
+        const r = await api('GET', '/health');
+        const h = await r.json();
+        connected = true;
+        dot.className = 'dot on';
+        statusEl.textContent = h.hostname + '/' + h.user + ' (pid ' + h.pid + ')';
+        log('Connected: ' + h.hostname + '/' + h.user, 'ok');
+        refreshWindows();
+        startPoll();
+        refreshSysInfo();
+        refreshNetwork();
+      } catch (e) {
+        connected = false; dot.className = 'dot off';
+        statusEl.textContent = 'failed: ' + e.message;
+        log('Connect failed: ' + e.message, 'err');
+      }
+    }
+
+    function startPoll() {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(captureOnce, pollMs);
+      captureOnce();
+    }
+    function setFps() { pollMs = parseInt($('fps').value); if (connected) startPoll(); }
+    async function captureOnce() { if (!baseUrl) return; screenImg.src = baseUrl + '/screenshot?quality=60&t=' + Date.now(); }
+
+    screenImg.addEventListener('load', function () {
+      if (!screenW && screenImg.naturalWidth > 0) {
+        imgW = screenImg.naturalWidth; imgH = screenImg.naturalHeight;
+        screenW = imgW * 2; screenH = imgH * 2;
+        log('Screen: ' + screenW + 'x' + screenH, 'ok');
+      }
+    });
+
+    // === Coordinate mapping ===
+    function getScreenCoords(e) {
+      const rect = screenImg.getBoundingClientRect();
+      return {
+        x: Math.round((e.clientX - rect.left) * screenW / rect.width),
+        y: Math.round((e.clientY - rect.top) * screenH / rect.height)
+      };
+    }
+
+    // === Click handling (debounced: single vs double) ===
+    async function remoteClick(x, y, button, clicks) {
+      try {
+        const r = await api('POST', '/click', { x, y, button, clicks });
+        const d = await r.json();
+        if (d.blocked) { log('Blocked: ' + d.reason, 'err'); return; }
+        log((clicks > 1 ? 'DblClick' : button === 'right' ? 'RClick' : 'Click') + ' (' + x + ',' + y + ')', 'ok');
+        setTimeout(captureOnce, 200);
+      } catch (e) { log('Click error: ' + e.message, 'err'); }
+    }
+
+    screenImg.addEventListener('click', (e) => {
+      if (!connected || !screenW || dragMode) return;
+      if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; } // dblclick will fire
+      const c = getScreenCoords(e);
+      clickTimer = setTimeout(() => { clickTimer = null; remoteClick(c.x, c.y, 'left', 1); }, 200);
+    });
+    screenImg.addEventListener('dblclick', (e) => {
+      if (!connected || !screenW || dragMode) return;
+      e.preventDefault();
+      if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
+      const c = getScreenCoords(e);
+      remoteClick(c.x, c.y, 'left', 2);
+    });
+    screenImg.addEventListener('contextmenu', (e) => {
+      if (!connected || !screenW) return;
+      e.preventDefault();
+      const c = getScreenCoords(e);
+      remoteClick(c.x, c.y, 'right', 1);
+    });
+
+    // === Drag support ===
+    function toggleDragMode() {
+      dragMode = !dragMode;
+      const btn = $('dragBtn');
+      btn.textContent = 'Drag: ' + (dragMode ? 'ON' : 'OFF');
+      btn.classList.toggle('active', dragMode);
+      screenImg.parentElement.style.cursor = dragMode ? 'move' : 'crosshair';
+      log('Drag mode ' + (dragMode ? 'ON' : 'OFF'), dragMode ? 'ok' : '');
+    }
+
+    screenImg.addEventListener('mousedown', (e) => {
+      if (!dragMode || !connected || !screenW || e.button !== 0) return;
+      e.preventDefault();
+      dragStart = getScreenCoords(e);
+      isDragging = true;
+      const rect = screenImg.getBoundingClientRect();
+      dragLine.style.left = (e.clientX - rect.left + screenImg.offsetLeft) + 'px';
+      dragLine.style.top = (e.clientY - rect.top + screenImg.offsetTop) + 'px';
+      dragLine.style.width = '0px'; dragLine.style.height = '0px';
+      dragLine.style.display = 'block';
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging || !dragStart) return;
+      const rect = screenImg.getBoundingClientRect();
+      const x1 = dragStart.x, y1 = dragStart.y;
+      const c = getScreenCoords(e);
+      // Visual drag line
+      const sx = Math.min(e.clientX, rect.left + x1 * rect.width / screenW);
+      const sy = Math.min(e.clientY, rect.top + y1 * rect.height / screenH);
+      dragLine.style.left = sx + 'px'; dragLine.style.top = sy + 'px';
+      dragLine.style.width = Math.abs(e.clientX - (rect.left + x1 * rect.width / screenW)) + 'px';
+      dragLine.style.height = Math.abs(e.clientY - (rect.top + y1 * rect.height / screenH)) + 'px';
+    });
+    document.addEventListener('mouseup', async (e) => {
+      if (!isDragging || !dragStart) return;
+      isDragging = false;
+      dragLine.style.display = 'none';
+      const end = getScreenCoords(e);
+      if (Math.abs(end.x - dragStart.x) > 5 || Math.abs(end.y - dragStart.y) > 5) {
+        try {
+          const r = await api('POST', '/drag', { x1: dragStart.x, y1: dragStart.y, x2: end.x, y2: end.y });
+          const d = await r.json();
+          log('Drag (' + dragStart.x + ',' + dragStart.y + ')→(' + end.x + ',' + end.y + ')', d.ok ? 'ok' : 'err');
+          setTimeout(captureOnce, 300);
+        } catch (e) { log('Drag error: ' + e.message, 'err'); }
+      }
+      dragStart = null;
+    });
+
+    // === Scroll ===
+    screenImg.addEventListener('wheel', (e) => {
+      if (!connected || !screenW) return;
+      e.preventDefault();
+      const c = getScreenCoords(e);
+      remoteScroll(e.deltaY < 0 ? 3 : -3, c.x, c.y);
+    }, { passive: false });
+
+    async function remoteScroll(clicks, x, y) {
+      if (!connected) return;
+      x = x || 0; y = y || 0;
+      try {
+        const r = await api('POST', '/scroll', { x, y, clicks });
+        const d = await r.json();
+        log('Scroll ' + clicks + ' @(' + x + ',' + y + ')', d.ok ? 'ok' : 'err');
+        setTimeout(captureOnce, 200);
+      } catch (e) { log('Scroll error: ' + e.message, 'err'); }
+    }
+
+    // === Mouse coord display ===
+    screenImg.addEventListener('mousemove', (e) => {
+      if (!screenW) return;
+      const c = getScreenCoords(e);
+      coordsEl.textContent = c.x + ', ' + c.y;
+    });
+
+    // === Keyboard capture ===
+    function toggleKeyCapture() {
+      keyCapture = !keyCapture;
+      const btn = $('keyCapBtn');
+      btn.textContent = 'Keys: ' + (keyCapture ? 'ON' : 'OFF');
+      btn.classList.toggle('active', keyCapture);
+      log('Key capture ' + (keyCapture ? 'ON' : 'OFF'), keyCapture ? 'ok' : '');
+    }
+
+    document.addEventListener('keydown', async (e) => {
+      if (!keyCapture || !connected) return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      e.preventDefault();
+      const mods = [];
+      if (e.ctrlKey) mods.push('ctrl');
+      if (e.shiftKey) mods.push('shift');
+      if (e.altKey) mods.push('alt');
+      if (e.metaKey) mods.push('win');
+      const keyMap = {
+        'arrowup': 'up', 'arrowdown': 'down', 'arrowleft': 'left', 'arrowright': 'right',
+        'backspace': 'backspace', 'delete': 'delete', 'home': 'home', 'end': 'end',
+        'pageup': 'pageup', 'pagedown': 'pagedown', 'enter': 'enter', 'escape': 'escape',
+        'f1': 'f1', 'f2': 'f2', 'f3': 'f3', 'f4': 'f4', 'f5': 'f5', 'f6': 'f6',
+        'f7': 'f7', 'f8': 'f8', 'f9': 'f9', 'f10': 'f10', 'f11': 'f11', 'f12': 'f12'
+      };
+      let key = e.key.length === 1 ? e.key : (keyMap[e.key.toLowerCase()] || e.key.toLowerCase());
+      if (mods.length > 0 && !['control', 'shift', 'alt', 'meta'].includes(key)) {
+        mods.push(key); sendHotkey(mods);
+      } else if (!['control', 'shift', 'alt', 'meta'].includes(key)) {
+        sendKey(key);
+      }
+    });
+
+    async function sendKey(key) {
+      if (!connected) return;
+      try {
+        const r = await api('POST', '/key', { key });
+        const d = await r.json();
+        if (d.blocked) { log('Blocked: ' + d.reason, 'err'); return; }
+        setTimeout(captureOnce, 200);
+      } catch (e) { log('Key error: ' + e.message, 'err'); }
+    }
+    async function sendHotkey(keys) {
+      if (!connected) return;
+      log('Hotkey: ' + keys.join('+'));
+      try {
+        const r = await api('POST', '/key', { hotkey: keys });
+        const d = await r.json();
+        if (d.blocked) { log('Blocked: ' + d.reason, 'err'); return; }
+        setTimeout(captureOnce, 200);
+      } catch (e) { log('Hotkey error: ' + e.message, 'err'); }
+    }
+    async function sendText(text) {
+      if (!connected || !text) return;
+      log('Type: ' + text.substring(0, 30));
+      try {
+        const r = await api('POST', '/type', { text, interval: 0.03 });
+        const d = await r.json();
+        if (d.blocked) { log('Blocked: ' + d.reason, 'err'); return; }
+        setTimeout(captureOnce, 400);
+      } catch (e) { log('Type error: ' + e.message, 'err'); }
+    }
+
+    // === Windows Panel ===
+    async function refreshWindows() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/windows');
+        windows = await r.json();
+        const list = $('winList');
+        list.innerHTML = '';
+        windows.forEach(w => {
+          const d = document.createElement('div');
+          d.className = 'win-item' + (w.hwnd === selectedHwnd ? ' active' : '');
+          d.textContent = w.title;
+          d.title = w.title + ' (' + w.w + 'x' + w.h + ') hwnd=' + w.hwnd;
+          d.onclick = async () => {
+            selectedHwnd = w.hwnd;
+            await api('POST', '/focus', { hwnd: w.hwnd });
+            log('Focus: ' + w.title.substring(0, 40), 'ok');
+            list.querySelectorAll('.win-item').forEach(el => el.classList.remove('active'));
+            d.classList.add('active');
+            setTimeout(captureOnce, 300);
+          };
+          list.appendChild(d);
+        });
+      } catch (e) { log('Windows error: ' + e.message, 'err'); }
+    }
+    async function winAction(action) {
+      if (!selectedHwnd) { log('Select a window first', 'err'); return; }
+      try {
+        const r = await api('POST', '/window', { hwnd: selectedHwnd, action });
+        const d = await r.json();
+        log(action + ': ' + (d.ok ? 'ok' : JSON.stringify(d)), d.ok ? 'ok' : 'err');
+        setTimeout(() => { refreshWindows(); captureOnce(); }, 400);
+      } catch (e) { log('Window error: ' + e.message, 'err'); }
+    }
+
+    // === Processes Panel ===
+    async function refreshProcesses() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/processes');
+        allProcs = await r.json();
+        if (Array.isArray(allProcs)) {
+          allProcs.sort((a, b) => b.mem_kb - a.mem_kb);
+          $('procCount').textContent = allProcs.length + ' processes';
+          filterProcs();
+        }
+      } catch (e) { log('Processes error: ' + e.message, 'err'); }
+    }
+    function filterProcs() {
+      const q = ($('procSearch').value || '').toLowerCase();
+      const list = $('procList');
+      list.innerHTML = '';
+      const filtered = allProcs.filter(p => !q || p.name.toLowerCase().includes(q));
+      filtered.slice(0, 100).forEach(p => {
+        const d = document.createElement('div');
+        d.className = 'proc-item';
+        const memMB = (p.mem_kb / 1024).toFixed(1);
+        d.innerHTML = '<span class="pname" title="PID ' + p.pid + '">' + p.name + '</span>'
+          + '<span class="pmem">' + memMB + 'MB</span>'
+          + '<span class="pkill" onclick="killProc(' + p.pid + ',\'' + p.name.replace(/'/g, '') + '\')" title="Kill">✕</span>';
+        list.appendChild(d);
+      });
+      if (filtered.length > 100) {
+        const more = document.createElement('div');
+        more.style.cssText = 'font-size:10px;color:#666;padding:4px';
+        more.textContent = '... and ' + (filtered.length - 100) + ' more';
+        list.appendChild(more);
+      }
+    }
+    async function killProc(pid, name) {
+      if (!confirm('Kill ' + name + ' (PID ' + pid + ')?')) return;
+      try {
+        const r = await api('POST', '/kill', { pid, force: true });
+        const d = await r.json();
+        log('Kill ' + name + ': ' + (d.ok ? 'ok' : d.error), d.ok ? 'ok' : 'err');
+        setTimeout(refreshProcesses, 500);
+      } catch (e) { log('Kill error: ' + e.message, 'err'); }
+    }
+
+    // === Clipboard Panel ===
+    async function readClipboard() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/clipboard');
+        const d = await r.json();
+        $('clipText').value = d.text || '';
+        log('Clipboard read: ' + (d.text || '').length + ' chars', 'ok');
+      } catch (e) { log('Clipboard error: ' + e.message, 'err'); }
+    }
+    async function writeClipboard() {
+      if (!connected) return;
+      const text = $('clipText').value;
+      try {
+        const r = await api('POST', '/clipboard', { text });
+        const d = await r.json();
+        log('Clipboard set: ' + text.length + ' chars', d.ok ? 'ok' : 'err');
+      } catch (e) { log('Clipboard error: ' + e.message, 'err'); }
+    }
+    async function syncClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        $('clipText').value = text;
+        await writeClipboard();
+        log('Synced PC clipboard → remote', 'ok');
+      } catch (e) { log('Sync error: ' + e.message + ' (need HTTPS or localhost)', 'err'); }
+    }
+
+    // === Shell Panel ===
+    let shellHistory = [], shellHistIdx = -1;
+    $('shellInput').addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp') { e.preventDefault(); if (shellHistIdx < shellHistory.length - 1) { shellHistIdx++; $('shellInput').value = shellHistory[shellHistIdx]; } }
+      if (e.key === 'ArrowDown') { e.preventDefault(); if (shellHistIdx > 0) { shellHistIdx--; $('shellInput').value = shellHistory[shellHistIdx]; } else { shellHistIdx = -1; $('shellInput').value = ''; } }
+    });
+    async function execShell() {
+      if (!connected) return;
+      const cmd = $('shellInput').value.trim();
+      if (!cmd) return;
+      shellHistory.unshift(cmd); shellHistIdx = -1;
+      $('shellInput').value = '';
+      const out = $('shellOutput');
+      out.textContent += '\n$ ' + cmd + '\n';
+      try {
+        const r = await api('POST', '/shell', { cmd, timeout: 15 });
+        const d = await r.json();
+        if (d.ok) {
+          if (d.stdout) out.textContent += d.stdout;
+          if (d.stderr) out.textContent += '\n[stderr] ' + d.stderr;
+          if (d.returncode !== 0) out.textContent += '\n[exit ' + d.returncode + ']';
+        } else {
+          out.textContent += '[error] ' + (d.error || JSON.stringify(d));
+        }
+      } catch (e) { out.textContent += '[error] ' + e.message; }
+      out.textContent += '\n$ ';
+      out.scrollTop = out.scrollHeight;
+    }
+
+    // === System Info Panel ===
+    async function refreshSysInfo() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/sysinfo');
+        const info = await r.json();
+        const cards = $('sysCards');
+        cards.innerHTML = '';
+        const items = [
+          { label: 'Host', value: info.hostname + ' / ' + info.user },
+          { label: 'OS', value: info.os || '-' },
+          { label: 'Session', value: info.session || '-' },
+          { label: 'Screen', value: (info.screen_w || '?') + ' x ' + (info.screen_h || '?') },
+          { label: 'Uptime', value: info.uptime_sec ? formatUptime(info.uptime_sec) : '-' },
+          { label: 'RAM', value: info.ram_avail_mb ? (info.ram_avail_mb + ' / ' + info.ram_total_mb + ' MB free') : '-', pct: info.ram_percent, color: info.ram_percent > 80 ? '#f87171' : '#4a9eff' },
+          { label: 'Disk C:', value: info.disk_free_gb ? (info.disk_free_gb + ' / ' + info.disk_total_gb + ' GB free') : '-', pct: info.disk_total_gb ? Math.round((1 - info.disk_free_gb / info.disk_total_gb) * 100) : null, color: '#facc15' },
+          { label: 'Locked', value: info.is_locked ? 'Yes' : 'No' },
+        ];
+        items.forEach(it => {
+          const card = document.createElement('div');
+          card.className = 'sys-card';
+          let html = '<div class="label">' + it.label + '</div><div class="value">' + it.value + '</div>';
+          if (it.pct != null) html += '<div class="bar"><div class="bar-fill" style="width:' + it.pct + '%;background:' + (it.color || '#4a9eff') + '"></div></div>';
+          card.innerHTML = html;
+          cards.appendChild(card);
+        });
+      } catch (e) { log('SysInfo error: ' + e.message, 'err'); }
+    }
+    function formatUptime(sec) {
+      const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
+      return (d ? d + 'd ' : '') + h + 'h ' + m + 'm';
+    }
+
+    // === Files Panel ===
+    let currentDir = 'C:\\';
+    async function browseDir(path) {
+      if (!connected) return;
+      if (path) $('filePath').value = path;
+      currentDir = $('filePath').value;
+      try {
+        const r = await api('GET', '/files?path=' + encodeURIComponent(currentDir));
+        const d = await r.json();
+        if (d.error) { log('Files: ' + d.error, 'err'); return; }
+        currentDir = d.path;
+        $('filePath').value = currentDir;
+        // Breadcrumb
+        const bread = $('fileBread');
+        bread.innerHTML = '';
+        const parts = currentDir.split('\\').filter(Boolean);
+        let accumulated = '';
+        parts.forEach((p, i) => {
+          accumulated += p + '\\';
+          const s = document.createElement('span');
+          s.textContent = p;
+          const target = accumulated;
+          s.onclick = () => browseDir(target);
+          bread.appendChild(s);
+          if (i < parts.length - 1) { const sep = document.createTextNode(' > '); bread.appendChild(sep); }
+        });
+        // File list
+        const list = $('fileList');
+        list.innerHTML = '';
+        (d.items || []).forEach(f => {
+          const row = document.createElement('div');
+          row.className = 'file-item';
+          const icon = f.is_dir ? '📁' : (f.name.match(/\.(jpg|png|gif|bmp)$/i) ? '🖼️' : f.name.match(/\.(txt|md|log|py|js|json)$/i) ? '📄' : '📎');
+          const size = f.is_dir ? '' : formatSize(f.size);
+          row.innerHTML = '<span class="fi">' + icon + '</span><span class="fn">' + f.name + '</span><span class="fs">' + size + '</span>' + (!f.is_dir ? '<a class="fs" href="' + baseUrl + '/file/download?path=' + encodeURIComponent(currentDir + '\\' + f.name) + '" target="_blank" style="color:#4a9eff;text-decoration:none" title="Download">⬇</a>' : '') + '<span class="fd" onclick="event.stopPropagation();deleteFile(\'' + (currentDir + '\\' + f.name).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')" title="Delete">✕</span>';
+          if (f.is_dir) row.onclick = () => browseDir(currentDir + '\\' + f.name);
+          list.appendChild(row);
+        });
+        log('Files: ' + d.count + ' items in ' + currentDir, 'ok');
+      } catch (e) { log('Files error: ' + e.message, 'err'); }
+    }
+    function fileUp() {
+      const parts = currentDir.replace(/\\$/, '').split('\\');
+      if (parts.length > 1) { parts.pop(); browseDir(parts.join('\\') + '\\'); }
+    }
+    function formatSize(b) {
+      if (b < 1024) return b + 'B';
+      if (b < 1048576) return (b / 1024).toFixed(1) + 'K';
+      if (b < 1073741824) return (b / 1048576).toFixed(1) + 'M';
+      return (b / 1073741824).toFixed(1) + 'G';
+    }
+    async function deleteFile(path) {
+      if (!confirm('Delete ' + path + '?')) return;
+      try {
+        const r = await api('POST', '/file/delete', { path });
+        const d = await r.json();
+        log('Delete: ' + (d.ok ? 'ok' : d.error), d.ok ? 'ok' : 'err');
+        if (d.ok) browseDir();
+      } catch (e) { log('Delete error: ' + e.message, 'err'); }
+    }
+    function downloadScreenshot() {
+      if (!baseUrl) return;
+      const a = document.createElement('a');
+      a.href = baseUrl + '/screenshot?quality=90&t=' + Date.now();
+      a.download = 'screenshot_' + Date.now() + '.jpg';
+      a.click();
+      log('Screenshot saved', 'ok');
+    }
+
+    // === Power ===
+    async function doPower(action) {
+      if (!connected) return;
+      if (['shutdown', 'restart', 'logoff'].includes(action) && !confirm('Confirm ' + action + '?')) return;
+      try {
+        const r = await api('POST', '/power', { action });
+        const d = await r.json();
+        log('Power ' + action + ': ' + (d.ok ? 'ok' : d.error), d.ok ? 'ok' : 'err');
+      } catch (e) { log('Power error: ' + e.message, 'err'); }
+    }
+
+    // === Network ===
+    async function refreshNetwork() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/network');
+        const d = await r.json();
+        const el = $('netInfo');
+        let html = '';
+        (d.adapters || []).forEach(a => {
+          if (a.ipv4.length) html += '<div style="margin:2px 0"><b>' + a.name.substring(0, 30) + '</b>: ' + a.ipv4.join(', ') + '</div>';
+        });
+        if (d.connections && d.connections.length) {
+          html += '<div style="margin-top:4px;color:#666">' + d.connections.length + ' active connections</div>';
+        }
+        el.innerHTML = html || 'No adapters found';
+      } catch (e) { log('Network error: ' + e.message, 'err'); }
+    }
+
+    // === Services ===
+    let allSvcs = [];
+    async function refreshServices() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/services');
+        allSvcs = await r.json();
+        if (Array.isArray(allSvcs)) filterSvcs();
+      } catch (e) { log('Services error: ' + e.message, 'err'); }
+    }
+    function filterSvcs() {
+      const q = ($('svcSearch').value || '').toLowerCase();
+      const list = $('svcList');
+      list.innerHTML = '';
+      const filtered = allSvcs.filter(s => !q || (s.name + ' ' + (s.display || '')).toLowerCase().includes(q));
+      filtered.slice(0, 50).forEach(s => {
+        const d = document.createElement('div');
+        d.className = 'svc-item';
+        const running = s.status === 'RUNNING';
+        d.innerHTML = '<span class="sn" title="' + s.name + '">' + (s.display || s.name) + '</span>' +
+          '<span class="ss ' + (running ? 'run' : 'stop') + '">' + (s.status || '?') + '</span>';
+        d.title = s.name + ' — click to ' + (running ? 'stop' : 'start');
+        d.style.cursor = 'pointer';
+        d.onclick = async () => {
+          const action = running ? 'stop' : 'start';
+          if (!confirm(action + ' service ' + s.name + '?')) return;
+          try {
+            const r = await api('POST', '/service', { name: s.name, action });
+            const res = await r.json();
+            log('Service ' + s.name + ' ' + action + ': ' + (res.ok ? 'ok' : res.output), res.ok ? 'ok' : 'err');
+            setTimeout(refreshServices, 1000);
+          } catch (e) { log('Service error: ' + e.message, 'err'); }
+        };
+        list.appendChild(d);
+      });
+    }
+
+    // === Guard ===
+    let guardPaused = false;
+    async function updateGuardStatus() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/guard');
+        const g = await r.json();
+        guardPaused = g.paused;
+        const el = $('guardStatus');
+        const label = g.enabled ? (g.paused ? 'PAUSE' : (g.can_automate ? 'idle' : 'guard')) : 'OFF';
+        el.textContent = 'Guard: ' + label;
+        el.style.color = g.enabled ? (g.paused ? '#f87171' : (g.can_automate ? '#4ade80' : '#facc15')) : '#888';
+        el.title = (g.paused ? 'Resume' : 'Pause') + ' | ' + g.blocked_count + '/' + g.total_requests + ' blocked | CD=' + g.cooldown + 's';
+      } catch (e) { /* ignore */ }
+    }
+    async function toggleGuard() {
+      if (!connected) return;
+      try { await api('POST', '/guard/' + (guardPaused ? 'resume' : 'pause')); log('Guard toggled', 'ok'); updateGuardStatus(); } catch (e) { log('Guard error: ' + e.message, 'err'); }
+    }
+    setInterval(updateGuardStatus, 3000);
+
+    // === UI toggles ===
+    function toggleFullscreen() {
+      const w = $('canvasWrap');
+      if (!document.fullscreenElement) w.requestFullscreen(); else document.exitFullscreen();
+    }
+    function toggleSidebar() {
+      const s = $('sidebar');
+      s.style.display = s.style.display === 'none' ? '' : 'none';
+    }
+
+    // === Auto-reconnect ===
+    let reconnectTimer = null;
+    screenImg.addEventListener('error', () => {
+      if (connected) {
+        connected = false; dot.className = 'dot off';
+        statusEl.textContent = 'disconnected';
+        log('Connection lost, retrying...', 'err');
+        if (!reconnectTimer) {
+          reconnectTimer = setInterval(() => {
+            connect().then(() => { if (connected && reconnectTimer) { clearInterval(reconnectTimer); reconnectTimer = null; } });
+          }, 5000);
+        }
+      }
+    });
+
+    // === Auto-detect URL ===
+    (function () {
+      const loc = window.location;
+      $('agentUrl').value = (loc.port && parseInt(loc.port) >= 9900) ? loc.origin : 'http://127.0.0.2:9904';
+    })();
+    connect();
+  </script>
+</body>
+
+</html>
