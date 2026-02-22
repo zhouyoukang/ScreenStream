@@ -17,8 +17,11 @@
 手机操控库/
 ├── phone_lib.py           ← 核心库：Phone 类 (零依赖，纯 urllib)
 │                             支持远程连接/自动发现/心跳/负面状态恢复
-├── remote_setup.py        ← 远程操控一键启动脚本
-├── FINDINGS.md            ← 实测发现 P1-P29
+├── remote_setup.py        ← 远程操控一键启动（发现→连接→五感→Web UI）
+├── remote_assist.py       ← 远程家庭协助工具（交互式CLI+18个命令+8场景）
+├── family_setup_guide.md  ← 家人端设置指南（发给家人的5分钟教程）
+├── family_phones.json     ← 家人手机配置（自动生成，--add 管理）
+├── FINDINGS.md            ← 实测发现 P1-P29 + 远程架构发现
 ├── README.md              ← 项目文档
 └── tests/
     ├── standalone_test.py ← 36 项 L0/L1 原始 HTTP 验证

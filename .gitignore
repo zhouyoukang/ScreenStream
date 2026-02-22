@@ -73,8 +73,8 @@ replay_pid*.log
 
 # ============================================
 # Build logs (local temp)
-# >> build_log/error/log/current_build moved to .git/info/exclude
 # ============================================
+build_log/error/log/current_build
 temp_gh_*
 
 # ============================================
@@ -198,7 +198,7 @@ PCB设计/
 OpenSCAD/
 轮毂电机/
 # --- 内容与工具 ---
-视频制作/
+# 视频制作/
 微信公众号/
 电脑管理/
 SpaceDesk/

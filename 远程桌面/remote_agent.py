@@ -275,39 +275,25 @@ def kill_process(pid, force=False):
 # ---------------------------------------------------------------------------
 
 def get_clipboard():
-    """Get clipboard text content."""
-    CF_UNICODETEXT = 13
-    k32 = ctypes.windll.kernel32
-    u32 = ctypes.windll.user32
-    u32.OpenClipboard(0)
+    """Get clipboard text via PowerShell subprocess (thread-safe)."""
     try:
-        if u32.IsClipboardFormatAvailable(CF_UNICODETEXT):
-            h = u32.GetClipboardData(CF_UNICODETEXT)
-            data = ctypes.c_wchar_p(h)
-            return {"text": data.value or "", "ok": True}
-        return {"text": "", "ok": True, "note": "no text in clipboard"}
-    finally:
-        u32.CloseClipboard()
+        r = subprocess.run(
+            ['powershell', '-NoProfile', '-Command', 'Get-Clipboard -Raw'],
+            capture_output=True, timeout=5, encoding='utf-8', errors='replace'
+        )
+        return {"text": (r.stdout or "").rstrip('\r\n'), "ok": True}
+    except Exception as e:
+        return {"text": "", "ok": False, "error": str(e)}
 
 
 def set_clipboard(text):
-    """Set clipboard text content."""
-    CF_UNICODETEXT = 13
-    k32 = ctypes.windll.kernel32
-    u32 = ctypes.windll.user32
-    u32.OpenClipboard(0)
+    """Set clipboard text via clip.exe (reliable from any thread)."""
     try:
-        u32.EmptyClipboard()
-        if text:
-            data = text.encode('utf-16le') + b'\x00\x00'
-            h = k32.GlobalAlloc(0x0042, len(data))  # GMEM_MOVEABLE | GMEM_ZEROINIT
-            p = k32.GlobalLock(h)
-            ctypes.memmove(p, data, len(data))
-            k32.GlobalUnlock(h)
-            u32.SetClipboardData(CF_UNICODETEXT, h)
+        proc = subprocess.Popen(['clip'], stdin=subprocess.PIPE)
+        proc.communicate(text.encode('utf-16le'))
         return {"ok": True, "length": len(text)}
-    finally:
-        u32.CloseClipboard()
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 
 # ---------------------------------------------------------------------------
