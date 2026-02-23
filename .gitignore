@@ -176,7 +176,7 @@ agent-comm/
 # External project links (Junction points)
 # ============================================
 # --- 学业项目 ---
-srt论文项目/
+# srt论文项目/ → 已整合到 args论文/（真实目录，非junction）
 二手书项目/
 三创赛项目/
 复习考试/

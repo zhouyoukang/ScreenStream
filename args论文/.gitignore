@@ -1,0 +1,21 @@
+# 大数据文件（不入Git）
+数据/1_gene_catalog_ardb_annotation.xls
+数据/筛选数据2_小子集_仅参考.xlsx
+
+# 参考素材（大文件）
+参考素材/*.pptx
+参考素材/*.docx
+
+# 图表产出（可重新生成）
+figures/*.png
+
+# 构建产物（可重新生成）
+给导师包/
+*.zip
+_pack_for_teacher.py
+preview_*.png
+
+# Python缓存
+__pycache__/
+*.pyc
+.venv/
