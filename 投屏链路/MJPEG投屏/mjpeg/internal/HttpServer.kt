@@ -21,8 +21,13 @@ import io.ktor.http.content.OutgoingContent
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopped
+import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
 import io.ktor.server.application.serverConfig
+import io.ktor.server.request.header
+import io.ktor.server.request.path
+import io.ktor.server.request.receiveText
+import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.EmbeddedServer
@@ -92,6 +97,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.io.readByteArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
 import java.net.BindException
 import java.net.SocketException
@@ -123,6 +129,12 @@ internal class HttpServer(
     private val jmuxerJs: ByteArray = context.getFileFromAssets("jmuxer.min.js")
     private val voiceHtml: ByteArray = context.getFileFromAssets("voice.html")
     private val voiceJs: ByteArray = context.getFileFromAssets("voice.js")
+
+    private val authTokenFile = File(context.filesDir, "remote_auth_token")
+    private val remoteAuthToken = AtomicReference<String>("").also { ref ->
+        try { if (authTokenFile.exists()) ref.set(authTokenFile.readText().trim()) } catch (_: Exception) {}
+    }
+
     private val baseIndexHtml = String(context.getFileFromAssets("index.html"), StandardCharsets.UTF_8)
         .replace("%CONNECTING%", context.getString(R.string.mjpeg_html_stream_connecting))
         .replace("%STREAM_REQUIRE_PIN%", context.getString(R.string.mjpeg_html_stream_require_pin))
@@ -361,9 +373,11 @@ internal class HttpServer(
         install(CORS) {
             anyHost()
             allowMethod(HttpMethod.Get)
+            allowMethod(HttpMethod.Post)
             allowMethod(HttpMethod.Head)
             allowMethod(HttpMethod.Options)
             allowHeader(HttpHeaders.ContentType)
+            allowHeader(HttpHeaders.Authorization)
             allowHeader(HttpHeaders.Range)
             allowNonSimpleContentTypes = true
 
@@ -371,6 +385,26 @@ internal class HttpServer(
             exposeHeader(HttpHeaders.ContentRange)
             exposeHeader(HttpHeaders.ContentType)
         }
+
+        val authTokenRef = remoteAuthToken
+        val authTokenFileRef = authTokenFile
+        val publicPaths = setOf("/", "/favicon.ico", "/logo.svg", "/jmuxer.min.js", "/voice.html", "/voice.js", "/auth/info", "/auth/verify")
+        install(createApplicationPlugin("RemoteAuth") {
+            onCall { call ->
+                val token = authTokenRef.get()
+                if (token.isEmpty()) return@onCall
+                val path = call.request.path()
+                if (path in publicPaths) return@onCall
+                val bearer = call.request.header("Authorization")?.removePrefix("Bearer ")?.trim()
+                val queryToken = call.request.queryParameters["token"]
+                if ((bearer ?: queryToken) != token) {
+                    call.respondText(
+                        """{"error":"unauthorized","message":"Invalid or missing auth token"}""",
+                        ContentType.Application.Json, HttpStatusCode.Unauthorized
+                    )
+                }
+            }
+        })
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 if (cause is IOException || cause is IllegalArgumentException || cause is IllegalStateException) return@exception
@@ -387,6 +421,54 @@ internal class HttpServer(
             }
             get("favicon.ico") { call.respondBytes(favicon, ContentType.Image.XIcon) }
             get("logo.svg") { call.respondBytes(logoSvg, ContentType.Image.SVG) }
+
+            get("/auth/info") {
+                val enabled = authTokenRef.get().isNotEmpty()
+                call.respondText(
+                    """{"authEnabled":$enabled}""",
+                    ContentType.Application.Json
+                )
+            }
+            post("/auth/verify") {
+                val body = call.receiveText()
+                val token = try { JSONObject(body).optString("token", "") } catch (_: Exception) { "" }
+                val valid = token.isNotEmpty() && token == authTokenRef.get()
+                call.respondText(
+                    """{"valid":$valid}""",
+                    ContentType.Application.Json
+                )
+            }
+            post("/auth/generate") {
+                // When no token is set, only allow from local/private IPs (prevent malicious token gen)
+                if (authTokenRef.get().isEmpty()) {
+                    val remoteHost = call.request.origin.remoteHost
+                    val isLocal = remoteHost == "127.0.0.1" || remoteHost == "::1" || remoteHost == "0:0:0:0:0:0:0:1"
+                            || remoteHost.startsWith("192.168.") || remoteHost.startsWith("10.")
+                            || remoteHost.startsWith("172.") || remoteHost == "localhost"
+                    if (!isLocal) {
+                        call.respondText(
+                            """{"error":"forbidden","message":"Token generation only allowed from local network"}""",
+                            ContentType.Application.Json, HttpStatusCode.Forbidden
+                        )
+                        return@post
+                    }
+                }
+                val newToken = randomString(16)
+                authTokenRef.set(newToken)
+                try { authTokenFileRef.writeText(newToken) } catch (_: Exception) {}
+                call.respondText(
+                    """{"ok":true,"token":"$newToken"}""",
+                    ContentType.Application.Json
+                )
+            }
+            post("/auth/revoke") {
+                authTokenRef.set("")
+                try { if (authTokenFileRef.exists()) authTokenFileRef.delete() } catch (_: Exception) {}
+                call.respondText(
+                    """{"ok":true,"authEnabled":false}""",
+                    ContentType.Application.Json
+                )
+            }
             get("jmuxer.min.js") { call.respondBytes(jmuxerJs, ContentType.parse("application/javascript")) }
             get("voice.html") {
                 call.response.headers.append(HttpHeaders.CacheControl, "no-store, no-cache, must-revalidate, max-age=0")

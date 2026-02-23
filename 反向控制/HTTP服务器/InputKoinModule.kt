@@ -10,7 +10,7 @@ public val InputKoinModule: Module = module {
     single { InputSettingsImpl(get()) } bind InputSettings::class
     single(createdAtStart = true) {
         val settings: InputSettings = get()
-        InputHttpServer(settings.data.value.apiPort).also { server ->
+        InputHttpServer(get(), settings.data.value.apiPort).also { server ->
             if (settings.data.value.autoStartHttp) server.start()
         }
     }

@@ -835,9 +835,309 @@
         window.DD_LOGS && DD_LOGS.logger.setHandler(DD_HANDLER);
         window.DD_LOGS && DD_LOGS.setGlobalContextProperty('version', '%APP_VERSION%');
     </script>
+    <style>
+        /* Auth Gate */
+        #authGate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a14 0%, #0d1117 50%, #0a0a14 100%);
+            z-index: 200000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
+        }
+
+        #authGate .auth-card {
+            background: rgba(20, 22, 35, 0.95);
+            border: 1px solid rgba(100, 170, 255, 0.15);
+            border-radius: 20px;
+            padding: 40px 36px;
+            width: 380px;
+            max-width: 90vw;
+            backdrop-filter: blur(24px);
+            box-shadow: 0 16px 64px rgba(0, 0, 0, 0.5);
+        }
+
+        #authGate .auth-title {
+            color: #e0e8ff;
+            font-size: 22px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        #authGate .auth-sub {
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        #authGate input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-family: monospace;
+            letter-spacing: 2px;
+            text-align: center;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #authGate input:focus {
+            border-color: rgba(100, 170, 255, 0.5);
+        }
+
+        #authGate .auth-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 16px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        #authGate .auth-btn:hover {
+            opacity: 0.9;
+        }
+
+        #authGate .auth-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #authGate .auth-error {
+            color: #f87171;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 12px;
+            min-height: 18px;
+        }
+
+        #authGate .auth-status {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 11px;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        /* Connection Quality Indicator */
+        #connQuality {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            padding: 3px 10px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 11px;
+            z-index: 10001;
+            pointer-events: none;
+            display: none;
+            color: #0f0;
+        }
+    </style>
 </head>
 
 <body>
+    <!-- Auth Gate (hidden by default, shown by JS if auth is enabled) -->
+    <div id="authGate" style="display:none;">
+        <div class="auth-card">
+            <div class="auth-title">ScreenStream Remote</div>
+            <div class="auth-sub">Enter the access token to connect</div>
+            <input id="authTokenInput" type="password" placeholder="Access Token" autocomplete="off"
+                onkeydown="if(event.key==='Enter')authSubmit()" />
+            <button class="auth-btn" id="authSubmitBtn" onclick="authSubmit()">Connect</button>
+            <div class="auth-error" id="authError"></div>
+            <div class="auth-status" id="authStatus"></div>
+        </div>
+    </div>
+    <div id="connQuality"></div>
+
+    <script>
+        "use strict";
+        // ==================== Auth & Connection Management ====================
+        var _ssAuthToken = localStorage.getItem('ss_auth_token') || '';
+        var _ssAuthRequired = false;
+
+        // Check URL for token parameter (e.g., shared link with ?auth=xxx)
+        (function () {
+            var p = new URLSearchParams(window.location.search);
+            var urlToken = p.get('auth') || p.get('token');
+            if (urlToken) {
+                _ssAuthToken = urlToken;
+                localStorage.setItem('ss_auth_token', urlToken);
+                // Clean URL
+                var clean = window.location.pathname + window.location.search.replace(/[?&](auth|token)=[^&]*/g, '').replace(/^\?$/, '');
+                if (window.history.replaceState) window.history.replaceState({}, '', clean || '/');
+            }
+        })();
+
+        // Override global fetch to add Authorization header
+        var _origFetch = window.fetch;
+        window.fetch = function (url, opts) {
+            if (_ssAuthToken && typeof url === 'string') {
+                opts = opts || {};
+                opts.headers = opts.headers || {};
+                if (opts.headers instanceof Headers) {
+                    if (!opts.headers.has('Authorization')) opts.headers.set('Authorization', 'Bearer ' + _ssAuthToken);
+                } else if (typeof opts.headers === 'object') {
+                    if (!opts.headers['Authorization']) opts.headers['Authorization'] = 'Bearer ' + _ssAuthToken;
+                }
+            }
+            return _origFetch.call(window, url, opts).then(function (resp) {
+                if (resp.status === 401 && _ssAuthRequired) {
+                    // Token expired or revoked - show auth gate
+                    localStorage.removeItem('ss_auth_token');
+                    _ssAuthToken = '';
+                    var gate = document.getElementById('authGate');
+                    if (gate) {
+                        gate.style.display = 'flex';
+                        var errEl = document.getElementById('authError');
+                        if (errEl) errEl.textContent = 'Session expired. Please re-enter token.';
+                    }
+                }
+                return resp;
+            });
+        };
+
+        // WebSocket URL helper: appends token as query param
+        function authWsUrl(path) {
+            var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            var url = proto + '//' + location.host + path;
+            if (_ssAuthToken) url += (path.indexOf('?') >= 0 ? '&' : '?') + 'token=' + encodeURIComponent(_ssAuthToken);
+            return url;
+        }
+
+        // Auth gate logic
+        function authSubmit() {
+            var input = document.getElementById('authTokenInput');
+            var errEl = document.getElementById('authError');
+            var btn = document.getElementById('authSubmitBtn');
+            var token = input.value.trim();
+            if (!token) { errEl.textContent = 'Please enter a token'; return; }
+            btn.disabled = true;
+            errEl.textContent = '';
+            _origFetch('/auth/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token })
+            }).then(function (r) { return r.json(); }).then(function (d) {
+                btn.disabled = false;
+                if (d.valid) {
+                    _ssAuthToken = token;
+                    localStorage.setItem('ss_auth_token', token);
+                    document.getElementById('authGate').style.display = 'none';
+                    // Reload to re-init all connections with token
+                    window.location.reload();
+                } else {
+                    errEl.textContent = 'Invalid token';
+                    input.select();
+                }
+            }).catch(function (e) {
+                btn.disabled = false;
+                errEl.textContent = 'Connection error: ' + e.message;
+            });
+        }
+
+        // Check auth status on load
+        (function checkAuth() {
+            _origFetch('/auth/info').then(function (r) { return r.json(); }).then(function (d) {
+                if (!d.authEnabled) {
+                    // No auth required
+                    document.getElementById('authGate').style.display = 'none';
+                    return;
+                }
+                _ssAuthRequired = true;
+                // Verify stored token
+                if (_ssAuthToken) {
+                    _origFetch('/auth/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: _ssAuthToken })
+                    }).then(function (r) { return r.json(); }).then(function (v) {
+                        if (v.valid) {
+                            document.getElementById('authGate').style.display = 'none';
+                        } else {
+                            localStorage.removeItem('ss_auth_token');
+                            _ssAuthToken = '';
+                            document.getElementById('authGate').style.display = 'flex';
+                        }
+                    }).catch(function () {
+                        document.getElementById('authGate').style.display = 'flex';
+                    });
+                } else {
+                    document.getElementById('authGate').style.display = 'flex';
+                }
+            }).catch(function () {
+                // Server unreachable, hide auth gate (it'll show connecting...)
+                document.getElementById('authGate').style.display = 'none';
+            });
+        })();
+
+        // Connection quality monitor + reconnection overlay
+        var _connQualityEl = document.getElementById('connQuality');
+        var _connLatencyHistory = [];
+        var _connOfflineCount = 0;
+        function updateConnQuality(latencyMs) {
+            _connOfflineCount = 0;
+            _connLatencyHistory.push(latencyMs);
+            if (_connLatencyHistory.length > 10) _connLatencyHistory.shift();
+            var avg = Math.round(_connLatencyHistory.reduce(function (a, b) { return a + b; }, 0) / _connLatencyHistory.length);
+            var color = avg < 100 ? '#0f0' : avg < 300 ? '#ff0' : '#f44';
+            var label = avg < 100 ? 'Good' : avg < 300 ? 'Fair' : 'Poor';
+            _connQualityEl.style.display = 'block';
+            _connQualityEl.style.color = color;
+            _connQualityEl.textContent = avg + 'ms · ' + label;
+            // Hide reconnection overlay if shown
+            var overlay = document.getElementById('reconnectOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+        function showReconnectOverlay() {
+            var overlay = document.getElementById('reconnectOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'reconnectOverlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:150000;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,system-ui,sans-serif;';
+                overlay.innerHTML = '<div style="color:#fff;font-size:18px;font-weight:600;margin-bottom:8px;">Connection Lost</div>'
+                    + '<div style="color:rgba(255,255,255,0.5);font-size:13px;">Reconnecting...</div>'
+                    + '<div style="margin-top:16px;width:40px;height:40px;border:3px solid rgba(255,255,255,0.2);border-top-color:#4a9eff;border-radius:50%;animation:spin 1s linear infinite;"></div>'
+                    + '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+                document.body.appendChild(overlay);
+            }
+            overlay.style.display = 'flex';
+        }
+        // Measure latency periodically
+        setInterval(function () {
+            var t0 = performance.now();
+            _origFetch('/auth/info').then(function (r) {
+                if (r.ok) updateConnQuality(Math.round(performance.now() - t0));
+                else { _connOfflineCount++; if (_connOfflineCount >= 2) showReconnectOverlay(); }
+            }).catch(function () {
+                _connOfflineCount++;
+                _connQualityEl.style.display = 'block';
+                _connQualityEl.style.color = '#f44';
+                _connQualityEl.textContent = 'Offline';
+                if (_connOfflineCount >= 2) showReconnectOverlay();
+            });
+        }, 5000);
+    </script>
+
     <div id="connectDiv">
         <img src="logo.svg" class="logo" />
         <p style="font-weight:500">%CONNECTING%</p>
@@ -2398,13 +2698,16 @@
                 if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
             }
 
+            var touchWsBackoff = 1000;
             function connectTouchWs() {
                 try {
-                    var wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-                    var wsUrl = wsProto + '//' + location.host + '/ws/touch';
-                    touchWs = new WebSocket(wsUrl);
-                    touchWs.onopen = function () { touchWsReady = true; console.log('[TouchWS] Connected'); };
-                    touchWs.onclose = function () { touchWsReady = false; setTimeout(connectTouchWs, 3000); };
+                    touchWs = new WebSocket(authWsUrl('/ws/touch'));
+                    touchWs.onopen = function () { touchWsReady = true; touchWsBackoff = 1000; console.log('[TouchWS] Connected'); };
+                    touchWs.onclose = function () {
+                        touchWsReady = false;
+                        setTimeout(connectTouchWs, touchWsBackoff);
+                        touchWsBackoff = Math.min(touchWsBackoff * 1.5, 30000);
+                    };
                     touchWs.onerror = function () { touchWsReady = false; };
                 } catch (e) { touchWsReady = false; }
             }
@@ -5919,7 +6222,7 @@
                 errorDiv.style.visibility = "hidden";
                 stream.src = "";
 
-                websocket = new WebsocketHeartbeat("ws://" + window.location.host + "/socket?clientId=" + clientId);
+                websocket = new WebsocketHeartbeat(authWsUrl("/socket?clientId=" + clientId));
 
                 websocket.onopen = function () {
                     websocket.send(JSON.stringify({ type: "CONNECT" }));
@@ -5957,7 +6260,9 @@
 
                         var sc = (message.data && typeof message.data.streamCodec !== 'undefined') ? message.data.streamCodec : 0;
                         setStreamCodec(sc);
-                        showStream(message.data.streamAddress + ("?clientId=" + clientId), sc);
+                        var streamUrl = message.data.streamAddress + ("?clientId=" + clientId);
+                        if (_ssAuthToken) streamUrl += "&token=" + encodeURIComponent(_ssAuthToken);
+                        showStream(streamUrl, sc);
                         configureButtons(message.data.enableButtons);
 
                         // Auto-start Audio by Default (User Request)
@@ -6392,10 +6697,8 @@
                     // Initialize jMuxer
                     this.initJMuxer();
 
-                    var protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-                    var port = window.location.port;
                     var endpoint = (this.activeCodec === 2) ? "/stream/h265" : "/stream/h264";
-                    var wsUrl = protocol + "//" + window.location.hostname + ":" + port + endpoint + "?clientId=" + clientId;
+                    var wsUrl = authWsUrl(endpoint + "?clientId=" + clientId);
                     console.log("[VideoPlayer] Connecting to WebSocket:", wsUrl);
 
                     this.ws = new WebSocket(wsUrl);
@@ -6655,8 +6958,7 @@
                         }
                     } catch (e) { }
 
-                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                    this.socket = new WebSocket(protocol + '//' + window.location.host + '/stream/audio');
+                    this.socket = new WebSocket(authWsUrl('/stream/audio'));
                     this.socket.binaryType = 'arraybuffer';
 
                     this.socket.onmessage = (e) => {
