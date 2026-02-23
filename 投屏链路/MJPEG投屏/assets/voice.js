@@ -1,3 +1,29 @@
+// ==================== Auth Token Handling ====================
+var _vAuthToken = localStorage.getItem('ss_auth_token') || '';
+(function() {
+    var p = new URLSearchParams(window.location.search);
+    var t = p.get('auth') || p.get('token');
+    if (t) { _vAuthToken = t; localStorage.setItem('ss_auth_token', t); }
+})();
+var _vOrigFetch = window.fetch;
+window.fetch = function(url, opts) {
+    if (_vAuthToken && typeof url === 'string') {
+        opts = opts || {};
+        opts.headers = opts.headers || {};
+        if (typeof opts.headers === 'object' && !(opts.headers instanceof Headers)) {
+            if (!opts.headers['Authorization']) opts.headers['Authorization'] = 'Bearer ' + _vAuthToken;
+        }
+    }
+    return _vOrigFetch.call(window, url, opts).then(function(resp) {
+        if (resp.status === 401) {
+            localStorage.removeItem('ss_auth_token'); _vAuthToken = '';
+            toast('Session expired - redirecting...');
+            setTimeout(function() { window.location.href = '/' + (_vAuthToken ? '?auth=' + _vAuthToken : ''); }, 1500);
+        }
+        return resp;
+    });
+};
+// ==================== End Auth ====================
 var A = "", rc = 0;
 function rd() {
     rc++;

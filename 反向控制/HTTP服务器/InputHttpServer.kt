@@ -8,6 +8,7 @@ import io.ktor.server.application.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.request.header
 import io.ktor.server.request.path
 import io.ktor.server.response.respondText
@@ -82,23 +83,24 @@ public class InputHttpServer(
                         allowMethod(HttpMethod.Options)
                         allowNonSimpleContentTypes = true
                     }
+                    install(ForwardedHeaders)
                     val server = this@InputHttpServer
-                    install(createApplicationPlugin("InputRemoteAuth") {
-                        onCall { call ->
-                            val token = server.getAuthToken()
-                            if (token.isEmpty()) return@onCall
-                            val path = call.request.path()
-                            if (path == "/status" || path == "/health") return@onCall
-                            val bearer = call.request.header("Authorization")?.removePrefix("Bearer ")?.trim()
-                            val queryToken = call.request.queryParameters["token"]
-                            if ((bearer ?: queryToken) != token) {
-                                call.respondText(
-                                    """{"error":"unauthorized"}""",
-                                    ContentType.Application.Json, HttpStatusCode.Unauthorized
-                                )
-                            }
+                    intercept(ApplicationCallPipeline.Plugins) {
+                        val token = server.getAuthToken()
+                        if (token.isEmpty()) return@intercept
+                        if (call.request.httpMethod == HttpMethod.Options) return@intercept
+                        val path = call.request.path()
+                        if (path == "/status" || path == "/health") return@intercept
+                        val bearer = call.request.header("Authorization")?.removePrefix("Bearer ")?.trim()
+                        val queryToken = call.request.queryParameters["token"]
+                        if ((bearer ?: queryToken) != token) {
+                            call.respondText(
+                                """{"error":"unauthorized"}""",
+                                ContentType.Application.Json, HttpStatusCode.Unauthorized
+                            )
+                            finish()
                         }
-                    })
+                    }
                     configureRouting()
                 }.start(wait = false)
 

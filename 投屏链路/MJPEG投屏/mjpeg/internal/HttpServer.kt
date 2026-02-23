@@ -21,7 +21,7 @@ import io.ktor.http.content.OutgoingContent
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopped
-import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.install
 import io.ktor.server.application.serverConfig
 import io.ktor.server.request.header
@@ -389,22 +389,22 @@ internal class HttpServer(
         val authTokenRef = remoteAuthToken
         val authTokenFileRef = authTokenFile
         val publicPaths = setOf("/", "/favicon.ico", "/logo.svg", "/jmuxer.min.js", "/voice.html", "/voice.js", "/auth/info", "/auth/verify")
-        install(createApplicationPlugin("RemoteAuth") {
-            onCall { call ->
-                val token = authTokenRef.get()
-                if (token.isEmpty()) return@onCall
-                val path = call.request.path()
-                if (path in publicPaths) return@onCall
-                val bearer = call.request.header("Authorization")?.removePrefix("Bearer ")?.trim()
-                val queryToken = call.request.queryParameters["token"]
-                if ((bearer ?: queryToken) != token) {
-                    call.respondText(
-                        """{"error":"unauthorized","message":"Invalid or missing auth token"}""",
-                        ContentType.Application.Json, HttpStatusCode.Unauthorized
-                    )
-                }
+        intercept(ApplicationCallPipeline.Plugins) {
+            val token = authTokenRef.get()
+            if (token.isEmpty()) return@intercept
+            if (call.request.httpMethod == HttpMethod.Options) return@intercept
+            val path = call.request.path()
+            if (path in publicPaths) return@intercept
+            val bearer = call.request.header("Authorization")?.removePrefix("Bearer ")?.trim()
+            val queryToken = call.request.queryParameters["token"]
+            if ((bearer ?: queryToken) != token) {
+                call.respondText(
+                    """{"error":"unauthorized","message":"Invalid or missing auth token"}""",
+                    ContentType.Application.Json, HttpStatusCode.Unauthorized
+                )
+                finish()
             }
-        })
+        }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 if (cause is IOException || cause is IllegalArgumentException || cause is IllegalStateException) return@exception
@@ -453,7 +453,9 @@ internal class HttpServer(
                         return@post
                     }
                 }
-                val newToken = randomString(16)
+                val secureRandom = java.security.SecureRandom()
+                val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+                val newToken = (1..32).map { chars[secureRandom.nextInt(chars.length)] }.joinToString("")
                 authTokenRef.set(newToken)
                 try { authTokenFileRef.writeText(newToken) } catch (_: Exception) {}
                 call.respondText(

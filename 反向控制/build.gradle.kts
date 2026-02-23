@@ -33,11 +33,11 @@ android {
     sourceSets {
         getByName("main") {
             java.setSrcDirs(listOf(
-                "010-输入路由_Routes",
-                "020-输入服务_Service",
-                "030-HTTP服务器_HttpServer",
-                "040-宏系统_Macro",
-                "../080-配置管理_Settings/040-反向控制配置_InputSettings"
+                "输入路由",
+                "输入服务",
+                "HTTP服务器",
+                "宏系统",
+                "../配置管理/040-反向控制配置_InputSettings"
             ))
         }
     }
@@ -58,5 +58,6 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
     implementation(libs.ktor.server.cors)
+    implementation(libs.ktor.server.forwarded.header)
     implementation(libs.ktor.server.websockets)
 }

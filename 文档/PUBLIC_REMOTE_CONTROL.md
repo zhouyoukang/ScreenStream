@@ -18,14 +18,15 @@
 
 ### 1. 生成认证令牌
 
+**方式A：手机设置界面（推荐）**
+- 打开 ScreenStream → 反向控制设置 → Remote Access → 打开开关
+- 自动生成 32 位安全令牌（SecureRandom），可复制/重新生成
+
+**方式B：HTTP API**
 ```bash
-# 通过 ADB（手机需连接电脑）
 adb forward tcp:8081 tcp:8081
 curl -X POST http://localhost:8081/auth/generate
-# 返回: {"ok":true,"token":"aBcDeFgH12345678"}
-
-# 或手动写入令牌文件
-adb shell "echo mySecretToken > /data/data/info.dvkr.screenstream/files/remote_auth_token"
+# 返回: {"ok":true,"token":"aBcDeFgH...32chars..."}
 ```
 
 ### 2. 启动公网隧道
