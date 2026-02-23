@@ -1,0 +1,24 @@
+# 临时数据采集输出
+*.xml
+*.txt
+*.json
+!family_phones.json
+
+# 五感采集目录（大量临时dump）
+五感采集/
+
+# 购物记录采集（临时产物）
+shopping_*.txt
+deep_*.txt
+taobao_*.txt
+*_orders_*.txt
+*_20260*.txt
+*_20260*.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 临时脚本（一次性采集用，不入库）
+# 如需永久保留，从此处移除对应条目

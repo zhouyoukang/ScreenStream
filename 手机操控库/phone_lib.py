@@ -45,16 +45,57 @@ _PROJECT_ADB = os.path.join(os.path.dirname(__file__), "..",
     "adb.exe" if os.name == "nt" else "adb")
 
 def _find_adb():
+    """查找ADB路径，找不到返回None（不再fallback到'adb'）"""
     return (shutil.which("adb")
             or (os.path.abspath(_PROJECT_ADB) if os.path.isfile(_PROJECT_ADB) else None)
             or os.environ.get("ADB_PATH")
-            or "adb")
+            or None)
 
-def _adb(*args, timeout=10):
-    """执行ADB命令，返回(stdout, ok)"""
+def _adb_available():
+    """ADB二进制是否存在"""
+    return _find_adb() is not None
+
+def _get_usb_serial():
+    """获取第一个USB连接的ADB设备序列号（排除WiFi设备）"""
+    adb = _find_adb()
+    if not adb:
+        return None
     try:
-        r = subprocess.run([_find_adb()] + list(args),
-                           capture_output=True, text=True, timeout=timeout)
+        r = subprocess.run([adb, "devices"],
+                           capture_output=True, text=True, timeout=5)
+        for line in r.stdout.splitlines():
+            if "\tdevice" in line:
+                serial = line.split("\t")[0]
+                if ":" not in serial:  # WiFi设备格式为 IP:PORT
+                    return serial
+    except Exception:
+        pass
+    return None
+
+# 缓存USB序列号，避免每次ADB调用都查询
+_usb_serial_cache = None
+
+def _adb(*args, timeout=10, serial=None):
+    """执行ADB命令，返回(stdout, ok)。
+    ADB二进制不存在时安全返回('', False)。
+    多设备连接时自动指定USB设备。"""
+    global _usb_serial_cache
+    adb = _find_adb()
+    if not adb:
+        return "", False
+    try:
+        cmd = [adb]
+        # 非devices命令时，检查是否需要指定设备
+        if args and args[0] != "devices":
+            target = serial
+            if not target:
+                if _usb_serial_cache is None:
+                    _usb_serial_cache = _get_usb_serial() or ""
+                target = _usb_serial_cache
+            if target:
+                cmd.extend(["-s", target])
+        cmd.extend(args)
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         return r.stdout.strip(), r.returncode == 0
     except Exception as e:
         return str(e), False
@@ -140,15 +181,37 @@ def _probe(url, timeout=1.0):
 
 
 def _get_phone_wifi_ip():
-    """通过ADB获取手机WiFi IP"""
+    """获取手机可达WiFi IP。三种来源：
+    1. adb devices 中的WiFi ADB条目 (IP:PORT格式，最可靠)
+    2. adb shell ip addr show wlan0 (WiFi接口IP)
+    3. adb shell ip route (默认路由src IP，可能是移动数据)"""
+    import re
+
+    # 来源1: WiFi ADB设备列表 — 最可靠（已证明可达）
+    out, ok = _adb("devices")
+    if ok:
+        for line in out.splitlines():
+            if "\tdevice" in line:
+                serial = line.split("\t")[0]
+                if ":" in serial:  # WiFi ADB格式: IP:PORT
+                    ip = serial.rsplit(":", 1)[0]
+                    if not ip.startswith("127."):
+                        return ip
+
+    # 来源2: wlan0接口IP
+    out, ok = _adb("shell", "ip", "addr", "show", "wlan0")
+    if ok:
+        m = re.search(r"inet (\d+\.\d+\.\d+\.\d+)", out)
+        if m and not m.group(1).startswith("127."):
+            return m.group(1)
+
+    # 来源3: 默认路由（可能是移动数据IP，不一定可从PC访问）
     out, ok = _adb("shell", "ip", "route")
     if ok:
-        import re
         m = re.search(r"src (\d+\.\d+\.\d+\.\d+)", out)
-        if m:
-            ip = m.group(1)
-            if not ip.startswith("127."):
-                return ip
+        if m and not m.group(1).startswith("127."):
+            return m.group(1)
+
     return None
 
 
@@ -392,12 +455,12 @@ class NegativeState:
 class Phone:
     """远程弹性手机操控。支持自动发现、心跳、重试、负面状态恢复。"""
 
-    def __init__(self, host=None, port=8086, url=None, auto_discover=True,
+    def __init__(self, host=None, port=8084, url=None, auto_discover=True,
                  retry=2, retry_delay=1.0, heartbeat_sec=0):
         """
         Args:
             host: 手机IP (None=localhost/auto)。例: "192.168.31.100"
-            port: ScreenStream端口 (默认8086，扫描8080-8099)
+            port: ScreenStream端口 (默认8084，扫描8080-8099)
             url:  完整URL (优先级最高)。例: "https://my.domain.com"
             auto_discover: host为None时自动发现最优连接
             retry: HTTP失败重试次数
@@ -762,12 +825,17 @@ class Phone:
         返回 {vision, hearing, touch, smell, taste}"""
         result = {"_ok": False}
         try:
-            # 👁 视觉：屏幕内容 + 前台APP
-            texts, pkg = self.read()
+            # 👁 视觉：屏幕内容 + 前台APP + 可点击元素
+            screen = self.get("/screen/text")
+            texts = [t.get("text", "") for t in screen.get("texts", [])]
+            clickables = [c.get("text", "") or c.get("label", "") for c in screen.get("clickables", [])]
+            pkg = screen.get("package", "") or self.foreground()
             result["vision"] = {
                 "foreground_app": pkg,
-                "screen_texts": texts[:20],  # 前20条文本
+                "screen_texts": texts[:20],
                 "text_count": len(texts),
+                "clickables": clickables[:20],
+                "clickable_count": len(clickables),
             }
 
             # 👂 听觉：媒体状态 + 音量
@@ -810,7 +878,11 @@ class Phone:
                 "wifi_ssid": dev.get("wifiSSID", "?"),
             }
 
-            result["_ok"] = True
+            # 数据质量校验：确保至少有基本数据
+            has_fg = bool(result.get("vision", {}).get("foreground_app"))
+            has_bat = result.get("taste", {}).get("battery", -1) >= 0
+            has_input = "input_enabled" in result.get("touch", {})
+            result["_ok"] = has_fg or has_bat or has_input
             result["_connection"] = self._connection_mode
             result["_base"] = self.base
         except Exception as e:

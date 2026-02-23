@@ -332,10 +332,10 @@ def test_remote_apis(phone, t):
     else:
         t.fail("宏系统", f"→ {ml}")
 
-    # 8.6 无障碍状态
-    a11y = phone.get("/a11y/status")
-    if isinstance(a11y, dict) and "connected" in a11y:
-        t.ok("无障碍状态", f"→ connected={a11y['connected']}, method={a11y.get('method_available','?')}")
+    # 8.6 无障碍状态（通过/status的inputEnabled字段）
+    a11y = phone.status()
+    if isinstance(a11y, dict) and "inputEnabled" in a11y:
+        t.ok("无障碍状态", f"→ inputEnabled={a11y['inputEnabled']}")
     else:
         t.fail("无障碍状态", f"→ {a11y}")
 
@@ -347,7 +347,7 @@ def test_remote_apis(phone, t):
 def main():
     parser = argparse.ArgumentParser(description="远程五感端到端验证")
     parser.add_argument("--host", help="手机IP地址")
-    parser.add_argument("--port", type=int, default=8086, help="ScreenStream端口")
+    parser.add_argument("--port", type=int, default=8084, help="ScreenStream端口")
     parser.add_argument("--url", help="完整URL")
     parser.add_argument("--json", action="store_true", help="JSON格式输出")
     args = parser.parse_args()

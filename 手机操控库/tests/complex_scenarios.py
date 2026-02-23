@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from phone_lib import Phone
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--port", type=int, default=8086)
+parser.add_argument("--port", type=int, default=8084)
 args = parser.parse_args()
 
 p = Phone(port=args.port)

@@ -99,3 +99,30 @@ UsageStatsManager 需授权：`adb shell su -c "appops set info.dvkr.screenstrea
 5. a11y_dead → /a11y/enable 或 ADB
 6. doze_mode → ADB unforce + wake
 7. battery_low → 告警
+
+### 渐进式ADB缺失实测结果（2026-02-22）
+
+| Phase | 模式 | 结果 | 发现的问题 |
+|-------|------|------|-----------|
+| 1 | 完整ADB | ✅ discover→WiFi设备, 五感全开 | `_get_phone_wifi_ip` 返回移动数据IP而非WiFi |
+| 2 | WiFi直连 | ✅ 9/9核心API全通 | 无 |
+| 3 | 纯HTTP(无ADB) | ✅ intent/tap/key/text+6/6远程API | `/a11y/status`端点不存在(用`/status`的inputEnabled) |
+| 4 | 叠加测试 | ✅ 检测+恢复优先级链正确 | 无 |
+
+### 修复的实测Bug
+- **多设备ADB**: `_adb()` 未指定`-s serial`，导致"more than one device"错误 → 新增`_get_usb_serial()`+缓存
+- **WiFi IP来源**: `ip route`返回移动数据IP(10.x)而非WiFi IP(192.168.x) → 改为三层来源：WiFi ADB设备列表→wlan0接口→ip route
+- **senses()误报OK**: HTTP超时返回空dict时`_ok=True` → 增加数据质量校验(fg/battery/input至少有一个)
+- **`/a11y/status`不存在**: 无障碍信息在`/status`的`inputEnabled`字段中
+
+### 纯HTTP模式验证（ADB二进制完全不存在）
+**35/35 全部通过** — monkey-patch `_find_adb()=None` 后：
+- 连接发现: `discover(extra_hosts=[IP])` ✅
+- 视觉: read/foreground/viewtree ✅
+- 听觉: volume ✅
+- 触觉: tap/key/text/findnodes/back/home ✅
+- 嗅觉: notifications ✅
+- 味觉: battery/network/storage/clipboard/apps ✅
+- 弹性: health/senses/detect/ensure_alive ✅
+- ADB替代: monkey_open→/intent, search_in_app→/tap+/key+/text ✅
+- 远程API: brightness/autorotate/stayawake/files/macro ✅

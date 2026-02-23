@@ -1,0 +1,222 @@
+[
+  {
+    "store": "朵淽旗舰店",
+    "products": [
+      "假睫毛镊子免胶睫毛新手自用专用高精密专业美睫嫁接工具金羽夹"
+    ],
+    "qty": 1,
+    "status": "已发货",
+    "ship_deadline": "",
+    "shipping": [],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 0.0,
+    "total": 0.0,
+    "analysis": "单价=总价(1件或无数量信息)"
+  },
+  {
+    "store": "上海蓬达电子",
+    "products": [
+      "统一霸王电池5号7号碳性电池七号电视空调遥控器闹钟五号玩具耐用"
+    ],
+    "qty": null,
+    "status": "已发货",
+    "ship_deadline": "",
+    "shipping": [
+      "[自提柜]已签收，签收人凭取货码签收。感谢使用韵达快递及四季青路32号兔喜A【自提柜】，期待再次为您服务。"
+    ],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 0.14,
+    "total": 0.14,
+    "analysis": "单价=总价(1件或无数量信息)"
+  },
+  {
+    "store": "信管数码专营店",
+    "products": [
+      "【活动价】适用三星水凝膜s25/s24/s23/s22/s21/ultra保护膜fe钢化膜s21+手机膜 s20+全"
+    ],
+    "qty": null,
+    "status": "交易关闭",
+    "ship_deadline": "",
+    "shipping": [],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 0.38,
+    "total": 2.38,
+    "analysis": "两个价格:0.38和2.38(可能含运费或折扣)"
+  },
+  {
+    "store": "信管数码专营店",
+    "products": [
+      "【优惠价】适用一加水凝膜13/12/11/10/9/8/pro保护膜9rt高清11promax钢化膜7t全屏1+ac"
+    ],
+    "qty": null,
+    "status": "",
+    "ship_deadline": "",
+    "shipping": [],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 0.32,
+    "total": 0.32,
+    "analysis": "单价=总价(1件或无数量信息)"
+  },
+  {
+    "store": "八卦鼠惠隆达专卖店",
+    "products": [
+      "黑色编织纹适用三星s25ultra手机壳s24/23新款s22/21plus夏季note20u原创10pro简约s1"
+    ],
+    "qty": null,
+    "status": "待退货寄出",
+    "ship_deadline": "",
+    "shipping": [
+      "[自提柜]已签收，签收人凭取货码签收。感谢使用极兔速递及四季青路32号兔喜A【自提柜】，期待再次为您服务。"
+    ],
+    "return_notice": "请在16天5时31分内前往寄件点寄出",
+    "split": false,
+    "unit_price": 23.38,
+    "total": 23.38,
+    "analysis": "单价=总价(1件或无数量信息)"
+  },
+  {
+    "store": "旧书云 西南旧书城",
+    "products": [
+      "二手正版图书国防教育与军事技能未知重庆出版社9787229187545"
+    ],
+    "qty": 4,
+    "status": "",
+    "ship_deadline": "02月10日 13:50",
+    "shipping": [
+      "取件码 59072275",
+      "取件码 30135852"
+    ],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 3.45,
+    "total": 13.81,
+    "analysis": "3个价格值,最大13.81可能是总价"
+  },
+  {
+    "store": "鑫博雅二手教材书店",
+    "products": [],
+    "qty": 6,
+    "status": "",
+    "ship_deadline": "01月31日 10:48",
+    "shipping": [],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 4.03,
+    "total": 24.17,
+    "analysis": "4个价格值,最大24.17可能是总价"
+  },
+  {
+    "store": "博智书店",
+    "products": [],
+    "qty": null,
+    "status": "",
+    "ship_deadline": "",
+    "shipping": [],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 3.92,
+    "total": 3.92,
+    "analysis": "单价=总价(1件或无数量信息)"
+  },
+  {
+    "store": "旧书云 四川旧书城",
+    "products": [],
+    "qty": null,
+    "status": "",
+    "ship_deadline": "",
+    "shipping": [
+      "商品被拆分成2个包裹发货"
+    ],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 3.6,
+    "total": 21.6,
+    "analysis": "两个价格:3.6和21.6(可能含运费或折扣)"
+  },
+  {
+    "store": "龙港市元素制袋厂",
+    "products": [
+      "帆布袋加急定制印logo学生diy拓印扎染空白包纯色环保定做手提袋"
+    ],
+    "qty": null,
+    "status": "",
+    "ship_deadline": "",
+    "shipping": [],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 0.87,
+    "total": 0.87,
+    "analysis": "单价=总价(1件或无数量信息)"
+  },
+  {
+    "store": "劲欢旗舰店",
+    "products": [
+      "加重全金属2025新款手机架支架360度旋转桌面直播专用平板iPad懒人支撑架追剧通用可折叠卡通架子多功能便携"
+    ],
+    "qty": null,
+    "status": "",
+    "ship_deadline": "01月26日 22:27",
+    "shipping": [
+      "【驿站】包裹已签收！如有问题请联系：代收点18599689468，您的快递已经妥投，投诉电话：09916251513"
+    ],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 0.01,
+    "total": 4.66,
+    "analysis": "3个价格值,最大4.66可能是总价"
+  },
+  {
+    "store": "深圳金海龙数码",
+    "products": [
+      "AUX音频线车用3.5mm圆孔公对公手机耳机电脑双头音响汽车连接线",
+      "二手正版新时代明德大学英语阅读教程2胡杰辉曾建松高等教育出版社9787040620740",
+      "正版旧书新时代明德大学英语阅读教程2胡杰辉曾建松高等教育出版社9787040620740"
+    ],
+    "qty": 3,
+    "status": "",
+    "ship_deadline": "01月16日 13:01",
+    "shipping": [],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 0.9,
+    "total": 98.45,
+    "analysis": "9个价格值,最大98.45可能是总价"
+  },
+  {
+    "store": "秋实书社",
+    "products": [
+      "二手正版国防教育与军事技能 黄昉 重庆出版社9787229187545",
+      "二手正版新时代明德大学英语阅读教程2胡杰辉主编,曾建松主编高等教育出版社9787040620740"
+    ],
+    "qty": 9,
+    "status": "",
+    "ship_deadline": "",
+    "shipping": [],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 10.37,
+    "total": 82.68,
+    "analysis": "3个价格值,最大82.68可能是总价"
+  },
+  {
+    "store": "掏书铺 特惠二手书城",
+    "products": [
+      "正版旧书电路与模拟电子技术第三3版殷瑞祥教材+习题解答高等教育出",
+      "正版旧书2025年版中华民族共同体概论本书编写组高等教育出版社政治理论9787040617009",
+      "二手书中华民族共同体概论本书编写组高等教育出版社2024年版政治理论9787040617009"
+    ],
+    "qty": 10,
+    "status": "",
+    "ship_deadline": "",
+    "shipping": [],
+    "return_notice": "",
+    "split": false,
+    "unit_price": 2.86,
+    "total": 28.6,
+    "analysis": "4个价格值,最大28.6可能是总价"
+  }
+]

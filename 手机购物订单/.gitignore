@@ -1,0 +1,4 @@
+# 中间产物
+ui_dump.xml
+__pycache__/
+*.pyc

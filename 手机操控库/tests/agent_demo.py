@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from phone_lib import Phone
 
 parser = argparse.ArgumentParser(description="Agent Demo: 5 Multi-Step Tasks")
-parser.add_argument("--port", type=int, default=8086)
+parser.add_argument("--port", type=int, default=8084)
 args = parser.parse_args()
 
 p = Phone(port=args.port)
@@ -54,10 +54,10 @@ steps += 1
 s = observe()
 info_texts = s["texts"]
 detail = ""
-if "关于本机" in " ".join(info_texts) or s["pkg"] == "com.android.settings":
-    # 提取设备信息
-    model = next((t for t in info_texts if "OnePlus" in t or "NE2210" in t), "?")
-    android_ver = next((t for t in info_texts if t in ["15.0", "14", "15", "13"]), "?")
+if "关于本机" in " ".join(info_texts) or "关于手机" in " ".join(info_texts) or s["pkg"] == "com.android.settings":
+    # 提取设备信息 (兼容Samsung/OnePlus/小米等)
+    model = next((t for t in info_texts if any(kw in t for kw in ["OnePlus","NE2210","SM-","Galaxy","samsung","Redmi","POCO","Pixel"])), "?")
+    android_ver = next((t for t in info_texts if t in ["15.0", "14", "15", "13", "12", "11"]), "?")
     storage = next((t for t in info_texts if "GB" in t and "/" in t), "?")
     cpu = next((t for t in info_texts if "骁龙" in t or "Snapdragon" in t), "?")
     battery = next((t for t in info_texts if "mAh" in t), "?")
@@ -212,7 +212,7 @@ wait_ms(2000)
 
 steps += 1
 s2 = observe()
-calc_ok = "calculator" in s2["pkg"].lower() or "calc" in s2["pkg"].lower() or "coloros" in s2["pkg"].lower()
+calc_ok = "calculator" in s2["pkg"].lower() or "calc" in s2["pkg"].lower() or "coloros" in s2["pkg"].lower() or "geogebra" in s2["pkg"].lower()
 calc_detail = f"pkg:{s2['pkg'].split('.')[-1]} | {s2['n']}项" if calc_ok else f"pkg:{s2['pkg']}"
 
 # 回桌面

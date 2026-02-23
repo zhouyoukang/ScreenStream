@@ -15,7 +15,7 @@ p = Phone()
 p = Phone(host="192.168.31.100")          # WiFi直连
 p = Phone(host="100.100.1.5")             # Tailscale
 p = Phone(url="https://my.domain.com")    # 公网穿透
-p = Phone(port=8086, auto_discover=False) # 传统USB模式
+p = Phone(port=8084, auto_discover=False) # 传统USB模式
 
 # 带心跳守护（30秒自动检测+恢复）
 p = Phone(heartbeat_sec=30)
@@ -107,9 +107,9 @@ p.macro_inline([{"action":"tap","nx":0.5,"ny":0.5}])
 ## 测试（46/46 通过，2026-02-22）
 
 ```bash
-python tests/standalone_test.py --port 8086   # 36项 L0/L1 原始HTTP验证
-python tests/agent_demo.py --port 8086        # 5个多步Agent任务
-python tests/complex_scenarios.py --port 8086 # 5场景43步，86%零AI
+python tests/standalone_test.py --port 8084   # 36项 L0/L1 原始HTTP验证
+python tests/agent_demo.py --port 8084        # 5个多步Agent任务
+python tests/complex_scenarios.py --port 8084 # 5场景43步，86%零AI
 ```
 
 ## 依赖度分层

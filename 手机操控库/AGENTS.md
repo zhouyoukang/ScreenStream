@@ -19,10 +19,16 @@
 │                             支持远程连接/自动发现/心跳/负面状态恢复
 ├── remote_setup.py        ← 远程操控一键启动（发现→连接→五感→Web UI）
 ├── remote_assist.py       ← 远程家庭协助工具（交互式CLI+18个命令+8场景）
+├── five_senses.py         ← 五感批量采集（多APP UI/a11y/activity dump）
+├── parse_orders.py        ← 订单解析（淘宝/京东/当当 结构化提取）
+├── shopping_records.py    ← 购物记录汇总采集
+├── scan_book_orders.py    ← 二手书订单扫描
+├── collect_v3.py          ← UI采集 v3（深度滚动+增量）
 ├── family_setup_guide.md  ← 家人端设置指南（发给家人的5分钟教程）
 ├── family_phones.json     ← 家人手机配置（自动生成，--add 管理）
 ├── FINDINGS.md            ← 实测发现 P1-P29 + 远程架构发现
 ├── README.md              ← 项目文档
+├── .gitignore             ← 排除 xml/txt dump + 五感采集临时文件
 └── tests/
     ├── standalone_test.py ← 36 项 L0/L1 原始 HTTP 验证
     ├── agent_demo.py      ← 5 个多步 Agent 任务
@@ -53,16 +59,16 @@
 ```powershell
 # 前置：ScreenStream 必须已部署到手机并运行
 adb devices                                    # 确认设备连接
-adb forward tcp:8086 tcp:8086                  # 端口转发
-curl -s http://127.0.0.1:8086/status           # 确认 API 可达
+adb forward tcp:8084 tcp:8084                  # 端口转发
+curl -s http://127.0.0.1:8084/status           # 确认 API 可达
 
 # 开发
-python -c "from phone_lib import Phone; p=Phone(); print(p.status())"
+python -c "from phone_lib import Phone; p=Phone(port=8084, auto_discover=False); print(p.status())"
 
 # 测试
-python tests/standalone_test.py --port 8086    # 36 项
-python tests/agent_demo.py --port 8086         # 5 项
-python tests/complex_scenarios.py --port 8086  # 5 场景
+python tests/standalone_test.py --port 8084    # 36 项
+python tests/agent_demo.py --port 8084         # 5 项
+python tests/complex_scenarios.py --port 8084  # 5 场景
 ```
 
 ## 共享资源
@@ -71,7 +77,7 @@ python tests/complex_scenarios.py --port 8086  # 5 场景
 |------|---------|---------|
 | ScreenStream API | 高 | 测试时会占用手机前台，与 SS Agent 部署冲突 |
 | ADB 设备 | 高 | 与 SS Agent 共享，测试时需协调 |
-| 端口 8086 | 低 | 可用 --port 参数切换 |
+| 端口 8084 | 低 | 可用 --port 参数切换 |
 
 ## 架构要点
 

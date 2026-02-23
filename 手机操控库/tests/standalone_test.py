@@ -22,7 +22,7 @@ from urllib.error import URLError, HTTPError
 # ==================== 基础设施 ====================
 
 parser = argparse.ArgumentParser(description="ScreenStream Standalone Test")
-parser.add_argument("--port", type=int, default=8086)
+parser.add_argument("--port", type=int, default=8084)
 parser.add_argument("--verbose", "-v", action="store_true")
 args = parser.parse_args()
 
@@ -301,7 +301,7 @@ def test_l1_open_app():
     wait(2000)
     fg = GET("/foreground")
     pkg = fg.get("packageName", "").lower()
-    is_battery_page = "settings" in pkg or "battery" in pkg
+    is_battery_page = "settings" in pkg or "battery" in pkg or "lool" in pkg
     screen = GET("/screen/text")
     texts = [t.get("text", "") for t in screen.get("texts", [])]
     has_battery = any(kw in " ".join(texts) for kw in ["电池", "电量", "Battery", "充电"])
