@@ -13,7 +13,7 @@
 param(
     [ValidateSet('quick', 'cloudflare', 'frp')]
     [string]$Mode = 'quick',
-    [int]$LocalPort = 8081,
+    [int]$LocalPort = 8080,
     [string]$Domain = '',
     [string]$FrpServer = '',
     [int]$RemotePort = 7000,
@@ -36,7 +36,8 @@ if ($GenerateToken) {
             Write-Host "`n  Share this URL with remote users:" -ForegroundColor White
             Write-Host "  https://<your-tunnel-domain>/?auth=$($resp.token)" -ForegroundColor Yellow
         }
-    } catch {
+    }
+    catch {
         Write-Warn "Could not generate token. Is ScreenStream running on port $LocalPort?"
     }
 }
@@ -129,7 +130,8 @@ custom_domains = $Domain
         if ($frpc) {
             Write-Step "Starting FRP client..."
             & frpc -c $configPath
-        } else {
+        }
+        else {
             Write-Warn "frpc not found. Please download from https://github.com/fatedier/frp/releases"
             Write-Host "  Then run: frpc -c `"$configPath`"" -ForegroundColor Gray
         }

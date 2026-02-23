@@ -1,16 +1,21 @@
 # 公网远程控制指南
 
 > **一个网页，完整控制手机** — 视觉、听觉、触觉、认知、管控，五感齐全。
+>
+> v2: 统一 Command Center 侧滑面板，无需切换页面即可完整远控。
 
 ## 架构概览
 
 ```
-远程用户浏览器 ──HTTPS──→ Cloudflare Tunnel / FRP ──→ 手机 ScreenStream (port 8081)
+远程用户浏览器 ──HTTPS──→ Cloudflare Tunnel / FRP ──→ 手机 ScreenStream (port 8080)
      │                                                      │
      ├── 画面流 (MJPEG/H264/H265 WebSocket)                │
-     ├── 音频流 (/stream/audio WebSocket)                    │
+     ├── 音频流 (/stream/audio WebSocket, 48kHz stereo)     │
      ├── 触控输入 (/ws/touch WebSocket)                      │
      ├── 70+ REST API (导航/输入/设备控制/文件/宏/AI)         │
+     ├── Status Dashboard (顶部实时状态栏)                   │
+     ├── Command Center (右侧滑出全功能面板)                 │
+     ├── 语音输入 (Speech Recognition → 指令执行)            │
      └── Bearer Token 认证 (所有请求自动附带)                 │
 ```
 
@@ -24,8 +29,8 @@
 
 **方式B：HTTP API**
 ```bash
-adb forward tcp:8081 tcp:8081
-curl -X POST http://localhost:8081/auth/generate
+adb forward tcp:8080 tcp:8080
+curl -X POST http://localhost:8080/auth/generate
 # 返回: {"ok":true,"token":"aBcDeFgH...32chars..."}
 ```
 
@@ -37,15 +42,15 @@ curl -X POST http://localhost:8081/auth/generate
 winget install Cloudflare.cloudflared
 
 # 一键启动（会输出公网 URL）
-cloudflared tunnel --url http://localhost:8081
+cloudflared tunnel --url http://localhost:8080
 
 # 或使用脚本
-.\构建部署\remote-tunnel-setup.ps1 -Mode quick -LocalPort 8081 -GenerateToken
+.\构建部署\remote-tunnel-setup.ps1 -Mode quick -LocalPort 8080 -GenerateToken
 ```
 
 **方式B：FRP（自建服务器）**
 ```powershell
-.\构建部署\remote-tunnel-setup.ps1 -Mode frp -FrpServer your-server.com -LocalPort 8081
+.\构建部署\remote-tunnel-setup.ps1 -Mode frp -FrpServer your-server.com -LocalPort 8080
 ```
 
 ### 3. 分享给远程用户
@@ -105,8 +110,16 @@ https://xxxx-xxxx.trycloudflare.com/?auth=aBcDeFgH12345678
 - **手柄**：Quest VR 手柄 + 标准游戏手柄
 - **Ctrl+拖拽**：缩放手势模拟（scrcpy 风格）
 
-### 🧠 认知 — AI + 自动化
+### 🧠 认知 — AI + 自动化 + Command Center
+- **Status Dashboard**：顶部实时状态栏（电池/网络/前台APP/通知/时钟）
+- **Command Center**：右侧滑出面板（Alt+C），整合全部控制功能
+  - 设备详情/通知/屏幕阅读/应用列表/剪贴板
+  - 导航/系统控制/媒体/找手机/手电筒
+  - AI语义点击/View树/窗口信息
+  - 文字输入/APP启动/指令执行
+  - 宏管理/语音输入
 - **AI 命令栏**：自然语言控制（"打开微信"、"设置WiFi"）
+- **语音输入**：🎤 按钮，语音识别→自动执行指令
 - **View Tree**：获取界面元素树
 - **语义点击**：按文本查找并点击元素
 - **宏系统**：录制/回放/触发器/导入导出
@@ -143,6 +156,7 @@ https://xxxx-xxxx.trycloudflare.com/?auth=aBcDeFgH12345678
 | Alt+F | 全屏 |
 | Alt+M | 命令菜单 |
 | Alt+/ | AI 命令栏 |
+| Alt+C | Command Center 面板 |
 | Alt+I | FPS/延迟面板 |
 | Alt+1~0 | 平台面板（应用/通知/阅读器/...） |
 | Ctrl+V | 粘贴到手机 |
@@ -171,5 +185,5 @@ https://xxxx-xxxx.trycloudflare.com/?auth=aBcDeFgH12345678
 
 | 端口 | 服务 | 说明 |
 |------|------|------|
-| 8081 | MJPEG Gateway | **主入口**，包含投屏+所有 Input API |
+| 8080 | MJPEG Gateway | **主入口**，包含投屏+所有 Input API+Command Center |
 | 8084 | Input HTTP | 独立 Input API（可选，通常不需要） |
