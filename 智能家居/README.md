@@ -1,15 +1,24 @@
 # 智能家居控制中心
 
-> 通过 ScreenStream 浏览器面板(Alt+Shift+H)统一控制所有智能设备。
-> Gateway: 8900 | ScreenStream: 8080+
+> **971设备** | Gateway :8900 (MiCloud + HA桥接) | 95自动化 | 28 AI Agent | 7场景
+> 笔记本Python网关 ↔ 台式机Home Assistant Docker，合二为一
 
 ## 架构
 
 ```
-浏览器 → ScreenStream /smarthome/* → Gateway :8900 → {MiCloud | eWeLink | Tuya | HA} → 设备
+用户入口
+  ├─ 📱 微信公众号 ─── POST /wx → Gateway:8900 → 设备
+  ├─ 🌐 浏览器仪表盘 ── Gateway:8900/dashboard → 设备+场景+TTS
+  ├─ 🔊 语音 ────── 小爱音箱 → execute-text-directive → 全屋WiFi设备
+  └─ 💻 ScreenStream ─ /smarthome/* → Gateway:8900
+
+控制路径（从快到慢）
+  1️⃣ MiCloud RPC直控 ── 200ms ── 在线WiFi设备(24台)
+  2️⃣ HA API ────── ~100ms ── 1416 entities(含Sonoff/OpenRGB)
+  3️⃣ 音箱语音代理 ──── 2s ─── 任何设备(含离线)
 ```
 
-**核心洞察**: 一台在线音箱 > 十个平台API。音箱在家庭WiFi内代理执行语音指令，不依赖设备云端在线。
+**核心洞察**: 一台在线音箱 > 十个平台API。`execute-text-directive` 是万物互联的塑码密钥。
 
 ## 快速启动
 
