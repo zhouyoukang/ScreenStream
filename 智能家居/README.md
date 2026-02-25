@@ -99,7 +99,7 @@ adb reverse tcp:8900 tcp:8900
   },
   "ewelink": {"enabled": true, "app_id": "", "app_secret": "", "email": "", "password": ""},
   "tuya":    {"enabled": false, "client_id": "", "secret": ""},
-  "ha":      {"enabled": false, "url": "http://192.168.31.228:8123", "token": ""}
+  "ha":      {"enabled": false, "url": "http://192.168.31.141:8123", "token": ""}
 }
 ```
 

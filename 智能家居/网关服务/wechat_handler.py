@@ -417,6 +417,7 @@ class WeChatCommandRouter:
         """按名称关键词在所有后端中查找设备，返回 (backend_name, device_id, device_info)"""
         micloud = self.gw.get("micloud")
         ewelink = self.gw.get("ewelink")
+        ha_client = self.gw.get("ha")
 
         if micloud:
             for dev in micloud.get_devices():
@@ -431,6 +432,15 @@ class WeChatCommandRouter:
                 eid = str(dev.get("id", dev.get("deviceid", "")))
                 if keyword in name or name in keyword:
                     return ("ewelink", eid, dev)
+
+        if ha_client and ha_client.connected and ha_client._states_cache:
+            for s in ha_client._states_cache:
+                domain = s["entity_id"].split(".")[0]
+                if domain not in ("switch", "light", "fan", "climate", "cover", "scene"):
+                    continue
+                name = s.get("attributes", {}).get("friendly_name", "")
+                if keyword in name or name in keyword:
+                    return ("ha", s["entity_id"], {"name": name, "state": s["state"], "domain": domain})
 
         return None
 
@@ -450,6 +460,15 @@ class WeChatCommandRouter:
         elif backend == "ewelink":
             ewelink = self.gw.get("ewelink")
             result = await ewelink.control_device(eid, action, value)
+        elif backend == "ha":
+            ha_client = self.gw.get("ha")
+            try:
+                domain = eid.split(".")[0]
+                service = action if action in ("turn_on", "turn_off", "toggle") else action
+                await ha_client.call_service(domain, service, {"entity_id": eid})
+                result = {"ok": True}
+            except Exception as e:
+                result = {"ok": False, "error": str(e)}
         else:
             return f"未知后端: {backend}"
 

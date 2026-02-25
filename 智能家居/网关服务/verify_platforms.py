@@ -30,7 +30,7 @@ _gw = _CFG.get("gateway", {})
 _ha = _CFG.get("ha", {})
 
 GATEWAY_URL = f"http://127.0.0.1:{_gw.get('port', 8900)}"
-HA_URL = _ha.get("url", "http://192.168.31.228:8123")
+HA_URL = _ha.get("url", "http://192.168.31.141:8123")
 HA_TOKEN = _ha.get("token", "")
 SS_URL = os.getenv("SS_URL", "")  # ScreenStream API URL, e.g. http://192.168.31.100:8086
 

@@ -96,7 +96,7 @@ GATEWAY_PORT = int(_gw.get("port", os.getenv("GATEWAY_PORT", "8900")))
 GATEWAY_MODE = _gw.get("mode", os.getenv("GATEWAY_MODE", "direct"))
 
 HA_ENABLED = _ha.get("enabled", False)
-HA_URL = _ha.get("url", os.getenv("HA_URL", "http://192.168.31.228:8123"))
+HA_URL = _ha.get("url", os.getenv("HA_URL", "http://192.168.31.141:8123"))
 HA_TOKEN = _ha.get("token", os.getenv("HA_TOKEN", ""))
 
 TUYA_CLIENT_ID = _ty.get("client_id", os.getenv("TUYA_CLIENT_ID", ""))
@@ -330,6 +330,7 @@ async def lifespan(app: FastAPI):
             "micloud": micloud,
             "ewelink": ewelink,
             "mina": mina,
+            "ha": ha if HA_ENABLED and HA_TOKEN else None,
             "scene_macros": SCENE_MACROS,
             "find_speaker": _find_best_speaker,
         })
