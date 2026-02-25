@@ -1,0 +1,572 @@
+{
+  "meta": {
+    "time": "2026-02-25T09:48:13.964770",
+    "method": "从原始dump精准提取(v2去噪)"
+  },
+  "orders": [
+    {
+      "app": "taobao",
+      "product": "假睫毛镊子免胶睫毛新手自用专用高精密专业美睫嫁接工具金羽夹",
+      "paid": "0",
+      "status": "已发货",
+      "store": "朵淽旗舰店",
+      "source": "list"
+    },
+    {
+      "app": "taobao",
+      "product": "【活动价】适用三星水凝膜s25/s24/s23/s22/s21/ultra保护膜fe钢化膜s21+手机膜 s20+全",
+      "paid": "0.38",
+      "status": "已发货",
+      "store": "信管数码专营店",
+      "source": "list"
+    },
+    {
+      "app": "taobao",
+      "product": "【优惠价】适用一加水凝膜13/12/11/10/9/8/pro保护膜9rt高清11promax钢化膜7t全屏1+ac",
+      "paid": "0.32",
+      "status": "交易成功",
+      "store": "信管数码专营店",
+      "source": "list"
+    },
+    {
+      "app": "taobao",
+      "product": "加重全金属2025新款手机架支架360度旋转桌面直播专用平板iPad懒人支撑架追剧通用可折叠卡通架子多功能便携",
+      "paid": "0.01",
+      "status": "交易成功",
+      "store": "劲欢旗舰店",
+      "source": "list"
+    },
+    {
+      "app": "pdd",
+      "source": "detail",
+      "order_id": "260222-643217570150629",
+      "date": "2026-02-22 14:40:13",
+      "product": "(国行全新)Apple苹果2024 Mac M4芯片台式电脑主机9D3 16+256G 百【3天内发货】",
+      "unit_price": "3999",
+      "paid": "3999",
+      "status": "交易已取消",
+      "store": "海选数码店",
+      "receiver": "周有康"
+    },
+    {
+      "app": "pdd",
+      "source": "detail",
+      "order_id": "260205-406952395110629",
+      "product": "三星s25ultra手机壳三星S25+超薄s25编织保护套硅胶软壳高档商务",
+      "unit_price": "6.29",
+      "paid": "9.51",
+      "status": "退款成功",
+      "store": "特七数码官方旗舰店"
+    },
+    {
+      "app": "pdd",
+      "source": "detail",
+      "product": "健力宝无糖冻梨风味汽水330ml*4罐0糖0脂0卡东北风味聚餐饮料正品",
+      "unit_price": "11.48",
+      "paid": "11.48"
+    },
+    {
+      "app": "pdd",
+      "source": "detail",
+      "order_id": "260106-533840607590629",
+      "product": "拉杆箱行李箱轮子旅行箱静音轱辘可拆卸脚轮万向轮密码箱配件替换",
+      "unit_price": "7.8",
+      "paid": "7.8",
+      "status": "交易成功",
+      "receiver": "周有康"
+    },
+    {
+      "app": "pdd",
+      "source": "detail",
+      "product": "话费快充-浙江移动-50元",
+      "unit_price": "50",
+      "paid": "50"
+    },
+    {
+      "app": "pdd",
+      "source": "detail",
+      "order_id": "251204-295971111270629",
+      "product": "日清合味道中杯五香牛肉77克*2杯",
+      "unit_price": "6.5",
+      "paid": "6.5",
+      "status": "交易成功",
+      "store": "日清合味道面泡面整箱批发混搭桶装方便面夜宵充饥懒人速食品",
+      "receiver": "周有康"
+    },
+    {
+      "app": "pdd",
+      "source": "detail",
+      "order_id": "251014-621685061990629",
+      "product": "可口可乐美汁源酷儿饮料450ml橙汁/苹果汁3瓶解暑果味饮料",
+      "unit_price": "9.56",
+      "paid": "3",
+      "status": "交易成功",
+      "store": "起升食品专营店",
+      "receiver": "周有康"
+    },
+    {
+      "app": "pdd",
+      "source": "detail",
+      "product": "美甲挫刀修型纳米玻璃婴儿\n指甲锉条抛光打磨亮甲砂条"
+    },
+    {
+      "app": "pdd",
+      "source": "list",
+      "store": "优号玩网游",
+      "status": "退款成功",
+      "product": "王者荣耀租号安卓苹果便宜无双贵族V10赫兹紫瑶富婆女号九尾",
+      "unit_price": "0.1",
+      "paid": "0.1"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易关闭，有退款",
+      "paid": "3.70",
+      "status": "交易关闭，有退款",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "等待见面交易",
+      "paid": "13.00",
+      "status": "等待见面交易",
+      "store": "存洁的小黄瓜",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "断念成空无",
+      "paid": "5.00",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "等待见面交易",
+      "paid": "5.00",
+      "status": "等待见面交易",
+      "store": "断念成空无",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易关闭，有退款",
+      "paid": "7.88",
+      "status": "交易关闭，有退款",
+      "store": "叫胡仙森",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "【特惠】Windsurf代码编辑器Pro账号无限续杯",
+      "paid": "8.80",
+      "status": "",
+      "store": "小丁堡",
+      "spec": "时间:1天, 时间:1天",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功，有退款",
+      "paid": "7.88",
+      "status": "交易成功，有退款",
+      "store": "啥都干哦",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易关闭，有退款",
+      "paid": "8.80",
+      "status": "交易关闭，有退款",
+      "store": "小丁堡",
+      "spec": "时间:1天, 时间:1天",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "9.90",
+      "status": "交易成功",
+      "store": "",
+      "spec": "规格:一天无限, 规格:一天无限",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易关闭，有退款",
+      "paid": "4.99",
+      "status": "交易关闭，有退款",
+      "store": "",
+      "spec": "天数:100积分全高级模型可用, 天数:100积分全高级模型可用",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "3.99",
+      "status": "交易成功",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功，有退款",
+      "paid": "4.99",
+      "status": "交易成功，有退款",
+      "store": "长安Windsurf服务",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "5.00",
+      "status": "交易成功",
+      "store": "断念成空无",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "励志成为帅哥",
+      "paid": "1.00",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "赛博XBOT",
+      "paid": "0.89",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "1.00",
+      "status": "交易成功",
+      "store": "励志成为帅哥",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "赛博小报童",
+      "paid": "0.89",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "0.89",
+      "status": "交易成功",
+      "store": "赛博XBOT",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "樱囍千岁",
+      "paid": "1.29",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "1.29",
+      "status": "交易成功",
+      "store": "樱囍千岁",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易关闭，有退款",
+      "paid": "1.19",
+      "status": "交易关闭，有退款",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "14.80",
+      "status": "交易成功",
+      "store": "超级IT宅男",
+      "spec": "类型:永久使用, 类型:永久使用",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "1.76",
+      "status": "交易成功",
+      "store": "超级IT宅男",
+      "spec": "类型:试用7天, 类型:试用7天",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "海上看金门",
+      "paid": "190.00",
+      "status": "",
+      "store": "厦门旅行管家",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "嘻嘻哈哈",
+      "paid": "1.00",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "190.00",
+      "status": "交易成功",
+      "store": "厦门旅行管家",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易关闭，有退款",
+      "paid": "0.08",
+      "status": "交易关闭，有退款",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "1.99",
+      "status": "交易成功",
+      "store": "断念成空无",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "超级IT宅男",
+      "paid": "2.00",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "2.00",
+      "status": "交易成功",
+      "store": "超级IT宅男",
+      "spec": "类型:试用7天, 类型:试用7天",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "断念成空无",
+      "paid": "1.99",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "石头城北",
+      "paid": "1.84",
+      "status": "",
+      "store": "",
+      "spec": "规格:支持Opus\\Sonnet 4.5, 规格:支持Opus\\Sonnet 4.5",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "1.84",
+      "status": "交易成功",
+      "store": "石头城北",
+      "spec": "规格:支持Opus\\Sonnet 4.5, 规格:支持Opus\\Sonnet 4.5",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "考特橘_",
+      "paid": "569.00",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "断念成空无",
+      "paid": "1.80",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "1.80",
+      "status": "交易成功",
+      "store": "断念成空无",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "石头城北",
+      "paid": "1.80",
+      "status": "",
+      "store": "",
+      "spec": "规格:支持Opus\\Sonnet 4.5, 规格:支持Opus\\Sonnet 4.5",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "西红柿炒番茄",
+      "paid": "1.00",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "0.01",
+      "status": "交易成功",
+      "store": "西红柿炒番茄",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "电脑副屏拓展软件2026版",
+      "paid": "4.37",
+      "status": "",
+      "store": "老六自由人",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "4.37",
+      "status": "交易成功",
+      "store": "老六自由人",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "西红柿炒番茄",
+      "paid": "0.01",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "小小怪下士",
+      "paid": "0.01",
+      "status": "",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易关闭",
+      "paid": "0.01",
+      "status": "交易关闭",
+      "store": "",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易成功",
+      "paid": "1.08",
+      "status": "交易成功",
+      "store": "",
+      "spec": "积分:100积分4.5限流号, 积分:100积分4.5限流号",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "等待卖家发货",
+      "paid": "0.68",
+      "status": "等待卖家发货",
+      "store": "东南亚蹦极的犁齿鱼",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "（秒发）spacedesk电脑屏幕扩展软件（Windows+",
+      "paid": "0.01",
+      "status": "",
+      "store": "七弯巷逛书店的蔬菜",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "交易关闭，有退款",
+      "paid": "60.00",
+      "status": "押金链接，押金60，押金可退，72h自动退款，押金不发货，7",
+      "store": "拾光卡券",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "京东puls会员年卡 京东年卡 PLUS 12个月京东会员一",
+      "paid": "18.80",
+      "status": "交易成功",
+      "store": "交易成功",
+      "spec": "",
+      "source": "list"
+    },
+    {
+      "app": "xianyu",
+      "product": "1京东puls会员年卡 京东年卡 PLUS 12个月京典卡",
+      "paid": "0.01",
+      "status": "",
+      "store": "青城安静的鱼丸",
+      "spec": "",
+      "source": "list"
+    }
+  ]
+}
