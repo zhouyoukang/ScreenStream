@@ -2,6 +2,8 @@
 
 跨 Windows 账号远程全功能控制：截屏、键鼠、拖拽、窗口、进程、剪贴板、Shell、系统信息。
 
+**手机完整支持** — 触摸点击、长按右键、滑动滚屏、双指缩放、底部导航栏、响应式布局。
+
 ## 架构
 
 ```
@@ -21,7 +23,7 @@ python remote_agent.py --cooldown 3     # 自定义冷却时间
 # 浏览器打开 http://127.0.0.1:9903/
 ```
 
-## API（20+ 端点）
+## API（30+ 端点）
 
 ### 视觉感知
 | 方法 | 路径 | 说明 |
@@ -29,6 +31,7 @@ python remote_agent.py --cooldown 3     # 自定义冷却时间
 | GET | `/screenshot` | 截屏 JPEG（query: quality=70, monitor=0） |
 | GET | `/windows` | 枚举可见窗口 |
 | GET | `/sysinfo` | 系统信息（RAM/磁盘/分辨率/开机时长/锁屏状态） |
+| GET | `/screen/info` | 屏幕状态（锁屏检测+当前活动窗口，移动端状态栏用） |
 
 ### 输入控制
 | 方法 | 路径 | 说明 |
@@ -63,6 +66,7 @@ python remote_agent.py --cooldown 3     # 自定义冷却时间
 | POST | `/guard` | 配置：`{"enabled":true,"cooldown":2.0}` |
 | POST | `/guard/pause` | 暂停保护 |
 | POST | `/guard/resume` | 恢复保护 |
+| POST | `/wakeup` | 唤醒屏幕（模拟Shift键按下） |
 
 ## 前端面板
 
@@ -70,24 +74,47 @@ python remote_agent.py --cooldown 3     # 自定义冷却时间
 |------|------|
 | **Win** | 窗口列表 + 聚焦/最大化/最小化/关闭 |
 | **Keys** | 快捷键：IDE/编辑/导航/系统/滚动/音量 |
+| **Files** | 文件浏览器：目录导航/下载/删除/面包屑 |
 | **Proc** | 进程管理器：搜索/排序/一键终止 |
 | **Clip** | 剪贴板同步：读取/写入/PC→远程同步 |
 | **Shell** | 远程终端：命令执行 + 历史(↑↓) |
-| **Sys** | 系统仪表盘：RAM/磁盘/分辨率/开机时长 |
+| **Sys** | 系统仪表盘：RAM/磁盘/电源/网络/服务管理 |
 
-**交互增强**：拖拽模式(Drag按钮)、单击/双击防抖、右键菜单、滚轮转发、键盘捕获(Keys按钮)
+### 桌面端交互
+拖拽模式(Drag按钮)、单击/双击防抖、右键菜单、滚轮转发、键盘捕获(Keys按钮)
 
-## 跨会话部署
+### 手机端交互（触摸五感）
+| 手势 | 效果 |
+|------|------|
+| **单指点按** | 左键单击 |
+| **快速双击** | 左键双击 |
+| **长按500ms** | 右键单击（带振动反馈） |
+| **单指滑动** | 远程滚屏 |
+| **双指捏合** | 缩放截图视图（1x-5x） |
+| **双击空白** | 重置缩放至1x |
+
+**移动端布局**：底部5键导航栏 → 全屏面板覆盖 → ✕关闭回到截屏
+
+## 跨会话部署（手机控制另一Windows账号）
 
 ```powershell
-# 本地会话
-python remote_agent.py --port 9903
+# 1. 开放防火墙（管理员权限运行一次）
+powershell -ExecutionPolicy Bypass -File setup-firewall.ps1
 
-# 远程RDP会话 — 用计划任务启动
-Register-ScheduledTask -TaskName "RemoteAgent9904" -Action (
-  New-ScheduledTaskAction -Execute "python" -Argument "remote_agent.py --port 9904"
-) -Principal (New-ScheduledTaskPrincipal -UserId "<RDP_USER_SID>" -LogonType Interactive)
+# 2. 在目标会话启动Agent
+python remote_agent.py --port 9903         # 本地会话
+python remote_agent.py --port 9904         # 远程RDP会话
+python remote_agent.py --port 9903 --token mypass  # 带密码保护
+
+# 3. 手机浏览器打开
+http://192.168.x.x:9903/                  # 替换为电脑局域IP
 ```
+
+### 手机使用技巧（OPPO/小米/华为等Android）
+1. **添加到主屏幕** — Chrome菜单 → “添加到主屏幕”，以PWA全屏模式运行（去掉地址栏）
+2. **横屏操作** — 横屏时截图几乎占满全屏，体验最佳
+3. **关闭边缘手势** — 设置 → 便捷工具 → 关闭边缘滑动返回，避免触摸冲突
+4. **剪贴板同步** — HTTP下无法自动读取手机剪贴板，手动粘贴到Clip面板然后点Write
 
 ## 测试
 
@@ -95,17 +122,56 @@ Register-ScheduledTask -TaskName "RemoteAgent9904" -Action (
 python tests/test_remote.py                     # 默认 127.0.0.1:9905
 python tests/test_remote.py --port 9903         # 自定义端口
 python tests/test_remote.py --host 127.0.0.2    # 远程主机
-# 19轮 / 45+ 项测试
+# 24轮 / 55+ 项测试
 ```
+
+### Guardian Engine（自治守护引擎）
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/guardian/status` | 守护引擎状态（uptime/任务统计/网络/进程） |
+| GET | `/tasks` | 任务队列（?status=pending&limit=20） |
+| POST | `/tasks` | 提交任务：`{"action":"shell","params":{"cmd":"..."},"scheduled_at":1234}` |
+| POST | `/tasks/cancel` | 取消任务：`{"id":"xxx"}` |
+| POST | `/tasks/clear` | 清理旧任务：`{"max_age_hours":24}` |
+| GET | `/rules` | 规则列表 |
+| POST | `/rules` | 添加规则：`{"name":"..","trigger_type":"network_down","action":"shell","params":{}}` |
+| POST | `/rules/delete` | 删除规则：`{"id":"xxx"}` |
+| POST | `/rules/toggle` | 启停规则：`{"id":"xxx","enabled":true}` |
+| GET | `/network/status` | 网络连通性检测（3DNS+网关） |
+| POST | `/network/heal` | 网络自愈（DHCP→WiFi重连→网卡重置→DNS刷新） |
+| POST | `/network/check` | 手动触发网络检查 |
+| GET | `/watchdog` | 进程监控状态 |
+| POST | `/watchdog/watch` | 监控进程：`{"name":"python.exe"}` |
+| POST | `/watchdog/unwatch` | 取消监控 |
+| GET | `/events` | 事件日志（?limit=30） |
+
+#### 规则触发器类型
+| trigger_type | 触发条件 | 示例trigger_config |
+|---|---|---|
+| `network_down` | 网络断开 | `{}` |
+| `network_up` | 网络恢复 | `{}` |
+| `process_exit` | 进程退出 | `{"name":"gateway.py"}` |
+| `cron` | 定时触发 | `{"hour":"3","minute":"0","cooldown":300}` |
+| `session_disconnect` | 会话断开 | `{}` |
+
+#### 网络自愈链（逐级升级）
+1. `ipconfig /renew` — DHCP续约
+2. `netsh wlan disconnect + connect` — WiFi重连
+3. `Disable-NetAdapter + Enable` — 网卡重置
+4. `ipconfig /flushdns` — DNS刷新
 
 ## 文件结构
 
 ```
 远程桌面/
-├── remote_agent.py          ← 服务端（~870行，零框架，MouseGuard，20+API）
-├── remote_desktop.html      ← Web前端（~720行，暗色主题，6面板，拖拽支持）
+├── remote_agent.py          ← 服务端（~2300行，零框架，45+API，Guardian引擎）
+├── remote_desktop.html      ← Web前端（~2500行，PWA+触摸+9面板+Android适配）
+├── guardian.db              ← SQLite运行时数据库（自动创建，gitignore）
+├── manifest.json            ← PWA清单（添加到主屏幕全屏模式）
+├── setup-firewall.ps1       ← 防火墙配置（允许手机访问）
 ├── guard-toggle.ps1         ← 一键切换Guard状态
+├── auto-start.ps1           ← 开机自启配置（计划任务）
 ├── tests/
-│   └── test_remote.py       ← 自动化测试（19轮，45+项）
+│   └── test_remote.py       ← 自动化测试（24轮，55+项）
 └── README.md
 ```

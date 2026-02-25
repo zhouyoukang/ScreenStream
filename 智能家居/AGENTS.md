@@ -95,13 +95,13 @@ start_wechat.bat               # Gateway + Cloudflare Tunnel
 
 ## 对话结束选项
 
-> 任务完成后，AI 必须调用 `ask_user_question` 从以下选项中选取 4 个最相关的：
+> 任务完成后调用 `ask_user_question`，从下表选 4 个最贴合的：
 
 | label | description |
 |-------|-------------|
-| 启动网关验证 | python gateway.py + curl验证API端点正常 |
-| 运行测试套件 | 执行test_wechat/test_wx_live/test_wx_commands全套测试 |
-| 继续开发功能 | 继续完善网关路由/平台后端/微信命令 |
-| 更新仪表盘 | 改进dashboard.html的设备卡片/场景/TTS交互 |
-| 更新文档提交 | 更新README/NEEDS_ANALYSIS + git commit |
-| 微信公网测试 | 启动Cloudflare Tunnel进行端到端公网验证 |
+| 启动网关试试 | 启动网关，验证设备控制正常 |
+| 跑全套测试 | 执行微信/命令/在线全套测试 |
+| 继续完善控制 | 改进设备控制/场景/微信命令 |
+| 打开仪表盘看看 | 浏览器打开仪表盘确认效果 |
+| 微信公网测试 | 启动隧道做端到端验证 |
+| 收工提交 | 记录成果 + git commit |

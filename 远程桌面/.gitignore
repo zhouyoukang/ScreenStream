@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.pyo
+guardian.db
+guardian.db-wal
+guardian.db-shm

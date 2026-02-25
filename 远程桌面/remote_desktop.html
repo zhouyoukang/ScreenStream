@@ -3,12 +3,24 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0f0f1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="/manifest.json">
   <title>Remote Desktop Control</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box
+    }
+
+    html {
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch
     }
 
     body {
@@ -18,7 +30,12 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
-      overflow: hidden
+      height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
+      padding-top: env(safe-area-inset-top, 0);
+      padding-left: env(safe-area-inset-left, 0);
+      padding-right: env(safe-area-inset-right, 0)
     }
 
     .header {
@@ -119,7 +136,11 @@
       justify-content: center;
       background: #000;
       position: relative;
-      cursor: crosshair
+      cursor: crosshair;
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none
     }
 
     .canvas-wrap img {
@@ -328,6 +349,21 @@
       font-family: 'Cascadia Code', 'Consolas', monospace;
       font-size: 11px;
       outline: none
+    }
+
+    .shell-hist-btn {
+      background: #1a1a2e;
+      border: none;
+      color: #888;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      border-right: 1px solid #333
+    }
+
+    .shell-hist-btn:hover {
+      color: #fff;
+      background: #2a2a3e
     }
 
     .shell-input button {
@@ -571,6 +607,286 @@
         width: 220px
       }
     }
+
+    /* === MOBILE LAYOUT === */
+    @media (max-width: 640px) {
+      .header {
+        padding: 4px 8px;
+        flex-wrap: wrap;
+        gap: 4px
+      }
+
+      .header h1 {
+        font-size: 14px
+      }
+
+      .header .controls {
+        width: 100%;
+        justify-content: space-between;
+        gap: 3px
+      }
+
+      .hbtn,
+      .hctl {
+        font-size: 12px;
+        padding: 6px 10px;
+        min-height: 36px;
+        display: flex;
+        align-items: center
+      }
+
+      #agentUrl {
+        display: none
+      }
+
+      .main {
+        flex-direction: column
+      }
+
+      .canvas-wrap {
+        flex: 1;
+        min-height: 0
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100% !important;
+        z-index: 100;
+        display: none;
+        background: #16213eee;
+        backdrop-filter: blur(8px)
+      }
+
+      .sidebar.mobile-show {
+        display: flex !important
+      }
+
+      .tab {
+        font-size: 12px;
+        padding: 10px 4px;
+        min-height: 40px
+      }
+
+      .panel-body {
+        padding: 10px
+      }
+
+      .sbtn {
+        font-size: 13px;
+        padding: 8px 12px;
+        min-height: 36px
+      }
+
+      .shortcuts {
+        gap: 4px
+      }
+
+      .section-title {
+        font-size: 12px;
+        margin: 10px 0 6px
+      }
+
+      .win-item {
+        font-size: 14px;
+        padding: 8px 10px;
+        min-height: 40px
+      }
+
+      .proc-item {
+        font-size: 13px;
+        padding: 6px 8px;
+        min-height: 36px
+      }
+
+      .proc-item .pkill {
+        opacity: 1;
+        font-size: 14px;
+        padding: 4px 8px
+      }
+
+      .file-item {
+        font-size: 13px;
+        padding: 6px 8px;
+        min-height: 40px
+      }
+
+      .file-item .fd {
+        opacity: 1;
+        font-size: 14px
+      }
+
+      .svc-item {
+        font-size: 13px;
+        padding: 6px 8px
+      }
+
+      .shell-input input {
+        font-size: 14px;
+        padding: 10px
+      }
+
+      .shell-input button {
+        font-size: 13px;
+        padding: 10px 16px
+      }
+
+      .shell-output {
+        font-size: 13px
+      }
+
+      .clip-area {
+        font-size: 14px;
+        min-height: 120px
+      }
+
+      .search-box {
+        font-size: 14px;
+        padding: 8px 10px;
+        min-height: 40px
+      }
+
+      .sys-card .label {
+        font-size: 12px
+      }
+
+      .sys-card .value {
+        font-size: 16px
+      }
+
+      .power-grid button {
+        padding: 12px 8px;
+        font-size: 13px;
+        min-height: 44px
+      }
+
+      .input-bar {
+        padding: 4px 8px;
+        gap: 6px
+      }
+
+      .input-bar input {
+        font-size: 14px;
+        padding: 6px 10px;
+        min-height: 36px
+      }
+
+      .input-bar button {
+        font-size: 14px;
+        padding: 6px 14px;
+        min-height: 36px
+      }
+
+      .log {
+        display: none
+      }
+
+      .landscape-hint {
+        display: flex !important;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.85);
+        color: #4a9eff;
+        padding: 16px 24px;
+        border-radius: 12px;
+        font-size: 14px;
+        z-index: 300;
+        pointer-events: none;
+        animation: fadeHint 3s ease-out forwards
+      }
+
+      @keyframes fadeHint {
+
+        0%,
+        60% {
+          opacity: 1
+        }
+
+        100% {
+          opacity: 0;
+          visibility: hidden
+        }
+      }
+
+      /* Mobile bottom nav */
+      .mobile-nav {
+        display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #16213e;
+        border-top: 1px solid #333;
+        z-index: 200;
+        padding: 4px 0;
+        padding-bottom: env(safe-area-inset-bottom, 4px)
+      }
+
+      .mobile-nav button {
+        flex: 1;
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 9px;
+        padding: 4px 1px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+        cursor: pointer;
+        min-width: 0
+      }
+
+      .mobile-nav button.active {
+        color: #4a9eff
+      }
+
+      .mobile-nav button .icon {
+        font-size: 18px
+      }
+
+      /* Hide desktop-only elements */
+      #dragBtn {
+        display: none !important
+      }
+
+      body {
+        padding-bottom: 56px
+      }
+
+      /* Close button for mobile sidebar */
+      .mobile-close {
+        display: block !important;
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        font-size: 24px;
+        color: #888;
+        cursor: pointer;
+        z-index: 110;
+        padding: 8px;
+        line-height: 1
+      }
+
+      .mobile-close:hover {
+        color: #fff
+      }
+    }
+
+    @media (min-width: 641px) {
+      .mobile-nav {
+        display: none !important
+      }
+
+      .mobile-close {
+        display: none !important
+      }
+    }
   </style>
 </head>
 
@@ -593,6 +909,8 @@
       <button class="hbtn" id="dragBtn" onclick="toggleDragMode()">Drag: OFF</button>
       <span id="guardStatus" class="hbtn" onclick="toggleGuard()" title="Click to toggle MouseGuard">Guard: ?</span>
       <button class="hbtn" onclick="toggleSidebar()">Panel</button>
+      <button class="hbtn" onclick="wakeScreen()" title="Wake remote screen">Wake</button>
+      <button class="hbtn" onclick="reconnectSession()" title="Reconnect disconnected session">Reconn</button>
       <button class="hbtn" onclick="toggleFullscreen()">Full</button>
     </div>
   </div>
@@ -603,6 +921,7 @@
       <div class="drag-line" id="dragLine" style="display:none"></div>
     </div>
     <div class="sidebar" id="sidebar">
+      <span class="mobile-close" onclick="closeMobileSidebar()">&times;</span>
       <div class="tabs">
         <div class="tab active" data-panel="pWin" title="Windows">Win</div>
         <div class="tab" data-panel="pKeys" title="Shortcuts">Keys</div>
@@ -611,6 +930,8 @@
         <div class="tab" data-panel="pClip" title="Clipboard">Clip</div>
         <div class="tab" data-panel="pShell" title="Shell">Shell</div>
         <div class="tab" data-panel="pSys" title="System">Sys</div>
+        <div class="tab" data-panel="pSess" title="Sessions" style="color:#f0a030">Sess</div>
+        <div class="tab" data-panel="pGuard" title="Guardian" style="color:#f59e0b">Guard</div>
       </div>
       <!-- Windows Panel -->
       <div class="panel active" id="pWin">
@@ -735,8 +1056,9 @@
       <!-- Shell Panel -->
       <div class="panel" id="pShell">
         <div class="shell-wrap">
-          <div class="shell-output" id="shellOutput">Remote Shell Ready\n$ </div>
+          <div class="shell-output" id="shellOutput">$ </div>
           <div class="shell-input">
+            <button class="shell-hist-btn" onclick="shellHistPrev()" title="Previous command">▲</button>
             <input id="shellInput" placeholder="Enter command..." onkeydown="if(event.key==='Enter')execShell()">
             <button onclick="execShell()">Run</button>
           </div>
@@ -767,6 +1089,132 @@
           <div id="svcList" style="max-height:200px;overflow-y:auto"></div>
         </div>
       </div>
+      <!-- Sessions Panel -->
+      <div class="panel" id="pSess">
+        <div class="panel-body">
+          <div class="section-title">Windows Sessions</div>
+          <div style="display:flex;gap:3px;margin-bottom:6px;flex-wrap:wrap">
+            <button class="sbtn" onclick="refreshSessions()">Refresh</button>
+            <button class="sbtn" onclick="scanAgents()">Scan Agents</button>
+            <button class="sbtn" style="background:#1d4ed8" onclick="deployAgent()">Deploy to 周</button>
+          </div>
+          <div id="sessList" style="margin-bottom:8px"></div>
+          <div id="sessHint" style="font-size:10px;color:#f0a030;margin-bottom:8px;display:none">💡
+            周账号未登录。非视觉操作(Shell/文件/进程)可通过下方PSRemoting使用。视觉控制需先通过RDP登录周账号。</div>
+          <div class="section-title">Running Agents</div>
+          <div id="agentsList" style="margin-bottom:8px"><span style="font-size:10px;color:#666">Click Scan</span></div>
+          <div class="section-title">Switch Agent Target</div>
+          <div style="display:flex;gap:3px;margin-bottom:6px">
+            <input class="search-box" id="switchUrl" placeholder="http://192.168.103.122:9904" style="margin:0;flex:1">
+            <button class="sbtn" style="background:#1d4ed8" onclick="switchAgent()">Switch</button>
+          </div>
+          <div class="section-title">Cross-Session Shell (PSRemoting)</div>
+          <div style="display:flex;gap:3px;margin-bottom:4px">
+            <input class="search-box" id="remoteTarget" value="127.0.0.2" style="margin:0;width:100px">
+            <input class="search-box" id="remoteCmd" placeholder="whoami; hostname" style="margin:0;flex:1"
+              onkeydown="if(event.key==='Enter')execRemoteShell()">
+            <button class="sbtn" onclick="execRemoteShell()">Run</button>
+          </div>
+          <div id="remoteShellOutput"
+            style="background:#0a0a14;padding:6px;border-radius:3px;font-family:monospace;font-size:11px;color:#aaa;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-all">
+            $ </div>
+          <div class="section-title" style="margin-top:8px">User Accounts</div>
+          <div id="accountsList"><span style="font-size:10px;color:#666">Loading...</span></div>
+        </div>
+      </div>
+      <!-- Guardian Panel -->
+      <div class="panel" id="pGuard">
+        <div class="panel-body">
+          <div class="section-title" style="color:#f59e0b">⚡ Guardian Engine</div>
+          <div id="guardianStatus" style="margin-bottom:8px;font-size:11px;color:#888">Loading...</div>
+
+          <div class="section-title">🌐 Network</div>
+          <div style="display:flex;gap:3px;margin-bottom:6px;flex-wrap:wrap">
+            <button class="sbtn" onclick="checkNetwork()">Check</button>
+            <button class="sbtn" style="background:#b91c1c" onclick="healNetwork()">Heal</button>
+          </div>
+          <div id="netStatus" style="font-size:11px;margin-bottom:8px;color:#888">—</div>
+
+          <div class="section-title">📋 Task Queue</div>
+          <div style="display:flex;gap:3px;margin-bottom:6px;flex-wrap:wrap">
+            <button class="sbtn" onclick="refreshTasks()">Refresh</button>
+            <button class="sbtn" style="background:#1d4ed8" onclick="showAddTask()">+ Task</button>
+            <button class="sbtn" onclick="clearOldTasks()">Clear Old</button>
+          </div>
+          <div id="addTaskForm" style="display:none;margin-bottom:6px;padding:6px;background:#1a1a2e;border-radius:4px">
+            <div style="display:flex;gap:3px;margin-bottom:3px">
+              <select id="taskAction" class="search-box" style="margin:0;width:100px">
+                <option value="shell">shell</option>
+                <option value="key">key</option>
+                <option value="wakeup">wakeup</option>
+                <option value="network_heal">network_heal</option>
+                <option value="remote_shell">remote_shell</option>
+                <option value="service">service</option>
+              </select>
+              <input class="search-box" id="taskParams" placeholder='{"cmd":"echo hello"}' style="margin:0;flex:1">
+            </div>
+            <div style="display:flex;gap:3px;align-items:center">
+              <input class="search-box" id="taskDelay" placeholder="delay sec (0=now)" style="margin:0;width:100px"
+                type="number" value="0">
+              <input class="search-box" id="taskRetries" placeholder="retries" style="margin:0;width:60px" type="number"
+                value="1">
+              <button class="sbtn" style="background:#16a34a" onclick="submitTask()">Submit</button>
+              <button class="sbtn" onclick="$('addTaskForm').style.display='none'">✕</button>
+            </div>
+          </div>
+          <div id="tasksList" style="max-height:180px;overflow-y:auto;font-size:10px"></div>
+
+          <div class="section-title">📐 Rules</div>
+          <div style="display:flex;gap:3px;margin-bottom:6px;flex-wrap:wrap">
+            <button class="sbtn" onclick="refreshRules()">Refresh</button>
+            <button class="sbtn" style="background:#1d4ed8" onclick="showAddRule()">+ Rule</button>
+          </div>
+          <div id="addRuleForm" style="display:none;margin-bottom:6px;padding:6px;background:#1a1a2e;border-radius:4px">
+            <div style="display:flex;gap:3px;margin-bottom:3px">
+              <input class="search-box" id="ruleName" placeholder="Rule name" style="margin:0;flex:1">
+              <select id="ruleTrigger" class="search-box" style="margin:0;width:110px">
+                <option value="network_down">network_down</option>
+                <option value="network_up">network_up</option>
+                <option value="process_exit">process_exit</option>
+                <option value="cron">cron</option>
+                <option value="session_disconnect">session_disconnect</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:3px;margin-bottom:3px">
+              <input class="search-box" id="ruleTriggerCfg" placeholder='trigger config: {"hour":"3","minute":"0"}'
+                style="margin:0;flex:1">
+            </div>
+            <div style="display:flex;gap:3px;align-items:center">
+              <select id="ruleAction" class="search-box" style="margin:0;width:80px">
+                <option value="shell">shell</option>
+                <option value="network_heal">net_heal</option>
+                <option value="wakeup">wakeup</option>
+                <option value="remote_shell">remote_sh</option>
+              </select>
+              <input class="search-box" id="ruleParams" placeholder='{"cmd":"..."}' style="margin:0;flex:1">
+              <button class="sbtn" style="background:#16a34a" onclick="submitRule()">Add</button>
+              <button class="sbtn" onclick="$('addRuleForm').style.display='none'">✕</button>
+            </div>
+          </div>
+          <div id="rulesList" style="max-height:140px;overflow-y:auto;font-size:10px"></div>
+
+          <div class="section-title">👁 Process Watchdog</div>
+          <div style="display:flex;gap:3px;margin-bottom:6px">
+            <input class="search-box" id="watchName" placeholder="process name (e.g. python.exe)"
+              style="margin:0;flex:1">
+            <button class="sbtn" style="background:#16a34a" onclick="addWatch()">Watch</button>
+          </div>
+          <div id="watchList" style="font-size:10px;margin-bottom:8px"></div>
+
+          <div class="section-title">📜 Event Log</div>
+          <div style="display:flex;gap:3px;margin-bottom:4px">
+            <button class="sbtn" onclick="refreshEvents()">Refresh</button>
+            <button class="sbtn danger" onclick="clearEvents()">Clear</button>
+          </div>
+          <div id="eventLog" style="max-height:160px;overflow-y:auto;font-size:9px;font-family:monospace;color:#888">
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="input-bar">
@@ -776,6 +1224,22 @@
       onclick="sendText(document.getElementById('typeInput').value);document.getElementById('typeInput').value='';">Send</button>
   </div>
   <div class="log" id="log"></div>
+
+  <!-- Landscape Hint (mobile only, auto-fades) -->
+  <div class="landscape-hint" id="landscapeHint" style="display:none">📱↔ Rotate for full-screen view</div>
+
+  <!-- Mobile Bottom Navigation -->
+  <div class="mobile-nav" id="mobileNav">
+    <button onclick="mobileShowPanel('pWin')" id="mnWin"><span class="icon">🪟</span>Win</button>
+    <button onclick="mobileShowPanel('pKeys')" id="mnKeys"><span class="icon">⌨️</span>Keys</button>
+    <button onclick="mobileShowPanel('pFiles')" id="mnFiles"><span class="icon">📁</span>Files</button>
+    <button onclick="mobileShowPanel('pProc')" id="mnProc"><span class="icon">📊</span>Proc</button>
+    <button onclick="mobileShowPanel('pClip')" id="mnClip"><span class="icon">📋</span>Clip</button>
+    <button onclick="mobileShowPanel('pShell')" id="mnShell"><span class="icon">💻</span>Shell</button>
+    <button onclick="mobileShowPanel('pSys')" id="mnSys"><span class="icon">⚙️</span>Sys</button>
+    <button onclick="mobileShowPanel('pSess')" id="mnSess"><span class="icon">👥</span>Sess</button>
+    <button onclick="mobileShowPanel('pGuard')" id="mnGuard"><span class="icon">⚡</span>Guard</button>
+  </div>
 
   <script>
     // === State ===
@@ -789,6 +1253,192 @@
     const $ = id => document.getElementById(id);
     const dot = $('dot'), statusEl = $('status'), screenImg = $('screen');
     const logEl = $('log'), coordsEl = $('coords'), dragLine = $('dragLine');
+    const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+    // === Mobile Navigation ===
+    function mobileShowPanel(panelId) {
+      const sidebar = $('sidebar');
+      sidebar.classList.add('mobile-show');
+      // Activate the correct tab and panel
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      const tab = document.querySelector(`.tab[data-panel="${panelId}"]`);
+      if (tab) tab.classList.add('active');
+      $(panelId).classList.add('active');
+      // Highlight bottom nav
+      document.querySelectorAll('.mobile-nav button').forEach(b => b.classList.remove('active'));
+      const navMap = { pWin: 'mnWin', pKeys: 'mnKeys', pFiles: 'mnFiles', pProc: 'mnProc', pClip: 'mnClip', pShell: 'mnShell', pSys: 'mnSys', pSess: 'mnSess', pGuard: 'mnGuard' };
+      const navBtn = $(navMap[panelId]);
+      if (navBtn) navBtn.classList.add('active');
+      // Auto-load data
+      if (panelId === 'pWin') refreshWindows();
+      else if (panelId === 'pProc') refreshProcesses();
+      else if (panelId === 'pSys') { refreshSysInfo(); refreshNetwork(); }
+      else if (panelId === 'pFiles') browseDir();
+      else if (panelId === 'pSess') { refreshSessions(); loadAccounts(); }
+      else if (panelId === 'pGuard') { refreshGuardian(); }
+    }
+    function closeMobileSidebar() {
+      $('sidebar').classList.remove('mobile-show');
+      document.querySelectorAll('.mobile-nav button').forEach(b => b.classList.remove('active'));
+    }
+
+    // === Touch Events (Mobile Five Senses) ===
+    let touchState = { startTime: 0, startX: 0, startY: 0, longPressTimer: null, moved: false, fingers: 0, lastTapTime: 0, pinchStartDist: 0, zoomLevel: 1 };
+
+    function getTouchScreenCoords(touch) {
+      const rect = screenImg.getBoundingClientRect();
+      if (!screenW || !rect.width) return null;
+      const x = Math.round((touch.clientX - rect.left) * screenW / rect.width);
+      const y = Math.round((touch.clientY - rect.top) * screenH / rect.height);
+      if (x < 0 || y < 0 || x > screenW || y > screenH) return null;
+      return { x, y };
+    }
+
+    function showTouchIndicator(clientX, clientY) {
+      const ind = document.createElement('div');
+      ind.style.cssText = `position:fixed;left:${clientX - 15}px;top:${clientY - 15}px;width:30px;height:30px;border-radius:50%;background:rgba(74,158,255,0.4);pointer-events:none;z-index:999;transition:all 0.3s ease-out;`;
+      document.body.appendChild(ind);
+      requestAnimationFrame(() => { ind.style.transform = 'scale(2)'; ind.style.opacity = '0'; });
+      setTimeout(() => ind.remove(), 350);
+    }
+
+    screenImg.addEventListener('touchstart', (e) => {
+      if (!connected || !screenW) return;
+      e.preventDefault();
+      const touches = e.touches;
+      touchState.fingers = touches.length;
+      touchState.moved = false;
+
+      if (touches.length === 1) {
+        const t = touches[0];
+        touchState.startTime = Date.now();
+        touchState.startX = t.clientX;
+        touchState.startY = t.clientY;
+        // Long press timer for right-click
+        touchState.longPressTimer = setTimeout(() => {
+          if (!touchState.moved) {
+            const c = getTouchScreenCoords(t);
+            if (c) {
+              // Vibration feedback
+              if (navigator.vibrate) navigator.vibrate(50);
+              showTouchIndicator(t.clientX, t.clientY);
+              remoteClick(c.x, c.y, 'right', 1);
+              log('Long-press → Right-click (' + c.x + ',' + c.y + ')', 'ok');
+            }
+            touchState.longPressTimer = null; // Mark as fired
+          }
+        }, 500);
+      } else if (touches.length === 2) {
+        // Cancel any single-finger action
+        if (touchState.longPressTimer) { clearTimeout(touchState.longPressTimer); touchState.longPressTimer = null; }
+        // Record pinch start distance
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        touchState.pinchStartDist = Math.sqrt(dx * dx + dy * dy);
+        touchState.startX = (touches[0].clientX + touches[1].clientX) / 2;
+        touchState.startY = (touches[0].clientY + touches[1].clientY) / 2;
+      }
+    }, { passive: false });
+
+    screenImg.addEventListener('touchmove', (e) => {
+      if (!connected || !screenW) return;
+      e.preventDefault();
+      const touches = e.touches;
+
+      if (touches.length === 1 && touchState.fingers === 1) {
+        const dx = touches[0].clientX - touchState.startX;
+        const dy = touches[0].clientY - touchState.startY;
+        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+          touchState.moved = true;
+          if (touchState.longPressTimer) { clearTimeout(touchState.longPressTimer); touchState.longPressTimer = null; }
+        }
+      } else if (touches.length === 2) {
+        touchState.moved = true;
+        // Two-finger: pinch to zoom the view
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (touchState.pinchStartDist > 0) {
+          const scale = dist / touchState.pinchStartDist;
+          touchState.zoomLevel = Math.max(1, Math.min(5, touchState.zoomLevel * (1 + (scale - 1) * 0.02)));
+          screenImg.style.transform = `scale(${touchState.zoomLevel})`;
+          touchState.pinchStartDist = dist;
+        }
+      }
+    }, { passive: false });
+
+    screenImg.addEventListener('touchend', (e) => {
+      if (!connected || !screenW) return;
+      e.preventDefault();
+      const elapsed = Date.now() - touchState.startTime;
+
+      if (touchState.fingers === 1 && !touchState.moved && touchState.longPressTimer !== null) {
+        // Short tap — single or double click
+        clearTimeout(touchState.longPressTimer);
+        touchState.longPressTimer = null;
+
+        const t = e.changedTouches[0];
+        const c = getTouchScreenCoords(t);
+        if (!c) return;
+
+        const now = Date.now();
+        if (now - touchState.lastTapTime < 300) {
+          // Double tap
+          touchState.lastTapTime = 0;
+          showTouchIndicator(t.clientX, t.clientY);
+          remoteClick(c.x, c.y, 'left', 2);
+          log('Double-tap (' + c.x + ',' + c.y + ')', 'ok');
+        } else {
+          // Single tap — delay to detect double
+          touchState.lastTapTime = now;
+          const cx = t.clientX, cy = t.clientY;
+          setTimeout(() => {
+            if (touchState.lastTapTime === now) {
+              showTouchIndicator(cx, cy);
+              remoteClick(c.x, c.y, 'left', 1);
+            }
+          }, 300);
+        }
+      } else if (touchState.fingers === 1 && touchState.moved && touchState.longPressTimer === null) {
+        // Was a drag after long press start — do nothing (right-click already sent)
+      } else if (touchState.fingers === 1 && touchState.moved) {
+        // Swipe gesture — send as remote scroll
+        if (touchState.longPressTimer) { clearTimeout(touchState.longPressTimer); touchState.longPressTimer = null; }
+        const t = e.changedTouches[0];
+        const dy = t.clientY - touchState.startY;
+        const dx = t.clientX - touchState.startX;
+        if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 30) {
+          const c = getTouchScreenCoords(t);
+          if (c) {
+            const clicks = dy < 0 ? 5 : -5; // swipe up = scroll up
+            remoteScroll(clicks, c.x, c.y);
+            log('Swipe-scroll ' + (dy < 0 ? '↑' : '↓'), 'ok');
+          }
+        }
+      } else if (touchState.fingers === 2) {
+        // Two-finger end — check for vertical scroll vs pinch
+        // Reset zoom if close to 1x
+        if (touchState.zoomLevel < 1.1) {
+          touchState.zoomLevel = 1;
+          screenImg.style.transform = '';
+        }
+      }
+
+      // Reset pinch after all fingers lift
+      if (e.touches.length === 0) {
+        touchState.fingers = 0;
+      }
+    }, { passive: false });
+
+    // Double-tap on empty area to reset zoom
+    $('canvasWrap').addEventListener('dblclick', (e) => {
+      if (isMobile && touchState.zoomLevel > 1) {
+        touchState.zoomLevel = 1;
+        screenImg.style.transform = '';
+        e.preventDefault();
+      }
+    });
 
     // === Tabs ===
     document.querySelectorAll('.tab').forEach(tab => {
@@ -796,7 +1446,15 @@
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         tab.classList.add('active');
-        $(tab.dataset.panel).classList.add('active');
+        const pid = tab.dataset.panel;
+        $(pid).classList.add('active');
+        // Auto-load data for the activated panel
+        if (pid === 'pWin') refreshWindows();
+        else if (pid === 'pProc') refreshProcesses();
+        else if (pid === 'pSys') { refreshSysInfo(); refreshNetwork(); }
+        else if (pid === 'pFiles') browseDir();
+        else if (pid === 'pSess') { refreshSessions(); loadAccounts(); }
+        else if (pid === 'pGuard') refreshGuardian();
       };
     });
 
@@ -835,6 +1493,13 @@
         startPoll();
         refreshSysInfo();
         refreshNetwork();
+        updateGuardStatus();
+        // Fetch real screen resolution from server (don't guess from image)
+        try {
+          const si = await api('GET', '/screen/info');
+          const sd = await si.json();
+          if (sd.screen_w && sd.screen_h) { screenW = sd.screen_w; screenH = sd.screen_h; log('Screen: ' + screenW + 'x' + screenH, 'ok'); }
+        } catch (_) { }
       } catch (e) {
         connected = false; dot.className = 'dot off';
         statusEl.textContent = 'failed: ' + e.message;
@@ -851,10 +1516,10 @@
     async function captureOnce() { if (!baseUrl) return; screenImg.src = baseUrl + '/screenshot?quality=60&t=' + Date.now(); }
 
     screenImg.addEventListener('load', function () {
-      if (!screenW && screenImg.naturalWidth > 0) {
+      if (screenImg.naturalWidth > 0) {
         imgW = screenImg.naturalWidth; imgH = screenImg.naturalHeight;
-        screenW = imgW * 2; screenH = imgH * 2;
-        log('Screen: ' + screenW + 'x' + screenH, 'ok');
+        // screenW/screenH set by /screen/info on connect; fallback if not yet set
+        if (!screenW) { screenW = imgW * 2; screenH = imgH * 2; log('Screen (est): ' + screenW + 'x' + screenH); }
       }
     });
 
@@ -1135,20 +1800,37 @@
       } catch (e) { log('Clipboard error: ' + e.message, 'err'); }
     }
     async function syncClipboard() {
+      // Try modern API first, then fallback for Android HTTP
       try {
-        const text = await navigator.clipboard.readText();
-        $('clipText').value = text;
-        await writeClipboard();
-        log('Synced PC clipboard → remote', 'ok');
-      } catch (e) { log('Sync error: ' + e.message + ' (need HTTPS or localhost)', 'err'); }
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          $('clipText').value = text;
+          await writeClipboard();
+          log('Synced phone clipboard → remote', 'ok');
+          return;
+        }
+      } catch (e) { /* fall through to fallback */ }
+      // Fallback: prompt user to paste manually
+      const ta = $('clipText');
+      ta.value = '';
+      ta.focus();
+      ta.placeholder = '⬆ Long-press here and Paste, then tap Write';
+      log('Clipboard API unavailable (HTTP). Please paste manually, then tap Write.', 'warn');
     }
 
     // === Shell Panel ===
     let shellHistory = [], shellHistIdx = -1;
     $('shellInput').addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowUp') { e.preventDefault(); if (shellHistIdx < shellHistory.length - 1) { shellHistIdx++; $('shellInput').value = shellHistory[shellHistIdx]; } }
-      if (e.key === 'ArrowDown') { e.preventDefault(); if (shellHistIdx > 0) { shellHistIdx--; $('shellInput').value = shellHistory[shellHistIdx]; } else { shellHistIdx = -1; $('shellInput').value = ''; } }
+      if (e.key === 'ArrowUp') { e.preventDefault(); shellHistPrev(); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); shellHistNext(); }
     });
+    function shellHistPrev() {
+      if (shellHistIdx < shellHistory.length - 1) { shellHistIdx++; $('shellInput').value = shellHistory[shellHistIdx]; }
+    }
+    function shellHistNext() {
+      if (shellHistIdx > 0) { shellHistIdx--; $('shellInput').value = shellHistory[shellHistIdx]; }
+      else { shellHistIdx = -1; $('shellInput').value = ''; }
+    }
     async function execShell() {
       if (!connected) return;
       const cmd = $('shellInput').value.trim();
@@ -1277,9 +1959,9 @@
     // === Power ===
     async function doPower(action) {
       if (!connected) return;
-      if (['shutdown', 'restart', 'logoff'].includes(action) && !confirm('Confirm ' + action + '?')) return;
+      if (action !== 'cancel' && !confirm('Confirm ' + action + '?')) return;
       try {
-        const r = await api('POST', '/power', { action });
+        const r = await api('POST', '/power', { action, confirm: true });
         const d = await r.json();
         log('Power ' + action + ': ' + (d.ok ? 'ok' : d.error), d.ok ? 'ok' : 'err');
       } catch (e) { log('Power error: ' + e.message, 'err'); }
@@ -1371,6 +2053,57 @@
       s.style.display = s.style.display === 'none' ? '' : 'none';
     }
 
+    // === Wake Screen (Mobile Essential) ===
+    async function wakeScreen() {
+      if (!connected) return;
+      try {
+        const r = await api('POST', '/wakeup', {});
+        const d = await r.json();
+        log('Wake: ' + (d.ok ? 'screen woken' : d.error), d.ok ? 'ok' : 'err');
+        setTimeout(captureOnce, 1000);
+      } catch (e) { log('Wake error: ' + e.message, 'err'); }
+    }
+
+    // === Screen Info Polling (Mobile Status + Session State) ===
+    async function pollScreenInfo() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/screen/info');
+        const d = await r.json();
+        const state = d.session_state || 'unknown';
+        if (state === 'disconnected') {
+          statusEl.textContent = '⚠ DISCONNECTED';
+          statusEl.style.color = '#fbbf24';
+          dot.className = 'dot off';
+        } else if (d.is_locked) {
+          statusEl.textContent = '🔒 LOCKED';
+          statusEl.style.color = '#f87171';
+        } else {
+          dot.className = 'dot on';
+          statusEl.style.color = '';
+          const win = d.active_window ? d.active_window.substring(0, 30) : '';
+          if (win) statusEl.textContent = win;
+        }
+      } catch (e) { /* ignore */ }
+    }
+    setInterval(pollScreenInfo, 5000);
+
+    // === Session Reconnect ===
+    async function reconnectSession() {
+      if (!connected) return;
+      try {
+        log('Attempting session reconnect...', 'ok');
+        const r = await api('POST', '/session/reconnect', {});
+        const d = await r.json();
+        if (d.ok) {
+          log('Session reconnected! Refreshing...', 'ok');
+          setTimeout(captureOnce, 2000);
+        } else {
+          log('Reconnect: ' + (d.error || 'failed') + (d.hint ? ' — ' + d.hint : ''), 'err');
+        }
+      } catch (e) { log('Reconnect error: ' + e.message, 'err'); }
+    }
+
     // === Auto-reconnect ===
     let reconnectTimer = null;
     screenImg.addEventListener('error', () => {
@@ -1386,10 +2119,420 @@
       }
     });
 
+    // === Mobile Keyboard Handling ===
+    if (isMobile && window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        const vvH = window.visualViewport.height;
+        const winH = window.innerHeight;
+        const kbH = winH - vvH;
+        if (kbH > 100) {
+          // Keyboard is open — lift input bar above it
+          document.body.style.paddingBottom = (kbH + 56) + 'px'; // 56=nav height
+          $('mobileNav').style.bottom = kbH + 'px';
+        } else {
+          document.body.style.paddingBottom = '';
+          $('mobileNav').style.bottom = '';
+        }
+      });
+    }
+
+    // === Touch Coordinate Display ===
+    if (isMobile) {
+      screenImg.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1 && screenW) {
+          const c = getTouchScreenCoords(e.touches[0]);
+          if (c) coordsEl.textContent = c.x + ', ' + c.y;
+        }
+      }, { passive: true });
+    }
+
+    // === Sessions Panel ===
+    async function refreshSessions() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/sessions');
+        const sessions = await r.json();
+        const el = $('sessList');
+        if (Array.isArray(sessions)) {
+          el.innerHTML = '';
+          sessions.forEach(s => {
+            const d = document.createElement('div');
+            const stateColor = s.state === '运行中' || s.state === 'Active' ? '#4ade80' : s.state === '侦听' || s.state === 'Listen' ? '#888' : '#f87171';
+            d.style.cssText = 'font-size:11px;padding:4px 6px;border-radius:3px;margin:2px 0;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04)';
+            d.innerHTML = '<span style="color:' + stateColor + ';font-size:14px">' + (s.active ? '●' : '○') + '</span>'
+              + '<span style="flex:1">' + (s.user || s.name) + ' <span style="color:#666">(ID ' + s.id + ' / ' + s.name + ')</span></span>'
+              + '<span style="font-size:10px;color:' + stateColor + '">' + s.state + '</span>';
+            el.appendChild(d);
+          });
+          // Show hint if 周 is not in an active session
+          const zhouActive = sessions.some(s => s.user === '周' && (s.state === '运行中' || s.state === 'Active'));
+          const hint = $('sessHint');
+          if (hint) hint.style.display = zhouActive ? 'none' : 'block';
+          log('Sessions: ' + sessions.length, 'ok');
+        } else {
+          el.innerHTML = '<span style="font-size:10px;color:#f87171">' + (sessions.error || 'error') + '</span>';
+        }
+      } catch (e) { log('Sessions error: ' + e.message, 'err'); }
+    }
+
+    async function scanAgents() {
+      if (!connected) return;
+      const el = $('agentsList');
+      el.innerHTML = '<span style="font-size:10px;color:#888">Scanning...</span>';
+      try {
+        const r = await api('GET', '/remote/agents');
+        const agents = await r.json();
+        el.innerHTML = '';
+        if (agents.length === 0) {
+          el.innerHTML = '<span style="font-size:10px;color:#666">No agents found</span>';
+          return;
+        }
+        agents.forEach(a => {
+          const d = document.createElement('div');
+          // Translate 127.x URLs to WiFi IP for phone access
+          let displayUrl = a.url;
+          if (isMobile && a.url.includes('127.0.0')) {
+            displayUrl = 'http://' + window.location.hostname + ':' + a.port;
+          }
+          const isCurrent = displayUrl === baseUrl || a.url === baseUrl || (a.host === '127.0.0.1' && a.port === parseInt(baseUrl.split(':').pop()));
+          d.style.cssText = 'font-size:11px;padding:4px 6px;border-radius:3px;margin:2px 0;display:flex;align-items:center;gap:6px;cursor:pointer;background:' + (isCurrent ? 'rgba(74,158,255,0.15)' : 'rgba(255,255,255,0.04)');
+          d.innerHTML = '<span style="color:#4ade80;font-size:14px">●</span>'
+            + '<span style="flex:1">' + a.user + '@' + a.hostname + ':' + a.port + ' <span style="color:#666">' + a.session + '</span></span>'
+            + (isCurrent ? '<span style="font-size:9px;color:#4a9eff">CURRENT</span>' : '<button class="sbtn" style="font-size:9px" onclick="switchToAgent(\'' + displayUrl + '\')">Connect</button>');
+          el.appendChild(d);
+        });
+        log('Found ' + agents.length + ' agent(s)', 'ok');
+      } catch (e) { log('Scan error: ' + e.message, 'err'); }
+    }
+
+    function switchToAgent(url) {
+      $('agentUrl').value = url;
+      // For phone access, translate 127.x to PC's WiFi IP
+      if (isMobile && url.includes('127.0.0')) {
+        const pcIp = window.location.hostname;
+        const port = url.split(':').pop();
+        $('agentUrl').value = 'http://' + pcIp + ':' + port;
+      }
+      connect();
+    }
+
+    function switchAgent() {
+      const url = $('switchUrl').value.trim();
+      if (url) switchToAgent(url);
+    }
+
+    async function deployAgent() {
+      if (!connected) return;
+      try {
+        log('Deploying agent to 周 (127.0.0.2:9904)...', 'ok');
+        const r = await api('POST', '/remote/deploy', { computer: '127.0.0.2', port: 9904 });
+        const d = await r.json();
+        if (d.ok) {
+          log('Deploy: ' + (d.status || 'ok') + ' on port ' + d.port, 'ok');
+          setTimeout(scanAgents, 2000);
+        } else {
+          log('Deploy failed: ' + (d.error || JSON.stringify(d)), 'err');
+        }
+      } catch (e) { log('Deploy error: ' + e.message, 'err'); }
+    }
+
+    async function execRemoteShell() {
+      if (!connected) return;
+      const computer = $('remoteTarget').value.trim() || '127.0.0.2';
+      const cmd = $('remoteCmd').value.trim();
+      if (!cmd) return;
+      const out = $('remoteShellOutput');
+      out.textContent += '\n[' + computer + '] $ ' + cmd + '\n';
+      out.textContent += '⏳ executing...\n';
+      out.scrollTop = out.scrollHeight;
+      $('remoteCmd').value = '';
+      try {
+        const r = await fetch(baseUrl + '/remote/shell', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ computer, cmd, timeout: 15 })
+        });
+        const d = await r.json();
+        // Remove loading indicator
+        out.textContent = out.textContent.replace('⏳ executing...\n', '');
+        if (d.ok) {
+          if (d.stdout) out.textContent += d.stdout;
+          if (d.stderr) out.textContent += '\n[stderr] ' + d.stderr;
+          if (d.returncode !== 0) out.textContent += '\n[exit ' + d.returncode + ']';
+          if (!d.stdout && !d.stderr) out.textContent += '(no output)';
+        } else {
+          out.textContent += '[error] ' + (d.error || JSON.stringify(d));
+        }
+      } catch (e) {
+        out.textContent = out.textContent.replace('⏳ executing...\n', '');
+        out.textContent += '[error] ' + e.message;
+      }
+      out.textContent += '\n$ ';
+      out.scrollTop = out.scrollHeight;
+    }
+
+    async function loadAccounts() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/accounts');
+        const accounts = await r.json();
+        const el = $('accountsList');
+        if (Array.isArray(accounts)) {
+          el.innerHTML = '';
+          accounts.forEach(a => {
+            if (a.disabled) return;
+            const d = document.createElement('div');
+            d.style.cssText = 'font-size:11px;padding:3px 6px;margin:1px 0;display:flex;align-items:center;gap:4px';
+            d.innerHTML = '<span>👤</span><span>' + a.name + '</span><span style="color:#666;font-size:9px">' + (a.status || '') + '</span>';
+            el.appendChild(d);
+          });
+        } else {
+          el.innerHTML = '<span style="font-size:10px;color:#666">' + (accounts.error || 'error') + '</span>';
+        }
+      } catch (e) { $('accountsList').textContent = 'Error'; }
+    }
+
+    // === Guardian Panel ===
+    async function refreshGuardian() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/guardian/status');
+        const d = await r.json();
+        const el = $('guardianStatus');
+        if (d.error) { el.textContent = d.error; return; }
+        const netColor = d.network?.state === 'online' ? '#4ade80' : d.network?.state === 'degraded' ? '#f0a030' : '#f87171';
+        el.innerHTML = '<span style="color:#4a9eff">Uptime:</span> ' + d.uptime_human
+          + ' | <span style="color:#4a9eff">Tasks:</span> ' + d.tasks_executed + ' done / ' + d.tasks_failed + ' fail'
+          + ' | <span style="color:#4a9eff">Net:</span> <span style="color:' + netColor + '">' + (d.network?.state || '?') + '</span>'
+          + ' | <span style="color:#4a9eff">Ticks:</span> ' + d.ticks;
+        // Also refresh sub-sections
+        refreshTasks(); refreshRules(); refreshEvents(); refreshWatchList();
+        // Network status
+        const ns = d.network || {};
+        $('netStatus').innerHTML = '<span style="color:' + netColor + '">● ' + (ns.state || '?') + '</span>'
+          + ' | fails: ' + (ns.fail_count || 0) + ' | heals: ' + (ns.heal_count || 0)
+          + (ns.last_check ? ' | last: ' + new Date(ns.last_check * 1000).toLocaleTimeString() : '');
+      } catch (e) { $('guardianStatus').textContent = 'Error: ' + e.message; }
+    }
+
+    async function checkNetwork() {
+      if (!connected) return;
+      $('netStatus').textContent = 'Checking...';
+      try {
+        const r = await api('GET', '/network/status');
+        const d = await r.json();
+        const color = d.state === 'online' ? '#4ade80' : d.state === 'degraded' ? '#f0a030' : '#f87171';
+        let html = '<span style="color:' + color + '">● ' + d.state + '</span> | ';
+        if (d.checks) {
+          Object.entries(d.checks).forEach(([k, v]) => {
+            if (k === 'gateway_ip') return;
+            html += '<span style="color:' + (v ? '#4ade80' : '#f87171') + '">' + k + '</span> ';
+          });
+        }
+        $('netStatus').innerHTML = html;
+        log('Network: ' + d.state, d.state === 'online' ? 'ok' : 'err');
+      } catch (e) { $('netStatus').textContent = 'Error'; log('Net check: ' + e.message, 'err'); }
+    }
+
+    async function healNetwork() {
+      if (!connected) return;
+      $('netStatus').textContent = 'Healing... (may take 30s)';
+      log('Starting network heal...', 'ok');
+      try {
+        const r = await api('POST', '/network/heal');
+        const d = await r.json();
+        const ok = d.ok;
+        let html = '<span style="color:' + (ok ? '#4ade80' : '#f87171') + '">' + (ok ? 'HEALED' : 'FAILED') + '</span> → ' + d.state + '<br>';
+        (d.steps || []).forEach(s => {
+          html += '<span style="color:' + (s.ok ? '#4ade80' : '#f87171') + '">' + s.step + '</span> ';
+        });
+        $('netStatus').innerHTML = html;
+        log('Heal result: ' + (ok ? 'success' : 'failed → ' + d.state), ok ? 'ok' : 'err');
+      } catch (e) { $('netStatus').textContent = 'Heal error'; log('Heal: ' + e.message, 'err'); }
+    }
+
+    async function refreshTasks() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/tasks?limit=20');
+        const tasks = await r.json();
+        const el = $('tasksList');
+        if (!Array.isArray(tasks)) { el.textContent = tasks.error || 'error'; return; }
+        el.innerHTML = '';
+        if (tasks.length === 0) { el.innerHTML = '<span style="color:#666">No tasks</span>'; return; }
+        tasks.forEach(t => {
+          const d = document.createElement('div');
+          const sc = { pending: '#f0a030', running: '#4a9eff', done: '#4ade80', failed: '#f87171', cancelled: '#888' };
+          const age = Math.round((Date.now() / 1000 - t.created_at) / 60);
+          d.style.cssText = 'padding:3px 5px;margin:1px 0;background:rgba(255,255,255,0.03);border-radius:2px;display:flex;align-items:center;gap:4px';
+          d.innerHTML = '<span style="color:' + (sc[t.status] || '#888') + ';width:52px;display:inline-block">' + t.status + '</span>'
+            + '<span style="flex:1">' + t.action + '</span>'
+            + '<span style="color:#666">' + age + 'm</span>'
+            + (t.source !== 'api' ? '<span style="color:#6366f1;font-size:9px">' + t.source + '</span>' : '')
+            + (t.status === 'pending' ? '<button class="sbtn" style="font-size:9px;padding:1px 4px" onclick="cancelTask(\'' + t.id + '\')">✕</button>' : '');
+          el.appendChild(d);
+        });
+      } catch (e) { $('tasksList').textContent = 'Error'; }
+    }
+
+    function showAddTask() { $('addTaskForm').style.display = 'block'; }
+
+    async function submitTask() {
+      if (!connected) return;
+      const action = $('taskAction').value;
+      let params = {};
+      try { params = JSON.parse($('taskParams').value || '{}'); } catch { log('Invalid JSON params', 'err'); return; }
+      const delay = parseInt($('taskDelay').value || '0');
+      const retries = parseInt($('taskRetries').value || '1');
+      const body = { action, params, max_retries: retries };
+      if (delay > 0) body.scheduled_at = Date.now() / 1000 + delay;
+      try {
+        const r = await api('POST', '/tasks', body);
+        const d = await r.json();
+        if (d.ok) { log('Task added: ' + d.task_id, 'ok'); $('addTaskForm').style.display = 'none'; refreshTasks(); }
+        else log('Task error: ' + (d.error || '?'), 'err');
+      } catch (e) { log('Task submit: ' + e.message, 'err'); }
+    }
+
+    async function cancelTask(tid) {
+      try {
+        const r = await api('POST', '/tasks/cancel', { id: tid });
+        const d = await r.json();
+        log('Cancel ' + tid + ': ' + (d.ok ? 'ok' : 'fail'), d.ok ? 'ok' : 'err');
+        refreshTasks();
+      } catch (e) { log('Cancel: ' + e.message, 'err'); }
+    }
+
+    async function clearOldTasks() {
+      try {
+        await api('POST', '/tasks/clear', { max_age_hours: 1 });
+        log('Old tasks cleared', 'ok'); refreshTasks();
+      } catch (e) { log('Clear: ' + e.message, 'err'); }
+    }
+
+    async function refreshRules() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/rules');
+        const rules = await r.json();
+        const el = $('rulesList');
+        if (!Array.isArray(rules)) { el.textContent = rules.error || 'error'; return; }
+        el.innerHTML = '';
+        if (rules.length === 0) { el.innerHTML = '<span style="color:#666">No rules</span>'; return; }
+        rules.forEach(ru => {
+          const d = document.createElement('div');
+          d.style.cssText = 'padding:3px 5px;margin:1px 0;background:rgba(255,255,255,0.03);border-radius:2px;display:flex;align-items:center;gap:4px';
+          const ena = ru.enabled;
+          d.innerHTML = '<span style="color:' + (ena ? '#4ade80' : '#888') + ';cursor:pointer" onclick="toggleRule(\'' + ru.id + '\',' + !ena + ')">' + (ena ? '●' : '○') + '</span>'
+            + '<span style="flex:1;color:' + (ena ? '#e0e0e0' : '#666') + '">' + ru.name + '</span>'
+            + '<span style="color:#6366f1;font-size:9px">' + ru.trigger_type + '→' + ru.action + '</span>'
+            + '<span style="color:#666;font-size:9px">×' + ru.fire_count + '</span>'
+            + '<button class="sbtn" style="font-size:9px;padding:1px 4px" onclick="deleteRule(\'' + ru.id + '\')">✕</button>';
+          el.appendChild(d);
+        });
+      } catch (e) { $('rulesList').textContent = 'Error'; }
+    }
+
+    function showAddRule() { $('addRuleForm').style.display = 'block'; }
+
+    async function submitRule() {
+      if (!connected) return;
+      const name = $('ruleName').value.trim();
+      const trigger_type = $('ruleTrigger').value;
+      const action = $('ruleAction').value;
+      if (!name) { log('Rule name required', 'err'); return; }
+      let trigger_config = {}, params = {};
+      try { trigger_config = JSON.parse($('ruleTriggerCfg').value || '{}'); } catch { log('Invalid trigger config JSON', 'err'); return; }
+      try { params = JSON.parse($('ruleParams').value || '{}'); } catch { log('Invalid params JSON', 'err'); return; }
+      try {
+        const r = await api('POST', '/rules', { name, trigger_type, trigger_config, action, params });
+        const d = await r.json();
+        if (d.ok) { log('Rule added: ' + d.rule_id, 'ok'); $('addRuleForm').style.display = 'none'; refreshRules(); }
+        else log('Rule error: ' + (d.error || '?'), 'err');
+      } catch (e) { log('Rule submit: ' + e.message, 'err'); }
+    }
+
+    async function toggleRule(rid, enabled) {
+      try {
+        await api('POST', '/rules/toggle', { id: rid, enabled });
+        refreshRules();
+      } catch (e) { log('Toggle: ' + e.message, 'err'); }
+    }
+
+    async function deleteRule(rid) {
+      try {
+        await api('POST', '/rules/delete', { id: rid });
+        log('Rule deleted', 'ok'); refreshRules();
+      } catch (e) { log('Delete: ' + e.message, 'err'); }
+    }
+
+    async function addWatch() {
+      if (!connected) return;
+      const name = $('watchName').value.trim();
+      if (!name) return;
+      try {
+        const r = await api('POST', '/watchdog/watch', { name });
+        const d = await r.json();
+        if (d.ok) { log('Watching: ' + name, 'ok'); $('watchName').value = ''; refreshWatchList(); }
+        else log('Watch error: ' + (d.error || '?'), 'err');
+      } catch (e) { log('Watch: ' + e.message, 'err'); }
+    }
+
+    async function refreshWatchList() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/watchdog');
+        const d = await r.json();
+        const el = $('watchList');
+        const watched = d.watched || [];
+        if (watched.length === 0) { el.innerHTML = '<span style="color:#666">No watched processes</span>'; return; }
+        el.innerHTML = watched.map(w =>
+          '<span style="display:inline-block;margin:2px;padding:2px 6px;background:#1a1a2e;border-radius:3px;color:#4ade80">'
+          + w + ' <span style="cursor:pointer;color:#f87171" onclick="unwatchProc(\'' + w + '\')">✕</span></span>'
+        ).join('');
+      } catch (e) { $('watchList').textContent = 'Error'; }
+    }
+
+    async function unwatchProc(name) {
+      try {
+        await api('POST', '/watchdog/unwatch', { name });
+        refreshWatchList();
+      } catch (e) { log('Unwatch: ' + e.message, 'err'); }
+    }
+
+    async function refreshEvents() {
+      if (!connected) return;
+      try {
+        const r = await api('GET', '/events?limit=20');
+        const events = await r.json();
+        const el = $('eventLog');
+        if (!Array.isArray(events)) { el.textContent = 'error'; return; }
+        el.innerHTML = events.map(e => {
+          const t = new Date(e.ts * 1000).toLocaleTimeString();
+          const sc = { guardian: '#4a9eff', network: '#f59e0b', watchdog: '#f87171', rules: '#6366f1', taskqueue: '#4ade80', cron: '#a78bfa' };
+          return '<div><span style="color:#666">' + t + '</span> <span style="color:' + (sc[e.source] || '#888') + '">[' + e.source + ']</span> ' + e.event + (e.detail ? ' <span style="color:#555">' + e.detail + '</span>' : '') + '</div>';
+        }).join('');
+      } catch (e) { $('eventLog').textContent = 'Error'; }
+    }
+    async function clearEvents() {
+      if (!connected || !confirm('Clear all event logs?')) return;
+      try {
+        await api('POST', '/events/clear', {});
+        $('eventLog').innerHTML = '';
+        log('Events cleared', 'ok');
+      } catch (e) { log('Clear events: ' + e.message, 'err'); }
+    }
+
     // === Auto-detect URL ===
     (function () {
       const loc = window.location;
-      $('agentUrl').value = (loc.port && parseInt(loc.port) >= 9900) ? loc.origin : 'http://127.0.0.2:9904';
+      // Works for both localhost and LAN IP access from phone
+      $('agentUrl').value = loc.origin;
+      // Mobile: default to lower FPS to save battery/bandwidth
+      if (isMobile) {
+        $('fps').value = '2000';
+        pollMs = 2000;
+      }
     })();
     connect();
   </script>

@@ -1,37 +1,37 @@
-# ScreenStream_v2 规则体系（已迁移到结构化规则）
+# ScreenStream_v2 Windsurf配置索引
 
-> ⚠️ 本文件已被 `.windsurf/rules/` 结构化规则体系替代
-> 保留此文件仅为向后兼容；新规则请编辑 `.windsurf/rules/` 下的文件
-> 迁移日期：2026-02-13 | 更新：2026-02-22（统一管理重构：49项=11目录+24链接+14文件）
+> 规则体系在 `.windsurf/`，此文件为唯一真相源。
 
-## 规则体系说明
+## Rules (6)
+- **Always On** (3): soul.md | execution-engine.md | project-structure.md
+- **Glob** (2): kotlin-android.md (`*.kt`) | frontend-html.md (`*.html/*.js/*.css`)
+- **Model** (1): build-deploy.md
 
-本项目的 AI 规则已从单一 `.windsurfrules` 升级为多层结构化体系：
+## Skills (13)
+| 领域 | Skill | 用途 |
+|------|-------|------|
+| 构建 | build-and-deploy | APK构建→推送→安装→启动 |
+| 调试 | adb-device-debug | Android设备连接/ADB问题 |
+| 调试 | keyboard-input-debug | PC键盘→手机输入映射 |
+| 调试 | terminal-resilience | 终端卡死诊断与恢复 |
+| 测试 | api-testing | HTTP API端点验证 |
+| 测试 | full-verification | 端到端验证链 |
+| 开发 | feature-development | 新功能完整开发流程 |
+| 开发 | new-module-setup | 新模块/子功能创建 |
+| 开发 | requirement-decompose | 需求→可执行特性分解 |
+| 前端 | pwa-framework | PWA单文件+WebView封装+五感UX |
+| 前端 | persona-chat-system | 人格对话(概率回复+记忆搜索) |
+| 浏览器 | browser-agent-mastery | 五器辩证·多Agent五感冲突防护 |
+| 控制 | agent-phone-control | Agent远程操控手机 |
 
-### .windsurf/rules/ — 结构化规则（6个）
-- `soul.md` (Always On) — AI思维内核：PREDICT框架+预测补全+自我进化
-- `project-structure.md` (Always On) — 项目结构：Gradle映射+端口+文档入口
-- `execution-engine.md` (Always On) — 执行引擎：闭环执行+防卡顿+MCP+严禁事项
-- `kotlin-android.md` (Glob: *.kt) — Kotlin/Android 专属规则
-- `frontend-html.md` (Glob: *.html) — 前端开发规则
-- `build-deploy.md` (Model Decision) — 构建部署流程
+## Workflows (10)
+/dev /doc /review /test /refactor /optimize /evolve /health-check /debug-escalation /swe-pipeline
 
-### AGENTS.md — 目录级自动加载指令
-9个目录级指令文件（6个ScreenStream核心 + 3个Python卫星），操作对应目录时自动加载。
+## AGENTS.md (12)
+目录级指令，操作对应目录时自动加载
 
-### .windsurf/skills/ — 原生技能系统（9个）
-- `build-and-deploy/` — 构建→推送→安装→启动
-- `keyboard-input-debug/` — 键盘输入调试
-- `api-testing/` — API端点测试
-- `new-module-setup/` — 新模块创建
-- `adb-device-debug/` — ADB设备调试
-- `feature-development/` — ScreenStream 功能开发全流程
-- `full-verification/` — 编译→推送→安装→启动→API验证→日志检查
-- `agent-phone-control/` — Agent手机控制技能
-- `requirement-decompose/` — 需求分解：顶层需求→结构化特性列表→最优实现路径
+## MCP (5, 全启用)
+chrome-devtools | context7 | fetch | github | playwright(`--headless`)
 
-### .windsurf/hooks.json — 自动化钩子
-- 当前包含 2 个 Python hooks（conversation_capture×2）
-- Python/Node.js hooks 安全可用
-- **PowerShell hooks 绝对禁止**
-
+## Hooks
+2个Python (conversation_capture) | **PS hooks绝对禁止**

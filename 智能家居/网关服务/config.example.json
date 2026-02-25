@@ -7,7 +7,7 @@
   },
   "ha": {
     "enabled": false,
-    "url": "http://192.168.31.228:8123",
+    "url": "http://192.168.31.141:8123",
     "token": "",
     "_comment": "设为 true 并填入 token 可启用 HA 高级功能(历史/模板/场景)"
   },

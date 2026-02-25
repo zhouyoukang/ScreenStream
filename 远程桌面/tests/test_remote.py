@@ -203,12 +203,43 @@ def run_tests():
     r, _ = api_post("/volume", {"mute": True})
     test("Volume unmute", r.get("ok") is True)
 
+    # 19. Files
+    print("\nRound 19: Files")
+    f, _, _ = api_get("/files?path=C%3A%5C")
+    test("Files list", "items" in f and isinstance(f["items"], list), f"{f.get('count', 0)} items")
+    if isinstance(f.get("items"), list) and f["items"]:
+        test("File fields", all(k in f["items"][0] for k in ("name", "is_dir", "size")))
+
+    # 20. Screen Info (mobile)
+    print("\nRound 20: Screen Info")
+    si, _, _ = api_get("/screen/info")
+    test("Screen info", "is_locked" in si, f"locked={si.get('is_locked')}")
+    test("Screen resolution", "screen_w" in si, f"{si.get('screen_w')}x{si.get('screen_h')}")
+
+    # 21. Wake Screen
+    print("\nRound 21: Wake Screen")
+    r, _ = api_post("/wakeup", {})
+    test("Wake screen", r.get("ok") is True, r.get("method", ""))
+
+    # 22. Network
+    print("\nRound 22: Network")
+    n, _, _ = api_get("/network")
+    test("Network adapters", "adapters" in n)
+    test("Network connections", "connections" in n)
+
+    # 23. Power (cancel only — safe)
+    print("\nRound 23: Power")
+    r, _ = api_post("/power", {"action": "shutdown"})
+    test("Power needs confirm", "error" in r and "confirm" in r.get("error", ""))
+    r, _ = api_post("/power", {"action": "cancel", "confirm": True})
+    test("Power cancel", r.get("ok") is True or "error" in r)  # cancel may fail if no pending shutdown
+
     # Re-enable guard
     api_post("/guard", {"enabled": True})
     print("\n--- MouseGuard re-enabled ---")
 
-    # 19. Error handling
-    print("\nRound 19: Error Handling")
+    # 24. Error handling
+    print("\nRound 24: Error Handling")
     try:
         api_get("/nonexistent")
         test("404 route", False, "should have raised")

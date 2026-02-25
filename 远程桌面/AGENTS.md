@@ -17,11 +17,11 @@
 
 ```
 远程桌面/
-├── remote_agent.py          ← 服务端 (~870行，20+API，MouseGuard)
-├── remote_desktop.html      ← Web 前端 (~720行，6面板，拖拽支持)
+├── remote_agent.py          ← 服务端 (~1230行，30+API，MouseGuard，唤醒/屏幕状态)
+├── remote_desktop.html      ← Web 前端 (~1850行，7面板，触摸五感+响应式)
 ├── guard-toggle.ps1         ← MouseGuard 一键切换
 ├── tests/
-│   └── test_remote.py       ← 45+ 项自动化测试 (19轮)
+│   └── test_remote.py       ← 55+ 项自动化测试 (24轮)
 └── README.md
 ```
 
@@ -72,14 +72,16 @@ python tests/test_remote.py --port 9903 # 自定义端口
 - **MouseGuard**：检测用户鼠标活动，自动暂停自动化防止劫持
 - **跨会话**：支持多 Windows 用户会话，每个会话独立端口
 - **Unicode**：非 ASCII 文本自动用 clip.exe + Ctrl+V 粘贴
+- **手机五感**：触摸点击/长按右键/滑动滚屏/双指缩放/底部导航/响应式布局
 
 ## 对话结束选项
 
-> 任务完成后，AI 必须调用 `ask_user_question` 从以下选项中选取 4 个最相关的：
+> 任务完成后调用 `ask_user_question`，从下表选 4 个最贴合的：
 
 | label | description |
 |-------|-------------|
-| 启动服务验证 | python remote_agent.py + 浏览器打开前端确认 |
-| 运行27项测试 | 执行test_remote.py全套自动化测试 |
-| 继续开发功能 | 继续改进API端点/前端交互/MouseGuard |
-| 更新文档提交 | 更新README + git commit |
+| 打开浏览器试试 | 启动服务，浏览器打开确认效果 |
+| 跑全套测试 | 执行55项自动化测试验证 |
+| 手机上试试 | 用手机浏览器访问，测试触摸操控 |
+| 继续完善功能 | 改进API/前端交互/MouseGuard |
+| 收工提交 | 记录成果 + git commit |

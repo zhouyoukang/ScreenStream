@@ -35,15 +35,15 @@ android {
         getByName("main") {
             java.setSrcDirs(listOf(
                 "010-模块管理_ModuleManager",
-                "020-依赖注入_DI", 
+                "020-依赖注入_DI",
                 "030-通用工具_Utils",
-                "../010-用户界面与交互_UI/050-通用组件_CommonUI",
-                "../010-用户界面与交互_UI/030-通知系统_Notifications/010-通用通知_CommonNotifications",
-                "../080-配置管理_Settings/010-全局配置_GlobalSettings"
+                "../用户界面/050-通用组件_CommonUI",
+                "../用户界面/030-通知系统_Notifications/010-通用通知_CommonNotifications",
+                "../配置管理/010-全局配置_GlobalSettings"
             ))
 
             res.setSrcDirs(listOf(
-                "../010-用户界面与交互_UI/050-通用组件_CommonUI/res"
+                "../用户界面/050-通用组件_CommonUI/res"
             ))
         }
     }

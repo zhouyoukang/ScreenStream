@@ -34,13 +34,13 @@ PC浏览器 keydown → sendInputJson("/key", {keysym, down, shift, ctrl})
 
 ## 对话结束选项
 
-> 任务完成后，AI 必须调用 `ask_user_question` 从以下选项中选取 4 个最相关的：
+> 任务完成后调用 `ask_user_question`，从下表选 4 个最贴合的：
 
 | label | description |
 |-------|-------------|
-| 编译部署验证API | Gradle构建→推送→安装→curl验证新/改的API端点 |
-| 同步前端index.html | 检查并更新前端的键盘/触控/面板代码匹配后端变更 |
-| 继续开发API | 在当前方向上继续添加或优化InputRoutes端点 |
-| 更新FEATURES.md | 登记新功能到文档 + git commit |
-| 验证宏系统 | 测试MacroEngine的CRUD/运行/循环/日志功能 |
-| 同步PhoneLib | 通知P3 Agent在phone_lib.py中同步新API封装 |
+| 装手机试试 | 编译安装到手机，打开浏览器体验操控效果 |
+| 打磨操控手感 | 继续优化触控/键盘/手势的响应流畅度 |
+| 同步前端体验 | 确保浏览器端面板与后端变更一致 |
+| 试试宏功能 | 测试宏的创建/运行/循环是否顺畅 |
+| 同步操控库 | phone_lib.py 跟进新API封装 |
+| 收工提交 | 记录成果 + git commit |

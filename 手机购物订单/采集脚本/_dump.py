@@ -2,7 +2,7 @@
 import xml.etree.ElementTree as ET, re, os, sys
 TMP = os.path.join(os.environ.get("TEMP", "/tmp"), "ui.xml")
 ADB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "构建部署", "android-sdk", "platform-tools", "adb.exe")
-SN = "158377ff"
+SN = os.environ.get("ADB_SERIAL", "10.172.236.90:43253")
 
 import subprocess
 def adb(*a):

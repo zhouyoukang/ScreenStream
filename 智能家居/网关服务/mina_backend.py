@@ -48,7 +48,12 @@ class MinaClient:
     async def fetch_devices(self) -> list:
         url = f"{self.MINA_API}/admin/v2/device_list?master=0&requestId={self._rid()}"
         resp = await self._client.get(url, cookies=self._cookies(), headers={"User-Agent": self.UA})
-        data = resp.json()
+        if resp.status_code != 200:
+            return self.devices
+        try:
+            data = resp.json()
+        except Exception:
+            return self.devices
         if data.get("code") == 0:
             self.devices = data.get("data", [])
         return self.devices

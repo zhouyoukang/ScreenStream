@@ -104,25 +104,34 @@ switch ($Mode) {
 
         Write-Step "Mode: FRP Client -> $FrpServer"
 
+        # FRP v0.52+ 仅支持 TOML 格式，INI 已废弃
         $frpConfig = @"
-[common]
-server_addr = $FrpServer
-server_port = $RemotePort
+serverAddr = "$FrpServer"
+serverPort = $RemotePort
+loginFailExit = false
 
-[screenstream]
-type = tcp
-local_ip = 127.0.0.1
-local_port = $LocalPort
-remote_port = $($LocalPort + 10000)
-
-[screenstream-https]
-type = https
-local_ip = 127.0.0.1
-local_port = $LocalPort
-custom_domains = $Domain
+[[proxies]]
+name = "screenstream"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = $LocalPort
+remotePort = $($LocalPort + 10000)
 "@
 
-        $configPath = Join-Path $PSScriptRoot "frpc-screenstream.ini"
+        # 如果有域名，添加 HTTPS 代理
+        if ($Domain) {
+            $frpConfig += @"
+
+[[proxies]]
+name = "screenstream-https"
+type = "https"
+localIP = "127.0.0.1"
+localPort = $LocalPort
+customDomains = ["$Domain"]
+"@
+        }
+
+        $configPath = Join-Path $PSScriptRoot "frpc-screenstream.toml"
         $frpConfig | Set-Content $configPath -Encoding UTF8
         Write-Ok "FRP config written to: $configPath"
 

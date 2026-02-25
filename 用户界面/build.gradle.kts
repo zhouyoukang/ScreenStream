@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "info.dvkr.screenstream"
-        minSdk = 21
+        minSdk = 24
         targetSdk = 36
         versionCode = 42010
         versionName = "4.2.10"
@@ -18,7 +18,7 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            storeFile = file("../090-构建与部署_Build/07-构建与脚本_build/debug-key.jks")
+            storeFile = file("../构建部署/07-构建与脚本_build/debug-key.jks")
             storePassword = "debug_key_password"
             keyAlias = "debug_key_alias"
             keyPassword = "debug_key_password"
@@ -65,7 +65,7 @@ android {
                 "030-通知系统_Notifications",
                 "040-瓦片服务_Tiles",
                 "050-通用组件_CommonUI",
-                "../070-基础设施_Infrastructure/040-日志系统_Logging"
+                "../基础设施/040-日志系统_Logging"
             ))
             manifest.srcFile("010-主界面_MainUI/AndroidManifest.xml")
             res.setSrcDirs(listOf("010-主界面_MainUI/res"))

@@ -1,6 +1,6 @@
 # ScreenStream_v2 文档中心
 
-> 更新：2026-02-21 | 保留 12 个核心文档 + adr/
+> 更新：2026-02-23 | 保留 13 个核心文档 + adr/
 
 ## 核心文档
 
@@ -17,6 +17,7 @@
 | `NEEDS_LANDSCAPE.md` | 全景需求分析 |
 | `COMPETITIVE_ANALYSIS.md` | 竞品对标 + 能力缺口 + 联动方案 |
 | `GOVERNANCE.md` | 人机共治论（规则体系顶层设计） |
+| `PUBLIC_REMOTE_CONTROL.md` | 公网远控指南（Cloudflare Tunnel + FRP） |
 | `adr/` | 架构决策记录 |
 
 ## 上级入口

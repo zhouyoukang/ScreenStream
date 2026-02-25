@@ -91,12 +91,12 @@ python tests/complex_scenarios.py --port 8084  # 5 场景
 
 ## 对话结束选项
 
-> 任务完成后，AI 必须调用 `ask_user_question` 从以下选项中选取 4 个最相关的：
+> 任务完成后调用 `ask_user_question`，从下表选 4 个最贴合的：
 
 | label | description |
 |-------|-------------|
-| 运行测试验证 | 执行standalone_test.py 36项 + agent_demo 5项 |
-| 继续扩展Phone类 | 添加新的API封装方法或优化现有方法 |
-| 同步上游API变更 | 检查InputRoutes.kt是否有新增API需要封装 |
-| 更新文档提交 | 更新README/FINDINGS + git commit |
-| 复杂场景测试 | 运行complex_scenarios.py 5场景43步联动验证 |
+| 跑测试看结果 | 执行36项+5场景测试验证效果 |
+| 扩展操控能力 | 添加新API封装或优化现有方法 |
+| 同步上游变更 | 跟进后端新增API的封装 |
+| 跑复杂场景 | 5场景43步联动验证 |
+| 收工提交 | 记录成果 + git commit |

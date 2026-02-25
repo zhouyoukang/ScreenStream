@@ -19,7 +19,7 @@
 ## 目录结构
 
 ```
-args论文/
+ARGs论文/
 ├── README.md                ← 本文件（唯一入口）
 ├── config.py                ← 路径配置（所有脚本共享）
 ├── srt_run_all.py           ← 一键运行全管线

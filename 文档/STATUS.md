@@ -8,7 +8,7 @@
 - docs 权威入口：`文档/README.md`
 - ADR 目录：`文档/adr/`
 - Windsurf 规则：`.windsurf/rules/`（6 个结构化规则）
-- Windsurf Skills：`.windsurf/skills/`（9 个项目技能）
+- Windsurf Skills：`.windsurf/skills/`（10 个项目技能）
 - 全局规则：`~/.codeium/windsurf/memories/global_rules.md`（AI 可自动编辑）
 
 ## 1) 当前主线目标（P0）
@@ -25,7 +25,7 @@
 
 ### AI 配置体系
 - **项目规则**：`.windsurf/rules/` 6 个文件
-- **Skills**：9 项目 + 全局 | **Hooks**：2 个 Python（conversation_capture） | **AGENTS.md**：11 个目录级（8 ScreenStream + 3 独立项目）
+- **Skills**：10 项目 + 全局 | **Hooks**：2 个 Python（conversation_capture） | **AGENTS.md**：12 个目录级（9 ScreenStream + 3 独立项目）
 
 ### 里程碑摘要
 

@@ -1194,7 +1194,22 @@ public class InputService : AccessibilityService() {
                 if (wm != null) {
                     val wi = wm.connectionInfo
                     if (wi != null) {
-                        json.put("wifiSSID", wi.ssid?.replace("\"", "") ?: "")
+                        var ssid = wi.ssid?.replace("\"", "") ?: ""
+                        // Android 8+ returns <unknown ssid> without ACCESS_FINE_LOCATION
+                        // Fallback: parse from cmd wifi status (works without location permission)
+                        if (ssid == "<unknown ssid>" || ssid.isBlank()) {
+                            try {
+                                val proc = Runtime.getRuntime().exec(arrayOf("cmd", "wifi", "status"))
+                                val output = proc.inputStream.bufferedReader().readText()
+                                proc.waitFor()
+                                // Format: Wifi is connected to "SSID_NAME"
+                                val connMatch = Regex("""connected to "(.+?)"""").find(output)
+                                if (connMatch != null) {
+                                    ssid = connMatch.groupValues[1]
+                                }
+                            } catch (_: Exception) {}
+                        }
+                        json.put("wifiSSID", ssid)
                         json.put("wifiRSSI", wi.rssi)
                         json.put("wifiSpeed", wi.linkSpeed)
                     }

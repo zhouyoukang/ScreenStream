@@ -14,11 +14,11 @@ Android 应用入口，Jetpack Compose UI，SingleActivity 架构。
 
 ## 对话结束选项
 
-> 任务完成后，AI 必须调用 `ask_user_question` 从以下选项中选取 4 个最相关的：
+> 任务完成后调用 `ask_user_question`，从下表选 4 个最贴合的：
 
 | label | description |
 |-------|-------------|
-| 编译部署验证 | 执行 Gradle 构建→推送→安装→启动，确认修改生效 |
-| 优化UI交互 | 继续改进 Compose 组件、布局或动画效果 |
-| 同步关联模块 | 检查 common/mjpeg/input 等依赖模块是否需要同步修改 |
-| 更新文档提交 | 更新 FEATURES.md + git commit 记录变更 |
+| 装手机看效果 | 编译安装到手机，确认界面改动生效 |
+| 继续打磨界面 | 优化组件的视觉和交互细节 |
+| 检查关联影响 | 确认其他模块是否需要同步适配 |
+| 收工提交 | 记录成果 + git commit |

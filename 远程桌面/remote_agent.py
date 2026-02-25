@@ -46,6 +46,10 @@ import threading
 import time
 import subprocess
 import struct
+import sqlite3
+import uuid
+import socket
+import hashlib
 from ctypes import wintypes
 from http.server import ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
@@ -218,20 +222,43 @@ def get_session_name():
 # Screen capture (zero-dependency GDI + Pillow for JPEG)
 # ---------------------------------------------------------------------------
 
-def capture_screen(quality=70, monitor=0):
-    """Capture screen as JPEG bytes. monitor=0 for primary, 1+ for others."""
-    import mss
-    from PIL import Image
+def capture_screen(quality=70, monitor=0, scale=50):
+    """Capture screen as JPEG bytes. monitor=0 for primary, 1+ for others.
+    scale=50 means half resolution (default), scale=100 means full res.
+    Returns placeholder when screen is locked or capture fails."""
+    try:
+        import mss
+        from PIL import Image
 
-    with mss.mss() as sct:
-        mon_idx = min(monitor + 1, len(sct.monitors) - 1)
-        img = sct.grab(sct.monitors[mon_idx])
-        pil = Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
-        w, h = pil.size
-        pil = pil.resize((w // 2, h // 2), Image.LANCZOS)
-        buf = io.BytesIO()
-        pil.save(buf, "JPEG", quality=quality)
-        return buf.getvalue(), pil.size
+        with mss.mss() as sct:
+            mon_idx = min(monitor + 1, len(sct.monitors) - 1)
+            img = sct.grab(sct.monitors[mon_idx])
+            pil = Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
+            # Detect all-black (locked screen produces black frame)
+            if pil.getbbox() is None:
+                return _locked_placeholder(pil.size)
+            w, h = pil.size
+            scale = max(10, min(100, scale))
+            if scale < 100:
+                nw, nh = int(w * scale / 100), int(h * scale / 100)
+                pil = pil.resize((nw, nh), Image.LANCZOS)
+            buf = io.BytesIO()
+            pil.save(buf, "JPEG", quality=quality)
+            return buf.getvalue(), pil.size
+    except Exception:
+        return _locked_placeholder((1920, 1080))
+
+
+def _locked_placeholder(size):
+    """Generate a placeholder JPEG for locked/unavailable screen."""
+    from PIL import Image, ImageDraw
+    w, h = size[0] // 2, size[1] // 2
+    pil = Image.new("RGB", (w, h), (20, 20, 40))
+    draw = ImageDraw.Draw(pil)
+    draw.text((w // 2 - 60, h // 2 - 10), "SCREEN LOCKED", fill=(200, 200, 200))
+    buf = io.BytesIO()
+    pil.save(buf, "JPEG", quality=50)
+    return buf.getvalue(), (w, h)
 
 
 # ---------------------------------------------------------------------------
@@ -526,8 +553,119 @@ def delete_path(path):
 # Power management
 # ---------------------------------------------------------------------------
 
-def power_action(action):
-    """Execute power action: shutdown/restart/sleep/lock/logoff."""
+def wake_screen():
+    """Wake the screen by simulating a key press (VK_SHIFT) via SendInput."""
+    try:
+        INPUT_KEYBOARD = 1
+        VK_SHIFT = 0x10
+        KEYEVENTF_KEYUP = 0x0002
+
+        class KEYBDINPUT(ctypes.Structure):
+            _fields_ = [("wVk", ctypes.c_ushort), ("wScan", ctypes.c_ushort),
+                        ("dwFlags", ctypes.c_ulong), ("time", ctypes.c_ulong),
+                        ("dwExtraInfo", ctypes.POINTER(ctypes.c_ulong))]
+        class INPUT_KB(ctypes.Structure):
+            _fields_ = [("type", ctypes.c_ulong), ("ki", KEYBDINPUT)]
+
+        # Key down
+        inp = INPUT_KB()
+        inp.type = INPUT_KEYBOARD
+        inp.ki.wVk = VK_SHIFT
+        ctypes.windll.user32.SendInput(1, ctypes.byref(inp), ctypes.sizeof(INPUT_KB))
+        # Key up
+        inp2 = INPUT_KB()
+        inp2.type = INPUT_KEYBOARD
+        inp2.ki.wVk = VK_SHIFT
+        inp2.ki.dwFlags = KEYEVENTF_KEYUP
+        ctypes.windll.user32.SendInput(1, ctypes.byref(inp2), ctypes.sizeof(INPUT_KB))
+        return {"ok": True, "action": "wake", "method": "SendInput(VK_SHIFT)"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def get_screen_info():
+    """Get combined screen info useful for mobile dashboard.
+    Detects: interactive / disconnected / locked session states."""
+    info = {"session_state": "unknown"}
+    try:
+        info["screen_w"] = user32.GetSystemMetrics(0)
+        info["screen_h"] = user32.GetSystemMetrics(1)
+    except: pass
+    # Detect session state via WTS API
+    try:
+        wtsapi32 = ctypes.windll.wtsapi32
+        kernel32 = ctypes.windll.kernel32
+        import ctypes.wintypes as wt
+        WTS_CURRENT_SERVER_HANDLE = 0
+        WTSConnectState = 8
+        pid = os.getpid()
+        sid = wt.DWORD(0)
+        kernel32.ProcessIdToSessionId(pid, ctypes.byref(sid))
+        info["session_id"] = sid.value
+        buf = ctypes.c_void_p()
+        size = wt.DWORD(0)
+        if wtsapi32.WTSQuerySessionInformationW(
+            WTS_CURRENT_SERVER_HANDLE, sid.value, WTSConnectState,
+            ctypes.byref(buf), ctypes.byref(size)
+        ):
+            state = ctypes.cast(buf, ctypes.POINTER(ctypes.c_int))[0]
+            wtsapi32.WTSFreeMemory(buf)
+            # WTS_CONNECTSTATE_CLASS: 0=Active, 1=Connected, 4=Disconnected, 5=Idle
+            state_map = {0: "active", 1: "connected", 2: "connect_query",
+                         3: "shadow", 4: "disconnected", 5: "idle",
+                         6: "listen", 7: "reset", 8: "down", 9: "init"}
+            info["session_state"] = state_map.get(state, f"unknown-{state}")
+    except: pass
+    # Lock detection
+    try:
+        hwnd = user32.GetForegroundWindow()
+        info["is_locked"] = not bool(hwnd)
+        if hwnd:
+            length = user32.GetWindowTextLengthW(hwnd)
+            buf = ctypes.create_unicode_buffer(length + 1)
+            user32.GetWindowTextW(hwnd, buf, length + 1)
+            fg_title = buf.value
+            info["active_window"] = fg_title
+            info["active_hwnd"] = hwnd
+            # Windows lock screen has specific window names
+            if "LockApp" in fg_title or not fg_title:
+                info["is_locked"] = True
+    except: pass
+    # If session is disconnected, mark as such
+    if info.get("session_state") == "disconnected":
+        info["is_locked"] = True
+        info["disconnect_reason"] = "Session disconnected — use Wake or Reconnect"
+    return info
+
+
+def reconnect_session():
+    """Try to reconnect a disconnected session to the console.
+    Uses tscon to bring the session back to the physical console."""
+    try:
+        import ctypes.wintypes as wt
+        kernel32 = ctypes.windll.kernel32
+        pid = os.getpid()
+        sid = wt.DWORD(0)
+        kernel32.ProcessIdToSessionId(pid, ctypes.byref(sid))
+        session_id = sid.value
+        # tscon requires admin; try it
+        result = subprocess.run(
+            f'tscon {session_id} /dest:console',
+            shell=True, capture_output=True, text=True, timeout=10
+        )
+        if result.returncode == 0:
+            return {"ok": True, "action": "reconnect", "session_id": session_id}
+        else:
+            return {"error": result.stderr.strip() or "tscon failed (need admin?)",
+                    "session_id": session_id,
+                    "hint": "Run agent as admin, or use RDP to reconnect"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def power_action(action, confirm=False):
+    """Execute power action: shutdown/restart/sleep/lock/logoff.
+    All destructive actions require confirm=True to prevent accidental disruption."""
     cmds = {
         "shutdown": "shutdown /s /t 5",
         "restart": "shutdown /r /t 5",
@@ -538,6 +676,10 @@ def power_action(action):
     }
     if action not in cmds:
         return {"error": "unknown action", "valid": list(cmds.keys())}
+    # Safety: all actions except cancel require explicit confirm
+    if action != "cancel" and not confirm:
+        return {"error": "confirm required", "action": action,
+                "hint": "send confirm:true to execute"}
     try:
         subprocess.Popen(cmds[action], shell=True)
         return {"ok": True, "action": action}
@@ -811,6 +953,883 @@ def send_scroll(x, y, clicks, direction="vertical"):
 
 
 # ---------------------------------------------------------------------------
+# Session Management & Cross-Account Control
+# ---------------------------------------------------------------------------
+
+def list_sessions():
+    """List all Windows Terminal Server sessions."""
+    try:
+        # qwinsta is the same as 'query session' but more reliably in PATH
+        try:
+            raw = subprocess.check_output(['qwinsta'], timeout=5, stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            raw = subprocess.check_output(
+                [os.path.join(os.environ.get('SYSTEMROOT', 'C:\\Windows'), 'System32', 'qwinsta.exe')],
+                timeout=5, stderr=subprocess.DEVNULL
+            )
+        out = raw.decode('gbk', errors='replace')
+        sessions = []
+        for line in out.strip().split('\n'):
+            line_s = line.rstrip()
+            if not line_s or '---' in line_s:
+                continue
+            active = line_s.startswith('>')
+            line_s = line_s.lstrip('> ')
+            # Parse columns: SESSIONNAME  USERNAME  ID  STATE  TYPE  DEVICE
+            parts = line_s.split()
+            if len(parts) < 3:
+                continue
+            # Find the state keyword to anchor parsing
+            state_words = {'运行中', '断开', '侦听', 'Active', 'Disc', 'Listen', 'Conn'}
+            state_idx = -1
+            for i, p in enumerate(parts):
+                if p in state_words:
+                    state_idx = i
+                    break
+            if state_idx < 0:
+                continue
+            # ID is right before state
+            try:
+                sid = int(parts[state_idx - 1])
+            except (ValueError, IndexError):
+                continue
+            name = parts[0]
+            state = parts[state_idx]
+            user = ' '.join(parts[1:state_idx - 1]) if state_idx > 2 else ''
+            # Skip header row
+            if name in ('会话名', 'SESSIONNAME'):
+                continue
+            sessions.append({
+                "name": name,
+                "user": user,
+                "id": sid,
+                "state": state,
+                "active": active,
+            })
+        return sessions
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def remote_shell(computer, cmd, timeout=15):
+    """Execute a command on a remote computer via PSRemoting."""
+    try:
+        # Escape single quotes in cmd for PowerShell
+        safe_cmd = cmd.replace("'", "''")
+        # Use Out-String to ensure text output is captured properly
+        ps_cmd = f"Invoke-Command -ComputerName {computer} -ScriptBlock {{ {safe_cmd} }} | Out-String"
+        result = subprocess.run(
+            ['powershell', '-NoProfile', '-OutputFormat', 'Text', '-Command', ps_cmd],
+            capture_output=True, timeout=timeout,
+            encoding='utf-8', errors='replace'
+        )
+        return {
+            "ok": True,
+            "stdout": (result.stdout or "").rstrip()[-4000:],
+            "stderr": (result.stderr or "").rstrip()[-2000:],
+            "returncode": result.returncode,
+            "computer": computer,
+        }
+    except subprocess.TimeoutExpired:
+        return {"error": "timeout", "timeout": timeout}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def scan_agents(ports=None, hosts=None):
+    """Scan for running remote_agent instances on LAN."""
+    import urllib.request
+    if ports is None:
+        ports = [9903, 9904, 9905]
+    if hosts is None:
+        hosts = ['127.0.0.1', '127.0.0.2']
+    agents = []
+    for host in hosts:
+        for port in ports:
+            try:
+                url = f'http://{host}:{port}/health'
+                req = urllib.request.Request(url, method='GET')
+                with urllib.request.urlopen(req, timeout=1) as resp:
+                    data = json.loads(resp.read())
+                    agents.append({
+                        "host": host,
+                        "port": port,
+                        "url": f"http://{host}:{port}",
+                        "status": "ok",
+                        "user": data.get("user", "?"),
+                        "hostname": data.get("hostname", "?"),
+                        "session": data.get("session", "?"),
+                    })
+            except Exception:
+                pass
+    return agents
+
+
+def deploy_agent_to_session(computer, port=9904):
+    """Deploy and start remote_agent.py on another computer/session via PSRemoting."""
+    agent_path = os.path.abspath(__file__).replace('\\', '\\\\')
+    try:
+        # Check if already running
+        check_cmd = f'Invoke-Command -ComputerName {computer} -ScriptBlock {{ Get-Process python* -ErrorAction SilentlyContinue | ForEach-Object {{ (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)").CommandLine }} }}'
+        check = subprocess.run(['powershell', '-NoProfile', '-Command', check_cmd],
+                               capture_output=True, text=True, timeout=10)
+        if f'--port {port}' in (check.stdout or '') and 'remote_agent' in (check.stdout or ''):
+            return {"ok": True, "status": "already_running", "port": port, "computer": computer}
+
+        # Start remote agent
+        start_cmd = f'Invoke-Command -ComputerName {computer} -ScriptBlock {{ Start-Process python -ArgumentList \'"\'{agent_path}\'" --port {port} --no-guard\' -WindowStyle Hidden }}'
+        result = subprocess.run(['powershell', '-NoProfile', '-Command', start_cmd],
+                                capture_output=True, text=True, timeout=15)
+        if result.returncode == 0:
+            # Wait a moment and verify
+            time.sleep(1)
+            return {"ok": True, "port": port, "computer": computer, "status": "started"}
+        else:
+            return {"ok": False, "error": (result.stderr or result.stdout or 'unknown error')[:500],
+                    "port": port, "computer": computer}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def get_user_accounts():
+    """List local Windows user accounts."""
+    try:
+        raw = subprocess.check_output(
+            ['wmic', 'useraccount', 'where', 'LocalAccount=TRUE', 'get',
+             'Name,SID,Status,Disabled', '/FORMAT:CSV'],
+            timeout=10, stderr=subprocess.DEVNULL
+        )
+        out = raw.decode('gbk', errors='replace')
+        accounts = []
+        for line in out.strip().split('\n'):
+            parts = line.strip().split(',')
+            if len(parts) >= 5 and parts[0] != 'Node':
+                accounts.append({
+                    "name": parts[2] if len(parts) > 2 else '',
+                    "disabled": parts[1].lower() == 'true' if len(parts) > 1 else False,
+                    "sid": parts[3] if len(parts) > 3 else '',
+                    "status": parts[4] if len(parts) > 4 else '',
+                })
+        return accounts
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# ---------------------------------------------------------------------------
+# Autonomous Guardian Engine — TaskQueue + Scheduler + Watchdog + Network
+# Zero external dependencies: sqlite3 + threading + socket (all stdlib)
+# ---------------------------------------------------------------------------
+
+DB_PATH = None  # Set in main() to <script_dir>/guardian.db
+
+
+def _db_path():
+    global DB_PATH
+    if DB_PATH is None:
+        DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guardian.db")
+    return DB_PATH
+
+
+def _init_db():
+    """Initialize SQLite tables for persistent task queue and rules."""
+    conn = sqlite3.connect(_db_path())
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS tasks (
+            id TEXT PRIMARY KEY,
+            type TEXT NOT NULL DEFAULT 'immediate',
+            action TEXT NOT NULL,
+            params TEXT NOT NULL DEFAULT '{}',
+            status TEXT NOT NULL DEFAULT 'pending',
+            priority INTEGER NOT NULL DEFAULT 5,
+            created_at REAL NOT NULL,
+            scheduled_at REAL,
+            started_at REAL,
+            finished_at REAL,
+            result TEXT,
+            error TEXT,
+            retries INTEGER NOT NULL DEFAULT 0,
+            max_retries INTEGER NOT NULL DEFAULT 1,
+            source TEXT DEFAULT 'api'
+        );
+        CREATE TABLE IF NOT EXISTS rules (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            enabled INTEGER NOT NULL DEFAULT 1,
+            trigger_type TEXT NOT NULL,
+            trigger_config TEXT NOT NULL DEFAULT '{}',
+            action TEXT NOT NULL,
+            params TEXT NOT NULL DEFAULT '{}',
+            last_fired REAL,
+            fire_count INTEGER NOT NULL DEFAULT 0,
+            created_at REAL NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS event_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ts REAL NOT NULL,
+            source TEXT NOT NULL,
+            event TEXT NOT NULL,
+            detail TEXT
+        );
+        CREATE TABLE IF NOT EXISTS watched_processes (
+            name TEXT PRIMARY KEY
+        );
+        CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+        CREATE INDEX IF NOT EXISTS idx_tasks_scheduled ON tasks(scheduled_at);
+        CREATE INDEX IF NOT EXISTS idx_rules_trigger ON rules(trigger_type);
+        CREATE INDEX IF NOT EXISTS idx_event_log_ts ON event_log(ts);
+    """)
+    conn.close()
+
+
+_log_event_counter = 0
+
+
+def _log_event(source, event, detail=None):
+    """Write to persistent event log (non-blocking, single connection)."""
+    global _log_event_counter
+    try:
+        conn = sqlite3.connect(_db_path())
+        conn.execute("INSERT INTO event_log (ts, source, event, detail) VALUES (?,?,?,?)",
+                     (time.time(), source, event, detail))
+        # Prune only every 50 writes to avoid overhead
+        _log_event_counter += 1
+        if _log_event_counter % 50 == 0:
+            conn.execute("DELETE FROM event_log WHERE id NOT IN "
+                         "(SELECT id FROM event_log ORDER BY ts DESC LIMIT 500)")
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+
+# --- Task Queue ---
+
+class TaskQueue:
+    """Persistent task queue backed by SQLite. Thread-safe."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+
+    def add(self, action, params=None, task_type="immediate", priority=5,
+            scheduled_at=None, max_retries=1, source="api"):
+        """Add a task. Returns task ID."""
+        tid = str(uuid.uuid4())[:8]
+        now = time.time()
+        with self._lock:
+            conn = sqlite3.connect(_db_path())
+            conn.execute(
+                "INSERT INTO tasks (id,type,action,params,status,priority,created_at,scheduled_at,max_retries,source) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (tid, task_type, action, json.dumps(params or {}), "pending", priority,
+                 now, scheduled_at, max_retries, source))
+            conn.commit()
+            conn.close()
+        _log_event("taskqueue", "task_added", f"{tid}:{action}")
+        return tid
+
+    def get_pending(self, limit=10):
+        """Get pending tasks ready to execute (immediate or past scheduled_at)."""
+        now = time.time()
+        conn = sqlite3.connect(_db_path())
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT * FROM tasks WHERE status='pending' AND (scheduled_at IS NULL OR scheduled_at <= ?) "
+            "ORDER BY priority ASC, created_at ASC LIMIT ?", (now, limit)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def update_status(self, tid, status, result=None, error=None):
+        """Update task status."""
+        now = time.time()
+        conn = sqlite3.connect(_db_path())
+        if status == "running":
+            conn.execute("UPDATE tasks SET status=?, started_at=? WHERE id=?", (status, now, tid))
+        elif status in ("done", "failed"):
+            conn.execute("UPDATE tasks SET status=?, finished_at=?, result=?, error=? WHERE id=?",
+                         (status, now, result, error, tid))
+        else:
+            conn.execute("UPDATE tasks SET status=? WHERE id=?", (status, tid))
+        conn.commit()
+        conn.close()
+
+    def retry_or_fail(self, tid, error_msg):
+        """Retry task if retries left, otherwise mark failed."""
+        conn = sqlite3.connect(_db_path())
+        row = conn.execute("SELECT retries, max_retries FROM tasks WHERE id=?", (tid,)).fetchone()
+        if row and row[0] < row[1]:
+            conn.execute("UPDATE tasks SET status='pending', retries=retries+1, error=? WHERE id=?",
+                         (error_msg, tid))
+        else:
+            conn.execute("UPDATE tasks SET status='failed', finished_at=?, error=? WHERE id=?",
+                         (time.time(), error_msg, tid))
+        conn.commit()
+        conn.close()
+
+    def list_all(self, status=None, limit=50):
+        """List tasks, optionally filtered by status."""
+        conn = sqlite3.connect(_db_path())
+        conn.row_factory = sqlite3.Row
+        if status:
+            rows = conn.execute("SELECT * FROM tasks WHERE status=? ORDER BY created_at DESC LIMIT ?",
+                                (status, limit)).fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM tasks ORDER BY created_at DESC LIMIT ?",
+                                (limit,)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def cancel(self, tid):
+        """Cancel a pending task."""
+        conn = sqlite3.connect(_db_path())
+        r = conn.execute("UPDATE tasks SET status='cancelled' WHERE id=? AND status='pending'", (tid,))
+        conn.commit()
+        changed = r.rowcount
+        conn.close()
+        return changed > 0
+
+    def clear_old(self, max_age_hours=24):
+        """Remove completed/failed/cancelled tasks older than max_age."""
+        cutoff = time.time() - max_age_hours * 3600
+        conn = sqlite3.connect(_db_path())
+        conn.execute("DELETE FROM tasks WHERE status IN ('done','failed','cancelled') AND created_at < ?", (cutoff,))
+        conn.commit()
+        conn.close()
+
+
+task_queue = TaskQueue()
+
+
+def execute_task(task):
+    """Execute a single task. Returns (result_str, error_str)."""
+    action = task["action"]
+    params = json.loads(task["params"]) if isinstance(task["params"], str) else task["params"]
+
+    try:
+        if action == "shell":
+            cmd = params.get("cmd", "")
+            timeout = params.get("timeout", 30)
+            cwd = params.get("cwd")
+            r = exec_shell(cmd, timeout, cwd)
+            if "error" in r:
+                return None, r["error"]
+            return json.dumps(r), None
+
+        elif action == "key":
+            return json.dumps(send_key(params.get("key"), params.get("hotkey"))), None
+
+        elif action == "click":
+            return json.dumps(send_click(params.get("x", 0), params.get("y", 0),
+                                         params.get("button", "left"), params.get("clicks", 1))), None
+
+        elif action == "type":
+            return json.dumps(send_type(params.get("text", ""), params.get("interval", 0.05))), None
+
+        elif action == "focus":
+            return json.dumps(focus_window(params.get("hwnd"), params.get("title"))), None
+
+        elif action == "power":
+            return json.dumps(power_action(params.get("action", ""), confirm=True)), None
+
+        elif action == "kill":
+            return json.dumps(kill_process(params.get("pid"), params.get("force", False))), None
+
+        elif action == "wakeup":
+            return json.dumps(wake_screen()), None
+
+        elif action == "service":
+            return json.dumps(control_service(params.get("name", ""), params.get("action", ""))), None
+
+        elif action == "remote_shell":
+            return json.dumps(remote_shell(params.get("computer", "127.0.0.2"),
+                                           params.get("cmd", ""), params.get("timeout", 15))), None
+
+        elif action == "network_heal":
+            return json.dumps(network_monitor.heal()), None
+
+        else:
+            return None, f"unknown action: {action}"
+
+    except Exception as e:
+        return None, str(e)
+
+
+# --- Rule Engine ---
+
+class RuleEngine:
+    """Event-driven rule engine. Evaluates rules against triggers."""
+
+    def add_rule(self, name, trigger_type, trigger_config, action, params):
+        rid = str(uuid.uuid4())[:8]
+        conn = sqlite3.connect(_db_path())
+        conn.execute(
+            "INSERT INTO rules (id,name,trigger_type,trigger_config,action,params,created_at) VALUES (?,?,?,?,?,?,?)",
+            (rid, name, trigger_type, json.dumps(trigger_config), action, json.dumps(params), time.time()))
+        conn.commit()
+        conn.close()
+        _log_event("rules", "rule_added", f"{rid}:{name}")
+        return rid
+
+    def remove_rule(self, rid):
+        conn = sqlite3.connect(_db_path())
+        r = conn.execute("DELETE FROM rules WHERE id=?", (rid,))
+        conn.commit()
+        changed = r.rowcount
+        conn.close()
+        return changed > 0
+
+    def toggle_rule(self, rid, enabled):
+        conn = sqlite3.connect(_db_path())
+        conn.execute("UPDATE rules SET enabled=? WHERE id=?", (1 if enabled else 0, rid))
+        conn.commit()
+        conn.close()
+
+    def list_rules(self):
+        conn = sqlite3.connect(_db_path())
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute("SELECT * FROM rules ORDER BY created_at DESC").fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def check_trigger(self, trigger_type, context=None):
+        """Check all rules matching trigger_type and fire them."""
+        conn = sqlite3.connect(_db_path())
+        conn.row_factory = sqlite3.Row
+        rules = conn.execute(
+            "SELECT * FROM rules WHERE trigger_type=? AND enabled=1", (trigger_type,)).fetchall()
+        conn.close()
+
+        fired = []
+        for rule in rules:
+            rule = dict(rule)
+            config = json.loads(rule["trigger_config"])
+            # Cooldown check: don't fire more than once per minute
+            if rule["last_fired"] and (time.time() - rule["last_fired"]) < config.get("cooldown", 60):
+                continue
+            if self._match(trigger_type, config, context):
+                # Fire: create task
+                params = json.loads(rule["params"])
+                tid = task_queue.add(rule["action"], params, source=f"rule:{rule['id']}")
+                # Update fire stats
+                conn2 = sqlite3.connect(_db_path())
+                conn2.execute("UPDATE rules SET last_fired=?, fire_count=fire_count+1 WHERE id=?",
+                              (time.time(), rule["id"]))
+                conn2.commit()
+                conn2.close()
+                fired.append({"rule_id": rule["id"], "rule_name": rule["name"], "task_id": tid})
+                _log_event("rules", "rule_fired", f"{rule['id']}:{rule['name']}→{tid}")
+        return fired
+
+    def _match(self, trigger_type, config, context):
+        """Check if trigger config matches context."""
+        if trigger_type == "process_exit":
+            return context and config.get("name", "").lower() in context.get("name", "").lower()
+        elif trigger_type == "network_down":
+            return True  # Fires whenever network goes down
+        elif trigger_type == "network_up":
+            return True  # Fires whenever network comes back
+        elif trigger_type == "session_disconnect":
+            return True
+        elif trigger_type == "always":
+            return True
+        return False
+
+
+rule_engine = RuleEngine()
+
+
+# --- Network Monitor ---
+
+class NetworkMonitor:
+    """Monitors network connectivity, detects outages, auto-heals."""
+
+    def __init__(self):
+        self._state = "unknown"  # online / degraded / offline / unknown
+        self._last_check = 0
+        self._fail_count = 0
+        self._heal_count = 0
+        self._lock = threading.Lock()
+        self._history = []  # last 20 state transitions
+
+    def check(self):
+        """Check network connectivity. Returns state dict."""
+        targets = [
+            ("8.8.8.8", 53, "google_dns"),
+            ("223.5.5.5", 53, "alibaba_dns"),
+            ("114.114.114.114", 53, "114_dns"),
+        ]
+        results = {}
+        ok_count = 0
+        for ip, port, name in targets:
+            s = None
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(3)
+                s.connect((ip, port))
+                results[name] = True
+                ok_count += 1
+            except Exception:
+                results[name] = False
+            finally:
+                if s:
+                    try: s.close()
+                    except Exception: pass
+
+        # Also check default gateway (LAN) — use 'route print' (instant, no PowerShell)
+        gateway_ok = False
+        try:
+            r = subprocess.run(['route', 'print', '0.0.0.0'],
+                               capture_output=True, timeout=3,
+                               encoding='gbk', errors='replace')
+            gw = None
+            for line in r.stdout.split('\n'):
+                parts = line.split()
+                # Route table: Destination Netmask Gateway Interface Metric
+                if len(parts) >= 4 and parts[0] == '0.0.0.0' and parts[1] == '0.0.0.0':
+                    candidate = parts[2]
+                    # Validate it looks like an IPv4 address
+                    if candidate.count('.') == 3 and candidate != '0.0.0.0':
+                        gw = candidate
+                        break
+            if gw:
+                p = subprocess.run(['ping', '-n', '1', '-w', '1500', gw],
+                                   capture_output=True, timeout=5)
+                gateway_ok = p.returncode == 0
+                results["gateway"] = gateway_ok
+                results["gateway_ip"] = gw
+        except Exception:
+            pass
+
+        with self._lock:
+            old_state = self._state
+            self._last_check = time.time()
+            if ok_count >= 2:
+                self._state = "online"
+                self._fail_count = 0
+            elif ok_count == 1 or gateway_ok:
+                self._state = "degraded"
+                self._fail_count += 1
+            else:
+                self._fail_count += 1
+                self._state = "offline" if self._fail_count >= 3 else "degraded"
+
+            # State transition events
+            if old_state != self._state:
+                self._history.append({"from": old_state, "to": self._state, "ts": time.time()})
+                if len(self._history) > 20:
+                    self._history = self._history[-20:]
+                _log_event("network", f"state_{self._state}", f"from={old_state} fails={self._fail_count}")
+                # Fire rules
+                if self._state == "offline":
+                    rule_engine.check_trigger("network_down")
+                elif self._state == "online" and old_state in ("offline", "degraded"):
+                    rule_engine.check_trigger("network_up")
+
+        return {
+            "state": self._state,
+            "checks": results,
+            "fail_count": self._fail_count,
+            "heal_count": self._heal_count,
+            "last_check": self._last_check,
+            "history": self._history[-5:],
+        }
+
+    def heal(self):
+        """Attempt to restore network connectivity. Progressive escalation."""
+        steps = []
+
+        # Step 1: DHCP renew
+        try:
+            r = subprocess.run(['ipconfig', '/renew'], capture_output=True, text=True, timeout=15)
+            steps.append({"step": "dhcp_renew", "ok": r.returncode == 0})
+        except Exception as e:
+            steps.append({"step": "dhcp_renew", "ok": False, "error": str(e)})
+
+        # Quick re-check
+        time.sleep(2)
+        st = self.check()
+        if st["state"] == "online":
+            self._heal_count += 1
+            _log_event("network", "healed", "dhcp_renew")
+            return {"ok": True, "steps": steps, "state": "online"}
+
+        # Step 2: WiFi reconnect
+        try:
+            # Get current WiFi profile
+            r = subprocess.run(['netsh', 'wlan', 'show', 'interfaces'],
+                               capture_output=True, text=True, timeout=5)
+            profile = None
+            for line in r.stdout.split('\n'):
+                if 'Profile' in line or '配置文件' in line:
+                    # Handle both ASCII colon and Chinese full-width colon
+                    profile = line.replace('：', ':').split(':')[-1].strip()
+                    break
+            if profile:
+                subprocess.run(['netsh', 'wlan', 'disconnect'], capture_output=True, timeout=5)
+                time.sleep(1)
+                r2 = subprocess.run(['netsh', 'wlan', 'connect', f'name={profile}'],
+                                    capture_output=True, text=True, timeout=10)
+                steps.append({"step": "wifi_reconnect", "ok": r2.returncode == 0, "profile": profile})
+                time.sleep(3)
+            else:
+                steps.append({"step": "wifi_reconnect", "ok": False, "error": "no wifi profile"})
+        except Exception as e:
+            steps.append({"step": "wifi_reconnect", "ok": False, "error": str(e)})
+
+        st = self.check()
+        if st["state"] == "online":
+            self._heal_count += 1
+            _log_event("network", "healed", "wifi_reconnect")
+            return {"ok": True, "steps": steps, "state": "online"}
+
+        # Step 3: Reset network adapter
+        try:
+            # Find active adapter
+            r = subprocess.run(['powershell', '-NoProfile', '-Command',
+                                'Get-NetAdapter | Where-Object {$_.Status -eq "Up"} | Select -First 1 -ExpandProperty Name'],
+                               capture_output=True, text=True, timeout=10)
+            adapter = r.stdout.strip()
+            if adapter:
+                subprocess.run(['powershell', '-NoProfile', '-Command',
+                                f'Disable-NetAdapter -Name "{adapter}" -Confirm:$false'],
+                               capture_output=True, timeout=10)
+                time.sleep(2)
+                subprocess.run(['powershell', '-NoProfile', '-Command',
+                                f'Enable-NetAdapter -Name "{adapter}" -Confirm:$false'],
+                               capture_output=True, timeout=10)
+                steps.append({"step": "reset_adapter", "ok": True, "adapter": adapter})
+                time.sleep(5)
+            else:
+                steps.append({"step": "reset_adapter", "ok": False, "error": "no active adapter"})
+        except Exception as e:
+            steps.append({"step": "reset_adapter", "ok": False, "error": str(e)})
+
+        # Step 4: DNS flush
+        try:
+            subprocess.run(['ipconfig', '/flushdns'], capture_output=True, timeout=5)
+            steps.append({"step": "dns_flush", "ok": True})
+        except Exception as e:
+            steps.append({"step": "dns_flush", "ok": False, "error": str(e)})
+
+        st = self.check()
+        self._heal_count += 1
+        healed = st["state"] == "online"
+        _log_event("network", "heal_attempt", f"healed={healed} steps={len(steps)}")
+        return {"ok": healed, "steps": steps, "state": st["state"]}
+
+    def status(self):
+        return {
+            "state": self._state,
+            "fail_count": self._fail_count,
+            "heal_count": self._heal_count,
+            "last_check": self._last_check,
+            "history": self._history[-5:],
+        }
+
+
+network_monitor = NetworkMonitor()
+
+
+# --- Process Watchdog ---
+
+class ProcessWatchdog:
+    """Monitors critical processes, fires rules on exit. Watches persisted to DB."""
+
+    def __init__(self):
+        self._watched = {}  # name -> last_seen_pids
+        self._lock = threading.Lock()
+        # Restore watches from DB
+        try:
+            conn = sqlite3.connect(_db_path())
+            rows = conn.execute("SELECT name FROM watched_processes").fetchall()
+            conn.close()
+            for (name,) in rows:
+                self._watched[name] = set()
+        except Exception:
+            pass
+
+    def check(self):
+        """Scan processes, detect exits of watched processes."""
+        if not self._watched:
+            return {"ok": True, "watched": 0}
+        try:
+            current = {}
+            out = subprocess.check_output(['tasklist', '/FO', 'CSV', '/NH'],
+                                          text=True, timeout=5, stderr=subprocess.DEVNULL)
+            for line in out.strip().split('\n'):
+                parts = line.strip().strip('"').split('",')
+                if len(parts) >= 2:
+                    name = parts[0].lower()
+                    pid = parts[1]
+                    if name not in current:
+                        current[name] = set()
+                    current[name].add(pid)
+
+            with self._lock:
+                for name in list(self._watched.keys()):
+                    if name in current:
+                        # Still running — update PID set
+                        self._watched[name] = current[name]
+                    elif self._watched[name]:
+                        # Was running (had PIDs), now gone → exited!
+                        _log_event("watchdog", "process_exit", name)
+                        rule_engine.check_trigger("process_exit", {"name": name})
+                        self._watched[name] = set()  # Reset but keep watching
+                    # else: never seen yet (empty set), skip
+            return {"ok": True, "watched": len(self._watched)}
+        except Exception as e:
+            return {"error": str(e)}
+
+    def watch(self, process_name):
+        """Start watching a process by name (e.g. 'python.exe')."""
+        name = process_name.lower()
+        with self._lock:
+            self._watched[name] = set()
+        try:
+            conn = sqlite3.connect(_db_path())
+            conn.execute("INSERT OR IGNORE INTO watched_processes (name) VALUES (?)", (name,))
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
+        return True
+
+    def unwatch(self, process_name):
+        name = process_name.lower()
+        with self._lock:
+            removed = self._watched.pop(name, None) is not None
+        if removed:
+            try:
+                conn = sqlite3.connect(_db_path())
+                conn.execute("DELETE FROM watched_processes WHERE name=?", (name,))
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
+        return removed
+
+    def list_watched(self):
+        with self._lock:
+            return list(self._watched.keys())
+
+
+process_watchdog = ProcessWatchdog()
+
+
+# --- Guardian Daemon (main loop) ---
+
+class GuardianDaemon(threading.Thread):
+    """Background daemon that runs the task executor, scheduler, and watchdogs."""
+
+    def __init__(self):
+        super().__init__(daemon=True, name="GuardianDaemon")
+        self._running = True
+        self._tick = 0
+        self._stats = {"tasks_executed": 0, "tasks_failed": 0, "ticks": 0, "started_at": time.time()}
+
+    def run(self):
+        _log_event("guardian", "started", f"pid={os.getpid()}")
+        while self._running:
+            try:
+                self._tick += 1
+                self._stats["ticks"] = self._tick
+
+                # Every tick (5s): execute pending tasks
+                pending = task_queue.get_pending(limit=5)
+                for task in pending:
+                    task_queue.update_status(task["id"], "running")
+                    result, error = execute_task(task)
+                    if error:
+                        task_queue.retry_or_fail(task["id"], error)
+                        self._stats["tasks_failed"] += 1
+                    else:
+                        task_queue.update_status(task["id"], "done", result=result)
+                        self._stats["tasks_executed"] += 1
+
+                # Every 30s: network check
+                if self._tick % 6 == 0:
+                    net_status = network_monitor.check()
+                    # Auto-heal if offline
+                    if net_status["state"] == "offline":
+                        _log_event("guardian", "auto_heal_triggered", "network offline")
+                        network_monitor.heal()
+
+                # Every 30s: process watchdog
+                if self._tick % 6 == 1:
+                    process_watchdog.check()
+
+                # Every hour: clean old tasks
+                if self._tick % 720 == 0:
+                    task_queue.clear_old(24)
+
+                # Every 5min: check cron rules
+                if self._tick % 60 == 0:
+                    self._check_cron_rules()
+
+            except Exception as e:
+                _log_event("guardian", "error", str(e))
+
+            time.sleep(5)
+
+    def _check_cron_rules(self):
+        """Check time-based rules (simplified cron: hour:minute matching)."""
+        now = time.localtime()
+        conn = sqlite3.connect(_db_path())
+        conn.row_factory = sqlite3.Row
+        rules = conn.execute(
+            "SELECT * FROM rules WHERE trigger_type='cron' AND enabled=1").fetchall()
+        conn.close()
+        for rule in rules:
+            config = json.loads(rule["trigger_config"])
+            hour = config.get("hour", "*")
+            minute = config.get("minute", "*")
+            if (hour == "*" or int(hour) == now.tm_hour) and \
+               (minute == "*" or int(minute) == now.tm_min):
+                # Check cooldown (don't fire same rule more than once per trigger window)
+                cooldown = config.get("cooldown", 300)
+                if rule["last_fired"] and (time.time() - rule["last_fired"]) < cooldown:
+                    continue
+                params = json.loads(rule["params"])
+                tid = task_queue.add(rule["action"], params, source=f"cron:{rule['id']}")
+                conn2 = sqlite3.connect(_db_path())
+                conn2.execute("UPDATE rules SET last_fired=?, fire_count=fire_count+1 WHERE id=?",
+                              (time.time(), rule["id"]))
+                conn2.commit()
+                conn2.close()
+                _log_event("cron", "fired", f"{rule['id']}:{rule['name']}→{tid}")
+
+    def stop(self):
+        self._running = False
+        _log_event("guardian", "stopped", "")
+
+    def status(self):
+        uptime = time.time() - self._stats["started_at"]
+        return {
+            **self._stats,
+            "uptime_seconds": round(uptime),
+            "uptime_human": f"{int(uptime//3600)}h{int((uptime%3600)//60)}m",
+            "network": network_monitor.status(),
+            "watched_processes": process_watchdog.list_watched(),
+            "running": self._running,
+        }
+
+
+guardian = None  # Initialized in main()
+
+
+def get_event_log(limit=30):
+    """Get recent events from the guardian event log."""
+    try:
+        conn = sqlite3.connect(_db_path())
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute("SELECT * FROM event_log ORDER BY ts DESC LIMIT ?", (limit,)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+    except Exception:
+        return []
+
+
+# ---------------------------------------------------------------------------
 # HTTP Server
 # ---------------------------------------------------------------------------
 
@@ -836,7 +1855,7 @@ class RemoteAgentHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Auth-Token")
         self.end_headers()
 
     def _check_auth(self):
@@ -876,11 +1895,13 @@ class RemoteAgentHandler(http.server.BaseHTTPRequestHandler):
         elif path == "/screenshot":
             quality = int(qs.get("quality", ["70"])[0])
             monitor = int(qs.get("monitor", ["0"])[0])
+            scale = int(qs.get("scale", ["50"])[0])
             try:
-                data, size = capture_screen(quality, monitor)
+                data, size = capture_screen(quality, monitor, scale)
                 self.send_response(200)
                 self.send_header("Content-Type", "image/jpeg")
                 self.send_header("Content-Length", str(len(data)))
+                self.send_header("Access-Control-Allow-Origin", "*")
                 self.send_header("X-Image-Width", str(size[0]))
                 self.send_header("X-Image-Height", str(size[1]))
                 self.end_headers()
@@ -925,8 +1946,61 @@ class RemoteAgentHandler(http.server.BaseHTTPRequestHandler):
         elif path == "/network":
             self._json(get_network_info())
 
+        elif path == "/screen/info":
+            self._json(get_screen_info())
+
         elif path == "/services":
             self._json(list_services())
+
+        elif path == "/sessions":
+            self._json(list_sessions())
+
+        elif path == "/accounts":
+            self._json(get_user_accounts())
+
+        elif path == "/remote/agents":
+            ports = [int(p) for p in qs.get("ports", ["9903,9904,9905"])[0].split(',')]
+            hosts = qs.get("hosts", ["127.0.0.1,127.0.0.2"])[0].split(',')
+            self._json(scan_agents(ports, hosts))
+
+        # --- Guardian Engine GET endpoints ---
+        elif path == "/guardian/status":
+            self._json(guardian.status() if guardian else {"error": "guardian not started"})
+
+        elif path == "/tasks":
+            status_filter = qs.get("status", [None])[0]
+            limit = int(qs.get("limit", ["50"])[0])
+            self._json(task_queue.list_all(status=status_filter, limit=limit))
+
+        elif path == "/rules":
+            self._json(rule_engine.list_rules())
+
+        elif path == "/network/status":
+            self._json(network_monitor.check())
+
+        elif path == "/watchdog":
+            self._json({
+                "watched": process_watchdog.list_watched(),
+                "network": network_monitor.status(),
+            })
+
+        elif path == "/events":
+            limit = int(qs.get("limit", ["30"])[0])
+            self._json(get_event_log(limit=limit))
+
+        elif path == "/manifest.json":
+            mf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "manifest.json")
+            if os.path.exists(mf_path):
+                with open(mf_path, "rb") as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/manifest+json")
+                self.send_header("Content-Length", str(len(content)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(content)
+            else:
+                self._json({"error": "manifest.json not found"}, 404)
 
         elif path == "/favicon.ico":
             self.send_response(204)
@@ -1066,7 +2140,8 @@ class RemoteAgentHandler(http.server.BaseHTTPRequestHandler):
 
         elif path == "/power":
             action = data.get("action", "")
-            self._json(power_action(action))
+            confirm = data.get("confirm", False)
+            self._json(power_action(action, confirm=confirm))
 
         elif path == "/service":
             name = data.get("name", "")
@@ -1083,6 +2158,26 @@ class RemoteAgentHandler(http.server.BaseHTTPRequestHandler):
             else:
                 self._json(move_window(hwnd, data.get("x"), data.get("y"), data.get("w"), data.get("h")))
 
+        elif path == "/wakeup":
+            self._json(wake_screen())
+
+        elif path == "/session/reconnect":
+            self._json(reconnect_session())
+
+        elif path == "/remote/shell":
+            computer = data.get("computer", "127.0.0.2")
+            cmd = data.get("cmd", "")
+            timeout = data.get("timeout", 15)
+            if not cmd:
+                self._json({"error": "provide cmd"}, 400)
+            else:
+                self._json(remote_shell(computer, cmd, timeout))
+
+        elif path == "/remote/deploy":
+            computer = data.get("computer", "127.0.0.2")
+            port = data.get("port", 9904)
+            self._json(deploy_agent_to_session(computer, port))
+
         elif path == "/guard":
             # POST /guard — configure MouseGuard
             if "enabled" in data:
@@ -1095,6 +2190,99 @@ class RemoteAgentHandler(http.server.BaseHTTPRequestHandler):
             if "cooldown" in data:
                 guard.set_cooldown(data["cooldown"])
             self._json(guard.status())
+
+        # --- Guardian Engine POST endpoints ---
+        elif path == "/tasks":
+            action = data.get("action", "")
+            if not action:
+                self._json({"error": "provide action"}, 400)
+            else:
+                tid = task_queue.add(
+                    action=action,
+                    params=data.get("params", {}),
+                    task_type=data.get("type", "immediate"),
+                    priority=data.get("priority", 5),
+                    scheduled_at=data.get("scheduled_at"),
+                    max_retries=data.get("max_retries", 1),
+                    source=data.get("source", "api"),
+                )
+                self._json({"ok": True, "task_id": tid})
+
+        elif path == "/tasks/cancel":
+            tid = data.get("id", "")
+            if not tid:
+                self._json({"error": "provide id"}, 400)
+            else:
+                self._json({"ok": task_queue.cancel(tid), "id": tid})
+
+        elif path == "/tasks/clear":
+            max_age = data.get("max_age_hours", 24)
+            task_queue.clear_old(max_age)
+            self._json({"ok": True})
+
+        elif path == "/rules":
+            name = data.get("name", "")
+            trigger_type = data.get("trigger_type", "")
+            action = data.get("action", "")
+            if not name or not trigger_type or not action:
+                self._json({"error": "provide name, trigger_type, action"}, 400)
+            else:
+                rid = rule_engine.add_rule(
+                    name=name,
+                    trigger_type=trigger_type,
+                    trigger_config=data.get("trigger_config", {}),
+                    action=action,
+                    params=data.get("params", {}),
+                )
+                self._json({"ok": True, "rule_id": rid})
+
+        elif path == "/rules/delete":
+            rid = data.get("id", "")
+            if not rid:
+                self._json({"error": "provide id"}, 400)
+            else:
+                self._json({"ok": rule_engine.remove_rule(rid), "id": rid})
+
+        elif path == "/rules/toggle":
+            rid = data.get("id", "")
+            enabled = data.get("enabled", True)
+            if not rid:
+                self._json({"error": "provide id"}, 400)
+            else:
+                rule_engine.toggle_rule(rid, enabled)
+                self._json({"ok": True, "id": rid, "enabled": enabled})
+
+        elif path == "/watchdog/watch":
+            name = data.get("name", "")
+            if not name:
+                self._json({"error": "provide process name"}, 400)
+            else:
+                process_watchdog.watch(name)
+                self._json({"ok": True, "watching": name})
+
+        elif path == "/watchdog/unwatch":
+            name = data.get("name", "")
+            if not name:
+                self._json({"error": "provide process name"}, 400)
+            else:
+                self._json({"ok": process_watchdog.unwatch(name), "name": name})
+
+        elif path == "/network/heal":
+            self._json(network_monitor.heal())
+
+        elif path == "/network/check":
+            self._json(network_monitor.check())
+
+        elif path == "/events/clear":
+            try:
+                conn = sqlite3.connect(_db_path())
+                conn.execute("DELETE FROM event_log")
+                conn.commit()
+                conn.close()
+                _log_event("guardian", "events_cleared", "manual")
+                self._json({"ok": True})
+            except Exception as e:
+                self._json({"error": str(e)}, 500)
 
         else:
             self._json({"error": "not found"}, 404)
@@ -1132,6 +2320,12 @@ def main():
     except ImportError:
         pass
 
+    # Initialize Guardian Engine (SQLite + daemon thread)
+    _init_db()
+    global guardian
+    guardian = GuardianDaemon()
+    guardian.start()
+
     # Start mouse guard monitor
     guard.start()
 
@@ -1144,11 +2338,14 @@ def main():
     print(f"  User: {os.environ.get('USERNAME', '?')}")
     print(f"  Session: {os.environ.get('SESSIONNAME', '?')}")
     print(f"  PID: {os.getpid()}")
+    print(f"  Guardian: ACTIVE (TaskQueue + Scheduler + Watchdog + Network)")
+    print(f"  DB: {_db_path()}")
 
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nShutting down...")
+        guardian.stop()
         server.shutdown()
 
 

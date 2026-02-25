@@ -10,11 +10,11 @@ RTSP 协议实现，支持实时视频流传输。
 
 ## 对话结束选项
 
-> 任务完成后，AI 必须调用 `ask_user_question` 从以下选项中选取 4 个最相关的：
+> 任务完成后调用 `ask_user_question`，从下表选 4 个最贴合的：
 
 | label | description |
 |-------|-------------|
-| 编译部署测试 | Gradle构建→推送→安装→RTSP流验证 |
-| 对齐其他协议 | 检查MJPEG/WebRTC是否有同类改进需要同步 |
-| 继续RTSP开发 | 继续优化RTSP协议实现或性能 |
-| 更新文档提交 | 更新FEATURES.md + git commit |
+| 装手机验证RTSP | 编译安装，连接客户端验证流效果 |
+| 同步其他协议 | 检查MJPEG/WebRTC是否需要同步 |
+| 继续优化RTSP | 改进协议实现或性能 |
+| 收工提交 | 记录成果 + git commit |

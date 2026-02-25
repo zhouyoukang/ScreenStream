@@ -1,0 +1,38 @@
+# FRP Client 配置模板
+# 使用方法：复制为 frpc.toml，填入真实值
+#
+# 1. cp frpc.example.toml frpc.toml
+# 2. 编辑 frpc.toml，替换 YOUR_xxx 为真实值
+# 3. frpc.exe -c frpc.toml
+
+serverAddr = "YOUR_ECS_IP"
+serverPort = 7000
+auth.method = "token"
+auth.token = "YOUR_FRP_TOKEN"
+
+# 登录失败不退出，持续重试
+loginFailExit = false
+
+# ── remote_agent 穿透（手机浏览器控制PC） ──
+[[proxies]]
+name = "remote_agent"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 9903
+remotePort = 19903
+
+# ── Windows RDP 穿透（远程桌面） ──
+[[proxies]]
+name = "rdp"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 3389
+remotePort = 13389
+
+# ── 可选：ScreenStream MJPEG（手机投屏公网访问） ──
+# [[proxies]]
+# name = "screenstream"
+# type = "tcp"
+# localIP = "127.0.0.1"
+# localPort = 8080
+# remotePort = 18080
