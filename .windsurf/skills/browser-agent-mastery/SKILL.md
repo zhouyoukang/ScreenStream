@@ -7,7 +7,7 @@
 - 多Agent并行操作浏览器
 - 前端E2E验证 / 网页数据提取
 
-## 六律（铁律，无条件遵守）
+## 八律（铁律，无条件遵守）
 
 | # | 铁律 | 解决 |
 |---|------|------|
@@ -17,6 +17,8 @@
 | R4 | DevTools禁止写操作pageId=0（用户活跃Tab） | 侵犯 |
 | R5 | 内存>85%禁新Playwright；用完即`browser_close` | 资源 |
 | R6 | DevTools按page+type过滤console | 听觉 |
+| R7 | DevTools `--isolated`（临时profile，多实例不冲突） | 并发(多实例) |
+| R8 | `select_page`+操作必须**原子化** | 竞态 |
 
 ## Token管控（优先级）
 
@@ -50,6 +52,26 @@ async (page) => {
 | **C 调试页面** | DevTools `list_pages` → `select_page` → `take_snapshot` → `list_console_messages` |
 | **D 多步自动化** | `navigate` → 循环(`snapshot`→`click/fill`→`wait_for`) → `run_code`提取 |
 | **E 跨设备联动** | SS `/intent`→`/screen/text` + Playwright `navigate`→`run_code` + remote_agent `/clipboard` |
+
+## 多Agent冲突防护（R7-R8）
+
+> 根因：`#selectedPage`全局单指针，多Agent共享→五感劫持
+> 详见 `文档/BROWSER_MCP_MULTI_AGENT_RESEARCH.md` §十一
+
+| 场景 | 方案 | 要点 |
+|------|------|------|
+| **多Cascade并行** | Worktree天然隔离 | 每Cascade独立MCP进程✅ |
+| **单Cascade多Tab** | `isolatedContext` | `new_page({isolatedContext:"myCtx"})` |
+| **多Agent需浏览器** | 优先Playwright | 无全局状态问题 |
+| **select_page后操作** | R8原子化 | select后下一调用**必须**是操作，不可插入其他工具 |
+
+### isolatedContext用法
+```javascript
+// 创建独立Cookie/Storage的页面
+new_page({ url: "https://a.com", isolatedContext: "taskA" })
+new_page({ url: "https://b.com", isolatedContext: "taskB" })
+// 各Context的Cookie/localStorage互不影响
+```
 
 ## Playwright 三模式
 

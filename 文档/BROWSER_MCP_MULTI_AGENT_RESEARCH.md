@@ -6,7 +6,7 @@
 > **三生万物**（N个Agent各有完整五感，互不干扰，和谐共存）
 >
 > 本文为全工作区**网络资源 + 浏览器MCP + 多Agent架构**知识的**唯一真相源**。
-> 2026-02-25 v1 → v2 升级：从「浏览器操控」扩展到「全域网络资源·多Agent五感无感」。
+> 2026-02-25 v1 → v2 → **v3 (2026-02-27)** 升级：新增§十一多Agent Chrome-MCP冲突深度解剖（五感冲突矩阵+社区Issue追踪+四方案全景）。
 >
 > **行动指南**: `.windsurf/skills/browser-agent-mastery/SKILL.md`
 > **执行规则**: `.windsurf/rules/execution-engine.md` §浏览器Agent统御
@@ -215,9 +215,9 @@ async (page) => {
 
 ---
 
-## 五、治——六律 + 场景路由
+## 五、治——八律 + 场景路由
 
-### 5.1 浏览器六律
+### 5.1 浏览器八律
 
 | # | 铁律 | 解决之祸 |
 |---|------|---------|
@@ -227,6 +227,8 @@ async (page) => {
 | R4 | DevTools禁止写操作pageId=0（用户活跃Tab） | 侵犯 |
 | R5 | 内存>85%禁新Playwright；用完即`browser_close` | 资源 |
 | R6 | DevTools按page+type过滤console | 听觉 |
+| R7 | DevTools `--isolated`（临时profile，多实例不冲突） | 并发(多实例) |
+| R8 | `select_page`+操作必须**原子化**（中间不可插入其他工具调用） | 竞态 |
 
 ### 5.2 场景路由——1秒决策树（浏览器+网络专精）
 
@@ -351,7 +353,7 @@ navigate → 填手机号密码 → 勾选协议 → 点击登录 → cookies提
 
 | 阶段 | 目标 | 状态 |
 |------|------|------|
-| **已达成** | `--headless` + STDIO隔离 + 六律 + Worktree | ✅ 日常够用 |
+| **已达成** | `--headless` + STDIO隔离 + 八律 + Worktree | ✅ 日常够用 |
 | **短期** | `browser_run_code`成为默认提取方式 | 可用，需养成习惯 |
 | **短期** | `--storage-state`导出/加载用户Cookie | 可用，按需使用 |
 | **中期** | BrowserTools MCP评估引入（继承用户登录态） | 待评估 |
@@ -390,7 +392,7 @@ navigate → 填手机号密码 → 勾选协议 → 点击登录 → cookies提
 
 | 场景 | 策略 |
 |------|------|
-| 日常单Agent | Playwright为主，DevTools调试辅助 |
+| 日常单Agent | Playwright为主，DevTools调试辅助（加`--isolated`） |
 | Worktree多Agent | STDIO天然隔离，各自独立Chromium ✅ |
 | Agent+用户共存 | DevTools `select_page` 不碰用户Tab |
 | 继承登录态 | `--storage-state auth.json` 加载Cookie |
@@ -574,3 +576,242 @@ chrome.exe --remote-debugging-port=9222
 > **五器无高下，场景定取舍。隔离解冲突，轻量胜重炮。**
 > **Token是隐性成本，`run_code`是默认选择，`snapshot`是交互必须，`screenshot`是最后手段。**
 > **无感不是没有感觉，是感觉不到冲突的存在。**
+
+---
+
+## 十一、多Agent同时调用Chrome-MCP冲突深度解剖（2026-02-27 v3）
+
+> 代入Agent之五感——我看到了错的页面、听到了别人的console、触摸到了别人的按钮、
+> 认知混乱不知自己在哪个Tab、失去了对页面的控制权。这就是**五感被劫持**。
+
+### 11.1 冲突全景——以五感观之
+
+```
+Agent A (Cascade 1)           Agent B (Cascade 2)           用户
+    │                             │                           │
+    │  select_page(2)             │                           │  看YouTube
+    │────────────►┐               │                           │
+    │             │ #selectedPage = Page 2                     │
+    │◄────────────┘               │                           │
+    │                             │  select_page(3)           │
+    │                             │────────────►┐             │
+    │                             │             │ #selectedPage = Page 3  ← 覆盖了!
+    │                             │◄────────────┘             │
+    │  take_snapshot()            │                           │
+    │────────────►┐               │                           │
+    │             │ 读取 #selectedPage → Page 3 ← 错的!       │
+    │◄────────────┘               │                           │
+    │  我看到了B的页面!?           │                           │
+```
+
+### 11.2 五感冲突矩阵（从Agent视角感受每一种痛）
+
+| 感官 | 冲突场景 | Agent的痛感 | 根因 | 严重度 |
+|------|---------|-----------|------|-------|
+| 👁 **视觉** | A调用`take_snapshot()`，但`#selectedPage`已被B切走 | **看到别人的世界**——snapshot/screenshot全是B的页面内容 | 全局`#selectedPage`单指针 | 🔴致命 |
+| 🖐 **触觉** | A调用`click(uid)`，uid是A页面的元素，但当前page是B的 | **触摸到虚空**——点击失败或点到B页面的随机元素 | 同上，uid只在正确page有效 | 🔴致命 |
+| 👂 **听觉** | A调用`list_console_messages()`，收到B页面的error | **听到别人的噪音**——误判Bug，浪费时间排查不存在的问题 | console消息不按Agent隔离 | 🟡高 |
+| 🧠 **认知** | A以为自己在Page 2操作，实际page已被切到3 | **认知错位**——所有后续决策基于错误认知，级联失败 | 无Agent身份感知 | 🔴致命 |
+| 🎮 **管控** | A调用`navigate_page(url)`，把B正在填表的页面导航走了 | **失去控制**——B填了半天的表单数据全丢 | 无页面所有权概念 | 🔴致命 |
+
+### 11.3 根因分析——三层架构缺陷
+
+**第一层：协议瓶颈（MCP STDIO = 1进程1连接）**
+
+```
+Windsurf IDE ──STDIO──► chrome-devtools-mcp (1个Node进程)
+                              │
+                              ▼
+                    Chrome CDP (1个WebSocket)
+                              │
+                    #selectedPage (1个全局指针)
+```
+
+- MCP协议设计为**1:1连接**（1个Client ↔ 1个Server进程）
+- Windsurf的mcp_config.json中`chrome-devtools`只启动**1个进程**
+- 该进程内部维护`#selectedPage`全局状态——**所有Agent共享这个指针**
+
+**第二层：CDP Session复用（6+ Tab → WebSocket过载）**
+
+- 每个Tab创建一个CDP Session（`Target.attachToTarget`）
+- 所有Session复用**同一个WebSocket通道**
+- 6+页面时事件风暴可导致连接断开（Issue #978）
+- 无心跳/keepalive机制，Chrome卡顿=静默断连
+
+**第三层：物理锁（单焦点/单Cookie罐/单光标）**
+
+| 资源 | 独占性 | 多Agent冲突 |
+|------|--------|-----------|
+| `#selectedPage` | 全局唯一 | Agent A选了Page 2，B选Page 3，A再操作→操作的是Page 3 |
+| Browser焦点 | 单窗口单Tab | `navigate_page`改变任何Tab的URL→可能破坏其他Agent工作 |
+| Cookie/Storage | 默认共享 | Agent A登录→B意外获得登录态；B登出→A被踢 |
+| Console输出 | 全页面混合 | 不区分来源的console.log/error互相干扰 |
+| 用户数据目录 | 默认共享 | 两个实例用同一profile→启动冲突（Issue #224） |
+
+### 11.4 社区之法——GitHub Issue全景追踪
+
+> 来源：ChromeDevTools/chrome-devtools-mcp + anthropics/claude-code
+
+#### 已合并（可用）
+
+| Issue/PR | 方案 | 状态 | 版本 |
+|----------|------|------|------|
+| **#991** `isolatedContext` | `new_page`加`isolatedContext`参数，创建命名BrowserContext（独立Cookie/Storage） | ✅已合并 | v0.18+ |
+| **#224** `--isolated` | 命令行加`--isolated`，每次启动用临时profile（解决多实例profile冲突） | ✅已有 | v0.8+ |
+
+#### 进行中（社区热议）
+
+| Issue/PR | 方案 | 状态 | 关键讨论 |
+|----------|------|------|---------|
+| **#1019** `pageId routing` | 所有page-operating工具加可选`pageId`参数，绕过`#selectedPage`全局指针 | 🔶实验性 | `--experimental-page-id-routing` flag |
+| **#1018** PR实现 | #1019的代码实现，`resolvePage(pageId?)`方法 | 🔶已合并到实验flag | Token增+7.6%(7084→7624) |
+| **#1034** Tab context隔离 | 每个Tab有自己的context，navigate只在自己Tab内 | 🔶已关闭→并入#1019 | 社区需求强烈 |
+
+#### Claude Code生态同类问题
+
+| Issue | 平台 | 问题 | 状态 |
+|-------|------|------|------|
+| **#15193** | Claude Code | 多Claude实例共享同一Chrome Tab Group，截图/导航互相干扰 | 🔶Open |
+| **#20100** | Claude Code | 请求Session-scoped Tab Group隔离 | 🔶Closed(重复) |
+| **#15173** | Claude Code | 所有Claude实例绑定到同一个tabGroupId | 🔶Open |
+| **#17736** | Claude Code | DevTools freezes with multiple instances | 🔶Open |
+
+#### 社区共识（从Issue讨论提炼）
+
+1. **`pageId`是正确的原语**——`isolatedContext`解决存储隔离，`pageId`解决定位隔离，二者正交
+2. **Token开销可接受**——+7.6%远小于竞态失败后的重试成本（实测3-5x）
+3. **静默错误比开销更危险**——截图截到错页面→Agent基于错误信息决策→级联失败
+4. **每个MCP Client应有独立Server实例**——这是官方设计意图，多Agent共享单实例不在设计范围
+
+### 11.5 解决方案全景——从当前到未来
+
+#### 方案A：进程级隔离（当前最佳实践）✅
+
+```
+Cascade A ──STDIO──► chrome-devtools-mcp 实例1 ──► Chrome实例1 (--isolated)
+Cascade B ──STDIO──► chrome-devtools-mcp 实例2 ──► Chrome实例2 (--isolated)
+用户      ──────────► 自己的Chrome ────────────────► 不受干扰
+```
+
+**原理**：Windsurf Worktree模式下，每个Cascade对话有**独立的MCP Server进程**。
+每个chrome-devtools-mcp进程启动自己的Chrome实例（`--isolated`确保临时profile）。
+五感完全独立，物理上不可能冲突。
+
+**配置**：
+```json
+{
+  "chrome-devtools": {
+    "command": "npx",
+    "args": ["chrome-devtools-mcp@latest", "--isolated"]
+  }
+}
+```
+
+**优势**：零冲突，零代码改动，当前可用。
+**劣势**：每Chrome实例+400MB内存；16GB机器最多2-3个并发（含用户Chrome）。
+
+#### 方案B：isolatedContext + select_page规约（轻量级）✅
+
+**适用**：单Server进程多Tab场景（如单Cascade内多步操作）
+
+```javascript
+// 1. 创建隔离Context
+new_page({ url: "https://a.com", isolatedContext: "agentA" })  // → pageId: 2
+new_page({ url: "https://b.com", isolatedContext: "agentB" })  // → pageId: 3
+
+// 2. 严格select_page后立即操作（中间不能插入其他Agent调用）
+select_page({ pageId: 2 })
+take_snapshot()  // 保证看到的是Page 2
+```
+
+**规约**：`select_page` + 操作必须**原子化**——Agent发出select后，下一个工具调用**必须**是对该页面的操作。
+
+**局限**：仅在**单Cascade**内有效。多Cascade共享同一MCP进程时仍有竞态。
+
+#### 方案C：pageId直接路由（实验性，等待稳定）🔶
+
+```json
+{
+  "chrome-devtools": {
+    "command": "npx",
+    "args": ["chrome-devtools-mcp@latest", "--experimental-page-id-routing"]
+  }
+}
+```
+
+```javascript
+// 无需select_page，直接定位
+take_screenshot({ pageId: 2 })  // 原子操作，不受其他Agent影响
+click({ uid: "btn-1", pageId: 2 })
+```
+
+**状态**：PR #1018已合并到实验flag，等待正式发布。
+**Token成本**：+7.6%，值得（vs竞态失败3-5x重试成本）。
+
+#### 方案D：Playwright进程隔离（已有，最强）✅
+
+Playwright MCP天然进程隔离——每个Cascade启动独立Chromium进程，**没有`#selectedPage`全局状态问题**。
+
+```
+Cascade A ──STDIO──► playwright-mcp 实例1 ──► Chromium 1 (headless)
+Cascade B ──STDIO──► playwright-mcp 实例2 ──► Chromium 2 (headless)
+```
+
+**当多Agent需浏览器时，优先Playwright而非DevTools。**
+
+### 11.6 我们的决策树（1秒决定用哪个）
+
+```
+多Agent需要浏览器?
+│
+├─ 各自独立任务 ────────────► 方案A: 各自chrome-devtools --isolated
+│                              或方案D: 各自Playwright (更推荐)
+│
+├─ 同一Cascade多Tab ─────────► 方案B: isolatedContext + select_page原子化
+│
+├─ 需共享Cookie ──────────────► 方案B: isolatedContext(不同名=独立Cookie)
+│                              + --storage-state(继承用户Cookie)
+│
+├─ 调试用户页面 ──────────────► DevTools --autoConnect (Chrome ≥144)
+│                              铁律R4: pageId=0禁写
+│
+└─ 需要pageId直接路由 ────────► 方案C: --experimental-page-id-routing
+                                (等待稳定后切为默认)
+```
+
+### 11.7 Windsurf特有约束与对策
+
+| 约束 | 原因 | 对策 |
+|------|------|------|
+| mcp_config.json全局共享 | Zone 0冻结，所有Cascade用同一配置 | `--isolated`确保临时profile互不冲突 |
+| Worktree模式每Cascade独立MCP进程 | Windsurf架构设计 | ✅天然进程隔离，最佳实践 |
+| 16GB内存限制 | 笔记本焊死 | 最多2个Chrome实例(2×400MB)；优先headless Playwright |
+| 用户Chrome不能碰 | 五感侵犯 | R4铁律(pageId=0禁写) + headless隔离 |
+
+### 11.8 进化路线更新
+
+| 阶段 | 目标 | 状态 | 变化 |
+|------|------|------|------|
+| **已达成** | `--headless` + STDIO隔离 + 八律 + Worktree | ✅ | — |
+| **已达成** | `--isolated` 临时profile隔离 | ✅ | **新增** |
+| **已达成** | `isolatedContext` 命名BrowserContext | ✅ v0.18+ | **新增** |
+| **短期** | `--experimental-page-id-routing` 评估 | 🔶可试用 | **新增** |
+| **短期** | `browser_run_code`成为默认提取方式 | 可用 | — |
+| **中期** | `pageId`正式成为默认（去掉experimental） | 等上游 | **新增** |
+| **中期** | Chrome ≥144 `--autoConnect` 无缝调试 | 等Chrome稳定版 | **新增** |
+| **长期** | Context Broker 2.0 多Agent+用户完美共存 | 概念设计 | — |
+
+### 11.9 实测验证（2026-02-27）
+
+> 环境：chrome-devtools-mcp v0.18.1 · 用户Chrome已有8 Tab · 内存93%
+
+| # | 测试项 | 方法 | 结果 |
+|---|--------|------|------|
+| 1 | **isolatedContext Cookie隔离** | `new_page({isolatedContext:"agentA"})` 设cookie=testA；`new_page({isolatedContext:"agentB"})` 设cookie=testB；分别读取 | ✅ 完全独立，agentA只见testA，agentB只见testB |
+| 2 | **select_page原子化** | `select_page(9)` → `take_snapshot()` | ✅ snapshot内容正确对应Page 9(agentA) |
+| 3 | **跨Context导航不影响** | agentA页面navigate到/headers，agentB的URL不变 | ✅ 互不干扰 |
+| 4 | **Playwright进程隔离** | 独立Chromium设cookie=playwrightTest，与用户Chrome完全隔离 | ✅ 独立Cookie |
+| 5 | **pageId routing** | `--experimental-page-id-routing` 在v0.18.1的`--help`中未出现 | 🔶 尚未发布到npm，等待上游 |
+| 6 | **--isolated参数** | `--help`确认存在，临时user-data-dir自动清理 | ✅ 可用 |
+
+**结论**：方案A(进程隔离) + 方案B(isolatedContext) + 方案D(Playwright) = **当前三个方案已验证可用**。方案C(pageId routing)等待上游发布。

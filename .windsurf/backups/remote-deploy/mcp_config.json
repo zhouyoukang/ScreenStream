@@ -3,7 +3,8 @@
     "chrome-devtools": {
       "args": [
         "-y",
-        "chrome-devtools-mcp@latest"
+        "chrome-devtools-mcp@latest",
+        "--isolated"
       ],
       "command": "npx",
       "disabled": false
@@ -26,15 +27,17 @@
     },
     "fetch": {
       "args": [
-        "mcp-server-fetch"
+        "-y",
+        "fetch-mcp"
       ],
-      "command": "uvx",
-      "disabled": false
+      "command": "npx",
+      "disabled": true
     },
     "playwright": {
       "args": [
         "-y",
-        "@playwright/mcp"
+        "@playwright/mcp@latest",
+        "--headless"
       ],
       "command": "npx",
       "disabled": false

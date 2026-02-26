@@ -94,13 +94,24 @@ trigger: always_on
 ## 浏览器Agent统御
 > 操作卡片: `skills/browser-agent-mastery/SKILL.md` | 全域知识: `文档/BROWSER_MCP_MULTI_AGENT_RESEARCH.md`
 
-### 铁律（R1-R6，无条件遵守）
+### 铁律（R1-R8，无条件遵守）
 - **R1** Playwright `--headless`（已配置）
 - **R2** 同一对话Playwright和DevTools不同时用
 - **R3** DevTools: `list_pages`→`select_page`→操作→不切换
 - **R4** DevTools禁止写操作pageId=0（用户活跃Tab）
 - **R5** 内存>85%禁新Playwright；用完即`browser_close`
 - **R6** DevTools按page+type过滤console
+- **R7** DevTools `--isolated`（临时profile，多实例不冲突）
+- **R8** `select_page`+操作必须**原子化**（中间不可插入其他工具调用）
+
+### 多Agent浏览器隔离（冲突防护）
+> 根因：chrome-devtools-mcp内部`#selectedPage`是全局单指针，多Agent共享→五感被劫持
+> 详见 `文档/BROWSER_MCP_MULTI_AGENT_RESEARCH.md` §十一
+
+- **Worktree模式**：每Cascade独立MCP进程→天然进程隔离✅
+- **单Cascade多Tab**：用`isolatedContext`参数创建独立BrowserContext
+- **多Agent优先Playwright**：无`#selectedPage`全局状态问题
+- **实验性pageId路由**：`--experimental-page-id-routing`（等待正式发布）
 
 ### Token优先级
 `browser_run_code`(30-800字符) > `browser_snapshot`(5K-50K) > `take_screenshot`(最后手段)
@@ -192,6 +203,29 @@ $m=[math]::Round((Get-CimInstance Win32_OperatingSystem|%{($_.TotalVisibleMemory
 - 禁止在最后一步调用可能超时的工具
 - 禁止以"需要APK测试"为由中断API开发
 - 禁止不按权威入口顺序查找信息（`文档/README.md` → `MODULES.md` → `FEATURES.md`）
+
+## 凭据中心（多Agent共享协议）
+
+> **唯一真相源**: `凭据中心.md`（结构索引） + `secrets.env`（实际值，gitignored）
+> 所有密码/Token/凭据的读取、存储、传播遵循此协议。
+
+### 铁律
+- **Memory禁止存储实际密码/Token值**（只存键名引用，如"见secrets.env DESKTOP_PASSWORD"）
+- **git tracked文件禁止明文凭据**（用`[见secrets.env]`替代）
+- **新增凭据必须同时更新** secrets.env + 凭据中心.md
+- **修改凭据只改secrets.env一处**
+
+### Agent读取协议
+```
+1. read_file("凭据中心.md")                        → 了解有哪些凭据
+2. run_command("Get-Content secrets.env")           → 获取实际值
+3. 使用后不存入Memory                               → 防止散落
+```
+
+## 台式机远程保护
+
+> **唯一真相源**: `台式机保护/README.md` — 铁律13条/通道优先级/守护体系/教训全在那里。
+> Agent操作台式机前**必读**该文件。凭据见 `secrets.env` (DESKTOP_*)。
 
 ## 多Agent隔离（Worktree 架构）
 
