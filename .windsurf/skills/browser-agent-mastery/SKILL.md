@@ -7,7 +7,7 @@
 - 多Agent并行操作浏览器
 - 前端E2E验证 / 网页数据提取
 
-## 八律（铁律，无条件遵守）
+## 九律（铁律，无条件遵守）
 
 | # | 铁律 | 解决 |
 |---|------|------|
@@ -17,8 +17,9 @@
 | R4 | DevTools禁止写操作pageId=0（用户活跃Tab） | 侵犯 |
 | R5 | 内存>85%禁新Playwright；用完即`browser_close` | 资源 |
 | R6 | DevTools按page+type过滤console | 听觉 |
-| R7 | DevTools `--isolated`（临时profile，多实例不冲突） | 并发(多实例) |
+| R7 | DevTools `--isolated`（**已配置**，临时profile） | 多实例 |
 | R8 | `select_page`+操作必须**原子化** | 竞态 |
+| R9 | DevTools同时打开页面≤5个 | 断连 |
 
 ## Token管控（优先级）
 

@@ -94,15 +94,16 @@ trigger: always_on
 ## 浏览器Agent统御
 > 操作卡片: `skills/browser-agent-mastery/SKILL.md` | 全域知识: `文档/BROWSER_MCP_MULTI_AGENT_RESEARCH.md`
 
-### 铁律（R1-R8，无条件遵守）
+### 铁律（R1-R9，无条件遵守）
 - **R1** Playwright `--headless`（已配置）
 - **R2** 同一对话Playwright和DevTools不同时用
 - **R3** DevTools: `list_pages`→`select_page`→操作→不切换
 - **R4** DevTools禁止写操作pageId=0（用户活跃Tab）
 - **R5** 内存>85%禁新Playwright；用完即`browser_close`
 - **R6** DevTools按page+type过滤console
-- **R7** DevTools `--isolated`（临时profile，多实例不冲突）
+- **R7** DevTools `--isolated`（**已配置**，临时profile，多实例不冲突）
 - **R8** `select_page`+操作必须**原子化**（中间不可插入其他工具调用）
+- **R9** DevTools同时打开页面≤5个（防6+Tab WebSocket过载断连）
 
 ### 多Agent浏览器隔离（冲突防护）
 > 根因：chrome-devtools-mcp内部`#selectedPage`是全局单指针，多Agent共享→五感被劫持

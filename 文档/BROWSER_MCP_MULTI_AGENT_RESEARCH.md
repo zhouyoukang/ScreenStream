@@ -215,9 +215,9 @@ async (page) => {
 
 ---
 
-## 五、治——八律 + 场景路由
+## 五、治——九律 + 场景路由
 
-### 5.1 浏览器八律
+### 5.1 浏览器九律
 
 | # | 铁律 | 解决之祸 |
 |---|------|---------|
@@ -227,8 +227,9 @@ async (page) => {
 | R4 | DevTools禁止写操作pageId=0（用户活跃Tab） | 侵犯 |
 | R5 | 内存>85%禁新Playwright；用完即`browser_close` | 资源 |
 | R6 | DevTools按page+type过滤console | 听觉 |
-| R7 | DevTools `--isolated`（临时profile，多实例不冲突） | 并发(多实例) |
+| R7 | DevTools `--isolated`（**已配置**，临时profile，多实例不冲突） | 多实例 |
 | R8 | `select_page`+操作必须**原子化**（中间不可插入其他工具调用） | 竞态 |
+| R9 | DevTools同时打开页面≤5个（防WebSocket过载断连） | 断连 |
 
 ### 5.2 场景路由——1秒决策树（浏览器+网络专精）
 
@@ -353,7 +354,7 @@ navigate → 填手机号密码 → 勾选协议 → 点击登录 → cookies提
 
 | 阶段 | 目标 | 状态 |
 |------|------|------|
-| **已达成** | `--headless` + STDIO隔离 + 八律 + Worktree | ✅ 日常够用 |
+| **已达成** | `--headless` + STDIO隔离 + 九律 + Worktree | ✅ 日常够用 |
 | **短期** | `browser_run_code`成为默认提取方式 | 可用，需养成习惯 |
 | **短期** | `--storage-state`导出/加载用户Cookie | 可用，按需使用 |
 | **中期** | BrowserTools MCP评估引入（继承用户登录态） | 待评估 |
@@ -792,7 +793,7 @@ Cascade B ──STDIO──► playwright-mcp 实例2 ──► Chromium 2 (head
 
 | 阶段 | 目标 | 状态 | 变化 |
 |------|------|------|------|
-| **已达成** | `--headless` + STDIO隔离 + 八律 + Worktree | ✅ | — |
+| **已达成** | `--headless` + STDIO隔离 + 九律 + Worktree | ✅ | — |
 | **已达成** | `--isolated` 临时profile隔离 | ✅ | **新增** |
 | **已达成** | `isolatedContext` 命名BrowserContext | ✅ v0.18+ | **新增** |
 | **短期** | `--experimental-page-id-routing` 评估 | 🔶可试用 | **新增** |
@@ -815,3 +816,67 @@ Cascade B ──STDIO──► playwright-mcp 实例2 ──► Chromium 2 (head
 | 6 | **--isolated参数** | `--help`确认存在，临时user-data-dir自动清理 | ✅ 可用 |
 
 **结论**：方案A(进程隔离) + 方案B(isolatedContext) + 方案D(Playwright) = **当前三个方案已验证可用**。方案C(pageId routing)等待上游发布。
+
+### 11.10 问·祸·惑——全面清扫（2026-02-27）
+
+> 代入用户之五感，直到**无感**——用户不知道有冲突这回事，Agent不知道有其他Agent，系统从未感到压力。
+
+#### 三问（未解问题→已解）
+
+| # | 问 | 用户五感 | 解法 | 状态 |
+|---|-----|---------|------|------|
+| 问1 | MCP config缺`--isolated` | 👁看到"profile already in use"报错 | **已修复**：`mcp_config.json`自动注入`--isolated` | ✅ |
+| 问2 | 内存93%下多Chrome实例→BSOD | 🖐触觉全丧失（蓝屏=五感归零） | R5铁律(>85%禁Playwright) + R9(DevTools≤5 Tab) | ✅ |
+| 问3 | `pageId`路由v0.18.1不可用 | 🧠认知：知道有更好方案但用不了 | 降级为R8原子化；持续跟踪#1019；稳定后自动升级 | 🔶等上游 |
+
+#### 三祸（灾害→已灭）
+
+| # | 祸 | 用户体验的痛 | 根治 | 状态 |
+|---|-----|------------|------|------|
+| 祸1 | 两Cascade共享profile→启动失败 | 👁看到MCP工具不可用，不知道为什么 | `--isolated`：每实例临时profile，启动即用，关闭即清 | ✅ |
+| 祸2 | 6+Tab→WebSocket过载→静默断连 | 🖐触觉丧失（click无响应）+ 👂听觉丧失（console断流） | **R9铁律**：DevTools同时打开页面≤5个；超过时先close再new | ✅新增 |
+| 祸3 | console消息跨页面混合→误判Bug | 👂听觉污染——听到别人的错误，浪费时间排查 | R6（按page+type过滤）+ `isolatedContext`各Context独立console | ✅ |
+
+#### 三惑（困惑→已解）
+
+| # | 惑 | 用户的疑问 | 解答 |
+|---|-----|---------|------|
+| 惑1 | `--isolated` vs `isolatedContext` vs Worktree有什么区别？ | 见下方「三层隔离一张表」 |
+| 惑2 | 我什么时候会遇到冲突？ | 见下方「冲突触发场景」 |
+| 惑3 | 备份mcp_config.json有什么用？ | 恢复参考模板；台式机部署源；新Cascade对话自检基线 |
+
+#### 三层隔离一张表（惑1之解）
+
+| 隔离机制 | 隔离什么 | 粒度 | 成本 | 谁触发 |
+|---------|---------|------|------|-------|
+| **`--isolated`** | Chrome用户数据目录（profile） | 每个MCP Server进程 | 零（临时目录自动清理） | 命令行参数，启动时生效 |
+| **`isolatedContext`** | Cookie/localStorage/Session | 每个命名Context（同一Chrome内） | 零（内存中BrowserContext） | Agent调用`new_page({isolatedContext:"name"})`时 |
+| **Worktree** | 整个Cascade环境（文件系统+MCP进程+终端） | 每个Cascade对话 | 磁盘空间（git worktree） | 用户在Windsurf中开启Worktree模式时 |
+
+**一句话**：`--isolated`隔离Chrome实例，`isolatedContext`隔离Tab的存储，Worktree隔离整个Agent。三者层层递进，互相补充。
+
+#### 冲突触发场景（惑2之解）
+
+| 场景 | 是否冲突 | 原因 | 你需要做什么 |
+|------|---------|------|-----------|
+| 单Cascade + 单Tab | ❌不冲突 | 只有一个操作者 | 什么都不用管 |
+| 单Cascade + 多Tab | ⚠️可能 | `#selectedPage`在Tab间切换 | 用`isolatedContext`或R8原子化 |
+| 多Cascade(Worktree) | ❌不冲突 | 每Cascade独立MCP进程+独立Chrome(`--isolated`) | **什么都不用管** ✅ |
+| 多Cascade(非Worktree) | ⚠️看配置 | 共享MCP进程？→冲突；各自进程+`--isolated`？→不冲突 | 确保`--isolated`已配置 |
+| Agent + 用户Chrome | ❌不冲突 | Playwright=独立Chromium；DevTools=独立Chrome(`--isolated`) | 什么都不用管 |
+
+**结论：加了`--isolated`后，99%的使用场景用户无需任何操作，冲突不可能发生。**
+
+### 11.11 铁律完整版（R1-R9）
+
+| # | 铁律 | 解决 | 来源 |
+|---|------|------|------|
+| R1 | Playwright `--headless`（已配置） | 焦点祸 | v1 |
+| R2 | 同一对话Playwright和DevTools不同时用 | 并发祸 | v1 |
+| R3 | DevTools: `list_pages`→`select_page`→操作→不切换 | 并发祸 | v1 |
+| R4 | DevTools禁止写操作pageId=0（用户活跃Tab） | 侵犯祸 | v1 |
+| R5 | 内存>85%禁新Playwright；用完即`browser_close` | 资源祸 | v1 |
+| R6 | DevTools按page+type过滤console | 听觉祸 | v1 |
+| R7 | DevTools `--isolated`（**已配置**，临时profile） | 多实例祸 | **v3 新增** |
+| R8 | `select_page`+操作必须原子化 | 竞态祸 | **v3 新增** |
+| R9 | DevTools同时打开页面≤5个（防WebSocket过载） | 断连祸 | **v3 新增** |
