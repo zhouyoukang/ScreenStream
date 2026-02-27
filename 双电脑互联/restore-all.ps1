@@ -5,6 +5,9 @@
 param([switch]$DesktopOnly, [switch]$LaptopOnly)
 
 $ErrorActionPreference = 'Continue'
+# 从 secrets.env 加载凭据
+$envFile = Join-Path $PSScriptRoot '..\secrets.env'
+if (Test-Path $envFile) { Get-Content $envFile | ForEach-Object { if ($_ -match '^\s*([^#=]+?)\s*=\s*(.+)$') { Set-Item "env:$($Matches[1])" $Matches[2] } } }
 
 function Write-Step($msg) { Write-Host "  → $msg" -ForegroundColor Cyan }
 function Write-OK($msg) { Write-Host "  ✅ $msg" -ForegroundColor Green }
@@ -19,7 +22,7 @@ if (-not $DesktopOnly) {
     Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server' -Name 'fDenyTSConnections' -Value 0 -Type DWord
     Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server' -Name 'fSingleSessionPerUser' -Value 1 -Type DWord
     Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa' -Name 'LimitBlankPasswordUse' -Value 0 -Type DWord
-    if(!(Test-Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services')){New-Item 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Force|Out-Null}
+    if (!(Test-Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services')) { New-Item 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Force | Out-Null }
     Set-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name 'Shadow' -Value 2 -Type DWord -Force
     Write-OK "RDP注册表"
 
@@ -37,7 +40,7 @@ if (-not $DesktopOnly) {
     # 4. cmdkey(台式机凭据)
     Write-Step "台式机凭据"
     cmdkey /delete:TERMSRV/192.168.31.141 2>$null
-    cmdkey /add:TERMSRV/192.168.31.141 /user:administrator /pass:wsy057066wsy 2>$null
+    cmdkey /add:TERMSRV/192.168.31.141 /user:$env:DESKTOP_USER /pass:$env:DESKTOP_PASSWORD 2>$null
     Write-OK "TERMSRV/192.168.31.141 → administrator"
 
     # 5. remote_agent计划任务
@@ -73,24 +76,25 @@ if (-not $DesktopOnly) {
 # ===== 台式机侧(需WinRM) =====
 if (-not $LaptopOnly) {
     Write-Host "`n=== 台式机侧恢复(via WinRM) ===" -ForegroundColor Yellow
-    $cred = New-Object PSCredential('administrator',(ConvertTo-SecureString 'wsy057066wsy' -AsPlainText -Force))
+    $cred = New-Object PSCredential($env:DESKTOP_USER, (ConvertTo-SecureString $env:DESKTOP_PASSWORD -AsPlainText -Force))
 
     try {
         Invoke-Command -ComputerName 192.168.31.141 -Credential $cred -ScriptBlock {
             # RDP配置
             Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server' -Name 'fSingleSessionPerUser' -Value 1 -Type DWord
-            if(!(Test-Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services')){New-Item 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Force|Out-Null}
+            if (!(Test-Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services')) { New-Item 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Force | Out-Null }
             Set-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name 'Shadow' -Value 2 -Type DWord -Force
 
             # 禁用无用账号
-            'Guest','zhou','zhou1' | ForEach-Object { Disable-LocalUser $_ -EA SilentlyContinue }
+            'Guest', 'zhou', 'zhou1' | ForEach-Object { Disable-LocalUser $_ -EA SilentlyContinue }
 
             # 验证agent
             $agentOK = try { netstat -ano | Select-String ':9903.*LISTENING' } catch { $false }
             "台式机: RDP注册表OK | 无用账号禁用 | agent=$([bool]$agentOK)"
         }
         Write-OK "台式机配置恢复完成"
-    } catch {
+    }
+    catch {
         Write-FAIL "台式机WinRM不可达: $_"
     }
 }

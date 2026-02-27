@@ -20,6 +20,11 @@ trigger: always_on
 ## 权威文档入口
 1. `核心架构.md` → 2. `文档/FEATURES.md` → 3. `STATUS.md` → 4. `MODULES.md`
 
+## 凭据管理
+- **结构索引**: `凭据中心.md`（git tracked，键名+描述，无实际值）
+- **实际凭据**: `secrets.env`（gitignored，Agent用 `run_command("Get-Content secrets.env")` 读取）
+- **协议详见**: `execution-engine.md` §凭据中心
+
 ## Python 卫星项目（顶层目录）
 - `智能家居/` → Python :8900 (HA代理+涂鸦+微信)
 - `手机操控库/` → Python (PhoneLib, SS API封装)

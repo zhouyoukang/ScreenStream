@@ -11,7 +11,18 @@ import httpx, time, hashlib, re, sys, os
 
 os.environ.setdefault("NO_PROXY", "127.0.0.1,localhost")
 
-TOKEN = "smarthome2026"
+# 从环境变量或secrets.env读取
+def _load_secrets():
+    env_file = os.path.join(os.path.dirname(__file__), '..', '..', 'secrets.env')
+    if os.path.exists(env_file):
+        for line in open(env_file, encoding='utf-8'):
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip())
+_load_secrets()
+
+TOKEN = os.environ.get("WECHAT_TOKEN", "smarthome2026")
 PASS = "\033[92mPASS\033[0m"
 FAIL = "\033[91mFAIL\033[0m"
 

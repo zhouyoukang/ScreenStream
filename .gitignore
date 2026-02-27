@@ -40,6 +40,7 @@ keystore.properties
 .env
 .env.local
 .env.*.local
+secrets.env
 
 # ============================================
 # IDE metadata

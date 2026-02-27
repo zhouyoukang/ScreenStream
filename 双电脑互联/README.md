@@ -52,7 +52,7 @@
 ├────────────────────────────────────────────────────────────────┤
 │  台式机 (分身) — 周大师的台式机                                  │
 │  IP: 192.168.31.141                                             │
-│  用户: administrator / wsy057066wsy                             │
+│  用户: administrator / [见secrets.env]                          │
 │  OS: Windows 11 教育版 | CPU: Ryzen 7 9700X | RAM: 64GB        │
 │  Disks: C:299GB D:653GB E:1TB F:908GB                          │
 │  角色: 被控端，remote_agent :9903/:9904                         │
@@ -386,7 +386,7 @@ Shell/文件操控 → **Chrome PWA(remote_agent)** | 看桌面/写代码 → **
 
 ### 惑五：台式机空密码？ → ✅ 已解决
 
-~~`LimitBlankPasswordUse=1` 阻断管理共享。~~ **已设密码 `wsy057066wsy`**，LimitBlankPasswordUse=0。
+~~`LimitBlankPasswordUse=1` 阻断管理共享。~~ **已设密码 [见secrets.env DESKTOP_PASSWORD]**，LimitBlankPasswordUse=0。
 
 **admin shares (C$/D$/E$/F$)** 因 `RejectUnencryptedAccess=True` 仍返回Error 64。
 **解法**：创建普通共享 FullC/D/E/F 指向磁盘根目录，映射为 X:/W:/V:/U: 驱动器号（持久化）。
@@ -689,18 +689,44 @@ powershell -File 远程桌面/setup-firewall.ps1
 
 ## 十四、演进路线
 
-| 层 | 方向 | 状态 | 解决的祸 |
-|----|------|------|----------|
-| **已完成** | 45+ API核心控制 | ✅ | 祸一~七 |
-| **已完成** | FRP+Cloudflare穿透 | ✅ | 祸四 |
-| **已完成** | file_share双向文件 | ✅ | — |
-| **已完成** | Guardian自治引擎 | ✅ | 祸六、祸十二 |
-| **已完成** | MouseGuard | ✅ | 祸七、祸九 |
-| 待实现 | SSE/WebSocket推送 | ❌ | **祸十二**(单向哑巴) |
-| 待实现 | 触控板相对移动 | ❌ | 祸三(精度) |
-| 待实现 | 音频转发 | ❌ | 祸二(感官剥夺) |
-| 可选 | Sunshine+KDE Connect | ❌ | 祸一(延迟)、祸二(听觉) |
-| 长期 | AI语音控制 | ❌ | 祸三(精度) |
+### 已完成
+
+| 方向 | 状态 | 解决的祸 |
+|------|------|----------|
+| 45+ API核心控制 | ✅ | 祸一~七 |
+| FRP+Cloudflare穿透 | ✅ | 祸四 |
+| file_share双向文件 | ✅ | — |
+| Guardian自治引擎 | ✅ | 祸六、祸十二 |
+| MouseGuard | ✅ | 祸七、祸九 |
+| 双机对称(笔记本也部署agent) | ✅ | 祸八(分身错乱) |
+
+### Phase 1: 补短板（投入小，收益大）
+
+| 项 | 内容 | 解决的祸 |
+|----|------|----------|
+| SSE事件推送 | `GET /events/stream` | **祸十二**(单向哑巴) |
+| 触控板相对移动 | `POST /mouse/relative` | 祸三(精度) |
+| UIA感知 | `GET /screen/elements` (pywinauto) | **新祸十三**(PC屏幕盲) |
+| 能力声明 | `GET /capabilities` | **新祸十五**(无能力注册) |
+| FRP TLS | `transport.tls.enable = true` | 祸五(安全) |
+
+### Phase 2: 借力VLM（接入AI视觉）
+
+| 项 | 内容 | 灵感来源 |
+|----|------|----------|
+| OmniParser本地部署 | 截屏→结构化UI元素 | microsoft/OmniParser |
+| VLM决策循环 | Observe→Think→Act→Verify | UI-TARS, Agent-S |
+| Ollama本地推理 | 台式机64GB已有5模型 | 自有基础设施 |
+
+### Phase 3: 多设备Galaxy（长期愿景）
+
+| 项 | 内容 | 灵感来源 |
+|----|------|----------|
+| 统一Agent协议 | 手机+笔记本+台式机统一编排 | UFO³ AIP |
+| 任务DAG引擎 | 复杂工作流分解+并行+持久化 | UFO³ Constellation |
+| 音频转发 | WebSocket+Opus编码 | 祸二(感官剥夺) |
+
+> 详见 `文档/AI_COMPUTER_CONTROL.md` — 全球30+项目对标+三阶段技术方案
 
 ---
 

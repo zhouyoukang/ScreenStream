@@ -33,5 +33,10 @@
 ## MCP (5, 全启用)
 chrome-devtools | context7 | fetch | github | playwright(`--headless`)
 
+## 凭据中心
+- **索引**: `凭据中心.md`（结构+协议，git tracked）
+- **实际值**: `secrets.env`（gitignored，`run_command("Get-Content secrets.env")`读取）
+- **铁律**: Memory禁存实际密码/Token | tracked文件禁明文凭据 | 改密码只改secrets.env
+
 ## Hooks
 2个Python (conversation_capture) | **PS hooks绝对禁止**
