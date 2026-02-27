@@ -37,7 +37,8 @@
       "args": [
         "-y",
         "@playwright/mcp@latest",
-        "--headless"
+        "--headless",
+        "--isolated"
       ],
       "command": "npx",
       "disabled": false

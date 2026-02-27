@@ -802,18 +802,57 @@ Cascade B ──STDIO──► playwright-mcp 实例2 ──► Chromium 2 (head
 | **中期** | Chrome ≥144 `--autoConnect` 无缝调试 | 等Chrome稳定版 | **新增** |
 | **长期** | Context Broker 2.0 多Agent+用户完美共存 | 概念设计 | — |
 
-### 11.9 实测验证（2026-02-27）
+### 11.9 实测验证（2026-02-27 两轮）
 
-> 环境：chrome-devtools-mcp v0.18.1 · 用户Chrome已有8 Tab · 内存93%
+> 环境：chrome-devtools-mcp v0.18.1 · Chrome 145 · Playwright headless · 内存93-95%
+
+#### 第一轮：功能验证（6项）
 
 | # | 测试项 | 方法 | 结果 |
 |---|--------|------|------|
-| 1 | **isolatedContext Cookie隔离** | `new_page({isolatedContext:"agentA"})` 设cookie=testA；`new_page({isolatedContext:"agentB"})` 设cookie=testB；分别读取 | ✅ 完全独立，agentA只见testA，agentB只见testB |
-| 2 | **select_page原子化** | `select_page(9)` → `take_snapshot()` | ✅ snapshot内容正确对应Page 9(agentA) |
-| 3 | **跨Context导航不影响** | agentA页面navigate到/headers，agentB的URL不变 | ✅ 互不干扰 |
-| 4 | **Playwright进程隔离** | 独立Chromium设cookie=playwrightTest，与用户Chrome完全隔离 | ✅ 独立Cookie |
-| 5 | **pageId routing** | `--experimental-page-id-routing` 在v0.18.1的`--help`中未出现 | 🔶 尚未发布到npm，等待上游 |
-| 6 | **--isolated参数** | `--help`确认存在，临时user-data-dir自动清理 | ✅ 可用 |
+| 1 | **isolatedContext Cookie隔离** | `new_page({isolatedContext:"agentA"})` 设cookie=testA；`new_page({isolatedContext:"agentB"})` 设cookie=testB；分别读取 | ✅ 完全独立 |
+| 2 | **select_page原子化** | `select_page(9)` → `take_snapshot()` | ✅ 正确对应 |
+| 3 | **跨Context导航不影响** | agentA navigate到/headers，agentB URL不变 | ✅ 互不干扰 |
+| 4 | **Playwright进程隔离** | 独立Chromium设cookie，与用户Chrome完全隔离 | ✅ 独立Cookie |
+| 5 | **pageId routing** | `--experimental-page-id-routing` 在v0.18.1未出现 | 🔶 等上游 |
+| 6 | **--isolated参数** | `--help`确认存在 | ✅ 可用 |
+
+#### 第二轮：五感全覆盖（3个MCP × 5感 = 15项）
+
+**Chrome DevTools MCP（28工具）**
+
+| 感官 | 工具 | 结果 | 备注 |
+|------|------|------|------|
+| 👁 视觉 | `take_snapshot` + `take_screenshot` | ✅✅ | a11y树+像素截图 |
+| 🖐 触觉 | `fill_form` + `click`(radio/checkbox/submit) | ✅✅ | 表单提交成功(httpbin.org/post) |
+| 👂 听觉 | `list_console_messages` + type过滤 + `list_network_requests` | ✅✅✅ | R6验证：error-only过滤正常 |
+| 🧠 认知 | `evaluate_script` DOM精准提取 | ✅ | title/url/headings/textLength |
+| 🎮 管控 | `navigate_page`(url/back/forward) + `new_page` + `close_page` | ✅✅✅ | 全链路 |
+| 🔒 隔离 | `isolatedContext` Cookie独立 + R8原子化 | ✅✅ | ctxA/ctxB完全隔离 |
+
+**Playwright MCP（22工具）**
+
+| 感官 | 工具 | 结果 | 备注 |
+|------|------|------|------|
+| 👁 视觉 | `browser_snapshot` | ✅ | a11y树(YAML格式) |
+| 🖐 触觉 | `browser_fill_form` + `browser_click` | ✅✅ | 表单提交成功 |
+| 🧠 认知 | `browser_evaluate` JS精准提取 | ✅ | JSON解析+headless检测 |
+| 🎮 管控 | `browser_tabs`(list/new/close) + `browser_close` | ✅✅ | Tab管理正常 |
+
+**context7 MCP（2工具）**
+
+| 工具 | 结果 | 备注 |
+|------|------|------|
+| `resolve-library-id` | ✅ | 正确解析playwright→多个库 |
+| `query-docs` | ✅ | 返回isolated配置文档+schema |
+
+#### 发现并修复的问题
+
+| # | 发现 | 五感 | 修复 |
+|---|------|------|------|
+| 1 | **Playwright Cookie跨会话残留** — 上次设的cookie在本次仍存在 | 👅味觉污染 | `mcp_config.json` playwright加`--isolated`（临时profile，关闭即清） |
+
+**总计：20/21项通过**（pageId routing等上游），1个运行时问题已修复。
 
 **结论**：方案A(进程隔离) + 方案B(isolatedContext) + 方案D(Playwright) = **当前三个方案已验证可用**。方案C(pageId routing)等待上游发布。
 

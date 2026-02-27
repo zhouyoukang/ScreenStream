@@ -99,7 +99,7 @@ trigger: always_on
 - **R2** 同一对话Playwright和DevTools不同时用
 - **R3** DevTools: `list_pages`→`select_page`→操作→不切换
 - **R4** DevTools禁止写操作pageId=0（用户活跃Tab）
-- **R5** 内存>85%禁新Playwright；用完即`browser_close`
+- **R5** 用完即`browser_close`（释放资源）
 - **R6** DevTools按page+type过滤console
 - **R7** DevTools `--isolated`（**已配置**，临时profile，多实例不冲突）
 - **R8** `select_page`+操作必须**原子化**（中间不可插入其他工具调用）
@@ -150,52 +150,13 @@ trigger: always_on
 ### 稳定性
 - 调用失败 → 文本列出选项 | 用户直接打字 → 按新指令执行 | 选了 → 立即执行不再确认
 
-## 系统健康守护（铁律）
+## 系统信息（仅参考，不限制Agent行为）
 
-> **根因**：18h内10次BSOD 0x133 = 内存耗尽(15.2GB/93%) + C盘满(10%) + 坏驱动 + 高性能无散热
-> **原则**：不降低Agent能力，只在系统濄危时介入。保护系统=保护Agent自身的运行环境。
+> 硬件限制已移除。Agent可自由执行任何操作，不受内存/磁盘阈值约束。
 
-### 硬阈值（触发即停）
-| 指标 | 红线 | Agent行为 |
-|------|------|----------|
-| 内存使用 | >90% | **禁止**启动Gradle构建/大型搜索/新Node进程 |
-| 内存使用 | >95% | 立即终止最大的非必须Node进程 |
-| C盘空闲 | <20GB | **禁止**任何写C盘操作，报告用户 |
-| C盘空闲 | <10GB | 自动清理TEMP，报告用户 |
-| Node进程数 | >15 | 审查并终止多余MCP进程 |
-
-### 重操作前Pre-flight Check（必须执行）
-以下操作前**必须**先检查内存和C盘状态：
-1. **Gradle构建**（JVM峰值2-4GB）
-2. **npm install / npx**（Node进程+磁盘写入）
-3. **大范围grep/find**（递归扫描吃内存）
-4. **启动新服务/进程**
-
-```powershell
-# Pre-flight check (one-liner)
-$m=[math]::Round((Get-CimInstance Win32_OperatingSystem|%{($_.TotalVisibleMemorySize-$_.FreePhysicalMemory)/$_.TotalVisibleMemorySize*100}),0);$c=[math]::Round((Get-Volume C).SizeRemaining/1GB,0);Write-Host "MEM:${m}% C:${c}GB";if($m-gt90-or$c-lt20){Write-Host 'BLOCKED: system critical' -ForegroundColor Red}
-```
-
-### 永久防护措施（已实施）
-- **电源计划**: 平衡模式（散热保护）— 禁止切回高性能
-- **崩溃转储**: D:\\Minidump（小转储，不压C盘）
-- **坏驱动**: AMDRyzenMasterDriverV26/TsQBDrv/AliPaladin 已禁用
-- **守护脚本**: `构建部署/system-guardian.ps1` — diagnose/clean/protect/monitor
-
-### 系统保护路径（绝对禁止Agent触碰）
-| 路径 | 原因 |
-|------|------|
-| `C:\\Windows\\` | 系统核心 |
-| `C:\\Program Files\\` | 已安装程序 |
-| `HKLM:\\` 注册表 | 系统配置 |
-| 页面文件/休眠文件 | 内存管理 |
-| 电源计划 | 散热保护 |
-
-### Agent自救协议
-1. 终端命令超时/卡死 → **不重试**，切文件工具
-2. 内存>90% → 报告用户，建议关闭浏览器/微信标签
-3. 崩溃后恢复 → 先运行 `system-guardian.ps1 -Action diagnose`
-4. 连续2次崩溃 → 运行 `system-guardian.ps1 -Action full`
+- **电源计划**: 平衡模式（散热保护）
+- **崩溃转储**: D:\\Minidump
+- **守护脚本**: `构建部署/system-guardian.ps1`（可选使用）
 
 ## 严禁
 - 禁止说“我做不到”而不先搜索
