@@ -1,9 +1,11 @@
 """
-Windsurf 智能体系仪表盘 — Web版
-启动: python .windsurf/dashboard-server.py
+道 — 智能体系仪表盘
+启动: python AGI/dashboard-server.py          (前台+托盘)
+      pythonw AGI/dashboard-server.py         (后台+托盘，无控制台)
+      python AGI/dashboard-server.py --no-tray (纯HTTP，无托盘)
 访问: http://localhost:9090
 """
-import http.server, json, os, re, glob, socketserver
+import http.server, json, os, re, glob, socketserver, sys, threading, time, signal, webbrowser
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
@@ -565,10 +567,147 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         pass  # Suppress request logs
 
-if __name__ == '__main__':
-    with socketserver.TCPServer(('127.0.0.1', PORT), Handler) as httpd:
-        print(f'Windsurf Dashboard: http://localhost:{PORT}')
+### ========== 系统托盘 + 守护进程 ==========
+
+_httpd = None
+_tray_icon = None
+
+def start_http_server():
+    """启动HTTP服务器（在后台线程运行）"""
+    global _httpd
+    # 防止端口占用：允许地址复用
+    socketserver.TCPServer.allow_reuse_address = True
+    try:
+        _httpd = socketserver.TCPServer(('127.0.0.1', PORT), Handler)
+        _httpd.serve_forever()
+    except OSError as e:
+        if 'address already in use' in str(e).lower() or '10048' in str(e):
+            print(f'[道] 端口 {PORT} 已被占用，服务已在运行')
+        else:
+            raise
+
+def stop_http_server():
+    global _httpd
+    if _httpd:
+        _httpd.shutdown()
+        _httpd = None
+
+def create_tray_icon():
+    """创建☯系统托盘图标（pystray + PIL）"""
+    try:
+        import pystray
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError:
+        print('[道] pystray/PIL未安装，跳过托盘。pip install pystray pillow')
+        return None
+
+    # 绘制☯太极图标 64x64
+    size = 64
+    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    # 外圆
+    draw.ellipse([2, 2, size-2, size-2], fill='#1a1a2e', outline='#d4a840', width=2)
+    # 阴阳：左黑右白半圆
+    draw.pieslice([2, 2, size-2, size-2], 90, 270, fill='#e8e0c8')
+    # 上小圆
+    r = size // 8
+    cx, cy_top, cy_bot = size//2, size//4, size*3//4
+    draw.ellipse([cx-r, cy_top-r, cx+r, cy_top+r], fill='#1a1a2e')
+    draw.ellipse([cx-r, cy_bot-r, cx+r, cy_bot+r], fill='#e8e0c8')
+    # 上弧修补
+    draw.pieslice([size//4, 2, size*3//4, size//2], 90, 270, fill='#e8e0c8')
+    draw.pieslice([size//4, size//2, size*3//4, size-2], 270, 90, fill='#1a1a2e')
+    # 重绘小圆（保证在上层）
+    draw.ellipse([cx-r, cy_top-r, cx+r, cy_top+r], fill='#1a1a2e')
+    draw.ellipse([cx-r, cy_bot-r, cx+r, cy_bot+r], fill='#e8e0c8')
+
+    def on_open(icon, item):
+        webbrowser.open(f'http://localhost:{PORT}')
+
+    def on_autostart(icon, item):
+        _toggle_autostart()
+
+    def on_quit(icon, item):
+        stop_http_server()
+        icon.stop()
+
+    menu = pystray.Menu(
+        pystray.MenuItem(f'观 · 打开仪表盘 (:{ PORT })', on_open, default=True),
+        pystray.Menu.SEPARATOR,
+        pystray.MenuItem('开机自启', on_autostart, checked=lambda item: _is_autostart_enabled()),
+        pystray.Menu.SEPARATOR,
+        pystray.MenuItem('止 · 退出', on_quit),
+    )
+
+    icon = pystray.Icon('dao-dashboard', img, '道 — 智能体系', menu)
+    return icon
+
+def _get_startup_shortcut_path():
+    """获取Startup目录中的快捷方式路径"""
+    startup = Path(os.environ.get('APPDATA', '')) / 'Microsoft' / 'Windows' / 'Start Menu' / 'Programs' / 'Startup'
+    return startup / '道-仪表盘.bat'
+
+def _is_autostart_enabled():
+    return _get_startup_shortcut_path().exists()
+
+def _toggle_autostart():
+    """切换开机自启状态"""
+    bat = _get_startup_shortcut_path()
+    if bat.exists():
+        bat.unlink()
+        print('[道] 已关闭开机自启')
+    else:
+        # 用pythonw无窗口启动
+        script = Path(__file__).resolve()
+        pythonw = Path(sys.executable).parent / 'pythonw.exe'
+        if not pythonw.exists():
+            pythonw = Path(sys.executable)  # fallback to python.exe
+        bat.write_text(f'@echo off\nstart "" "{pythonw}" "{script}"\n', encoding='utf-8')
+        print(f'[道] 已启用开机自启: {bat}')
+
+def run_with_watchdog(func, name='server', restart_delay=3, max_restarts=10):
+    """守护进程：崩溃自动重启"""
+    restarts = 0
+    while restarts < max_restarts:
         try:
-            httpd.serve_forever()
+            func()
+            break  # 正常退出
+        except Exception as e:
+            restarts += 1
+            print(f'[道] {name} 异常退出 ({restarts}/{max_restarts}): {e}')
+            if restarts < max_restarts:
+                time.sleep(restart_delay)
+            else:
+                print(f'[道] {name} 重启次数耗尽，停止守护')
+
+if __name__ == '__main__':
+    no_tray = '--no-tray' in sys.argv
+
+    # 启动HTTP服务器（后台线程）
+    server_thread = threading.Thread(target=lambda: run_with_watchdog(start_http_server, 'HTTP'), daemon=True)
+    server_thread.start()
+    print(f'[道] http://localhost:{PORT}')
+
+    if no_tray:
+        # 纯HTTP模式（无托盘）
+        try:
+            while True:
+                time.sleep(1)
         except KeyboardInterrupt:
-            print('\nStopped.')
+            stop_http_server()
+            print('\n[道] 止。')
+    else:
+        # 系统托盘模式
+        icon = create_tray_icon()
+        if icon:
+            print('[道] 系统托盘已就绪（右键托盘图标操作）')
+            icon.run()  # 阻塞，直到用户选择"退出"
+        else:
+            # pystray不可用，降级为纯HTTP
+            print('[道] 降级为纯HTTP模式')
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                stop_http_server()
+                print('\n[道] 止。')

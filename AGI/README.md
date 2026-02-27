@@ -6,9 +6,19 @@
 ## 启动
 
 ```powershell
-python AGI/dashboard-server.py
+python AGI/dashboard-server.py          # 前台+托盘（推荐）
+pythonw AGI/dashboard-server.py         # 后台+托盘（无控制台窗口）
+python AGI/dashboard-server.py --no-tray # 纯HTTP（无托盘）
 ```
 → http://localhost:9090
+
+### 系统托盘
+启动后☯太极图标出现在系统托盘区：
+- **双击** → 打开浏览器仪表盘
+- **右键** → 菜单：观·打开 / 开机自启(勾选切换) / 止·退出
+- **关闭控制台** → 托盘仍在，服务不中断
+- **崩溃** → 自动重启（最多10次）
+- **开机自启** → 勾选后写入Startup目录（pythonw无窗口启动）
 
 ## 天 · 人 · 地
 
