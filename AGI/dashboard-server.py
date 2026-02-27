@@ -202,6 +202,56 @@ def health_check():
     check('AGENTS.md ≥17', 2, agent_count >= 17, f'实际{agent_count}个')
     return checks
 
+def get_risks():
+    risks = []
+    def warn(msg, level='warn', zone=1):
+        risks.append({'msg': msg, 'level': level, 'zone': zone})
+    # Zone 0
+    gh = GLOBAL_ROOT / 'hooks.json'
+    if gh.exists():
+        c = gh.read_text(errors='replace')
+        if '"hooks": {}' not in c and '"hooks":{}' not in c:
+            warn('\u5168\u5c40hooks\u975e\u7a7a\uff01\u53ef\u80fd\u5f71\u54cd\u6240\u6709\u7a97\u53e3', 'error', 0)
+        if 'powershell' in c.lower() or '.ps1' in c.lower():
+            warn('\u5168\u5c40hooks\u542bPowerShell\uff01\u6781\u5ea6\u5371\u9669', 'error', 0)
+    # Zone 1 Skills
+    skills_dir = WINDSURF_DIR / 'skills'
+    if skills_dir.exists():
+        for d in skills_dir.iterdir():
+            if d.is_dir():
+                sf = d / 'SKILL.md'
+                if sf.exists():
+                    c = sf.read_text(errors='replace')
+                    if not c.strip().startswith('---'):
+                        warn(f'Skill {d.name} \u7f3afrontmatter', 'warn', 1)
+                    if 'e:\\github\\AIOT' in c or 'e:/github/AIOT' in c:
+                        warn(f'Skill {d.name} \u542b\u65e7\u8def\u5f84', 'error', 1)
+    # Zone 1 Hooks
+    hf = WINDSURF_DIR / 'hooks.json'
+    if hf.exists():
+        hc = hf.read_text(errors='replace')
+        if 'powershell' in hc.lower() or '.ps1' in hc.lower():
+            warn('\u9879\u76eehooks\u542bPowerShell\uff01', 'error', 1)
+    # Stale check
+    import time
+    for name in ('soul.md', 'execution-engine.md', 'project-structure.md'):
+        rf = WINDSURF_DIR / 'rules' / name
+        if rf.exists():
+            age_days = (time.time() - rf.stat().st_mtime) / 86400
+            if age_days > 30:
+                warn(f'Rule {name} \u8d85\u8fc730\u5929\u672a\u66f4\u65b0', 'info', 1)
+    return risks
+
+def save_file_api(rel_path, content):
+    full = (PROJECT_ROOT / rel_path).resolve()
+    if not str(full).startswith(str(PROJECT_ROOT.resolve())):
+        return {'error': 'Access denied'}, 403
+    try:
+        full.write_text(content, encoding='utf-8')
+        return {'ok': True, 'path': rel_path}, 200
+    except Exception as e:
+        return {'error': str(e)}, 500
+
 def read_file_api(rel_path):
     # Security: only allow reading within project or global windsurf dir
     full = (PROJECT_ROOT / rel_path).resolve()
@@ -273,6 +323,24 @@ th{color:var(--muted);font-weight:500;font-size:.8em;text-transform:uppercase}
 .modal-body pre{font-family:'Cascadia Code','Fira Code',monospace;font-size:.82em;line-height:1.5;white-space:pre-wrap;word-break:break-all}
 .refresh-btn{background:var(--accent);color:#fff;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.9em;margin-top:16px}
 .refresh-btn:hover{opacity:.9}
+.toast-container{position:fixed;top:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:8px;font-size:.85em;animation:slideIn .3s;max-width:360px;cursor:pointer}
+.toast-ok{background:rgba(46,204,113,.9);color:#fff}
+.toast-warn{background:rgba(241,196,15,.9);color:#000}
+.toast-err{background:rgba(231,76,60,.9);color:#fff}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.risks{margin-bottom:16px}
+.risk-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;margin:4px 0;font-size:.85em}
+.risk-error{background:rgba(231,76,60,.1);border-left:3px solid var(--red)}
+.risk-warn{background:rgba(241,196,15,.1);border-left:3px solid var(--yellow)}
+.risk-info{background:rgba(52,152,219,.1);border-left:3px solid var(--blue)}
+.auto-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-left:8px;animation:pulse 2s infinite}
+.edit-area{width:100%;min-height:300px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:'Cascadia Code','Fira Code',monospace;font-size:.82em;line-height:1.5;resize:vertical}
+.edit-actions{display:flex;gap:8px;margin-top:8px;justify-content:flex-end}
+.btn-save{background:var(--green);color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:.85em}
+.btn-save:hover{opacity:.85}
+.btn-cancel{background:var(--card);color:var(--text);border:1px solid var(--border);padding:6px 16px;border-radius:6px;cursor:pointer;font-size:.85em}
 @media(max-width:600px){.container{padding:8px}.stats{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -280,35 +348,82 @@ th{color:var(--muted);font-weight:500;font-size:.8em;text-transform:uppercase}
 <div class="container">
   <header>
     <h1>Windsurf 智能体系</h1>
-    <p>三层架构 · 全景仪表盘</p>
+    <p>三层架构 · 五感全覆盖<span class="auto-indicator" id="autoLed" title="自动刷新中"></span></p>
   </header>
   <div class="stats" id="stats"></div>
+  <div class="risks" id="risks"></div>
   <div id="zones"></div>
   <div class="health" id="health"></div>
-  <button class="refresh-btn" onclick="loadAll()">刷新全部</button>
+  <div style="display:flex;gap:8px;margin-top:16px;align-items:center">
+    <button class="refresh-btn" onclick="loadAll()">刷新全部</button>
+    <span style="color:var(--muted);font-size:.8em" id="lastRefresh"></span>
+  </div>
+  <div class="toast-container" id="toasts"></div>
 </div>
 <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <div class="modal-header"><h3 id="modalTitle"></h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
-    <div class="modal-body"><pre id="modalContent"></pre></div>
+    <div class="modal-header"><h3 id="modalTitle"></h3><div><button id="editToggle" onclick="toggleEdit()" style="background:var(--card);color:var(--text);border:1px solid var(--border);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:.8em;margin-right:8px">编辑</button><button class="modal-close" onclick="closeModal()">&times;</button></div></div>
+    <div class="modal-body">
+      <pre id="modalContent"></pre>
+      <textarea id="editArea" class="edit-area" style="display:none"></textarea>
+      <div id="editActions" class="edit-actions" style="display:none">
+        <button class="btn-cancel" onclick="cancelEdit()">取消</button>
+        <button class="btn-save" onclick="saveEdit()">保存</button>
+      </div>
+    </div>
   </div>
 </div>
 <script>
 const API = '';
 let DATA = {};
+let PREV_HC = null;
+let editPath = null;
+let autoTimer = null;
+
+// 👂 Toast notification system
+function toast(msg, type='ok') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  t.onclick = () => t.remove();
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
 
 async function loadAll() {
-  const [z0, z1, z2, hc] = await Promise.all([
-    fetch(API+'/api/zone0').then(r=>r.json()),
-    fetch(API+'/api/zone1').then(r=>r.json()),
-    fetch(API+'/api/zone2').then(r=>r.json()),
-    fetch(API+'/api/health').then(r=>r.json())
-  ]);
-  DATA = {z0, z1, z2, hc};
-  renderStats();
-  renderZones();
-  renderHealth();
+  try {
+    const [z0, z1, z2, hc, risks] = await Promise.all([
+      fetch(API+'/api/zone0').then(r=>r.json()),
+      fetch(API+'/api/zone1').then(r=>r.json()),
+      fetch(API+'/api/zone2').then(r=>r.json()),
+      fetch(API+'/api/health').then(r=>r.json()),
+      fetch(API+'/api/risks').then(r=>r.json())
+    ]);
+    // 👂 Change detection
+    if (PREV_HC) {
+      const prevOk = PREV_HC.filter(c=>c.ok).length;
+      const newOk = hc.filter(c=>c.ok).length;
+      if (newOk < prevOk) toast(`\u5065\u5eb7\u68c0\u67e5\u964d\u7ea7: ${newOk}/${hc.length}`, 'err');
+      else if (newOk > prevOk) toast(`\u5065\u5eb7\u68c0\u67e5\u6062\u590d: ${newOk}/${hc.length}`, 'ok');
+    }
+    PREV_HC = hc;
+    DATA = {z0, z1, z2, hc, risks};
+    renderStats();
+    renderRisks();
+    renderZones();
+    renderHealth();
+    document.getElementById('lastRefresh').textContent = new Date().toLocaleTimeString();
+  } catch(e) {
+    toast('\u52a0\u8f7d\u5931\u8d25: ' + e.message, 'err');
+  }
 }
+
+// 👂 Auto-refresh every 30s
+function startAutoRefresh() {
+  if (autoTimer) clearInterval(autoTimer);
+  autoTimer = setInterval(loadAll, 30000);
+}
+startAutoRefresh();
 
 function renderStats() {
   const {z0,z1,z2,hc} = DATA;
@@ -427,26 +542,88 @@ async function viewFile(key) {
 }
 async function viewRule(name) {
   const r = DATA.z1.rules.items.find(i=>i.name===name);
-  if (r) showModal(name, r.content);
+  if (r) showModal(name, r.content, `.windsurf/rules/${name}`);
 }
 async function viewSkill(name) {
-  const res = await fetch(API+`/api/file?path=.windsurf/skills/${name}/SKILL.md`);
+  const p = `.windsurf/skills/${name}/SKILL.md`;
+  const res = await fetch(API+`/api/file?path=${p}`);
   const d = await res.json();
-  showModal(`skills/${name}/SKILL.md`, d.content||d.error);
+  showModal(`skills/${name}/SKILL.md`, d.content||d.error, p);
 }
 async function viewAgent(path) {
   const res = await fetch(API+`/api/file?path=${encodeURIComponent(path)}`);
   const d = await res.json();
-  showModal(path, d.content||d.error);
+  showModal(path, d.content||d.error, path);
 }
 
-function showModal(title, content) {
+// 👃 Risks panel
+function renderRisks() {
+  const risks = DATA.risks || [];
+  if (!risks.length) { document.getElementById('risks').innerHTML = ''; return; }
+  let html = '<h3 style="font-size:.95em;margin-bottom:8px">👃 \u98ce\u9669\u9884\u8b66</h3>';
+  for (const r of risks) {
+    html += `<div class="risk-item risk-${r.level}"><span>Z${r.zone}</span><span>${r.msg}</span></div>`;
+  }
+  document.getElementById('risks').innerHTML = html;
+}
+
+// \u270b Modal with edit capability
+let currentFilePath = null;
+function showModal(title, content, filePath) {
+  currentFilePath = filePath || null;
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalContent').textContent = content;
+  document.getElementById('modalContent').style.display = 'block';
+  document.getElementById('editArea').style.display = 'none';
+  document.getElementById('editActions').style.display = 'none';
+  document.getElementById('editToggle').style.display = currentFilePath ? '' : 'none';
   document.getElementById('modal').classList.add('show');
 }
-function closeModal() { document.getElementById('modal').classList.remove('show'); }
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+function toggleEdit() {
+  const pre = document.getElementById('modalContent');
+  const area = document.getElementById('editArea');
+  const actions = document.getElementById('editActions');
+  if (area.style.display === 'none') {
+    area.value = pre.textContent;
+    pre.style.display = 'none';
+    area.style.display = 'block';
+    actions.style.display = 'flex';
+    area.focus();
+  } else { cancelEdit(); }
+}
+function cancelEdit() {
+  document.getElementById('modalContent').style.display = 'block';
+  document.getElementById('editArea').style.display = 'none';
+  document.getElementById('editActions').style.display = 'none';
+}
+async function saveEdit() {
+  if (!currentFilePath) { toast('\u65e0\u6cd5\u4fdd\u5b58: \u672a\u77e5\u6587\u4ef6\u8def\u5f84', 'err'); return; }
+  const content = document.getElementById('editArea').value;
+  try {
+    const res = await fetch(API+'/api/file/save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({path: currentFilePath, content})
+    });
+    const d = await res.json();
+    if (d.ok) {
+      toast('\u5df2\u4fdd\u5b58: ' + currentFilePath, 'ok');
+      document.getElementById('modalContent').textContent = content;
+      cancelEdit();
+      loadAll();
+    } else { toast('\u4fdd\u5b58\u5931\u8d25: ' + (d.error||''), 'err'); }
+  } catch(e) { toast('\u4fdd\u5b58\u5931\u8d25: ' + e.message, 'err'); }
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  cancelEdit();
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape') closeModal();
+  if(e.key==='s' && (e.ctrlKey||e.metaKey) && document.getElementById('editArea').style.display!=='none') {
+    e.preventDefault(); saveEdit();
+  }
+});
 
 loadAll();
 </script>
@@ -471,6 +648,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json(get_zone2())
         elif path == '/api/health':
             self._json(health_check())
+        elif path == '/api/risks':
+            self._json(get_risks())
         elif path == '/favicon.ico':
             svg = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="80">\xf0\x9f\xa7\xa0</text></svg>'
             self.send_response(200)
@@ -481,6 +660,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             rel = qs.get('path', [''])[0]
             data, code = read_file_api(rel)
             self._json(data, code)
+        else:
+            self.send_error(404)
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(length).decode('utf-8') if length else '{}'
+        if path == '/api/file/save':
+            try:
+                j = json.loads(body)
+                data, code = save_file_api(j.get('path',''), j.get('content',''))
+                self._json(data, code)
+            except Exception as e:
+                self._json({'error': str(e)}, 400)
         else:
             self.send_error(404)
 
