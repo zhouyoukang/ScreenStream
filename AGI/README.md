@@ -101,6 +101,7 @@ python AGI/dashboard-server.py --no-tray # 纯HTTP（无托盘）
 
 | 文件 | 用途 |
 |------|------|
-| `dashboard-server.py` | Web仪表盘(:9090) |
+| `start.bat` | **一键启动**（双击即用，防重复，自动打开浏览器） |
+| `dashboard-server.py` | Web仪表盘(:9090) + 系统托盘 |
 | `README.md` | 本文件 |
 | `AGENTS.md` | 目录级Agent指令 |
