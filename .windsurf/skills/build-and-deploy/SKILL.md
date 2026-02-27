@@ -6,13 +6,13 @@ description: 构建APK、推送到Android手机、安装并启动ScreenStream应
 ## 推荐方式：一键脚本（Root 设备）
 ```powershell
 # 全量：编译 + 推送 + 安装 + 自动启用 AccessibilityService + 端口转发 + 验证
-& "e:\github\AIOT\ScreenStream_v2\构建部署\dev-deploy.ps1"
+& "e:\道\道生一\一生二\构建部署\dev-deploy.ps1"
 
 # 跳过编译（仅部署已有 APK）
-& "e:\github\AIOT\ScreenStream_v2\构建部署\dev-deploy.ps1" -SkipBuild
+& "e:\道\道生一\一生二\构建部署\dev-deploy.ps1" -SkipBuild
 
 # 跳过编译和安装（仅启用服务 + 端口转发）
-& "e:\github\AIOT\ScreenStream_v2\构建部署\dev-deploy.ps1" -SkipBuild -SkipInstall
+& "e:\道\道生一\一生二\构建部署\dev-deploy.ps1" -SkipBuild -SkipInstall
 ```
 
 ## 手动步骤（备用）
@@ -20,14 +20,14 @@ description: 构建APK、推送到Android手机、安装并启动ScreenStream应
 ### 构建
 ```powershell
 $env:JAVA_HOME = "C:\Program Files\Processing\app\resources\jdk"
-$env:ANDROID_SDK_ROOT = "e:\github\AIOT\ScreenStream_v2\构建部署\android-sdk"
-& "e:\github\AIOT\ScreenStream_v2\gradlew.bat" assembleFDroidDebug --no-configuration-cache
+$env:ANDROID_SDK_ROOT = "e:\道\道生一\一生二\构建部署\android-sdk"
+& "e:\道\道生一\一生二\gradlew.bat" assembleFDroidDebug --no-configuration-cache
 ```
 
 ### 推送 + 安装
 ```powershell
-$ADB = "e:\github\AIOT\ScreenStream_v2\构建部署\android-sdk\platform-tools\adb.exe"
-$APK = "e:\github\AIOT\ScreenStream_v2\用户界面\build\outputs\apk\FDroid\debug\app-FDroid-debug.apk"
+$ADB = "e:\道\道生一\一生二\构建部署\android-sdk\platform-tools\adb.exe"
+$APK = "e:\道\道生一\一生二\用户界面\build\outputs\apk\FDroid\debug\app-FDroid-debug.apk"
 & $ADB push $APK /data/local/tmp/ss.apk
 $size = (Get-Item $APK).Length
 & $ADB shell "cat /data/local/tmp/ss.apk | pm install -t -r -S $size"

@@ -1,3 +1,12 @@
+---
+name: persona-chat-system
+description: 人格对话系统（概率回复+记忆搜索）。当需要构建具有特定人格的对话AI、角色扮演、或记忆增强对话时自动触发。
+triggers:
+  - 需要构建具有特定人格的对话AI
+  - 要求对话风格一致性和可预测性
+  - 需要结合历史记忆的上下文感知对话
+---
+
 # 人格对话系统 (Persona Chat System)
 
 > **核心理念**：概率加权场景回复+记忆搜索增强，低成本实现人格一致性
@@ -30,7 +39,7 @@ function searchMemories(query, limit = 5) {
   if (!MEMORIES.length || !query) return [];
   const qChars = new Set([...query].filter(c => !STOP_WORDS.has(c) && c.trim()));
   if (!qChars.size) return [];
-  
+
   const scored = [];
   for (const m of MEMORIES) {
     const mChars = new Set([...m.text].filter(c => !STOP_WORDS.has(c) && c.trim()));
@@ -38,7 +47,7 @@ function searchMemories(query, limit = 5) {
     for (const c of qChars) { if (mChars.has(c)) overlap++ }
     if (overlap > 0) scored.push({ score: overlap / qChars.size, memory: m });
   }
-  
+
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, limit).map(s => s.memory);
 }
@@ -134,13 +143,13 @@ const PERSONA_TEMPLATE = `你现在完全扮演{角色名}，{基本信息}。
 async function getChatReply(message) {
   // 1. 搜索相关记忆
   const memories = searchMemories(message);
-  
+
   // 2. 构建上下文
   let context = "";
   if (memories.length) {
     context = memories.map(m => `[${m.time}] ${m.sender}: ${m.text}`).join('\n');
   }
-  
+
   // 3. 选择回复模式
   if (hasLLMAPI()) {
     // LLM增强模式
@@ -239,6 +248,6 @@ async function getChatReply(message) {
 ## 扩展方向
 
 - **多模态对话**：语音、图像理解集成
-- **情感计算**：基于情绪状态的动态调整  
+- **情感计算**：基于情绪状态的动态调整
 - **社交网络**：多人格协作和互动
 - **学习进化**：基于用户交互的人格成长

@@ -88,7 +88,7 @@ routing {
 |------|---------|
 | 输入路由 | `反向控制/输入路由/InputRoutes.kt` |
 | 输入服务 | `反向控制/输入服务/InputService.kt` |
-| 输入设置 | `反向控制/输入服务/InputSettings.kt` |
+| 输入设置 | `配置管理/040-反向控制配置_InputSettings/InputSettings.kt` |
 | HTTP 服务 | `投屏链路/MJPEG投屏/mjpeg/internal/HttpServer.kt` |
 | 前端页面 | `投屏链路/MJPEG投屏/assets/index.html` |
 | 前端脚本 | `投屏链路/MJPEG投屏/assets/dev/script.js` |

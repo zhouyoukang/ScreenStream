@@ -1,3 +1,13 @@
+---
+name: pwa-framework
+description: PWA单文件框架+WebView封装+五感UX。当需要创建离线优先Web应用、单文件PWA、移动端优化应用时自动触发。
+triggers:
+  - 需要创建离线优先的Web应用
+  - 要求无服务器部署和零外部依赖
+  - 移动端优化和PWA特性需求
+  - Android WebView封装
+---
+
 # PWA单文件框架 (PWA Framework)
 
 > **核心理念**：自给自足的单文件应用，零依赖离线运行，跨平台一致体验

@@ -1,3 +1,12 @@
+---
+name: browser-agent-mastery
+description: 五器辩证·多Agent五感冲突防护。当Agent需操控浏览器、多Agent并行浏览器操作、前端E2E验证时自动触发。
+triggers:
+  - Agent需操控浏览器（导航/提取/填表/截图/调试）
+  - 多Agent并行操作浏览器
+  - 前端E2E验证 / 网页数据提取
+---
+
 # 浏览器Agent统御术 (Browser Agent Mastery)
 
 > Agent操作卡片。知识详见 `文档/BROWSER_MCP_MULTI_AGENT_RESEARCH.md`。
@@ -15,7 +24,7 @@
 | R2 | 同一对话Playwright和DevTools不同时用 | 并发 |
 | R3 | DevTools: `list_pages`→`select_page`→操作→不切换 | 并发 |
 | R4 | DevTools禁止写操作pageId=0（用户活跃Tab） | 侵犯 |
-| R5 | 内存>85%禁新Playwright；用完即`browser_close` | 资源 |
+| R5 | 用完即`browser_close`（释放资源） | 资源 |
 | R6 | DevTools按page+type过滤console | 听觉 |
 | R7 | DevTools `--isolated`（**已配置**，临时profile） | 多实例 |
 | R8 | `select_page`+操作必须**原子化** | 竞态 |

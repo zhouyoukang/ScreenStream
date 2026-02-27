@@ -7,14 +7,14 @@
 - **Glob** (2): kotlin-android.md (`*.kt`) | frontend-html.md (`*.html/*.js/*.css`)
 - **Model** (1): build-deploy.md
 
-## Skills (13)
+## Skills (13) — 全部有YAML frontmatter ✅
 | 领域 | Skill | 用途 |
 |------|-------|------|
 | 构建 | build-and-deploy | APK构建→推送→安装→启动 |
-| 调试 | adb-device-debug | Android设备连接/ADB问题 |
+| 调试 | adb-device-debug | 设备连接/WiFi ADB/OEM拦截/多设备 |
 | 调试 | keyboard-input-debug | PC键盘→手机输入映射 |
-| 调试 | terminal-resilience | 终端卡死诊断与恢复 |
-| 测试 | api-testing | HTTP API端点验证 |
+| 调试 | terminal-resilience | 终端卡死诊断与五感降级恢复 |
+| 测试 | api-testing | HTTP API验证(USB+WiFi+phone_lib) |
 | 测试 | full-verification | 端到端验证链 |
 | 开发 | feature-development | 新功能完整开发流程 |
 | 开发 | new-module-setup | 新模块/子功能创建 |
@@ -24,14 +24,17 @@
 | 浏览器 | browser-agent-mastery | 五器辩证·多Agent五感冲突防护 |
 | 控制 | agent-phone-control | Agent远程操控手机 |
 
+**全景索引**: `.windsurf/skills/README.md`
+
 ## Workflows (10)
 /dev /doc /review /test /refactor /optimize /evolve /health-check /debug-escalation /swe-pipeline
 
-## AGENTS.md (12)
-目录级指令，操作对应目录时自动加载
+## AGENTS.md (18)
+目录级指令，操作对应目录时自动加载（含子目录级）
 
-## MCP (5, 全启用)
-chrome-devtools | context7 | fetch | github | playwright(`--headless`)
+## MCP (5配置, 3活跃)
+✅ chrome-devtools(`--isolated`) | ✅ playwright(`--headless --isolated`) | ✅ context7
+❌ github(需Clash) | ❌ fetch(被IWR替代)
 
 ## 凭据中心
 - **索引**: `凭据中心.md`（结构+协议，git tracked）
