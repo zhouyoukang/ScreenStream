@@ -265,366 +265,243 @@ DASHBOARD_HTML = r'''<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Windsurf 仪表盘</title>
+<title>道 — 智能体系</title>
 <style>
-:root{--bg:#0a0a0f;--surface:#12121a;--card:#1a1a2e;--border:#2a2a3e;--text:#e0e0e0;--muted:#888;--accent:#6c5ce7;--green:#2ecc71;--red:#e74c3c;--yellow:#f1c40f;--blue:#3498db}
+:root{--ink:#0d0d0d;--paper:#141410;--scroll:#1c1b17;--line:#2a2822;--text:#c8c0a8;--faint:#7a7460;--vermillion:#c43e1c;--jade:#5a8a6a;--amber:#b89a3c;--sky:#4a7a9a;--gold:#d4a840;--white:#e8e0c8}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,system-ui,'Segoe UI',sans-serif;line-height:1.6;min-height:100vh}
-.container{max-width:1200px;margin:0 auto;padding:16px}
-header{text-align:center;padding:24px 0 16px;border-bottom:1px solid var(--border);margin-bottom:24px}
-header h1{font-size:1.8em;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
-header p{color:var(--muted);font-size:.9em}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
-.stat .num{font-size:2em;font-weight:700;color:var(--accent)}
-.stat .label{font-size:.8em;color:var(--muted);margin-top:4px}
-.zone{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
-.zone-header{padding:16px 20px;cursor:pointer;display:flex;align-items:center;gap:12px;user-select:none}
-.zone-header:hover{background:var(--card)}
-.zone-header .badge{padding:2px 10px;border-radius:6px;font-size:.75em;font-weight:600;text-transform:uppercase}
-.z0 .badge{background:rgba(231,76,60,.2);color:var(--red)}
-.z1 .badge{background:rgba(108,92,231,.2);color:var(--accent)}
-.z2 .badge{background:rgba(52,152,219,.2);color:var(--blue)}
-.zone-header h2{flex:1;font-size:1.1em}
-.zone-header .arrow{transition:transform .2s;color:var(--muted)}
+body{background:var(--ink);color:var(--text);font-family:'Noto Serif SC','Source Han Serif SC','Songti SC','SimSun',serif;line-height:1.8;min-height:100vh}
+.container{max-width:1100px;margin:0 auto;padding:20px 24px}
+header{text-align:center;padding:40px 0 20px;margin-bottom:32px;position:relative}
+header::after{content:'';display:block;width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--faint),transparent);margin:20px auto 0}
+header h1{font-size:2.8em;font-weight:400;letter-spacing:.3em;color:var(--white);margin-bottom:2px}
+header .subtitle{color:var(--faint);font-size:.85em;letter-spacing:.15em}
+header .breath{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--jade);margin-left:10px;animation:breath 4s ease-in-out infinite;vertical-align:middle}
+@keyframes breath{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+.verse{text-align:center;color:var(--faint);font-size:.8em;letter-spacing:.1em;margin-bottom:28px;font-style:italic}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:28px}
+.stat{background:var(--scroll);border:1px solid var(--line);border-radius:4px;padding:16px 12px;text-align:center;transition:border-color .3s}
+.stat:hover{border-color:var(--faint)}
+.stat .num{font-size:2.2em;font-weight:300;color:var(--gold);font-family:'Georgia',serif}
+.stat .label{font-size:.75em;color:var(--faint);margin-top:6px;letter-spacing:.08em}
+.zone{background:var(--paper);border:1px solid var(--line);border-radius:4px;margin-bottom:14px;overflow:hidden}
+.zone-header{padding:14px 20px;cursor:pointer;display:flex;align-items:center;gap:12px;user-select:none;transition:background .2s}
+.zone-header:hover{background:var(--scroll)}
+.zone-header .gua{font-size:1.1em;opacity:.6}
+.z0 .gua{color:var(--vermillion)}
+.z1 .gua{color:var(--gold)}
+.z2 .gua{color:var(--sky)}
+.zone-header h2{flex:1;font-size:1em;font-weight:400;letter-spacing:.05em}
+.zone-header .arrow{transition:transform .3s;color:var(--faint);font-size:.7em}
 .zone-header.open .arrow{transform:rotate(90deg)}
 .zone-body{padding:0 20px 20px;display:none}
 .zone-body.show{display:block}
-table{width:100%;border-collapse:collapse;margin:12px 0}
-th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:.9em}
-th{color:var(--muted);font-weight:500;font-size:.8em;text-transform:uppercase}
-.ok{color:var(--green)}
-.warn{color:var(--yellow)}
-.err{color:var(--red)}
-.tag{display:inline-block;padding:1px 8px;border-radius:4px;font-size:.75em;margin:1px}
-.tag-on{background:rgba(46,204,113,.15);color:var(--green)}
-.tag-glob{background:rgba(241,196,15,.15);color:var(--yellow)}
-.tag-model{background:rgba(52,152,219,.15);color:var(--blue)}
-.tag-py{background:rgba(46,204,113,.15);color:var(--green)}
-.tag-dis{background:rgba(231,76,60,.15);color:var(--red)}
-.health{margin-top:24px}
-.health h2{margin-bottom:12px;font-size:1.2em}
-.check{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:.9em}
-.check .icon{font-size:1.1em}
-.check .zone-tag{font-size:.7em;padding:1px 6px;border-radius:3px;background:var(--card);color:var(--muted)}
-.tree{background:var(--card);border-radius:8px;padding:16px;font-family:'Cascadia Code','Fira Code',monospace;font-size:.82em;line-height:1.8;overflow-x:auto;margin:12px 0;white-space:pre}
-.sub{margin:12px 0}
-.sub h3{font-size:.95em;color:var(--accent);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
-.clickable{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
-.clickable:hover{color:var(--accent)}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;justify-content:center;align-items:center}
+table{width:100%;border-collapse:collapse;margin:10px 0}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);font-size:.85em}
+th{color:var(--faint);font-weight:400;font-size:.75em;letter-spacing:.05em}
+.ok{color:var(--jade)}
+.warn{color:var(--amber)}
+.err{color:var(--vermillion)}
+.tag{display:inline-block;padding:1px 8px;border-radius:2px;font-size:.72em;margin:1px;font-family:-apple-system,system-ui,sans-serif}
+.tag-on{background:rgba(90,138,106,.15);color:var(--jade)}
+.tag-glob{background:rgba(184,154,60,.15);color:var(--amber)}
+.tag-model{background:rgba(74,122,154,.15);color:var(--sky)}
+.tag-py{background:rgba(90,138,106,.15);color:var(--jade)}
+.tag-dis{background:rgba(196,62,28,.12);color:var(--vermillion)}
+.health{margin-top:28px}
+.health h2{margin-bottom:10px;font-size:1.05em;font-weight:400;letter-spacing:.1em}
+.check{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.85em}
+.check .icon{font-size:.9em}
+.check .zt{font-size:.65em;padding:1px 5px;border-radius:2px;background:var(--scroll);color:var(--faint);font-family:-apple-system,system-ui,sans-serif}
+.sub{margin:10px 0}
+.sub h3{font-size:.88em;color:var(--gold);font-weight:400;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--line);letter-spacing:.05em}
+.clickable{cursor:pointer;color:var(--text);border-bottom:1px dotted var(--faint);transition:color .2s}
+.clickable:hover{color:var(--gold)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;justify-content:center;align-items:center}
 .modal-overlay.show{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:90%;max-width:800px;max-height:80vh;display:flex;flex-direction:column}
-.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-header h3{font-size:1em}
-.modal-close{background:none;border:none;color:var(--muted);font-size:1.5em;cursor:pointer;padding:0 8px}
+.modal{background:var(--paper);border:1px solid var(--line);border-radius:4px;width:90%;max-width:800px;max-height:80vh;display:flex;flex-direction:column}
+.modal-header{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:.95em;font-weight:400}
+.modal-close{background:none;border:none;color:var(--faint);font-size:1.4em;cursor:pointer;padding:0 6px}
 .modal-close:hover{color:var(--text)}
-.modal-body{padding:16px 20px;overflow-y:auto;flex:1}
-.modal-body pre{font-family:'Cascadia Code','Fira Code',monospace;font-size:.82em;line-height:1.5;white-space:pre-wrap;word-break:break-all}
-.refresh-btn{background:var(--accent);color:#fff;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.9em;margin-top:16px}
-.refresh-btn:hover{opacity:.9}
+.modal-body{padding:14px 20px;overflow-y:auto;flex:1}
+.modal-body pre{font-family:'Cascadia Code','Fira Code',monospace;font-size:.78em;line-height:1.6;white-space:pre-wrap;word-break:break-all;color:var(--text)}
+.refresh-btn{background:var(--scroll);color:var(--text);border:1px solid var(--line);padding:7px 20px;border-radius:3px;cursor:pointer;font-size:.82em;letter-spacing:.08em;transition:border-color .2s}
+.refresh-btn:hover{border-color:var(--gold);color:var(--gold)}
 .toast-container{position:fixed;top:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:8px}
-.toast{padding:12px 20px;border-radius:8px;font-size:.85em;animation:slideIn .3s;max-width:360px;cursor:pointer}
-.toast-ok{background:rgba(46,204,113,.9);color:#fff}
-.toast-warn{background:rgba(241,196,15,.9);color:#000}
-.toast-err{background:rgba(231,76,60,.9);color:#fff}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.toast{padding:10px 18px;border-radius:3px;font-size:.82em;animation:fadeIn .4s;max-width:340px;cursor:pointer;border-left:3px solid}
+.toast-ok{background:rgba(90,138,106,.15);border-color:var(--jade);color:var(--jade)}
+.toast-warn{background:rgba(184,154,60,.15);border-color:var(--amber);color:var(--amber)}
+.toast-err{background:rgba(196,62,28,.15);border-color:var(--vermillion);color:var(--vermillion)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 .risks{margin-bottom:16px}
-.risk-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;margin:4px 0;font-size:.85em}
-.risk-error{background:rgba(231,76,60,.1);border-left:3px solid var(--red)}
-.risk-warn{background:rgba(241,196,15,.1);border-left:3px solid var(--yellow)}
-.risk-info{background:rgba(52,152,219,.1);border-left:3px solid var(--blue)}
-.auto-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-left:8px;animation:pulse 2s infinite}
-.edit-area{width:100%;min-height:300px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:'Cascadia Code','Fira Code',monospace;font-size:.82em;line-height:1.5;resize:vertical}
+.risk-item{display:flex;align-items:center;gap:8px;padding:7px 12px;margin:3px 0;font-size:.82em;border-left:2px solid}
+.risk-error{background:rgba(196,62,28,.06);border-color:var(--vermillion);color:var(--vermillion)}
+.risk-warn{background:rgba(184,154,60,.06);border-color:var(--amber);color:var(--amber)}
+.risk-info{background:rgba(74,122,154,.06);border-color:var(--sky);color:var(--sky)}
+.edit-area{width:100%;min-height:280px;background:var(--ink);color:var(--text);border:1px solid var(--line);border-radius:3px;padding:12px;font-family:'Cascadia Code','Fira Code',monospace;font-size:.78em;line-height:1.6;resize:vertical}
 .edit-actions{display:flex;gap:8px;margin-top:8px;justify-content:flex-end}
-.btn-save{background:var(--green);color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:.85em}
-.btn-save:hover{opacity:.85}
-.btn-cancel{background:var(--card);color:var(--text);border:1px solid var(--border);padding:6px 16px;border-radius:6px;cursor:pointer;font-size:.85em}
-@media(max-width:600px){.container{padding:8px}.stats{grid-template-columns:repeat(2,1fr)}}
+.btn-save{background:var(--jade);color:var(--ink);border:none;padding:5px 14px;border-radius:3px;cursor:pointer;font-size:.82em}
+.btn-cancel{background:var(--scroll);color:var(--text);border:1px solid var(--line);padding:5px 14px;border-radius:3px;cursor:pointer;font-size:.82em}
+.footer{text-align:center;margin-top:32px;padding-top:16px;border-top:1px solid var(--line);color:var(--faint);font-size:.72em;letter-spacing:.1em}
+@media(max-width:600px){.container{padding:12px}.stats{grid-template-columns:repeat(2,1fr)}header h1{font-size:2em}}
 </style>
 </head>
 <body>
 <div class="container">
   <header>
-    <h1>Windsurf 智能体系</h1>
-    <p>三层架构 · 五感全覆盖<span class="auto-indicator" id="autoLed" title="自动刷新中"></span></p>
+    <h1>道</h1>
+    <div class="subtitle">天 · 人 · 地<span class="breath" id="autoLed" title="知常曰明 — 自观不息"></span></div>
   </header>
+  <div class="verse" id="verse"></div>
   <div class="stats" id="stats"></div>
   <div class="risks" id="risks"></div>
   <div id="zones"></div>
   <div class="health" id="health"></div>
-  <div style="display:flex;gap:8px;margin-top:16px;align-items:center">
-    <button class="refresh-btn" onclick="loadAll()">刷新全部</button>
-    <span style="color:var(--muted);font-size:.8em" id="lastRefresh"></span>
+  <div style="display:flex;gap:10px;margin-top:20px;align-items:center;justify-content:center">
+    <button class="refresh-btn" onclick="loadAll()">观 · 刷新</button>
+    <span style="color:var(--faint);font-size:.75em" id="lastRefresh"></span>
   </div>
+  <div class="footer">道生一 · 一生二 · 二生三 · 三生万物</div>
   <div class="toast-container" id="toasts"></div>
 </div>
 <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <div class="modal-header"><h3 id="modalTitle"></h3><div><button id="editToggle" onclick="toggleEdit()" style="background:var(--card);color:var(--text);border:1px solid var(--border);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:.8em;margin-right:8px">编辑</button><button class="modal-close" onclick="closeModal()">&times;</button></div></div>
+    <div class="modal-header"><h3 id="modalTitle"></h3><div><button id="editToggle" onclick="toggleEdit()" style="background:var(--scroll);color:var(--text);border:1px solid var(--line);padding:3px 10px;border-radius:3px;cursor:pointer;font-size:.78em;margin-right:8px">为 · 编辑</button><button class="modal-close" onclick="closeModal()">&times;</button></div></div>
     <div class="modal-body">
       <pre id="modalContent"></pre>
       <textarea id="editArea" class="edit-area" style="display:none"></textarea>
       <div id="editActions" class="edit-actions" style="display:none">
-        <button class="btn-cancel" onclick="cancelEdit()">取消</button>
-        <button class="btn-save" onclick="saveEdit()">保存</button>
+        <button class="btn-cancel" onclick="cancelEdit()">止</button>
+        <button class="btn-save" onclick="saveEdit()">存</button>
       </div>
     </div>
   </div>
 </div>
 <script>
-const API = '';
-let DATA = {};
-let PREV_HC = null;
-let editPath = null;
-let autoTimer = null;
+const API='';let DATA={};let PREV_HC=null;let autoTimer=null;
+const VERSES=[
+  '\u89c2\u5176\u5999\u2003\u2014\u2014\u2003\u300a\u9053\u5fb7\u7ecf\u300b\u7b2c\u4e00\u7ae0',
+  '\u5927\u97f3\u5e0c\u58f0\uff0c\u5927\u8c61\u65e0\u5f62\u2003\u2014\u2014\u2003\u300a\u9053\u5fb7\u7ecf\u300b\u7b2c\u56db\u5341\u4e00\u7ae0',
+  '\u77e5\u5e38\u66f0\u660e\u2003\u2014\u2014\u2003\u300a\u9053\u5fb7\u7ecf\u300b\u7b2c\u5341\u516d\u7ae0',
+  '\u5929\u7f51\u6062\u6062\uff0c\u758f\u800c\u4e0d\u5931\u2003\u2014\u2014\u2003\u300a\u9053\u5fb7\u7ecf\u300b\u7b2c\u4e03\u5341\u4e09\u7ae0',
+  '\u4e07\u7269\u8d1f\u9634\u800c\u62b1\u9633\uff0c\u51b2\u6c14\u4ee5\u4e3a\u548c\u2003\u2014\u2014\u2003\u300a\u9053\u5fb7\u7ecf\u300b\u7b2c\u56db\u5341\u4e8c\u7ae0',
+  '\u4e0a\u5584\u82e5\u6c34\u2003\u2014\u2014\u2003\u300a\u9053\u5fb7\u7ecf\u300b\u7b2c\u516b\u7ae0',
+  '\u65e0\u4e3a\u800c\u65e0\u4e0d\u4e3a\u2003\u2014\u2014\u2003\u300a\u9053\u5fb7\u7ecf\u300b\u7b2c\u56db\u5341\u516b\u7ae0',
+  '\u5929\u5730\u4e0e\u6211\u5e76\u751f\uff0c\u800c\u4e07\u7269\u4e0e\u6211\u4e3a\u4e00\u2003\u2014\u2014\u2003\u300a\u5e84\u5b50\u00b7\u9f50\u7269\u8bba\u300b',
+  '\u81f3\u4eba\u65e0\u5df1\uff0c\u795e\u4eba\u65e0\u529f\uff0c\u5723\u4eba\u65e0\u540d\u2003\u2014\u2014\u2003\u300a\u5e84\u5b50\u00b7\u900d\u9065\u6e38\u300b',
+  '\u5434\u751f\u4e4b\u4e5f\u6709\u6daf\uff0c\u800c\u77e5\u4e5f\u65e0\u6daf\u2003\u2014\u2014\u2003\u300a\u5e84\u5b50\u00b7\u517b\u751f\u4e3b\u300b',
+];
+document.getElementById('verse').textContent=VERSES[Math.floor(Math.random()*VERSES.length)];
 
-// 👂 Toast notification system
-function toast(msg, type='ok') {
-  const t = document.createElement('div');
-  t.className = `toast toast-${type}`;
-  t.textContent = msg;
-  t.onclick = () => t.remove();
-  document.getElementById('toasts').appendChild(t);
-  setTimeout(() => t.remove(), 4000);
-}
+function toast(msg,type='ok'){const t=document.createElement('div');t.className=`toast toast-${type}`;t.textContent=msg;t.onclick=()=>t.remove();document.getElementById('toasts').appendChild(t);setTimeout(()=>t.remove(),4000)}
 
-async function loadAll() {
-  try {
-    const [z0, z1, z2, hc, risks] = await Promise.all([
-      fetch(API+'/api/zone0').then(r=>r.json()),
-      fetch(API+'/api/zone1').then(r=>r.json()),
-      fetch(API+'/api/zone2').then(r=>r.json()),
-      fetch(API+'/api/health').then(r=>r.json()),
-      fetch(API+'/api/risks').then(r=>r.json())
-    ]);
-    // 👂 Change detection
-    if (PREV_HC) {
-      const prevOk = PREV_HC.filter(c=>c.ok).length;
-      const newOk = hc.filter(c=>c.ok).length;
-      if (newOk < prevOk) toast(`\u5065\u5eb7\u68c0\u67e5\u964d\u7ea7: ${newOk}/${hc.length}`, 'err');
-      else if (newOk > prevOk) toast(`\u5065\u5eb7\u68c0\u67e5\u6062\u590d: ${newOk}/${hc.length}`, 'ok');
-    }
-    PREV_HC = hc;
-    DATA = {z0, z1, z2, hc, risks};
-    renderStats();
-    renderRisks();
-    renderZones();
-    renderHealth();
-    document.getElementById('lastRefresh').textContent = new Date().toLocaleTimeString();
-  } catch(e) {
-    toast('\u52a0\u8f7d\u5931\u8d25: ' + e.message, 'err');
-  }
+async function loadAll(){
+  try{
+    const[z0,z1,z2,hc,risks]=await Promise.all([fetch(API+'/api/zone0').then(r=>r.json()),fetch(API+'/api/zone1').then(r=>r.json()),fetch(API+'/api/zone2').then(r=>r.json()),fetch(API+'/api/health').then(r=>r.json()),fetch(API+'/api/risks').then(r=>r.json())]);
+    if(PREV_HC){const p=PREV_HC.filter(c=>c.ok).length,n=hc.filter(c=>c.ok).length;if(n<p)toast(`\u6c14\u8861\u5931\u8c03: ${n}/${hc.length}`,'err');else if(n>p)toast(`\u6c14\u8861\u590d\u548c: ${n}/${hc.length}`,'ok')}
+    PREV_HC=hc;DATA={z0,z1,z2,hc,risks};renderStats();renderRisks();renderZones();renderHealth();
+    document.getElementById('lastRefresh').textContent=new Date().toLocaleTimeString();
+  }catch(e){toast('\u89c2\u5bdf\u5931\u8d25: '+e.message,'err')}
 }
-
-// 👂 Auto-refresh every 30s
-function startAutoRefresh() {
-  if (autoTimer) clearInterval(autoTimer);
-  autoTimer = setInterval(loadAll, 30000);
-}
+function startAutoRefresh(){if(autoTimer)clearInterval(autoTimer);autoTimer=setInterval(loadAll,30000)}
 startAutoRefresh();
 
-function renderStats() {
-  const {z0,z1,z2,hc} = DATA;
-  const okCount = hc.filter(c=>c.ok).length;
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="num">${z1.rules?.count||0}</div><div class="label">Rules</div></div>
-    <div class="stat"><div class="num">${z1.skills?.count||0}</div><div class="label">Skills</div></div>
-    <div class="stat"><div class="num">${z1.workflows?.count||0}</div><div class="label">Workflows</div></div>
-    <div class="stat"><div class="num">${z2.count||0}</div><div class="label">AGENTS.md</div></div>
-    <div class="stat"><div class="num">${z0.global_skills?.count||0}</div><div class="label">全局Skills</div></div>
-    <div class="stat"><div class="num">${Object.keys(z0.mcp_config?.servers||{}).length}</div><div class="label">MCP</div></div>
-    <div class="stat"><div class="num" style="color:${okCount===hc.length?'var(--green)':'var(--yellow)'}">
-      ${okCount}/${hc.length}</div><div class="label">健康检查</div></div>
-  `;
+function renderStats(){
+  const{z0,z1,z2,hc}=DATA;const ok=hc.filter(c=>c.ok).length;
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="num">${z1.rules?.count||0}</div><div class="label">\u5f8b · Rules</div></div>
+    <div class="stat"><div class="num">${z1.skills?.count||0}</div><div class="label">\u672f · Skills</div></div>
+    <div class="stat"><div class="num">${z1.workflows?.count||0}</div><div class="label">\u6cd5 · Workflows</div></div>
+    <div class="stat"><div class="num">${z2.count||0}</div><div class="label">\u5fb7 · AGENTS</div></div>
+    <div class="stat"><div class="num">${z0.global_skills?.count||0}</div><div class="label">\u5929\u672f</div></div>
+    <div class="stat"><div class="num">${Object.keys(z0.mcp_config?.servers||{}).length}</div><div class="label">\u5668 · MCP</div></div>
+    <div class="stat"><div class="num" style="color:${ok===hc.length?'var(--jade)':'var(--amber)'}">
+      ${ok}/${hc.length}</div><div class="label">\u6c14 · \u548c</div></div>`;
 }
 
-function renderZones() {
-  const {z0,z1,z2} = DATA;
-  let html = '';
-  // Zone 0
-  html += `<div class="zone z0">
-    <div class="zone-header" onclick="toggleZone(this)">
-      <span class="badge">Zone 0</span><h2>全局级 — 影响所有项目</h2><span class="arrow">▶</span>
+function renderZones(){
+  const{z0,z1,z2}=DATA;let h='';
+  h+=`<div class="zone z0"><div class="zone-header" onclick="toggleZone(this)">
+    <span class="gua">\u2630</span><h2>\u5929 \u2014 \u5929\u9053\u65e0\u4eb2\uff0c\u5e38\u4e0e\u5584\u4eba</h2><span class="arrow">\u25b6</span>
     </div><div class="zone-body">`;
-  // Global rules
-  html += `<div class="sub"><h3>全局规则 (${z0.global_rules?.lines||0}行)</h3>
+  h+=`<div class="sub"><h3>\u5929\u5f8b (\u5168\u5c40\u89c4\u5219 ${z0.global_rules?.lines||0}\u884c)</h3>
     <p class="clickable" onclick="viewFile('global_rules')">${z0.global_rules?.path}</p></div>`;
-  // MCP
-  html += `<div class="sub"><h3>MCP配置</h3><table><tr><th>Server</th><th>状态</th><th>命令</th></tr>`;
-  for (const [name, cfg] of Object.entries(z0.mcp_config?.servers||{})) {
-    const st = cfg.disabled ? '<span class="tag tag-dis">禁用</span>' : '<span class="tag tag-on">启用</span>';
-    html += `<tr><td>${name}</td><td>${st}</td><td style="font-size:.8em;color:var(--muted)">${cfg.command}</td></tr>`;
-  }
-  html += `</table></div>`;
-  // Global hooks
-  const gh = z0.global_hooks;
-  html += `<div class="sub"><h3>全局Hooks</h3>
-    <p>${gh?.empty ? '<span class="ok">✅ 已清空（安全）</span>' : '<span class="err">⚠ 非空！</span>'}</p></div>`;
-  // Global skills
-  html += `<div class="sub"><h3>全局Skills (${z0.global_skills?.count||0})</h3><table><tr><th>名称</th><th>SKILL.md</th><th>行数</th></tr>`;
-  for (const s of z0.global_skills?.skills||[]) {
-    html += `<tr><td>${s.name}</td><td>${s.has_skill_md?'<span class="ok">✅</span>':'<span class="err">❌</span>'}</td><td>${s.lines}</td></tr>`;
-  }
-  html += `</table></div></div></div>`;
+  h+=`<div class="sub"><h3>\u4e94\u5668 (MCP)</h3><table><tr><th>\u5668</th><th>\u72b6\u6001</th><th>\u547d\u4ee4</th></tr>`;
+  for(const[n,c] of Object.entries(z0.mcp_config?.servers||{})){
+    h+=`<tr><td>${n}</td><td>${c.disabled?'<span class="tag tag-dis">\u5bc2</span>':'<span class="tag tag-on">\u901a</span>'}</td><td style="font-size:.78em;color:var(--faint)">${c.command}</td></tr>`}
+  h+=`</table></div>`;
+  const gh=z0.global_hooks;
+  h+=`<div class="sub"><h3>\u5929\u94a9 (Hooks)</h3><p>${gh?.empty?'<span class="ok">\u2714 \u865a\u65e0\uff08\u5b89\uff09</span>':'<span class="err">\u26a0 \u975e\u865a\uff01</span>'}</p></div>`;
+  h+=`<div class="sub"><h3>\u5929\u672f (${z0.global_skills?.count||0})</h3><table><tr><th>\u540d</th><th>\u5177</th><th>\u884c</th></tr>`;
+  for(const s of z0.global_skills?.skills||[]){h+=`<tr><td>${s.name}</td><td>${s.has_skill_md?'<span class="ok">\u2714</span>':'<span class="err">\u2718</span>'}</td><td>${s.lines}</td></tr>`}
+  h+=`</table></div></div></div>`;
 
-  // Zone 1
-  html += `<div class="zone z1">
-    <div class="zone-header open" onclick="toggleZone(this)">
-      <span class="badge">Zone 1</span><h2>项目级 — 当前工作区</h2><span class="arrow">▶</span>
+  h+=`<div class="zone z1"><div class="zone-header open" onclick="toggleZone(this)">
+    <span class="gua">\u2634</span><h2>\u4eba \u2014 \u4eba\u6cd5\u5730\uff0c\u5730\u6cd5\u5929\uff0c\u5929\u6cd5\u9053</h2><span class="arrow">\u25b6</span>
     </div><div class="zone-body show">`;
-  // Rules
-  html += `<div class="sub"><h3>Rules (${z1.rules?.count||0})</h3><table><tr><th>文件</th><th>触发</th><th>行数</th></tr>`;
-  for (const r of z1.rules?.items||[]) {
-    const tag = r.trigger==='always_on'?'tag-on':r.trigger==='glob'?'tag-glob':'tag-model';
-    html += `<tr><td class="clickable" onclick="viewRule('${r.name}')">${r.name}</td>
-      <td><span class="tag ${tag}">${r.trigger}</span></td><td>${r.lines}</td></tr>`;
-  }
-  html += `</table></div>`;
-  // Skills
-  html += `<div class="sub"><h3>Skills (${z1.skills?.count||0}) — 全部有frontmatter ✅</h3><table><tr><th>名称</th><th>FM</th><th>行</th><th>描述</th></tr>`;
-  for (const s of z1.skills?.items||[]) {
-    html += `<tr><td class="clickable" onclick="viewSkill('${s.name}')">${s.name}</td>
-      <td>${s.has_frontmatter?'<span class="ok">✅</span>':'<span class="err">❌</span>'}</td>
-      <td>${s.lines}</td><td style="font-size:.8em;color:var(--muted)">${s.description||''}</td></tr>`;
-  }
-  html += `</table></div>`;
-  // Workflows
-  html += `<div class="sub"><h3>Workflows (${z1.workflows?.count||0})</h3><table><tr><th>命令</th><th>行</th><th>描述</th></tr>`;
-  for (const w of z1.workflows?.items||[]) {
-    html += `<tr><td>/${w.name}</td><td>${w.lines}</td><td style="font-size:.8em;color:var(--muted)">${w.description||''}</td></tr>`;
-  }
-  html += `</table></div>`;
-  // Hooks
-  html += `<div class="sub"><h3>项目Hooks</h3><table><tr><th>事件</th><th>语言</th><th>命令</th></tr>`;
-  for (const h of z1.hooks?.items||[]) {
-    html += `<tr><td>${h.event}</td><td><span class="tag tag-py">${h.language}</span></td>
-      <td style="font-size:.8em;color:var(--muted)">${h.command}</td></tr>`;
-  }
-  html += `</table></div></div></div>`;
+  h+=`<div class="sub"><h3>\u5f8b (${z1.rules?.count||0})</h3><table><tr><th>\u6587</th><th>\u89e6</th><th>\u884c</th></tr>`;
+  for(const r of z1.rules?.items||[]){const tg=r.trigger==='always_on'?'tag-on':r.trigger==='glob'?'tag-glob':'tag-model';
+    h+=`<tr><td class="clickable" onclick="viewRule('${r.name}')">${r.name}</td><td><span class="tag ${tg}">${r.trigger==='always_on'?'\u5e38':r.trigger==='glob'?'\u611f':'\u673a'}</span></td><td>${r.lines}</td></tr>`}
+  h+=`</table></div>`;
+  h+=`<div class="sub"><h3>\u672f (${z1.skills?.count||0})</h3><table><tr><th>\u540d</th><th>\u5177</th><th>\u884c</th><th>\u9053</th></tr>`;
+  for(const s of z1.skills?.items||[]){h+=`<tr><td class="clickable" onclick="viewSkill('${s.name}')">${s.name}</td><td>${s.has_frontmatter?'<span class="ok">\u2714</span>':'<span class="err">\u2718</span>'}</td><td>${s.lines}</td><td style="font-size:.78em;color:var(--faint)">${(s.description||'').slice(0,30)}</td></tr>`}
+  h+=`</table></div>`;
+  h+=`<div class="sub"><h3>\u6cd5 (${z1.workflows?.count||0})</h3><table><tr><th>\u5f0f</th><th>\u884c</th><th>\u9053</th></tr>`;
+  for(const w of z1.workflows?.items||[]){h+=`<tr><td>/${w.name}</td><td>${w.lines}</td><td style="font-size:.78em;color:var(--faint)">${(w.description||'').slice(0,40)}</td></tr>`}
+  h+=`</table></div>`;
+  h+=`<div class="sub"><h3>\u94a9 (Hooks)</h3><table><tr><th>\u65f6</th><th>\u8bed</th><th>\u547d</th></tr>`;
+  for(const hk of z1.hooks?.items||[]){h+=`<tr><td>${hk.event}</td><td><span class="tag tag-py">${hk.language}</span></td><td style="font-size:.78em;color:var(--faint)">${hk.command}</td></tr>`}
+  h+=`</table></div></div></div>`;
 
-  // Zone 2
-  html += `<div class="zone z2">
-    <div class="zone-header" onclick="toggleZone(this)">
-      <span class="badge">Zone 2</span><h2>目录级 — AGENTS.md (${z2.count})</h2><span class="arrow">▶</span>
-    </div><div class="zone-body"><table><tr><th>目录</th><th>行数</th></tr>`;
-  for (const a of z2.items||[]) {
-    html += `<tr><td class="clickable" onclick="viewAgent('${a.path}')">${a.directory}/</td><td>${a.lines}</td></tr>`;
-  }
-  html += `</table></div></div>`;
-
-  document.getElementById('zones').innerHTML = html;
+  h+=`<div class="zone z2"><div class="zone-header" onclick="toggleZone(this)">
+    <span class="gua">\u2637</span><h2>\u5730 \u2014 \u5fb7 \u00d7 ${z2.count}</h2><span class="arrow">\u25b6</span>
+    </div><div class="zone-body"><table><tr><th>\u5730</th><th>\u884c</th></tr>`;
+  for(const a of z2.items||[]){h+=`<tr><td class="clickable" onclick="viewAgent('${a.path}')">${a.directory}/</td><td>${a.lines}</td></tr>`}
+  h+=`</table></div></div>`;
+  document.getElementById('zones').innerHTML=h;
 }
 
-function renderHealth() {
-  const {hc} = DATA;
-  let html = '<h2>健康检查</h2>';
-  for (const c of hc) {
-    html += `<div class="check">
-      <span class="icon">${c.ok?'✅':'❌'}</span>
-      <span class="zone-tag">Z${c.zone}</span>
-      <span>${c.name}</span>
-      <span style="color:var(--muted);font-size:.8em;margin-left:auto">${c.detail||''}</span>
-    </div>`;
-  }
-  document.getElementById('health').innerHTML = html;
+function renderHealth(){
+  const{hc}=DATA;let h='<h2>\u6c14 \u2014 \u4e07\u7269\u8d1f\u9634\u800c\u62b1\u9633\uff0c\u51b2\u6c14\u4ee5\u4e3a\u548c</h2>';
+  for(const c of hc){h+=`<div class="check"><span class="icon">${c.ok?'\u25cf':'\u25cb'}</span><span class="zt">${['\u5929','\u4eba','\u5730'][c.zone]}</span><span>${c.name}</span><span style="color:var(--faint);font-size:.78em;margin-left:auto">${c.detail||''}</span></div>`}
+  document.getElementById('health').innerHTML=h;
 }
 
-function toggleZone(el) {
-  el.classList.toggle('open');
-  el.nextElementSibling.classList.toggle('show');
+function renderRisks(){
+  const risks=DATA.risks||[];
+  if(!risks.length){document.getElementById('risks').innerHTML='';return}
+  let h='<div class="sub"><h3>\u7978 \u2014 \u7978\u516e\u798f\u4e4b\u6240\u5029</h3>';
+  for(const r of risks){h+=`<div class="risk-item risk-${r.level}"><span>${['\u5929','\u4eba','\u5730'][r.zone]}</span><span>${r.msg}</span></div>`}
+  h+='</div>';document.getElementById('risks').innerHTML=h;
 }
 
-async function viewFile(key) {
-  let content = DATA.z0?.[key]?.content || '';
-  showModal(DATA.z0?.[key]?.path || key, content);
-}
-async function viewRule(name) {
-  const r = DATA.z1.rules.items.find(i=>i.name===name);
-  if (r) showModal(name, r.content, `.windsurf/rules/${name}`);
-}
-async function viewSkill(name) {
-  const p = `.windsurf/skills/${name}/SKILL.md`;
-  const res = await fetch(API+`/api/file?path=${p}`);
-  const d = await res.json();
-  showModal(`skills/${name}/SKILL.md`, d.content||d.error, p);
-}
-async function viewAgent(path) {
-  const res = await fetch(API+`/api/file?path=${encodeURIComponent(path)}`);
-  const d = await res.json();
-  showModal(path, d.content||d.error, path);
-}
+function toggleZone(el){el.classList.toggle('open');el.nextElementSibling.classList.toggle('show')}
 
-// 👃 Risks panel
-function renderRisks() {
-  const risks = DATA.risks || [];
-  if (!risks.length) { document.getElementById('risks').innerHTML = ''; return; }
-  let html = '<h3 style="font-size:.95em;margin-bottom:8px">👃 \u98ce\u9669\u9884\u8b66</h3>';
-  for (const r of risks) {
-    html += `<div class="risk-item risk-${r.level}"><span>Z${r.zone}</span><span>${r.msg}</span></div>`;
-  }
-  document.getElementById('risks').innerHTML = html;
-}
+async function viewFile(key){showModal(DATA.z0?.[key]?.path||key,DATA.z0?.[key]?.content||'')}
+async function viewRule(name){const r=DATA.z1.rules.items.find(i=>i.name===name);if(r)showModal(name,r.content,`.windsurf/rules/${name}`)}
+async function viewSkill(name){const p=`.windsurf/skills/${name}/SKILL.md`;const res=await fetch(API+`/api/file?path=${p}`);const d=await res.json();showModal(`\u672f/${name}`,d.content||d.error,p)}
+async function viewAgent(path){const res=await fetch(API+`/api/file?path=${encodeURIComponent(path)}`);const d=await res.json();showModal(path,d.content||d.error,path)}
 
-// \u270b Modal with edit capability
-let currentFilePath = null;
-function showModal(title, content, filePath) {
-  currentFilePath = filePath || null;
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalContent').textContent = content;
-  document.getElementById('modalContent').style.display = 'block';
-  document.getElementById('editArea').style.display = 'none';
-  document.getElementById('editActions').style.display = 'none';
-  document.getElementById('editToggle').style.display = currentFilePath ? '' : 'none';
+let currentFilePath=null;
+function showModal(title,content,filePath){
+  currentFilePath=filePath||null;
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalContent').textContent=content;
+  document.getElementById('modalContent').style.display='block';
+  document.getElementById('editArea').style.display='none';
+  document.getElementById('editActions').style.display='none';
+  document.getElementById('editToggle').style.display=currentFilePath?'':'none';
   document.getElementById('modal').classList.add('show');
 }
-function toggleEdit() {
-  const pre = document.getElementById('modalContent');
-  const area = document.getElementById('editArea');
-  const actions = document.getElementById('editActions');
-  if (area.style.display === 'none') {
-    area.value = pre.textContent;
-    pre.style.display = 'none';
-    area.style.display = 'block';
-    actions.style.display = 'flex';
-    area.focus();
-  } else { cancelEdit(); }
+function toggleEdit(){const pre=document.getElementById('modalContent'),area=document.getElementById('editArea'),actions=document.getElementById('editActions');if(area.style.display==='none'){area.value=pre.textContent;pre.style.display='none';area.style.display='block';actions.style.display='flex';area.focus()}else{cancelEdit()}}
+function cancelEdit(){document.getElementById('modalContent').style.display='block';document.getElementById('editArea').style.display='none';document.getElementById('editActions').style.display='none'}
+async function saveEdit(){
+  if(!currentFilePath){toast('\u65e0\u5f84\u53ef\u5b58','err');return}
+  try{const res=await fetch(API+'/api/file/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:currentFilePath,content:document.getElementById('editArea').value})});
+  const d=await res.json();if(d.ok){toast('\u5df1\u5b58: '+currentFilePath,'ok');document.getElementById('modalContent').textContent=document.getElementById('editArea').value;cancelEdit();loadAll()}else{toast('\u5b58\u5931\u8d25: '+(d.error||''),'err')}}catch(e){toast('\u5b58\u5931\u8d25: '+e.message,'err')}
 }
-function cancelEdit() {
-  document.getElementById('modalContent').style.display = 'block';
-  document.getElementById('editArea').style.display = 'none';
-  document.getElementById('editActions').style.display = 'none';
-}
-async function saveEdit() {
-  if (!currentFilePath) { toast('\u65e0\u6cd5\u4fdd\u5b58: \u672a\u77e5\u6587\u4ef6\u8def\u5f84', 'err'); return; }
-  const content = document.getElementById('editArea').value;
-  try {
-    const res = await fetch(API+'/api/file/save', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({path: currentFilePath, content})
-    });
-    const d = await res.json();
-    if (d.ok) {
-      toast('\u5df2\u4fdd\u5b58: ' + currentFilePath, 'ok');
-      document.getElementById('modalContent').textContent = content;
-      cancelEdit();
-      loadAll();
-    } else { toast('\u4fdd\u5b58\u5931\u8d25: ' + (d.error||''), 'err'); }
-  } catch(e) { toast('\u4fdd\u5b58\u5931\u8d25: ' + e.message, 'err'); }
-}
-function closeModal() {
-  document.getElementById('modal').classList.remove('show');
-  cancelEdit();
-}
-document.addEventListener('keydown', e=>{
-  if(e.key==='Escape') closeModal();
-  if(e.key==='s' && (e.ctrlKey||e.metaKey) && document.getElementById('editArea').style.display!=='none') {
-    e.preventDefault(); saveEdit();
-  }
-});
-
+function closeModal(){document.getElementById('modal').classList.remove('show');cancelEdit()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if(e.key==='s'&&(e.ctrlKey||e.metaKey)&&document.getElementById('editArea').style.display!=='none'){e.preventDefault();saveEdit()}});
 loadAll();
 </script>
 </body>
