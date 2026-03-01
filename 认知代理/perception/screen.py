@@ -176,6 +176,73 @@ def _get_visible_text(controls, max_items=50):
     return texts
 
 
+def _ocr_fallback(fg_info, max_texts=50):
+    """
+    OCR降级：当UIA控件树为空时，截取前台窗口区域并OCR提取文字。
+    使用 rapidocr_onnxruntime（已安装，速度快，离线）。
+    """
+    if not fg_info:
+        return [], "no_foreground"
+
+    rect = fg_info.get("rect", {})
+    if not rect or rect.get("w", 0) < 50:
+        return [], "window_too_small"
+
+    try:
+        import mss
+        from PIL import Image
+        import io
+        import numpy as np
+
+        # 截取前台窗口区域
+        monitor = {
+            "left": rect["x"],
+            "top": rect["y"],
+            "width": rect["w"],
+            "height": rect["h"],
+        }
+        with mss.mss() as sct:
+            shot = sct.grab(monitor)
+            img = Image.frombytes("RGB", (shot.width, shot.height), shot.rgb)
+
+        # 缩放到合理大小（太大OCR慢）
+        max_dim = 1920
+        if img.width > max_dim or img.height > max_dim:
+            ratio = max_dim / max(img.width, img.height)
+            img = img.resize((int(img.width * ratio), int(img.height * ratio)))
+
+        img_array = np.array(img)
+
+        # 使用 rapidocr
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+            ocr = RapidOCR()
+            result, _ = ocr(img_array)
+            if result:
+                texts = [line[1] for line in result if line[1] and len(line[1].strip()) > 1]
+                return texts[:max_texts], "rapidocr"
+        except Exception as e:
+            log.debug("rapidocr failed: %s", e)
+
+        # 降级到 ddddocr（验证码专用，但能做基本OCR）
+        try:
+            import ddddocr
+            ocr = ddddocr.DdddOcr(show_ad=False)
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            text = ocr.classification(buf.getvalue())
+            if text and len(text.strip()) > 1:
+                return [text.strip()], "ddddocr"
+        except Exception as e:
+            log.debug("ddddocr failed: %s", e)
+
+        return [], "ocr_all_failed"
+
+    except Exception as e:
+        log.warning("OCR fallback error: %s", e)
+        return [], f"error:{e}"
+
+
 def _is_sensitive(fg_info):
     """检测当前窗口是否涉及敏感信息"""
     if not fg_info:
@@ -197,9 +264,11 @@ def _is_sensitive(fg_info):
     return False
 
 
-def take_snapshot(max_depth=6, include_controls=True):
+def take_snapshot(max_depth=6, include_controls=True, skip_ocr=False):
     """
     获取一次完整的屏幕语义快照。
+
+    skip_ocr: True=跳过OCR降级（用于后台快速采集循环）
 
     返回:
     {
@@ -231,8 +300,21 @@ def take_snapshot(max_depth=6, include_controls=True):
     elif include_controls:
         controls = _uia_snapshot(max_depth=max_depth)
         result["controls"] = controls
-        result["visible_text"] = _get_visible_text(controls)
         result["control_count"] = len(controls)
+
+        # UIA控件树为空/只有窗口本身 → OCR降级（除非skip_ocr）
+        if len(controls) <= 1 and not skip_ocr:
+            ocr_texts, ocr_method = _ocr_fallback(fg)
+            result["visible_text"] = ocr_texts
+            result["ocr_fallback"] = True
+            result["ocr_method"] = ocr_method
+        elif len(controls) <= 1 and skip_ocr:
+            result["visible_text"] = _get_visible_text(controls)
+            result["ocr_fallback"] = False
+            result["ocr_skipped"] = True
+        else:
+            result["visible_text"] = _get_visible_text(controls)
+            result["ocr_fallback"] = False
     else:
         result["controls"] = []
         result["visible_text"] = []

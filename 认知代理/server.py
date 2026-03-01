@@ -84,7 +84,8 @@ def _perception_loop():
         try:
             # 屏幕语义快照（低频）
             if event_stream.get_current_session():
-                snap = screen.take_snapshot(max_depth=4, include_controls=True)
+                # Background loop uses lightweight snapshot (no OCR, fast)
+                snap = screen.take_snapshot(max_depth=4, include_controls=True, skip_ocr=True)
                 event_stream.record("screen_snapshot", "screen", {
                     "foreground": snap.get("foreground"),
                     "control_count": snap.get("control_count", 0),
@@ -92,25 +93,32 @@ def _perception_loop():
                     "sensitive": snap.get("sensitive", False),
                 })
 
-                # 同步输入事件到事件流
-                input_events = input_monitor.get_events(limit=200)
+                # 同步输入事件到事件流（保留完整结构含target）
+                input_events = input_monitor.get_events(limit=500)
                 for evt in input_events:
-                    event_stream.record(evt["type"], "input_monitor", evt["data"])
+                    full_data = dict(evt.get("data", {}))
+                    if "target" in evt:
+                        full_data["target"] = evt["target"]
+                    event_stream.record(evt["type"], "input_monitor", full_data)
+                input_monitor.clear()  # 清空已同步的事件
 
                 # 同步焦点事件
-                focus_chain = window_tracker.get_focus_chain(limit=20)
+                focus_chain = window_tracker.get_focus_chain(limit=100)
                 for entry in focus_chain:
                     event_stream.record("focus_change", "window_tracker", entry)
 
                 # 同步进程事件
-                proc_events = process_monitor.get_events(limit=50)
+                proc_events = process_monitor.get_events(limit=200)
                 for evt in proc_events:
                     event_stream.record(evt["type"], "process_monitor", evt)
 
                 # 同步文件事件
-                file_events = file_watcher.get_events(limit=50)
+                file_events = file_watcher.get_events(limit=200)
                 for evt in file_events:
                     event_stream.record("file_change", "file_watcher", evt)
+
+                # 强制刷新到SQLite
+                event_stream._flush_batch()
 
         except Exception as e:
             log.warning("Perception loop error: %s", e)

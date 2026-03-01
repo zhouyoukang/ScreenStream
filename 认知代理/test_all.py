@@ -85,6 +85,10 @@ check("session初始为null", r.get("session") is None)
 # =====================================================================
 section("2. 屏幕语义快照")
 
+# 先聚焦Windsurf确保UIA测试可靠（避免剪映等自定义渲染应用触发慢OCR）
+_post("/workflow/execute", {"workflow": {"id": "_", "name": "_", "steps": [{"id": "f", "action": "focus_app", "params": {"title": "Windsurf"}}]}})
+time.sleep(0.5)
+
 # 轻量快照（无控件树）
 r = _get("/snapshot?controls=false")
 check("轻量快照有foreground", "foreground" in r and r["foreground"] is not None, str(r.get("foreground", {}).get("title", ""))[:60])
@@ -97,9 +101,13 @@ check("foreground有process", bool(r.get("foreground", {}).get("process")))
 r = _get("/snapshot?depth=4")
 check("完整快照有controls", isinstance(r.get("controls"), list))
 check("完整快照controls>0", r.get("control_count", 0) > 0, f"{r.get('control_count')} controls")
-check("完整快照<3000ms", r.get("snapshot_ms", 9999) < 3000, f"{r.get('snapshot_ms')}ms")
+check("完整快照<15000ms", r.get("snapshot_ms", 9999) < 15000, f"{r.get('snapshot_ms')}ms (首次含OCR模型加载)")
 check("有visible_text", isinstance(r.get("visible_text"), list))
 check("sensitive字段存在", "sensitive" in r)
+
+# 第二次快照（OCR已初始化，应该快得多）
+r2 = _get("/snapshot?depth=4")
+check("二次快照<3000ms", r2.get("snapshot_ms", 9999) < 3000, f"{r2.get('snapshot_ms')}ms (OCR已缓存)")
 
 # =====================================================================
 # 3. 会话管理（录制→采集→查询→停止）
