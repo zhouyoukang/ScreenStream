@@ -118,6 +118,24 @@ def _bbox_rect(bbox):
     }
 
 
+def _force_focus(hwnd):
+    """强制聚焦窗口（ShowWindow+AttachThreadInput技巧）"""
+    import ctypes.wintypes as wt
+    SW_RESTORE = 9
+    user32.ShowWindow(hwnd, SW_RESTORE)
+    time.sleep(0.15)
+    cur_fg = user32.GetForegroundWindow()
+    if cur_fg != hwnd:
+        cur_tid = user32.GetWindowThreadProcessId(cur_fg, None)
+        target_tid = user32.GetWindowThreadProcessId(hwnd, None)
+        user32.AttachThreadInput(cur_tid, target_tid, True)
+        user32.BringWindowToTop(hwnd)
+        user32.SetForegroundWindow(hwnd)
+        user32.AttachThreadInput(cur_tid, target_tid, False)
+    time.sleep(0.3)
+    return user32.GetForegroundWindow() == hwnd
+
+
 def _capture_full_screen():
     """截取整个主屏幕。最可靠的方式，适用于任何应用。"""
     import mss
@@ -138,6 +156,56 @@ def _capture_full_screen():
         img = Image.frombytes("RGB", (shot.width, shot.height), shot.rgb)
         wrect = {"x": mon["left"], "y": mon["top"], "w": mon["width"], "h": mon["height"]}
         return img, wrect
+
+
+def focus_and_scan(hwnd=None, process_name=None, title_keyword=None, min_confidence=0.5):
+    """
+    原子操作：聚焦窗口 + 立即截屏 + OCR。
+    解决焦点竞争问题：聚焦后0.3s内截屏，不给其他窗口抢焦点机会。
+
+    hwnd: 直接指定窗口句柄
+    process_name: 按进程名查找(e.g. 'JianyingPro.exe')
+    title_keyword: 按标题关键字查找(e.g. '剪映')
+    """
+    import ctypes.wintypes as wt
+
+    # 查找目标窗口
+    target = hwnd
+    if not target and (process_name or title_keyword):
+        found = []
+        def _enum(h, _):
+            if user32.IsWindowVisible(h):
+                length = user32.GetWindowTextLengthW(h)
+                if length > 0:
+                    buf = ctypes.create_unicode_buffer(length + 1)
+                    user32.GetWindowTextW(h, buf, length + 1)
+                    pid = wt.DWORD()
+                    user32.GetWindowThreadProcessId(h, ctypes.byref(pid))
+                    proc = ""
+                    try:
+                        import psutil
+                        proc = psutil.Process(pid.value).name()
+                    except: pass
+                    if process_name and process_name.lower() in proc.lower():
+                        found.append(h)
+                    elif title_keyword and title_keyword in buf.value:
+                        found.append(h)
+            return True
+        WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+        user32.EnumWindows(WNDENUMPROC(_enum), 0)
+        if found:
+            target = found[0]
+
+    if not target:
+        return {"error": "window not found", "texts": [], "total": 0}
+
+    # 聚焦
+    focused = _force_focus(target)
+    if not focused:
+        log.warning("Could not focus hwnd=%s, capturing anyway", target)
+
+    # 立即截屏 + OCR（不经HTTP，同步执行）
+    return scan(full_screen=True, min_confidence=min_confidence)
 
 
 # ---------------------------------------------------------------------------
