@@ -1,0 +1,11 @@
+# 数据目录（SQLite、快照等运行时数据）
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
