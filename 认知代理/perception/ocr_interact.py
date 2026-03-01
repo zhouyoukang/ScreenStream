@@ -184,9 +184,9 @@ def scan(hwnd=None, min_confidence=0.5, full_screen=False):
 
     ocr = _get_ocr()
 
-    # 缩放到合理大小提升OCR速度（2560px→≤1280px，约4x加速）
+    # 缩放提升OCR速度（2560→960px ≈ 7x加速，UI文字仍可读）
     scale_factor = 1.0
-    max_ocr_width = 1280
+    max_ocr_width = 960
     if img.width > max_ocr_width:
         scale_factor = max_ocr_width / img.width
         new_h = int(img.height * scale_factor)

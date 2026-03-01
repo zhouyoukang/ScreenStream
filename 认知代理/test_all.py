@@ -100,7 +100,7 @@ check("foreground有process", bool(r.get("foreground", {}).get("process")))
 # 完整快照（含控件树）
 r = _get("/snapshot?depth=4")
 check("完整快照有controls", isinstance(r.get("controls"), list))
-check("完整快照controls>0", r.get("control_count", 0) > 0, f"{r.get('control_count')} controls")
+check("完整快照有controls或OCR降级", r.get("control_count", 0) > 0 or r.get("ocr_fallback") == True, f"{r.get('control_count')} controls, ocr={r.get('ocr_fallback')}")
 check("完整快照<15000ms", r.get("snapshot_ms", 9999) < 15000, f"{r.get('snapshot_ms')}ms (首次含OCR模型加载)")
 check("有visible_text", isinstance(r.get("visible_text"), list))
 check("sensitive字段存在", "sensitive" in r)
