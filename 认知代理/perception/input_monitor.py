@@ -201,7 +201,10 @@ def _start_mouse():
             WH_MOUSE_LL, _mouse_proc, kernel32.GetModuleHandleW(None), 0
         )
         if not _mouse_hook:
-            log.error("Failed to install mouse hook, error=%d", ctypes.get_last_error())
+            # Win32 LL hooks require a thread with a message pump.
+            # When called from a non-main thread (e.g. server background),
+            # this can silently fail. Keyboard monitoring still works via keyboard package.
+            log.warning("Mouse hook not installed (requires message pump thread). Keyboard-only mode.")
             return
 
         log.info("Mouse monitor started (hook=%d)", _mouse_hook)
