@@ -36,6 +36,15 @@ import info.dvkr.screenstream.common.ui.get
 import info.dvkr.screenstream.mjpeg.R
 import info.dvkr.screenstream.mjpeg.internal.MjpegEvent
 import info.dvkr.screenstream.mjpeg.internal.MjpegStreamingService
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.runtime.State
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import info.dvkr.screenstream.mjpeg.ui.main.ClientsCard
 import info.dvkr.screenstream.mjpeg.ui.main.ErrorCard
 import info.dvkr.screenstream.mjpeg.ui.main.InterfacesCard
@@ -85,6 +94,12 @@ internal fun MjpegMainScreenUI(
             mjpegState.value.error?.let {
                 item(key = "ERROR") {
                     ErrorCard(error = it, modifier = Modifier.padding(8.dp), sendEvent = sendEvent)
+                }
+            }
+
+            if (mjpegState.value.isStreaming && mjpegState.value.cloudRelayRoomCode.isNotEmpty()) {
+                item(key = "CLOUD_RELAY") {
+                    CloudRelayCard(mjpegState = mjpegState, modifier = Modifier.padding(8.dp))
                 }
             }
 
@@ -154,6 +169,66 @@ internal fun MjpegMainScreenUI(
                 text = stringResource(id = if (mjpegState.value.isStreaming) R.string.mjpeg_stream_stop else R.string.mjpeg_stream_start),
                 style = MaterialTheme.typography.titleMedium
             )
+        }
+    }
+}
+
+@Composable
+private fun CloudRelayCard(
+    mjpegState: State<MjpegState>,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(modifier = modifier) {
+        Column(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "📱 把这个数字告诉家人",
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Text(
+                text = mjpegState.value.cloudRelayRoomCode,
+                fontSize = 48.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+                textAlign = TextAlign.Center,
+                letterSpacing = 8.sp,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (mjpegState.value.cloudRelayConnected) {
+                Text(
+                    text = if (mjpegState.value.cloudRelayViewerCount > 0)
+                        "✅ 家人已连接（${mjpegState.value.cloudRelayViewerCount}人在看）"
+                    else
+                        "🟢 已就绪，等待家人连接...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            } else {
+                Text(
+                    text = "正在连接服务器...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (mjpegState.value.cloudRelayViewerUrl.isNotEmpty()) {
+                Text(
+                    text = "家人打开: aiotvr.xyz/cast",
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

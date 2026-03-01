@@ -15,7 +15,11 @@ internal data class MjpegState(
     val pin: Pin = Pin(MjpegSettings.Default.ENABLE_PIN, MjpegSettings.Default.PIN, MjpegSettings.Default.HIDE_PIN_ON_START),
     val clients: List<Client> = emptyList(),
     val traffic: List<TrafficPoint> = emptyList(),
-    val error: MjpegError? = null
+    val error: MjpegError? = null,
+    val cloudRelayRoomCode: String = "",
+    val cloudRelayViewerUrl: String = "",
+    val cloudRelayConnected: Boolean = false,
+    val cloudRelayViewerCount: Int = 0
 ) {
     @Immutable
     internal data class ServerNetInterface(val label: String, val fullAddress: String)

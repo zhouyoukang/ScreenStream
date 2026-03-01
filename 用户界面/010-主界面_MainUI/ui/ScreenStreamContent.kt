@@ -121,29 +121,40 @@ private fun AccessibilitySetupWizard() {
     }
 
     if (showDialog.value && !InputService.isConnected()) {
+        val brand = android.os.Build.MANUFACTURER.lowercase()
+        val brandHint = when {
+            brand.contains("huawei") || brand.contains("honor") -> "\n\n💡 华为/荣耀手机：在列表中找到本应用，打开开关即可。"
+            brand.contains("xiaomi") || brand.contains("redmi") -> "\n\n💡 小米手机：在\"已下载的服务\"中找到本应用，打开开关。"
+            brand.contains("oppo") || brand.contains("oneplus") -> "\n\n💡 OPPO手机：在\"已下载的服务\"中找到本应用，打开开关。"
+            brand.contains("vivo") -> "\n\n💡 vivo手机：在\"已下载的服务\"中找到本应用，打开开关。"
+            else -> ""
+        }
+
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showDialog.value = false },
             icon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_notification_small_24dp),
-                    contentDescription = null
-                )
+                Text("🤝", style = MaterialTheme.typography.headlineLarge)
             },
             title = {
                 Text(
-                    text = "Enable Remote Control",
+                    text = "让家人能帮您操作",
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.titleLarge
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("To enable touch control, keyboard input, and all remote features, please enable the Accessibility Service:")
-                    Text("1. Tap \"Open Settings\" below")
-                    Text("2. Find \"ScreenStream\" in the list")
-                    Text("3. Toggle it ON")
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "This permission allows ScreenStream to simulate touches and keystrokes on your device.",
+                        text = "开启这个权限后，家人就能远程帮您点击屏幕上的按钮。",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = "👉 点击下面的\"去开启\"按钮\n👉 在列表中找到本应用\n👉 打开开关就行了",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = "⚠️ 手机可能会提示\"此服务可以监控您的操作\"——这是系统的标准说法，不用担心。只有您允许的家人才能操作，关掉APP就断开了。" + brandHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -159,12 +170,12 @@ private fun AccessibilitySetupWizard() {
                     } catch (_: Exception) {}
                     showDialog.value = false
                 }) {
-                    Text("Open Settings")
+                    Text("去开启", style = MaterialTheme.typography.titleMedium)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog.value = false }) {
-                    Text("Later")
+                    Text("以后再说")
                 }
             }
         )

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>远程协助</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#e0e0e8;font-family:-apple-system,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;-webkit-user-select:none;user-select:none}
+
+/* ─── 连接页 ─── */
+#gate{position:fixed;inset:0;background:linear-gradient(170deg,#0a0e1a,#0f1628);z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;padding:20px}
+#gate.off{display:none}
+#gate h1{font-size:30px;font-weight:800}
+#gate h1 .accent{background:linear-gradient(135deg,#22c55e,#6ee7b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+#gate .sub{color:#9ca3b8;font-size:16px;text-align:center;line-height:1.7}
+.form{display:flex;flex-direction:column;gap:12px;width:min(340px,90vw)}
+.form input{padding:18px 24px;background:rgba(20,22,36,0.8);border:2px solid rgba(255,255,255,0.1);border-radius:14px;color:#fff;font-size:32px;text-align:center;letter-spacing:10px;outline:none;font-family:'Courier New',monospace;font-weight:700;transition:border .2s}
+.form input:focus{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+.form input::placeholder{font-size:16px;letter-spacing:3px;color:#444;font-weight:400}
+.form button{padding:18px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;border-radius:14px;font-size:20px;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(34,197,94,.25)}
+.form button:active{transform:scale(.97)}
+.form button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.err{color:#f87171;font-size:14px;text-align:center;min-height:22px}
+.hint{color:#64748b;font-size:13px;text-align:center;line-height:1.6}
+
+/* ─── 状态栏 ─── */
+#bar{height:32px;background:rgba(17,17,17,0.95);border-bottom:1px solid #1e1e2a;display:flex;align-items:center;padding:0 12px;gap:10px;font-size:12px;flex-shrink:0;backdrop-filter:blur(8px)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dg{background:#4ade80;box-shadow:0 0 6px #4ade80}.dy{background:#fbbf24;box-shadow:0 0 4px #fbbf24}.dr{background:#f87171}.dx{background:#555}
+#bar .sp{flex:1}
+#bar .st{color:#64748b;font-size:11px}
+
+/* ─── 视频区 ─── */
+#vid{flex:1;display:flex;align-items:center;justify-content:center;background:#000;position:relative;overflow:hidden;touch-action:none}
+#cv{max-width:100%;max-height:100%;object-fit:contain}
+#ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.9);color:#9ca3b8;font-size:16px;flex-direction:column;gap:12px}
+#ov.off{display:none}
+.spin{width:36px;height:36px;border:3px solid #1e1e2a;border-top-color:#22c55e;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ─── 控制栏 ─── */
+#ctrl{height:52px;background:rgba(17,17,17,0.95);border-top:1px solid #1e1e2a;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 6px;flex-shrink:0;backdrop-filter:blur(8px)}
+.cb{padding:10px 12px;background:rgba(30,30,42,0.8);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#e0e0e8;font-size:15px;cursor:pointer;transition:all .12s;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:42px}
+.cb:active{background:rgba(34,197,94,.2);border-color:rgba(34,197,94,.4);transform:scale(.93)}
+.cb .lbl{font-size:9px;color:#64748b;font-weight:500}
+
+/* ─── 断线重连 ─── */
+#reconn{position:fixed;top:0;left:0;right:0;background:linear-gradient(90deg,#dc2626,#ef4444);color:#fff;text-align:center;padding:10px;font-size:14px;font-weight:600;z-index:50;display:none;backdrop-filter:blur(4px)}
+
+/* ─── 全屏按钮 ─── */
+#fsbtn{position:fixed;bottom:60px;right:8px;z-index:40;width:36px;height:36px;border-radius:8px;background:rgba(30,30,42,.8);border:1px solid rgba(255,255,255,.08);color:#888;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+#fsbtn:active{background:rgba(34,197,94,.2)}
+
+@media(max-width:480px){
+.cb{padding:10px 9px;font-size:16px;min-width:38px}
+.cb .lbl{font-size:8px}
+#bar{font-size:11px;height:28px;gap:6px}
+}
+</style>
+</head>
+<body>
+
+<!-- 连接页 -->
+<div id="gate">
+<h1>📱 <span class="accent">远程协助</span></h1>
+<p class="sub">输入老人告诉您的数字<br>就能看到并操控ta的手机</p>
+<div class="form">
+<input id="inp" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="6位连接码" maxlength="6" autocomplete="off">
+<button id="btn" onclick="go()">📺 开始远程操作</button>
+</div>
+<div class="err" id="err"></div>
+<div class="hint">连接码在老人手机APP上显示<br>每次使用会生成新的码</div>
+</div>
+
+<!-- 断线重连横幅 -->
+<div id="reconn">连接断开，正在重连...</div>
+
+<!-- 全屏按钮 -->
+<button id="fsbtn" onclick="toggleFS()" title="全屏">⛶</button>
+
+<!-- 主界面 -->
+<div id="bar">
+<span class="dot dx" id="cdot"></span>
+<span id="ctxt" style="font-weight:600">未连接</span>
+<span class="sp"></span>
+<span class="st"><span id="fps">0</span>fps</span>
+<span class="st" id="res"></span>
+<span class="st" id="connMode"></span>
+</div>
+
+<div id="vid">
+<canvas id="cv" width="360" height="640"></canvas>
+<div id="ov"><div class="spin"></div><span id="ovt">等待视频流...</span></div>
+</div>
+
+<div id="ctrl">
+<button class="cb" onclick="ctl('back')">◀<span class="lbl">返回</span></button>
+<button class="cb" onclick="ctl('home')">●<span class="lbl">主页</span></button>
+<button class="cb" onclick="ctl('recents')">▣<span class="lbl">最近</span></button>
+<button class="cb" onclick="ctl('volume_up')">🔊<span class="lbl">音量+</span></button>
+<button class="cb" onclick="ctl('volume_down')">🔉<span class="lbl">音量-</span></button>
+<button class="cb" onclick="ctl('notifications')">🔔<span class="lbl">通知</span></button>
+<button class="cb" onclick="ctl('power')">⏻<span class="lbl">电源</span></button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  公网投屏观看器 — WebSocket Relay + WebCodecs H264
+//  架构: 浏览器 ←WSS→ aiotvr.xyz relay ←WSS→ 手机ScreenStream
+// ═══════════════════════════════════════════════════════════
+
+const RELAY = location.protocol === 'https:' ? 'wss://' : 'ws://';
+const RELAY_HOST = location.host; // Same origin as page
+const TOKEN = new URLSearchParams(location.search).get('token') || 'screenstream_2026';
+
+let ws = null, decoder = null, canvas, ctx;
+let fpsCount = 0, configData = null, hasConfig = false, lastCodec = null;
+let currentRoom = '', reconnAttempt = 0;
+
+window.addEventListener('DOMContentLoaded', () => {
+    canvas = document.getElementById('cv');
+    ctx = canvas.getContext('2d');
+    const inp = document.getElementById('inp');
+    inp.focus();
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    setInterval(() => { document.getElementById('fps').textContent = fpsCount; fpsCount = 0; }, 1000);
+    setupTouch();
+
+    // URL参数自动连接
+    const p = new URLSearchParams(location.search);
+    if (p.get('room')) {
+        inp.value = p.get('room');
+        go();
+    }
+});
+
+// ─── 连接 ──────────────────────────────────────────
+function go() {
+    const room = document.getElementById('inp').value.trim();
+    const err = document.getElementById('err');
+    if (!room || room.length < 4) { err.textContent = '请输入房间码'; return; }
+
+    currentRoom = room;
+    err.textContent = '连接中...';
+    document.getElementById('btn').disabled = true;
+    reconnAttempt = 0;
+    connect(room);
+}
+
+function connect(room) {
+    if (ws) { try { ws.close(); } catch(e){} }
+
+    const url = RELAY + RELAY_HOST + '/relay/?role=viewer&token=' + TOKEN + '&room=' + room;
+    ws = new WebSocket(url);
+    ws.binaryType = 'arraybuffer';
+
+    ws.onopen = () => {
+        document.getElementById('gate').classList.add('off');
+        document.getElementById('reconn').style.display = 'none';
+        document.getElementById('cdot').className = 'dot dg';
+        document.getElementById('ctxt').textContent = '已连接';
+        document.getElementById('err').textContent = '';
+        reconnAttempt = 0;
+        initDecoder();
+    };
+
+    ws.onmessage = ev => {
+        if (ev.data instanceof ArrayBuffer) {
+            handleFrame(new Uint8Array(ev.data));
+        } else {
+            try {
+                const msg = JSON.parse(ev.data);
+                handleMsg(msg);
+            } catch(e) {}
+        }
+    };
+
+    ws.onclose = e => {
+        document.getElementById('cdot').className = 'dot dr';
+        document.getElementById('ctxt').textContent = '断开';
+        if (e.code === 4004) {
+            document.getElementById('err').textContent = '房间不存在，请确认手机已开始投屏';
+            document.getElementById('btn').disabled = false;
+            document.getElementById('gate').classList.remove('off');
+            return;
+        }
+        if (e.code === 4001) {
+            document.getElementById('err').textContent = '认证失败';
+            document.getElementById('btn').disabled = false;
+            document.getElementById('gate').classList.remove('off');
+            return;
+        }
+        scheduleReconn();
+    };
+
+    ws.onerror = () => {};
+}
+
+function scheduleReconn() {
+    if (!currentRoom) return;
+    reconnAttempt++;
+    const delay = Math.min(2000 * Math.pow(1.5, reconnAttempt - 1), 30000);
+    document.getElementById('reconn').style.display = 'block';
+    document.getElementById('reconn').textContent = '连接断开，' + Math.round(delay/1000) + '秒后重连...';
+    setTimeout(() => connect(currentRoom), delay);
+}
+
+function handleMsg(msg) {
+    switch (msg.type) {
+        case 'joined':
+            document.getElementById('vc').textContent = msg.data?.viewerCount || 1;
+            break;
+        case 'viewer_joined':
+        case 'viewer_left':
+            document.getElementById('vc').textContent = msg.data?.count || 0;
+            break;
+        case 'device_info':
+            document.title = '远程投屏 — ' + (msg.data?.model || '手机');
+            break;
+        case 'provider_disconnected':
+            document.getElementById('ov').classList.remove('off');
+            document.getElementById('ovt').textContent = '手机已断开投屏';
+            break;
+        case 'provider_reconnected':
+            document.getElementById('ov').classList.add('off');
+            break;
+        case 'error':
+            document.getElementById('err').textContent = msg.data?.message || '连接错误';
+            break;
+    }
+}
+
+// ─── WebCodecs H264解码 ─────────────────────────────
+function initDecoder() {
+    if (typeof VideoDecoder === 'undefined') {
+        document.getElementById('ovt').textContent = '浏览器不支持WebCodecs，请用Chrome 94+';
+        return;
+    }
+    if (decoder && decoder.state !== 'closed') {
+        try { decoder.close(); } catch(_){}
+    }
+    decoder = new VideoDecoder({
+        output: frame => {
+            if (canvas.width !== frame.displayWidth || canvas.height !== frame.displayHeight) {
+                canvas.width = frame.displayWidth;
+                canvas.height = frame.displayHeight;
+                document.getElementById('res').textContent = frame.displayWidth + '×' + frame.displayHeight;
+            }
+            ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+            frame.close();
+            fpsCount++;
+            document.getElementById('ov').classList.add('off');
+        },
+        error: e => {
+            console.warn('Decoder error:', e);
+            setTimeout(() => initDecoder(), 2000);
+        }
+    });
+}
+
+function findSPS(d) {
+    let i = 0;
+    while (i < d.length - 4) {
+        if (d[i]===0 && d[i+1]===0) {
+            let sc;
+            if (d[i+2]===1) sc=3;
+            else if (d[i+2]===0 && i+3<d.length && d[i+3]===1) sc=4;
+            else { i++; continue; }
+            const t = d[i+sc] & 0x1F;
+            if (t === 7) { // SPS
+                // Find end of this NALU
+                let e = d.length;
+                for (let j=i+sc+1; j<d.length-2; j++) {
+                    if (d[j]===0&&d[j+1]===0&&(d[j+2]===1||(d[j+2]===0&&j+3<d.length&&d[j+3]===1))) {e=j;break;}
+                }
+                return d.slice(i+sc, e);
+            }
+            i += sc + 1;
+        } else i++;
+    }
+    return null;
+}
+
+function handleFrame(data) {
+    if (data.length < 10) return;
+
+    const ft = data[0]; // 0=config, 1=keyframe, 2=delta, 3=JPEG
+
+    // MJPEG mode: type=3 is a raw JPEG frame
+    if (ft === 3) {
+        const payload = data.slice(9);
+        const blob = new Blob([payload], {type: 'image/jpeg'});
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+            if (canvas.width !== img.width || canvas.height !== img.height) {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                document.getElementById('res').textContent = img.width + '×' + img.height;
+            }
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+            fpsCount++;
+            document.getElementById('ov').classList.add('off');
+        };
+        img.src = url;
+        return;
+    }
+
+    const payload = data.slice(9);
+
+    if (ft === 0) {
+        configData = payload;
+        hasConfig = true;
+        const sps = findSPS(payload);
+        if (sps && sps.length >= 4) {
+            const codec = 'avc1.' + [sps[1],sps[2],sps[3]].map(v=>v.toString(16).padStart(2,'0')).join('');
+            if (decoder && decoder.state !== 'closed' && codec !== lastCodec) {
+                try { decoder.configure({ codec, optimizeForLatency: true }); lastCodec = codec; } catch(e){}
+            }
+        }
+        return;
+    }
+
+    if (!hasConfig || !decoder || decoder.state !== 'configured') return;
+    if (decoder.decodeQueueSize > 3 && ft === 2) return; // Drop delta if behind
+
+    try {
+        let full;
+        if (ft === 1 && configData) {
+            full = new Uint8Array(configData.length + payload.length);
+            full.set(configData, 0);
+            full.set(payload, configData.length);
+        } else {
+            full = payload;
+        }
+        decoder.decode(new EncodedVideoChunk({
+            type: ft === 1 ? 'key' : 'delta',
+            timestamp: performance.now() * 1000,
+            data: full.buffer.slice(full.byteOffset, full.byteOffset + full.byteLength)
+        }));
+    } catch(e) {}
+}
+
+// ─── 触控 ──────────────────────────────────────────
+function setupTouch() {
+    const area = document.getElementById('vid');
+    let st = 0, sp = null, lt = null;
+
+    function pos(e) {
+        const r = canvas.getBoundingClientRect();
+        const t = e.touches ? e.touches[0] : e;
+        return { x: Math.max(0, Math.min(1, (t.clientX-r.left)/r.width)), y: Math.max(0, Math.min(1, (t.clientY-r.top)/r.height)) };
+    }
+
+    function down(e) {
+        e.preventDefault(); st = Date.now(); sp = pos(e);
+        lt = setTimeout(() => { send({type:'touch',data:{action:'longpress',...sp}}); sp=null; }, 600);
+    }
+    function up(e) {
+        e.preventDefault(); clearTimeout(lt);
+        if (!sp) return;
+        const p2 = e.changedTouches
+            ? (()=>{const r=canvas.getBoundingClientRect(),t=e.changedTouches[0];return{x:Math.max(0,Math.min(1,(t.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(t.clientY-r.top)/r.height))};})()
+            : pos(e);
+        const dt = Date.now()-st;
+        const dist = Math.sqrt((p2.x-sp.x)**2+(p2.y-sp.y)**2);
+        if (dist<0.02 && dt<500) send({type:'touch',data:{action:'tap',...p2}});
+        else if (dist>=0.02) send({type:'touch',data:{action:'swipe',fromX:sp.x,fromY:sp.y,toX:p2.x,toY:p2.y,duration:Math.max(100,dt)}});
+        sp=null;
+    }
+
+    area.addEventListener('mousedown', down);
+    area.addEventListener('mouseup', up);
+    area.addEventListener('touchstart', down, {passive:false});
+    area.addEventListener('touchend', up, {passive:false});
+    area.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+    area.addEventListener('wheel', e=>{e.preventDefault();const p=pos(e);send({type:'scroll',data:{...p,deltaY:e.deltaY>0?300:-300}});}, {passive:false});
+}
+
+function send(msg) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg)); }
+function ctl(a) { send({type:'control',data:{action:a}}); }
+
+// ─── 全屏 ─────────────────────────────────────────
+function toggleFS() {
+    if (document.fullscreenElement) {
+        document.exitFullscreen().catch(()=>{});
+    } else {
+        document.documentElement.requestFullscreen().catch(()=>{});
+    }
+}
+</script>
+</body>
+</html>

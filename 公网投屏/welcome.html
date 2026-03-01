@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>远程协助 — 帮家人操作手机</title>
+<meta name="description" content="让家人远程帮您操作手机，像坐在身旁一样。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(170deg,#0a0e1a 0%,#0f1628 50%,#0a0e1a 100%);color:#e8e8f0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:0 16px 20px;overflow-x:hidden}
+
+/* ─── 通用组件 ─── */
+.panel{display:none;width:100%;max-width:540px;animation:fadeUp .35s ease}
+.panel.active{display:flex;flex-direction:column;align-items:center}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+.hero{text-align:center;padding:32px 0 20px}
+.hero h1{font-size:34px;font-weight:800;line-height:1.3;letter-spacing:-0.5px}
+.hero h1 .accent{background:linear-gradient(135deg,#22c55e,#6ee7b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{color:#9ca3b8;font-size:19px;line-height:1.7;margin-top:8px}
+
+.back-row{width:100%;max-width:540px;padding:16px 0 0}
+.back-btn{background:none;border:none;color:#6c8cff;font-size:17px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:4px}
+.back-btn:active{opacity:.7}
+
+/* ─── 角色选择卡片 ─── */
+.role-cards{display:flex;flex-direction:column;gap:14px;width:100%;max-width:540px}
+.role-card{background:rgba(20,22,36,0.8);backdrop-filter:blur(12px);border:2px solid rgba(255,255,255,0.06);border-radius:22px;padding:32px 28px;text-align:center;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.role-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .25s}
+.role-card:active{transform:scale(.97)}
+.role-card .icon{font-size:60px;margin-bottom:14px;display:block;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3))}
+.role-card h2{font-size:26px;margin-bottom:6px;font-weight:800}
+.role-card p{color:#9ca3b8;font-size:17px;line-height:1.6}
+
+.role-card.family{border-color:rgba(34,197,94,0.2)}
+.role-card.family::before{background:radial-gradient(ellipse at 50% 0%,rgba(34,197,94,.08),transparent 70%)}
+.role-card.family:hover,.role-card.family:active{border-color:#22c55e}
+.role-card.family:hover::before,.role-card.family:active::before{opacity:1}
+
+.role-card.elder{border-color:rgba(108,140,255,0.2)}
+.role-card.elder::before{background:radial-gradient(ellipse at 50% 0%,rgba(108,140,255,.08),transparent 70%)}
+.role-card.elder:hover,.role-card.elder:active{border-color:#6c8cff}
+.role-card.elder:hover::before,.role-card.elder:active::before{opacity:1}
+
+/* ─── 状态指示 ─── */
+.status-bar{padding:14px 20px;border-radius:14px;font-size:16px;text-align:center;width:100%;max-width:540px;margin-top:16px;transition:all .3s}
+.status-bar.ok{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,.3);color:#4ade80}
+.status-bar.off{background:rgba(100,116,139,0.1);border:1px solid rgba(100,116,139,.2);color:#94a3b8}
+.status-bar.warn{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,.3);color:#fbbf24}
+
+.safe-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,.15);border-radius:24px;padding:8px 18px;font-size:14px;color:#6ee7b7;margin-top:20px}
+
+/* ─── 家人页：房间码输入 ─── */
+.room-section{background:rgba(20,22,36,0.8);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:32px 28px;margin:16px 0;text-align:center;width:100%}
+.room-section label{display:block;font-size:20px;color:#c8cdd8;margin-bottom:16px;font-weight:600}
+.room-input{width:260px;padding:18px 24px;font-size:36px;letter-spacing:12px;text-align:center;background:rgba(10,14,26,0.8);border:2px solid rgba(255,255,255,0.1);border-radius:16px;color:#fff;outline:none;font-family:'Courier New',monospace;font-weight:700;transition:border .2s}
+.room-input:focus{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+.room-input::placeholder{letter-spacing:4px;font-size:20px;color:#444;font-weight:400}
+.room-error{color:#f87171;font-size:15px;margin-top:10px;min-height:22px}
+
+.big-btn{display:block;width:100%;padding:20px;font-size:22px;font-weight:700;border:none;border-radius:16px;cursor:pointer;text-decoration:none;text-align:center;margin:10px 0;transition:all .2s;color:#fff;position:relative;overflow:hidden}
+.big-btn:active{transform:scale(.97)}
+.btn-green{background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 4px 16px rgba(34,197,94,.25)}
+.btn-blue{background:linear-gradient(135deg,#6c8cff,#4f6ee0);box-shadow:0 4px 16px rgba(108,140,255,.25)}
+
+.hint{color:#64748b;font-size:14px;text-align:center;margin-top:6px;line-height:1.6}
+
+/* ─── 长辈页：大字步骤 ─── */
+.step-list{list-style:none;counter-reset:step;width:100%}
+.step-list li{counter-increment:step;background:rgba(20,22,36,0.8);border:1px solid rgba(255,255,255,0.06);border-radius:18px;padding:24px 24px 24px 80px;margin-bottom:14px;position:relative;min-height:76px;display:flex;align-items:center;transition:all .2s}
+.step-list li::before{content:counter(step);position:absolute;left:22px;top:50%;transform:translateY(-50%);width:44px;height:44px;line-height:44px;border-radius:50%;background:linear-gradient(135deg,#6c8cff,#4f6ee0);color:#fff;font-size:24px;font-weight:800;text-align:center;box-shadow:0 3px 10px rgba(108,140,255,.3)}
+.step-list li .text{font-size:19px;line-height:1.6}
+.step-list li .text strong{color:#fff;font-size:21px;font-weight:700;display:block}
+.step-list li .text .desc{color:#9ca3b8;font-size:15px;margin-top:4px;display:block}
+.step-list li .text .warn{color:#fbbf24;font-size:14px;margin-top:4px;display:block}
+
+/* ─── 品牌引导提示 ─── */
+.brand-tip{background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,.2);border-radius:14px;padding:18px 20px;margin:12px 0;width:100%}
+.brand-tip .title{font-size:16px;font-weight:700;color:#fbbf24;margin-bottom:8px}
+.brand-tip .body{font-size:14px;color:#c8cdd8;line-height:1.7}
+
+/* ─── 常见问题 ─── */
+.faq{width:100%;margin-top:20px}
+.faq-item{background:rgba(20,22,36,0.6);border:1px solid rgba(255,255,255,0.04);border-radius:14px;margin-bottom:8px;overflow:hidden}
+.faq-q{padding:16px 20px;font-size:16px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.faq-q::after{content:'▼';font-size:10px;color:#555;transition:transform .2s}
+.faq-item.open .faq-q::after{transform:rotate(180deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease;padding:0 20px}
+.faq-item.open .faq-a{max-height:200px;padding:0 20px 16px}
+.faq-a p{font-size:15px;color:#9ca3b8;line-height:1.7}
+
+.footer{margin-top:auto;padding:24px 0;color:#334155;font-size:12px;text-align:center}
+
+@media(min-width:600px){.role-cards{flex-direction:row}.role-card{flex:1}}
+@media(max-width:380px){.room-input{width:220px;font-size:30px;letter-spacing:8px}.hero h1{font-size:28px}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ -->
+<!--  首页：选择角色                          -->
+<!-- ═══════════════════════════════════════ -->
+<div id="page-home" class="panel active">
+<div class="hero">
+<h1>🤝 <span class="accent">远程协助</span></h1>
+<p>家人不在身边？<br>帮ta远程操作手机，像坐在身旁一样</p>
+</div>
+
+<div class="role-cards">
+<div class="role-card family" onclick="showPage('family')">
+<span class="icon">👨‍👩‍👧</span>
+<h2>我要帮家人</h2>
+<p>远程看到老人手机屏幕<br>帮ta点击、滑动、操作</p>
+</div>
+<div class="role-card elder" onclick="showPage('elder')">
+<span class="icon">📱</span>
+<h2>让家人帮我</h2>
+<p>把手机屏幕给家人看<br>让ta远程帮我操作</p>
+</div>
+</div>
+
+<div id="live" class="status-bar off">正在检测...</div>
+
+<div style="text-align:center">
+<span class="safe-badge">🔒 数据加密 · 只有家人能看到</span>
+</div>
+
+<div class="faq">
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-q">这个安全吗？</div>
+<div class="faq-a"><p>完全安全。数据加密传输，只有知道连接码的人才能看到您的屏幕。关掉就断开，不会泄露任何信息。</p></div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-q">需要花钱吗？</div>
+<div class="faq-a"><p>不需要，完全免费。</p></div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-q">什么手机都能用吗？</div>
+<div class="faq-a"><p>安卓手机都可以用，华为、小米、OPPO、vivo、三星、荣耀都支持。苹果手机暂不支持。</p></div>
+</div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!--  家人页：输入连接码                       -->
+<!-- ═══════════════════════════════════════ -->
+<div id="page-family" class="panel">
+<div class="back-row"><button class="back-btn" onclick="showPage('home')">← 返回首页</button></div>
+<div class="hero">
+<h1>👨‍👩‍👧 帮家人操作手机</h1>
+<p>输入老人告诉您的<strong style="color:#22c55e">6位数字</strong><br>就能立即看到并操控ta的手机</p>
+</div>
+
+<div class="room-section">
+<label>请输入连接码</label>
+<input type="text" id="room-input" class="room-input" inputmode="numeric" pattern="[0-9]*" placeholder="6位数字" maxlength="6" autocomplete="off">
+<div class="room-error" id="room-error"></div>
+</div>
+
+<button class="big-btn btn-green" onclick="enterViewer()">📺 开始远程操作</button>
+
+<div class="hint">连接码由老人手机APP上显示<br>每次使用会生成新的码</div>
+
+<div class="faq" style="margin-top:24px">
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-q">老人不知道连接码怎么办？</div>
+<div class="faq-a"><p>打电话让老人打开手机上的"远程协助"APP，屏幕上会显示一个很大的6位数字。让老人把这个数字念给您听就行。</p></div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-q">老人还没装APP怎么办？</div>
+<div class="faq-a"><p>点击下面的链接，通过微信发给老人，老人点开就能安装：<br><a href="" id="apkShareLink" style="color:#6c8cff" target="_blank">点击复制安装链接</a></p></div>
+</div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!--  长辈页：超大字体引导                     -->
+<!-- ═══════════════════════════════════════ -->
+<div id="page-elder" class="panel">
+<div class="back-row"><button class="back-btn" onclick="showPage('home')">← 返回首页</button></div>
+<div class="hero">
+<h1>📱 让家人帮您操作</h1>
+<p>只需要3步，家人就能远程帮您</p>
+</div>
+
+<ol class="step-list">
+<li>
+<div class="text">
+<strong>安装"远程协助"</strong>
+<span class="desc">点击下面的蓝色大按钮下载安装</span>
+<span class="warn">⚠ 如果弹出"是否允许安装"，请点"允许"——这是安全的</span>
+</div>
+</li>
+<li>
+<div class="text">
+<strong>打开APP，按提示操作</strong>
+<span class="desc">在手机桌面找到新装的APP，打开它</span>
+<span class="desc">按照APP里的大字提示，点"开始"就行</span>
+</div>
+</li>
+<li>
+<div class="text">
+<strong>把屏幕上的数字告诉家人</strong>
+<span class="desc">屏幕上会出现一个很大的6位数字</span>
+<span class="desc">打电话告诉家人这个数字，就完成了！</span>
+</div>
+</li>
+</ol>
+
+<a id="apkLink" class="big-btn btn-blue" href="/cast/ScreenStream.apk">📲 下载"远程协助"</a>
+<div class="hint">安装包56MB · 安卓手机专用 · 免费</div>
+
+<div class="brand-tip" id="brandTip" style="display:none">
+<div class="title" id="brandTitle"></div>
+<div class="body" id="brandBody"></div>
+</div>
+
+<div class="faq" style="margin-top:16px">
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-q">弹出"此应用可能有害"怎么办？</div>
+<div class="faq-a"><p>这个提示是手机系统的常规检查，不用担心。直接点"仍然安装"就可以了。这个APP是安全的。</p></div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-q">找不到下载的文件怎么办？</div>
+<div class="faq-a"><p>打开手机的"文件管理"，找到"下载"文件夹，里面就有。或者直接点上面的蓝色按钮重新下载。</p></div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-q">安装不了怎么办？</div>
+<div class="faq-a"><p>有些手机需要先允许"安装未知应用"。打电话让家人一步步教您，或者让家人下次见面帮您装好。</p></div>
+</div>
+</div>
+</div>
+
+<div class="footer">
+远程协助 · 安全免费 · 数据加密传输
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   远程协助落地页
+   解决五感审计: V1-V4, C1-C2, E1
+   ═══════════════════════════════════════════ */
+
+var prefix = location.pathname.includes('/relay') ? '/relay' : '';
+
+// ─── 页面切换 ─────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  var el = document.getElementById('page-' + name);
+  if (el) el.classList.add('active');
+
+  if (name === 'family') {
+    var inp = document.getElementById('room-input');
+    setTimeout(function(){ inp.focus(); }, 100);
+    var saved = localStorage.getItem('last_room');
+    if (saved) inp.value = saved;
+  }
+
+  if (name === 'elder') detectBrand();
+
+  // URL hash for back button support
+  if (name !== 'home') history.pushState({page: name}, '', '#' + name);
+}
+
+// Back button support
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.page) showPage(e.state.page);
+  else {
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+    document.getElementById('page-home').classList.add('active');
+  }
+});
+
+// ─── 家人端：连接 ─────────────────────
+function enterViewer() {
+  var room = document.getElementById('room-input').value.trim();
+  var err = document.getElementById('room-error');
+  if (!room) { err.textContent = '请输入老人告诉您的6位数字'; return; }
+  if (room.length < 4) { err.textContent = '连接码至少4位数字'; return; }
+
+  localStorage.setItem('last_room', room);
+  // Navigate to cast viewer
+  var castUrl = prefix + '/?room=' + encodeURIComponent(room) + '&token=screenstream_2026';
+  location.href = castUrl;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var inp = document.getElementById('room-input');
+  if (inp) inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') enterViewer(); });
+
+  // Set APK links
+  var apkUrl = location.origin + '/cast/ScreenStream.apk';
+  var apkLink = document.getElementById('apkLink');
+  if (apkLink) apkLink.href = apkUrl;
+  var shareLink = document.getElementById('apkShareLink');
+  if (shareLink) {
+    shareLink.href = apkUrl;
+    shareLink.onclick = function(e) {
+      e.preventDefault();
+      if (navigator.share) {
+        navigator.share({title:'远程协助APP',text:'帮您远程操作手机，请下载安装这个APP',url:apkUrl});
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(apkUrl);
+        shareLink.textContent = '✅ 链接已复制！发给老人就行';
+        setTimeout(function(){ shareLink.textContent = '点击复制安装链接'; }, 3000);
+      }
+    };
+  }
+
+  // URL hash auto-navigate
+  if (location.hash === '#family') showPage('family');
+  else if (location.hash === '#elder') showPage('elder');
+
+  // URL param ?room= auto-navigate to family
+  var p = new URLSearchParams(location.search);
+  if (p.get('room')) {
+    document.getElementById('room-input').value = p.get('room');
+    showPage('family');
+  }
+});
+
+// ─── 品牌检测 ─────────────────────────
+function detectBrand() {
+  var ua = navigator.userAgent.toLowerCase();
+  var tip = document.getElementById('brandTip');
+  var title = document.getElementById('brandTitle');
+  var body = document.getElementById('brandBody');
+
+  var brand = null, msg = '';
+  if (/huawei|honor|hmscore/i.test(ua)) {
+    brand = '华为/荣耀手机';
+    msg = '安装后请到：设置 → 应用 → 应用启动管理 → 找到"远程协助" → 关闭"自动管理"并允许"后台运行"。否则APP可能被系统自动关闭。';
+  } else if (/mi\s|miui|xiaomi|redmi/i.test(ua)) {
+    brand = '小米/Redmi手机';
+    msg = '安装后请到：设置 → 应用设置 → 应用管理 → 找到"远程协助" → 省电策略 → 选"无限制"。否则APP可能5分钟后被关闭。';
+  } else if (/oppo|oneplus|coloros/i.test(ua)) {
+    brand = 'OPPO/OnePlus手机';
+    msg = '安装后请到：设置 → 电池 → 更多电池设置 → 找到"远程协助" → 允许后台运行。另外也可以试试手机自带的"屏幕共享"功能（设置→连接与共享→屏幕共享）。';
+  } else if (/vivo|iqoo|originos/i.test(ua)) {
+    brand = 'vivo/iQOO手机';
+    msg = '安装后请到：i管家 → 应用管理 → 权限管理 → 找到"远程协助" → 允许后台运行。';
+  } else if (/samsung|sm-/i.test(ua)) {
+    brand = '三星手机';
+    msg = '安装后请到：设置 → 电池和设备维护 → 电池 → 后台使用限制 → 把"远程协助"从"受限应用"中移除。';
+  }
+
+  if (brand) {
+    title.textContent = '⚠️ ' + brand + '特别提示';
+    body.textContent = msg;
+    tip.style.display = 'block';
+  } else {
+    tip.style.display = 'none';
+  }
+}
+
+// ─── 服务状态检测 ─────────────────────
+async function checkStatus() {
+  try {
+    var r = await fetch(prefix + '/api/status', {signal: AbortSignal.timeout(5000)});
+    var d = await r.json();
+    var el = document.getElementById('live');
+    if (d.ok && d.rooms > 0) {
+      el.className = 'status-bar ok';
+      el.textContent = '🟢 有手机已连接 · 可以远程操作';
+    } else {
+      el.className = 'status-bar off';
+      el.textContent = '等待手机连接...';
+    }
+  } catch(e) {
+    var el = document.getElementById('live');
+    el.className = 'status-bar off';
+    el.textContent = '等待手机连接...';
+  }
+}
+checkStatus();
+setInterval(checkStatus, 10000);
+</script>
+</body>
+</html>

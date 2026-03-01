@@ -112,6 +112,8 @@ internal class MjpegStreamingService(
     private var h264VirtualDisplay: android.hardware.display.VirtualDisplay? = null
     @Volatile private var lastH264ConfigFrame: H264Frame? = null
     @Volatile private var lastH265ConfigFrame: H264Frame? = null
+    private var cloudRelayClient: CloudRelayClient? = null
+    private var webRtcP2PClient: WebRtcP2PClient? = null
     private var currentError: MjpegError? = null
     private var previousError: MjpegError? = null
     // All vars must be read/write on this (WebRTC-HT) thread
@@ -406,10 +408,13 @@ internal class MjpegStreamingService(
                         // H.264 / H.265 Web mode: use a single VirtualDisplay with MediaCodec surface.
                         // Avoid running BitmapCapture in parallel to prevent MediaProjection invalidation on Android 14+/15.
                         val bounds = WindowMetricsCalculator.getOrCreate().computeMaximumWindowMetrics(service).bounds
-                        var width = bounds.width()
-                        var height = bounds.height()
+                        // 公网投屏: 分辨率由DataStore resizeFactor控制 (25=270p, 50=540p, 75=720p, 100=原生)
+                        val scaleFactor = mjpegSettings.data.value.resizeFactor.coerceIn(10, 100) / 100.0
+                        var width = (bounds.width() * scaleFactor).toInt()
+                        var height = (bounds.height() * scaleFactor).toInt()
                         if (width % 2 != 0) width--
                         if (height % 2 != 0) height--
+                        XLog.i(getLog("H264", "Encode resolution: ${width}x${height} (scale=${(scaleFactor*100).toInt()}% of ${bounds.width()}x${bounds.height()})"))
 
                         val mimeType = if (streamCodec == MjpegSettings.Values.STREAM_CODEC_H265)
                             MediaFormat.MIMETYPE_VIDEO_HEVC
@@ -419,8 +424,8 @@ internal class MjpegStreamingService(
                         val encoder = H264Encoder(
                             width = width,
                             height = height,
-                            densityDpi = service.resources.configuration.densityDpi,
-                            bitRate = 4000000, // 4Mbps / 30FPS (Stability Baseline)
+                            densityDpi = (service.resources.configuration.densityDpi * scaleFactor).toInt(),
+                            bitRate = 1000000, // 1Mbps for public network (aggressive)
                             frameRate = 30
                         ) { frame ->
                             if (frame.type == H264Frame.TYPE_CONFIG) {
@@ -462,6 +467,45 @@ internal class MjpegStreamingService(
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         audioStreamer?.start(mediaProjection)
+                    }
+
+                    // Auto-connect to cloud relay for public network streaming (both MJPEG and H264)
+                    try {
+                        val relayH264 = if (!isMjpeg) h264SharedFlow.onSubscription { lastH264ConfigFrame?.let { emit(it) } } else null
+                        val relayBitmap = if (isMjpeg) bitmapStateFlow else null
+                        cloudRelayClient = CloudRelayClient(
+                            context = service,
+                            h264Flow = relayH264,
+                            bitmapFlow = relayBitmap
+                        ).apply {
+                            setStateListener { connected, url, viewers ->
+                                XLog.i(getLog("CloudRelay", "connected=$connected viewers=$viewers url=$url mode=${if (isMjpeg) "MJPEG" else "H264"}"))
+                                publishState()
+                                if (connected && roomCode.isNotEmpty()) {
+                                    speakRoomCode(roomCode)
+                                }
+                            }
+                            start()
+                        }
+                        XLog.i(getLog("CloudRelay", "Started (${if (isMjpeg) "MJPEG" else "H264"}). URL: ${cloudRelayClient?.viewerUrl}"))
+                    } catch (e: Exception) {
+                        XLog.e(getLog("CloudRelay", "Failed to start"), e)
+                    }
+
+                    // Auto-start WebRTC P2P for direct peer-to-peer screen sharing (no server relay)
+                    try {
+                        webRtcP2PClient = WebRtcP2PClient(
+                            context = service,
+                            bitmapFlow = bitmapStateFlow
+                        ).apply {
+                            setStateListener { connected, url, viewers ->
+                                XLog.i(getLog("WebRTC-P2P", "connected=$connected viewers=$viewers url=$url"))
+                            }
+                            start()
+                        }
+                        XLog.i(getLog("WebRTC-P2P", "Started. Room: ${webRtcP2PClient?.roomCode} URL: ${webRtcP2PClient?.viewerUrl}"))
+                    } catch (e: Exception) {
+                        XLog.e(getLog("WebRTC-P2P", "Failed to start"), e)
                     }
                 }
 
@@ -551,6 +595,10 @@ internal class MjpegStreamingService(
 
             is InternalEvent.Destroy -> {
                 stopStream()
+                cloudRelayClient?.destroy()
+                cloudRelayClient = null
+                webRtcP2PClient?.destroy()
+                webRtcP2PClient = null
                 httpServer.destroy()
                 currentError = null
             }
@@ -607,6 +655,30 @@ internal class MjpegStreamingService(
         }
 
         try {
+            cloudRelayClient?.stop()
+            cloudRelayClient = null
+        } catch (e: Exception) {
+            XLog.e(getLog("stopStream", "CloudRelay Stop Error"), e)
+        }
+
+        try {
+            webRtcP2PClient?.stop()
+            webRtcP2PClient = null
+        } catch (e: Exception) {
+            XLog.e(getLog("stopStream", "WebRTC-P2P Stop Error"), e)
+        }
+
+        try {
+            tts?.stop()
+            tts?.shutdown()
+            tts = null
+            ttsReady = false
+            lastSpokenCode = ""
+        } catch (e: Exception) {
+            XLog.w(getLog("stopStream", "TTS cleanup error: ${e.message}"))
+        }
+
+        try {
             h264VirtualDisplay?.release()
             h264VirtualDisplay = null
             h264Encoder?.stop()
@@ -639,7 +711,11 @@ internal class MjpegStreamingService(
             pin = MjpegState.Pin(mjpegSettings.data.value.enablePin, mjpegSettings.data.value.pin, mjpegSettings.data.value.hidePinOnStart),
             clients = clients.toList(),
             traffic = traffic.toList(),
-            error = currentError
+            error = currentError,
+            cloudRelayRoomCode = cloudRelayClient?.roomCode ?: "",
+            cloudRelayViewerUrl = cloudRelayClient?.viewerUrl ?: "",
+            cloudRelayConnected = cloudRelayClient?.isConnected ?: false,
+            cloudRelayViewerCount = cloudRelayClient?.viewerCount ?: 0
         )
 
         mutableMjpegStateFlow.value = state
@@ -654,6 +730,37 @@ internal class MjpegStreamingService(
     private fun randomPin(): String = secureRandom.nextInt(10).toString() + secureRandom.nextInt(10).toString() +
             secureRandom.nextInt(10).toString() + secureRandom.nextInt(10).toString() +
             secureRandom.nextInt(10).toString() + secureRandom.nextInt(10).toString()
+
+    private var tts: android.speech.tts.TextToSpeech? = null
+    private var ttsReady = false
+    private var lastSpokenCode = ""
+
+    private fun speakRoomCode(code: String) {
+        if (code == lastSpokenCode) return
+        lastSpokenCode = code
+
+        val digitNames = mapOf(
+            '0' to "零", '1' to "一", '2' to "二", '3' to "三", '4' to "四",
+            '5' to "五", '6' to "六", '7' to "七", '8' to "八", '9' to "九"
+        )
+        val spoken = code.map { digitNames[it] ?: it.toString() }.joinToString(" ")
+        val text = "您的连接码是 $spoken"
+
+        if (tts == null) {
+            tts = android.speech.tts.TextToSpeech(service) { status ->
+                if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                    ttsReady = true
+                    tts?.language = java.util.Locale.CHINESE
+                    tts?.setSpeechRate(0.8f)
+                    tts?.speak(text, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "room_code")
+                    XLog.i(getLog("TTS", "Speaking room code: $code"))
+                }
+            }
+        } else if (ttsReady) {
+            tts?.speak(text, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "room_code")
+            XLog.i(getLog("TTS", "Speaking room code: $code"))
+        }
+    }
 
     private fun getStartBitmap(): Bitmap {
         startBitmap?.let { return it }
