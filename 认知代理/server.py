@@ -65,7 +65,7 @@ from urllib.parse import urlparse, parse_qs
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config import SERVER_PORT, SCREEN_SNAPSHOT_INTERVAL
-from perception import screen, input_monitor, window_tracker, process_monitor, file_watcher
+from perception import screen, input_monitor, window_tracker, process_monitor, file_watcher, ocr_interact
 from semantics import event_stream, intent
 from workflow import graph as wf_graph, storage as wf_storage, executor as wf_executor
 
@@ -293,6 +293,16 @@ class CognitiveAgentHandler(http.server.BaseHTTPRequestHandler):
                 "session": event_stream.get_current_session(),
             })
 
+        # --- OCR交互 ---
+        elif path == "/ocr/scan":
+            self._json(ocr_interact.scan())
+
+        elif path.startswith("/ocr/find/"):
+            target = path[len("/ocr/find/"):]
+            from urllib.parse import unquote
+            target = unquote(target)
+            self._json(ocr_interact.find_text(target))
+
         # --- 意图分析 ---
         elif path == "/analyze/summary":
             events = event_stream.query_events(limit=5000)
@@ -355,6 +365,30 @@ class CognitiveAgentHandler(http.server.BaseHTTPRequestHandler):
         # --- 输入控制 ---
         elif path == "/input/clear":
             self._json(input_monitor.clear())
+
+        # --- OCR交互 ---
+        elif path == "/ocr/click":
+            target = data.get("text", "")
+            if not target:
+                self._json({"error": "provide text"}, 400)
+            else:
+                self._json(ocr_interact.click_text(
+                    target,
+                    exact=data.get("exact", False),
+                    button=data.get("button", "left"),
+                    index=data.get("index", 0),
+                ))
+
+        elif path == "/ocr/type":
+            target = data.get("target", "")
+            text = data.get("text", "")
+            if not target or not text:
+                self._json({"error": "provide target and text"}, 400)
+            else:
+                self._json(ocr_interact.type_at(
+                    target, text,
+                    clear_first=data.get("clear_first", False),
+                ))
 
         # --- 意图分析 ---
         elif path == "/analyze":
