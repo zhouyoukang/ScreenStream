@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mcp.server.fastmcp import FastMCP
 
 from config import SCREEN_SNAPSHOT_INTERVAL
-from perception import screen, input_monitor, window_tracker, process_monitor, file_watcher
+from perception import screen, input_monitor, window_tracker, process_monitor, file_watcher, ocr_interact
 from semantics import event_stream, intent
 from workflow import graph as wf_graph, storage as wf_storage, executor as wf_executor
 
@@ -142,6 +142,47 @@ def analyze_intents(time_window: float = 3.0, limit: int = 2000) -> dict:
     if not events:
         return {"error": "no events in session"}
     return intent.analyze_session(events, time_window_s=time_window)
+
+
+# ===== 工作流 =====
+
+# ===== OCR交互（自定义渲染App操控） =====
+
+@mcp.tool()
+def ocr_scan(full_screen: bool = True) -> dict:
+    """扫描屏幕上所有可见文字及其屏幕坐标。
+    用于剪映/游戏/DirectX等没有UIA控件树的应用。
+    每个文字区域包含精确的屏幕坐标，可直接用于点击。
+    full_screen: True=扫描整个屏幕(最可靠)"""
+    return ocr_interact.scan(full_screen=full_screen)
+
+
+@mcp.tool()
+def ocr_find(text: str, exact: bool = False) -> dict:
+    """在屏幕上查找包含指定文字的区域，返回其屏幕坐标。
+    类似浏览器的findByText，但适用于任何应用。
+    text: 要查找的文字
+    exact: True=精确匹配, False=包含匹配"""
+    return ocr_interact.find_text(text, exact=exact)
+
+
+@mcp.tool()
+def ocr_click(text: str, button: str = "left", exact: bool = False, index: int = 0) -> dict:
+    """找到屏幕上的指定文字并点击其中心。
+    类似浏览器的click(element)，但适用于任何应用。
+    text: 要点击的文字
+    button: 'left'/'right'/'double'
+    index: 多个匹配时选择第几个(0=第一个)"""
+    return ocr_interact.click_text(text, exact=exact, button=button, index=index)
+
+
+@mcp.tool()
+def ocr_type(target: str, text: str, clear_first: bool = False) -> dict:
+    """找到屏幕上的指定文字位置，点击后输入文本。
+    target: 输入框标识文字(先点击这个文字)
+    text: 要输入的内容
+    clear_first: 输入前先全选清除"""
+    return ocr_interact.type_at(target, text, clear_first=clear_first)
 
 
 # ===== 工作流 =====
