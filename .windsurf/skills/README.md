@@ -3,7 +3,7 @@
 > **用户之眼**：一目了然看到所有Skill的覆盖范围、触发条件、质量状态
 > **Agent之眼**：通过frontmatter自动匹配触发，无需人工指定
 
-## 全景矩阵（13 Skills）
+## 全景矩阵（17 Skills）
 
 ### 🔧 构建部署（1）
 | Skill | 触发条件 | 行数 | 五感覆盖 |
@@ -46,12 +46,33 @@
 |-------|---------|------|---------|
 | **browser-agent-mastery** | 浏览器操控/多Agent并行/E2E验证 | 92 | 👁👂✋👃👅全五感 |
 
+### � AI中枢（1）
+
+| Skill | 触发条件 | 行数 | 五感覆盖 |
+|-------|---------|------|--------|
+| **smart-home-hub** | 智能家居联动/用户状态/跨系统编排/主动感知 | 201 | 👁👂✋👃👅全五感 |
+
+### �🏭 3D建模（1）
+| Skill | 触发条件 | 行数 | 五感覆盖 |
+|-------|---------|------|---------|
+| **3d-modeling** | 图片→3D模型/参数化CAD/3D打印STL | 280 | 👁视觉 ✋触觉 👅验证 |
+
+### 🖥️ 远程管理（1）
+| Skill | 触发条件 | 行数 | 五感覆盖 |
+|-------|---------|------|---------|
+| **remote-hub** | 远程电脑管理/远程执行/广播命令/远程诊断/Python SDK | 120 | 👁👂✋👃👅全五感 |
+
+### 🌐 网络代理（1）
+| Skill | 触发条件 | 行数 | 五感覆盖 |
+|-------|---------|------|---------|
+| **proxy-sense** | 网络请求失败/访问国外资源/代理状态诊断/自动修复 | 75 | 👁👂✋👃四感 |
+
 ## 质量状态
 
 | 状态 | 含义 | Skills |
 |------|------|--------|
 | ✅ 完善 | frontmatter+代码模板+实战案例+故障速查 | terminal-resilience, pwa-framework, browser-agent-mastery, agent-phone-control, feature-development |
-| ✅ 可用 | frontmatter+代码模板+基本覆盖 | build-and-deploy, full-verification, api-testing, adb-device-debug, persona-chat-system, requirement-decompose |
+| ✅ 可用 | frontmatter+代码模板+基本覆盖 | build-and-deploy, full-verification, api-testing, adb-device-debug, persona-chat-system, requirement-decompose, 3d-modeling, smart-home-hub, remote-hub, proxy-sense |
 | 🟡 基础 | frontmatter+基本流程 | keyboard-input-debug, new-module-setup |
 
 ## 格式规范
@@ -78,7 +99,7 @@ triggers:                  # 可选，细化触发场景
 
 ## 维护原则
 
-1. **路径必须是当前项目路径**：`e:\道\道生一\一生二\`（非旧路径`e:\github\AIOT\`）
+1. **路径必须用相对路径**：从项目根目录起算（如`构建部署\android-sdk\`），禁止硬编码绝对路径
 2. **代码模板必须可直接执行**：复制到终端即可运行
 3. **实战案例优先**：从真实对话中提炼，而非想象
 4. **与rules/workflows不重叠**：Skill=怎么做，Rule=什么不能做，Workflow=什么顺序做
@@ -100,5 +121,9 @@ triggers:                  # 可选，细化触发场景
 ├── pwa-framework/SKILL.md       ← 500行 | PWA框架
 │   └── templates/               ← 模板文件
 ├── requirement-decompose/SKILL.md ← 87行 | 需求分解
-└── terminal-resilience/SKILL.md ← 289行 | 终端韧性
+├── terminal-resilience/SKILL.md ← 289行 | 终端韧性
+├── smart-home-hub/SKILL.md     ← 201行 | AI中枢
+├── 3d-modeling/SKILL.md         ← 280行 | 3D建模
+├── remote-hub/SKILL.md          ← 120行 | 远程中枢管理
+└── proxy-sense/SKILL.md         ← 75行  | 代理感知+自愈
 ```

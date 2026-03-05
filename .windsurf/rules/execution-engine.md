@@ -4,6 +4,7 @@ trigger: always_on
 
 # 执行引擎
 
+> 此文件为"法"层——释迦·中道之实例化。道层见 soul.md，术层见 project-structure.md + skills。
 > **辩证统一：感官完整度 = Agent行为的唯一判据**
 > 感官完整 → 自由/自主/高效执行 | 感官缺失 → 立即降级/切换/求助
 > 所有规则都是这个原则在不同场景下的实例化。
@@ -69,26 +70,36 @@ trigger: always_on
 - 需要用户物理操作 → 告知"请做X"不问"是不是Y"；每次自愈记Memory
 
 ### 中断自愈（诊断链，到第一个匹配停下）
+0. **公网/FRP服务不通** → `curl.exe -sk https://aiotvr.xyz/api/health` → 看`status`/`frp_tunnels` → 服务器侧问题用`ssh aliyun`修 / 笔记本侧frpc未连接→告知用户
 1. `adb devices` → 无设备 → kill-server+start-server + "请插USB"
 2. `curl /status` → 拒绝/无响应 → 探测端口 + `adb forward` / 重启应用
 3. 编译错误 → 读错误 + 修复（最多2轮）
 4. 终端卡死 → 分类C1-C7（见SKILL）→ 按恢复链执行
 
-## 网络请求（零弹窗工具链）
+## 网络请求（零弹窗 + 代理感知工具链）
 > `read_url_content`/`mcp2_fetch` 弹窗是二进制硬编码，无法关闭。**禁止使用**。
+> **代理感知**: `clash-agent/proxy_sense.py` | 详见 `skills/proxy-sense/SKILL.md`
 
-| 需求 | 工具 |
-|------|------|
-| 网页/HTML | `Invoke-WebRequest -UseBasicParsing` + regex strip |
-| JSON API | `Invoke-RestMethod` |
-| JS渲染SPA | Playwright `browser_navigate`+`browser_snapshot` |
-| 搜索 | `search_web` |
-| 库文档 | context7 `query-docs` |
-| GitHub | github `get_file_contents` |
+| 需求 | 工具 | 代理 |
+|------|------|------|
+| 国外网页/HTML | `IWR -Proxy "http://127.0.0.1:7890" -UseBasicParsing` | ✅ |
+| 国外JSON API | `IRM -Proxy "http://127.0.0.1:7890"` | ✅ |
+| 国内网页/API | `IWR`/`IRM` (直连) | ❌ |
+| JS渲染SPA | Playwright `browser_navigate`+`browser_snapshot` | 自动 |
+| 搜索 | `search_web` | 内置 |
+| 库文档 | context7 `query-docs` | 内置 |
+| GitHub | github `get_file_contents` / `IWR -Proxy` | ✅ |
+| pip/npm/git | 设env后执行: `python clash-agent/proxy_sense.py --env \| iex` | ✅ |
+
+### 代理判断规则
+- **需要代理**: `github.com` `npmjs.org` `pypi.org` `docker.com` `google.com` `openai.com`
+- **不需要代理**: `127.0.0.1` `localhost` `192.168.*` `aiotvr.xyz` 国内站点
 
 ```powershell
 # HTML抓取（已加入 allowlist，自动执行）
 (Invoke-WebRequest -Uri "<URL>" -UseBasicParsing).Content -replace '<script[^>]*>[\s\S]*?</script>','' -replace '<[^>]+>',' ' -replace '\s+',' '
+# 国外资源加代理:
+(Invoke-WebRequest -Uri "<URL>" -Proxy "http://127.0.0.1:7890" -UseBasicParsing -TimeoutSec 15).Content
 ```
 
 ## 浏览器Agent统御
@@ -117,38 +128,17 @@ trigger: always_on
 ### Token优先级
 `browser_run_code`(30-800字符) > `browser_snapshot`(5K-50K) > `take_screenshot`(最后手段)
 
-## 网络故障
-第1次失败→换URL重试；连续2次失败→告知用户"可能需要VPN"
+## 网络故障（代理自愈链）
+> **原则**: Agent自主解决网络问题，不把"需要VPN"甩给用户。
+
+1. **第1次失败** → 判断是否国外资源 → 是则加`-Proxy "http://127.0.0.1:7890"`重试
+2. **代理重试也失败** → `python clash-agent/proxy_sense.py` 检查代理状态
+3. **代理已down** → `python clash-agent/proxy_sense.py --fix` 自动重启引擎
+4. **引擎启动失败** → 告知用户"Clash引擎无法启动，请检查clash-agent目录"
 
 ## 对话结束协议（ask_user_question）
 
-> 任务完成后调用 `ask_user_question` 引导下一步。**禁止使用 cunzhi 或任何外部UI工具。**
-
-### 触发条件（全部满足）
-1. 有**明确产出物** 2. **不在** /dev Phase 3→5.5 中 3. 用户**无下一步指令** 4. **非纯问答**
-
-### 五感化选项设计（代入用户视角）
-- **4个选项**，`allowMultiple: false`
-- **核心原则**：选项是用户自然想说的话，不是CI/CD清单
-- 优先从 AGENTS.md「对话结束选项」选取，无则用通用模板：
-
-| 位置 | 用户视角 | 说明 |
-|------|---------|------|
-| 选项1 | **看到效果** | 编译/部署/打开浏览器，亲眼确认变化 |
-| 选项2 | **继续打磨** | 当前方向深入，把体验做到位 |
-| 选项3 | **顺手做掉** | 关联模块/文档/同步，一并搞定 |
-| 选项4 | **收工提交** | git commit，干净利落结束 |
-
-### 文案规范
-- **label**: ≤10字，用户口语（如"装手机看看"、"跑测试"、"收工提交"）
-- **description**: 1句话，≤30字，说人话不说术语
-- **禁止**：Gradle/curl/FEATURES.md 等开发者术语出现在label中
-
-### 禁止触发
-- /dev Phase 3→5.5 连续执行中 | 用户已给下一步 | 上轮刚触发过 | 纯问答 | Bug诊断中
-
-### 稳定性
-- 调用失败 → 文本列出选项 | 用户直接打字 → 按新指令执行 | 选了 → 立即执行不再确认
+> 每轮回复末尾调用 `ask_user_question`，仅当用户已明确给出下一步时跳过
 
 ## 系统信息（仅参考，不限制Agent行为）
 
@@ -186,7 +176,7 @@ trigger: always_on
 
 ## 台式机远程保护
 
-> **唯一真相源**: `台式机保护/README.md` — 铁律13条/通道优先级/守护体系/教训全在那里。
+> **唯一真相源**: `文档/双机保护手册.md` — 铁律13条/通道优先级/守护体系/教训全在那里。
 > Agent操作台式机前**必读**该文件。凭据见 `secrets.env` (DESKTOP_*)。
 
 ## 多Agent隔离（Worktree 架构）
