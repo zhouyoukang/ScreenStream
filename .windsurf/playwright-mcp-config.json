@@ -1,0 +1,36 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "isolated": true,
+    "launchOptions": {
+      "headless": true,
+      "channel": "chromium",
+      "chromiumSandbox": true,
+      "args": [
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--no-first-run",
+        "--disable-background-networking",
+        "--disable-default-apps",
+        "--disable-sync",
+        "--disable-translate",
+        "--metrics-recording-only",
+        "--no-default-browser-check",
+        "--mute-audio"
+      ]
+    },
+    "contextOptions": {
+      "viewport": { "width": 1280, "height": 720 }
+    }
+  },
+  "capabilities": ["core"],
+  "console": {
+    "level": "info"
+  },
+  "timeouts": {
+    "action": 10000,
+    "navigation": 30000
+  },
+  "imageResponses": "allow",
+  "outputMode": "stdout"
+}
