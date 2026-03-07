@@ -1,0 +1,21 @@
+[gd_scene load_steps=5 format=3 uid="uid://c2j7nev6qx25s"]
+
+[ext_resource type="Script" path="res://content/entities/button/button.gd" id="1_ja7lt"]
+[ext_resource type="PackedScene" uid="uid://bsjqdvkt0u87c" path="res://content/ui/components/button/button.tscn" id="1_r4tef"]
+[ext_resource type="Script" path="res://content/functions/movable.gd" id="3_vrobf"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_um5pa"]
+size = Vector3(0.05, 0.05, 0.012)
+
+[node name="Button" type="StaticBody3D"]
+script = ExtResource("1_ja7lt")
+
+[node name="Button" parent="." instance=ExtResource("1_r4tef")]
+
+[node name="Movable" type="Node" parent="."]
+script = ExtResource("3_vrobf")
+resizable = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.005)
+shape = SubResource("BoxShape3D_um5pa")

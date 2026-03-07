@@ -1,0 +1,8 @@
+{
+  "name": "p2p-signaling",
+  "version": "1.0.0",
+  "description": "P2P Screen Share Signaling Server - SDP/ICE exchange only, no media relay",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "ws": "^8.16.0" }
+}

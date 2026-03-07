@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a1a">
+<title>智能家居</title>
+<style>
+:root{
+  --bg:#0a0a1a;--card:rgba(255,255,255,.07);--card-on:rgba(255,255,255,.15);
+  --text:#f0f0f0;--sub:rgba(255,255,255,.45);--accent:#4facfe;
+  --warm:#ffa726;--danger:#ef5350;--green:#66bb6a;--purple:#ab47bc;
+  --radius:16px;--safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body{padding-top:var(--safe-t);padding-bottom:var(--safe-b)}
+.c{max-width:480px;margin:0 auto;min-height:100vh;padding:0 20px 110px;position:relative;z-index:1}
+.amb{position:fixed;top:0;left:0;right:0;height:320px;opacity:.5;z-index:0;
+  pointer-events:none;filter:blur(80px);transition:background 3s}
+/* Hero */
+.hero{padding:28px 0 8px}
+.greet{font-size:30px;font-weight:700;letter-spacing:-.5px}
+.info{font-size:13px;color:var(--sub);margin-top:4px;display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+.dot.off{background:var(--danger)}
+/* Env bar */
+.env{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}
+.env-chip{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:20px;
+  padding:6px 14px;font-size:13px;display:flex;align-items:center;gap:6px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.env-chip .val{font-weight:600}
+/* Section */
+.sec{margin-top:20px;animation:fu .4s ease both}
+.sec:nth-child(3){animation-delay:.05s}.sec:nth-child(4){animation-delay:.1s}
+.sec:nth-child(5){animation-delay:.15s}.sec:nth-child(6){animation-delay:.2s}
+.sec:nth-child(7){animation-delay:.25s}
+.stit{font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:10px}
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+/* Scenes */
+.scenes{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;
+  margin:0 -20px;padding-left:20px;padding-right:20px}
+.scenes::-webkit-scrollbar{display:none}
+.sc{flex-shrink:0;width:100px;padding:14px 10px;border-radius:var(--radius);cursor:pointer;
+  background:var(--card);border:1px solid rgba(255,255,255,.06);transition:all .2s;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative}
+.sc:active{transform:scale(.92)}
+.sc .si{font-size:26px;margin-bottom:6px}
+.sc .sn{font-size:12px;font-weight:600}
+.sc.sug{border-color:rgba(79,172,254,.35);background:linear-gradient(135deg,rgba(79,172,254,.12),rgba(0,242,254,.06))}
+.sc.sug::after{content:'推荐';position:absolute;top:5px;right:5px;font-size:8px;
+  background:var(--accent);color:#000;padding:1px 5px;border-radius:6px;font-weight:700}
+.sc.run{animation:sp 2s infinite}
+@keyframes sp{0%,100%{box-shadow:0 0 0 0 rgba(79,172,254,.3)}50%{box-shadow:0 0 16px 2px rgba(79,172,254,.15)}}
+/* Device tiles */
+.dg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.dt{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);
+  padding:14px;cursor:pointer;transition:all .25s;min-height:80px;
+  display:flex;flex-direction:column;justify-content:space-between;position:relative;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.dt:active{transform:scale(.96)}
+.dt.on{background:var(--card-on);border-color:rgba(255,255,255,.12)}
+.dt.on.light{background:linear-gradient(135deg,rgba(255,167,38,.15),rgba(255,167,38,.04));border-color:rgba(255,167,38,.25)}
+.dt.on.fan{background:linear-gradient(135deg,rgba(79,172,254,.15),rgba(79,172,254,.04));border-color:rgba(79,172,254,.25)}
+.dt.on.speaker{background:linear-gradient(135deg,rgba(171,71,188,.15),rgba(171,71,188,.04));border-color:rgba(171,71,188,.25)}
+.dt.off .di{opacity:.5}
+.dt.offline{opacity:.3;pointer-events:none}
+.dt .top{display:flex;justify-content:space-between;align-items:flex-start}
+.dt .di{font-size:22px;width:36px;height:36px;border-radius:10px;display:flex;
+  align-items:center;justify-content:center;background:rgba(255,255,255,.06);transition:all .3s}
+.dt.on .di{background:rgba(255,255,255,.12)}
+/* Toggle switch */
+.tg{width:40px;height:22px;border-radius:11px;border:none;background:rgba(255,255,255,.1);
+  cursor:pointer;position:relative;transition:all .25s;flex-shrink:0}
+.tg::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;
+  top:2px;left:2px;transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.dt.on .tg{background:var(--green)}.dt.on .tg::after{left:20px}
+.dt.on.light .tg{background:var(--warm)}.dt.on.fan .tg{background:var(--accent)}
+.dt .dn{font-size:12px;font-weight:600;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dt .ds{font-size:10px;color:var(--sub);margin-top:2px;display:flex;align-items:center;gap:4px}
+.dt .ds .dot{width:5px;height:5px}
+/* Brightness slider */
+.bslider{width:100%;margin-top:8px;-webkit-appearance:none;appearance:none;height:4px;
+  border-radius:2px;background:rgba(255,255,255,.1);outline:none;cursor:pointer}
+.bslider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--warm);cursor:pointer;box-shadow:0 0 6px rgba(255,167,38,.4)}
+.bslider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--warm);border:0}
+/* Comfort */
+.crow{display:flex;gap:8px}
+.cc{flex:1;background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);
+  padding:14px 8px;cursor:pointer;transition:all .2s;text-align:center;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.cc:active{transform:scale(.93);background:var(--card-on)}
+.cc .ci{font-size:24px;margin-bottom:4px}
+.cc .cl{font-size:11px;color:var(--sub)}
+/* TTS */
+.tbar{display:flex;gap:6px;background:var(--card);border:1px solid rgba(255,255,255,.05);
+  border-radius:var(--radius);padding:8px 12px;align-items:center;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.tbar input{flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;min-width:0}
+.tbar input::placeholder{color:var(--sub)}
+.tbar button{width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;flex-shrink:0}
+.tb-s{background:var(--accent);color:#000}.tb-s:active{transform:scale(.9)}
+.tb-m{background:rgba(255,255,255,.08);color:var(--sub)}
+.tb-m.active{background:var(--danger);color:#fff;animation:mp 1.5s infinite}
+@keyframes mp{0%,100%{box-shadow:0 0 0 0 rgba(239,83,80,.3)}50%{box-shadow:0 0 10px 3px rgba(239,83,80,0)}}
+/* Activity */
+.act{max-height:180px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent}
+.act::-webkit-scrollbar{width:2px}.act::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px}
+.li{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.03);
+  font-size:12px;animation:fu .3s ease}
+.li .lt{color:var(--sub);font-size:10px;flex-shrink:0;min-width:38px}
+.li .lx{flex:1;line-height:1.4}
+/* Floating cmd */
+.cmd{position:fixed;bottom:0;left:0;right:0;z-index:10;padding:10px 20px;
+  padding-bottom:calc(10px + var(--safe-b));background:linear-gradient(transparent,rgba(10,10,26,.95) 30%)}
+.cmdi{max-width:480px;margin:0 auto;display:flex;gap:6px;align-items:center;
+  background:var(--card);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+  border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:5px 5px 5px 16px}
+.cmdi input{flex:1;background:transparent;border:none;color:var(--text);font-size:14px;outline:none;min-width:0}
+.cmdi input::placeholder{color:var(--sub)}
+.cmdb{width:34px;height:34px;border-radius:50%;border:none;background:var(--accent);color:#000;
+  font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0}
+.cmdb:active{transform:scale(.9)}.cmdb:disabled{background:rgba(255,255,255,.08);color:var(--sub)}
+/* Toast */
+.toast{position:fixed;top:50px;left:50%;transform:translateX(-50%) translateY(-16px);
+  background:rgba(0,0,0,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;z-index:100;
+  opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;
+  border:1px solid rgba(255,255,255,.08)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* Detail overlay */
+.ov{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.6);z-index:20;display:none;
+  align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.ov.show{display:flex}
+.sheet{background:#1a1a2e;border-radius:20px 20px 0 0;width:100%;max-width:480px;
+  max-height:60vh;overflow-y:auto;padding:20px;padding-bottom:calc(20px + var(--safe-b))}
+.sheet h3{font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sheet .x{margin-left:auto;font-size:20px;cursor:pointer;color:var(--sub);padding:4px}
+.sheet .row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);font-size:14px}
+.sheet .row .lbl{color:var(--sub);font-size:12px}
+.sheet .row .val{font-weight:600}
+.sheet .slider-row{padding:12px 0}
+.sheet .slider-row label{font-size:12px;color:var(--sub);margin-bottom:6px;display:block}
+.sheet .slider-row input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:6px;
+  border-radius:3px;background:rgba(255,255,255,.1);outline:none}
+.sheet .slider-row input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;
+  border-radius:50%;background:var(--warm);cursor:pointer;box-shadow:0 0 8px rgba(255,167,38,.4)}
+</style>
+</head>
+<body>
+<div class="amb" id="amb"></div>
+<div class="c">
+  <div class="hero">
+    <div class="greet" id="greet"></div>
+    <div class="info"><span class="dot" id="sDot"></span><span id="sText">连接中…</span></div>
+  </div>
+  <div class="env" id="envBar"></div>
+  <div class="sec"><div class="stit">场景</div><div class="scenes" id="scenes"></div></div>
+  <div class="sec"><div class="stit">💡 灯光</div><div class="dg" id="gLights"></div></div>
+  <div class="sec"><div class="stit">🔌 电器</div><div class="dg" id="gApps"></div></div>
+  <div class="sec"><div class="stit">🌡️ 舒适</div><div class="crow" id="comfort"></div></div>
+  <div class="sec"><div class="stit">🔊 播报</div>
+    <div class="tbar"><input id="ttsIn" placeholder="输入播报文字…" enterkeyhint="send">
+      <button class="tb-m" id="micB" onclick="tMic()">🎤</button>
+      <button class="tb-s" onclick="tSend()">📢</button></div></div>
+  <div class="sec"><div class="stit">📋 最近</div><div class="act" id="act"><div style="color:var(--sub);font-size:12px">暂无</div></div></div>
+</div>
+<div class="cmd"><div class="cmdi"><input id="cmdIn" placeholder="输入指令…" enterkeyhint="send">
+  <button class="cmdb" id="cmdB" onclick="cmdGo()" disabled>➤</button></div></div>
+<div class="toast" id="toast"></div>
+<div class="ov" id="ov" onclick="if(event.target===this)closeDetail()">
+  <div class="sheet" id="sheet"></div></div>
+<script>
+const $=s=>document.querySelector(s);
+const B=location.hostname==='localhost'||location.hostname==='127.0.0.1'
+  ?`${location.protocol}//${location.host}`:'https://aiotvr.xyz';
+let devs=[],states={},log=[],recog=false,recogObj=null;
+
+// ═══ Time ═══
+function tCtx(){const h=new Date().getHours();
+  if(h>=6&&h<9)return{g:'早上好',s:'work',gr:'linear-gradient(135deg,#667eea,#764ba2)'};
+  if(h>=9&&h<12)return{g:'上午好',s:'work',gr:'linear-gradient(135deg,#4facfe,#00f2fe)'};
+  if(h>=12&&h<14)return{g:'中午好',s:'away',gr:'linear-gradient(135deg,#43e97b,#38f9d7)'};
+  if(h>=14&&h<18)return{g:'下午好',s:'work',gr:'linear-gradient(135deg,#4facfe,#00f2fe)'};
+  if(h>=18&&h<21)return{g:'晚上好',s:'home',gr:'linear-gradient(135deg,#fa709a,#fee140)'};
+  if(h>=21&&h<23)return{g:'夜深了',s:'sleep',gr:'linear-gradient(135deg,#0c0c2e,#1a1a3e)'};
+  return{g:'深夜了',s:'sleep',gr:'linear-gradient(135deg,#0c0c2e,#1a1a3e)'};}
+function updTime(){const t=tCtx();$('#greet').textContent=t.g;$('#amb').style.background=t.gr;
+  document.querySelectorAll('.sc').forEach(c=>c.classList.toggle('sug',c.dataset.k===t.s));}
+
+// ═══ API ═══
+async function api(text){try{const r=await fetch(`${B}/wx/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});return await r.json()}catch(e){return{reply:'⚠️ 网络错误',ok:false}}}
+async function ctrl(did,action,value){try{const r=await fetch(`${B}/wx/control`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({did,action,value})});return await r.json()}catch(e){return{ok:false,error:e.message}}}
+async function fDev(){try{const r=await fetch(`${B}/wx/devices`);const d=await r.json();devs=d.devices||[];render()}catch{}}
+async function fStates(){try{const r=await fetch(`${B}/wx/states`);const d=await r.json();if(d.ok)states=d.states;applyStates()}catch{}}
+async function fStatus(){try{const r=await fetch(`${B}/wx/status`);const d=await r.json();const ok=d.enabled&&d.router_ready;
+  $('#sDot').className='dot '+(ok?'on':'off');const n=devs.filter(d=>d.online).length;
+  $('#sText').textContent=ok?`${n}台在线 · ${devs.length}台设备`:'离线';return ok}catch{$('#sDot').className='dot off';$('#sText').textContent='断线';return false}}
+
+// ═══ Environment chips ═══
+function updEnv(){const chips=[];
+  Object.entries(states).forEach(([did,s])=>{
+    if(s.temperature!=null)chips.push(`🌡️ <span class="val">${s.temperature.toFixed?s.temperature.toFixed(1):s.temperature}°C</span>`);
+    if(s.humidity!=null)chips.push(`💧 <span class="val">${Math.round(s.humidity)}%</span>`);
+  });
+  const onCount=Object.values(states).filter(s=>s.state==='on').length;
+  if(onCount>0)chips.unshift(`💡 <span class="val">${onCount}</span> 台开启`);
+  $('#envBar').innerHTML=chips.map(c=>`<div class="env-chip">${c}</div>`).join('');}
+
+// ═══ Scenes ═══
+const SC=[{k:'home',i:'🏡',n:'回家',c:'回家模式'},{k:'sleep',i:'🌙',n:'睡觉',c:'睡眠模式'},
+  {k:'away',i:'👋',n:'离家',c:'离家模式'},{k:'work',i:'💻',n:'工作',c:'工作模式'},
+  {k:'movie',i:'🎬',n:'观影',c:'观影模式'},{k:'alloff',i:'⛔',n:'全关',c:'全部关闭'}];
+function rScenes(){const t=tCtx();$('#scenes').innerHTML=SC.map(s=>
+  `<div class="sc${s.k===t.s?' sug':''}" data-k="${s.k}" onclick="exSc('${s.c}',this)"><div class="si">${s.i}</div><div class="sn">${s.n}</div></div>`).join('');}
+async function exSc(c,el){el?.classList.add('run');toast(`🎬 ${c}…`);const r=await api(c);
+  el&&setTimeout(()=>el.classList.remove('run'),3000);addLog(r.reply||c);toast(r.reply?.split('\n')[0]||'✅');
+  setTimeout(fStates,2000);}
+
+// ═══ Devices ═══
+const LIGHT_KW=['灯带','筒灯','床底灯','一号','二号','三号'];
+const HIDE=['zhouyoukang','中枢网关','温湿度计','人在传感器','手环','枕','手机','充电器'];
+const DI={light:'💡',switch:'🔌',fan:'🌀',media_player:'🔊',cover:'👔',climate:'🌡️',camera:'📹'};
+function shortN(n){return n.replace('米家智能','').replace('小米','').replace('直流变频循环落地扇 电池版','风扇')
+  .replace('晾芯M1智能电动晾衣机pro','晾衣机').replace('小爱触屏音箱','小爱触屏')
+  .replace('Redmi小爱触屏音箱Pro 8英寸','Redmi Pro').replace('Xiaomi Sound','Sound')
+  .replace('小爱音箱Pro2','小爱Pro2').replace('小爱音箱Pro','小爱Pro')
+  .replace('智能摄像机 云台版Pro','摄像机Pro').replace('智能摄像机2 云台版','摄像机2')
+  .replace('智能电热毯','电热毯').replace('智能枕','枕');}
+function clsDev(d){if(HIDE.some(h=>d.name.includes(h)))return null;
+  const ic=DI[d.domain]||'📱';const isL=LIGHT_KW.some(k=>d.name.includes(k));
+  const cat=d.domain==='fan'?'fan':d.domain==='media_player'?'speaker':d.domain==='light'?'light':'other';
+  return{ic,grp:isL?'lights':'apps',cat};}
+
+function render(){const gl=[],ga=[];
+  devs.forEach(d=>{const cl=clsDev(d);if(!cl)return;
+    const s=states[d.id]||{};const isOn=s.state==='on';const off=!d.online;
+    const html=mkTile(d,cl,s,isOn,off);
+    if(cl.grp==='lights')gl.push(html);else ga.push(html);});
+  $('#gLights').innerHTML=gl.join('')||'<div style="grid-column:1/-1;color:var(--sub);font-size:12px">无灯光设备</div>';
+  $('#gApps').innerHTML=ga.join('')||'<div style="grid-column:1/-1;color:var(--sub);font-size:12px">无电器</div>';}
+
+function mkTile(d,cl,s,isOn,off){
+  const onC=isOn?'on':'off';const offC=off?'offline':'';const sn=shortN(d.name);
+  const stTxt=off?'离线':isOn?'已开启':'关闭';
+  const bri=s.brightness!=null&&isOn?`<input type="range" class="bslider" min="1" max="100" value="${s.brightness}" onclick="event.stopPropagation()" onchange="setBri('${d.id}',this.value)" title="亮度${s.brightness}%">`:'';
+  return `<div class="dt ${onC} ${offC} ${cl.cat}" data-did="${d.id}" data-name="${esc(d.name)}"
+    onclick="togDev('${d.id}','${esc(d.name)}',this)" oncontextmenu="event.preventDefault();openDetail('${d.id}')">
+    <div class="top"><div class="di">${cl.ic}</div>
+      <button class="tg" onclick="event.stopPropagation();togDev('${d.id}','${esc(d.name)}',this.closest('.dt'))"></button></div>
+    <div class="dn">${esc(sn)}</div>
+    <div class="ds"><span class="dot ${off?'off':isOn?'on':'off'}"></span>${stTxt}${s.brightness!=null&&isOn?` · ${s.brightness}%`:''}</div>
+    ${bri}</div>`;}
+
+function applyStates(){
+  document.querySelectorAll('.dt[data-did]').forEach(el=>{
+    const did=el.dataset.did;const s=states[did]||{};const isOn=s.state==='on';
+    el.classList.toggle('on',isOn);el.classList.toggle('off',!isOn);
+    const dsEl=el.querySelector('.ds');if(dsEl){
+      const off=el.classList.contains('offline');
+      const stTxt=off?'离线':isOn?'已开启':'关闭';
+      dsEl.innerHTML=`<span class="dot ${off?'off':isOn?'on':'off'}" style="width:5px;height:5px"></span>${stTxt}${s.brightness!=null&&isOn?` · ${s.brightness}%`:''}`;}
+    const sl=el.querySelector('.bslider');
+    if(s.brightness!=null&&isOn&&!sl){render();}
+    else if(sl&&s.brightness!=null){sl.value=s.brightness;}
+  });updEnv();}
+
+async function togDev(did,name,el){
+  if(!el||el.classList.contains('offline'))return;
+  const wasOn=el.classList.contains('on');const action=wasOn?'turn_off':'turn_on';
+  el.classList.toggle('on');if(navigator.vibrate)navigator.vibrate(10);
+  toast(wasOn?`⚪ ${shortN(name)} 关闭中…`:`🟢 ${shortN(name)} 开启中…`);
+  const r=await ctrl(did,action);
+  addLog(r.ok?`${wasOn?'⚪':'🟢'} ${shortN(name)} ${wasOn?'已关闭':'已开启'}`:`❌ ${shortN(name)}: ${r.error||'失败'}`);
+  if(!r.ok){el.classList.toggle('on');toast(`❌ ${r.error||'控制失败'}`);}
+  else{toast(wasOn?`⚪ ${shortN(name)} 已关闭`:`🟢 ${shortN(name)} 已开启`);}
+  setTimeout(fStates,1500);}
+
+async function setBri(did,val){
+  toast(`💡 亮度 ${val}%`);if(navigator.vibrate)navigator.vibrate(5);
+  const r=await ctrl(did,'set_brightness',parseInt(val));
+  addLog(r.ok?`💡 亮度→${val}%`:`❌ 亮度设置失败`);
+  if(!r.ok)toast(`❌ ${r.error||'失败'}`);}
+
+// ═══ Detail ═══
+async function openDetail(did){
+  const d=devs.find(x=>x.id===did);if(!d)return;const s=states[did]||{};
+  const sn=shortN(d.name);const isOn=s.state==='on';
+  let html=`<h3>${DI[d.domain]||'📱'} ${esc(sn)} <span class="x" onclick="closeDetail()">&times;</span></h3>`;
+  html+=`<div class="row"><span class="lbl">状态</span><span class="val" style="color:${isOn?'var(--green)':'var(--sub)'}">●  ${isOn?'开启':'关闭'}</span></div>`;
+  html+=`<div class="row"><span class="lbl">在线</span><span class="val">${d.online?'✅ 在线':'❌ 离线'}</span></div>`;
+  if(s.brightness!=null){html+=`<div class="slider-row"><label>亮度 · ${s.brightness}%</label><input type="range" min="1" max="100" value="${s.brightness}" onchange="setBri('${did}',this.value)"></div>`;}
+  if(s.temperature!=null)html+=`<div class="row"><span class="lbl">温度</span><span class="val">${s.temperature}°C</span></div>`;
+  if(s.humidity!=null)html+=`<div class="row"><span class="lbl">湿度</span><span class="val">${Math.round(s.humidity)}%</span></div>`;
+  if(s.fan_level!=null)html+=`<div class="row"><span class="lbl">风速</span><span class="val">${s.fan_level}</span></div>`;
+  html+=`<div class="row"><span class="lbl">ID</span><span class="val" style="font-size:11px;color:var(--sub)">${did}</span></div>`;
+  if(d.online&&d.domain!=='sensor'){
+    html+=`<div style="margin-top:16px;display:flex;gap:8px">`;
+    html+=`<button onclick="togDev('${did}','${esc(d.name)}',document.querySelector('[data-did=\\'${did}\\']'));closeDetail()" style="flex:1;padding:12px;border-radius:12px;border:none;background:${isOn?'var(--danger)':'var(--green)'};color:#fff;font-size:14px;font-weight:600;cursor:pointer">${isOn?'关闭':'开启'}</button>`;
+    html+=`</div>`;}
+  $('#sheet').innerHTML=html;$('#ov').classList.add('show');}
+function closeDetail(){$('#ov').classList.remove('show');}
+
+// ═══ Comfort ═══
+const CF=[{i:'🥶',l:'好冷',c:'太冷了'},{i:'🥵',l:'好热',c:'太热了'},{i:'🔅',l:'太暗',c:'太暗了'},{i:'🔆',l:'太亮',c:'太亮了'}];
+function rComfort(){$('#comfort').innerHTML=CF.map(c=>`<div class="cc" onclick="exCf('${c.c}',this)"><div class="ci">${c.i}</div><div class="cl">${c.l}</div></div>`).join('');}
+async function exCf(c,el){el.style.transform='scale(.9)';setTimeout(()=>el.style.transform='',200);
+  if(navigator.vibrate)navigator.vibrate(10);toast(`${c}…`);const r=await api(c);
+  addLog(r.reply||c);toast(r.reply?.split('\n')[0]||'✅');setTimeout(fStates,1500);}
+
+// ═══ TTS ═══
+$('#ttsIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();tSend();}});
+async function tSend(){const v=$('#ttsIn').value.trim();if(!v)return;$('#ttsIn').value='';
+  toast('🔊 播报…');const r=await api(`说 ${v}`);addLog(r.reply||`播报: ${v}`);toast(r.reply?.split('\n')[0]||'✅');}
+function tMic(){if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){toast('不支持语音');return;}
+  if(recog){recogObj.stop();return;}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recogObj=new SR();recogObj.lang='zh-CN';recogObj.continuous=false;recogObj.interimResults=true;
+  recogObj.onstart=()=>{recog=true;$('#micB').classList.add('active');};
+  recogObj.onend=()=>{recog=false;$('#micB').classList.remove('active');};
+  recogObj.onresult=e=>{let f='',im='';for(let i=e.resultIndex;i<e.results.length;i++){
+    if(e.results[i].isFinal)f+=e.results[i][0].transcript;else im+=e.results[i][0].transcript;}
+    if(f){$('#ttsIn').value=f;tSend();}else{$('#ttsIn').value=im;}};recogObj.start();}
+
+// ═══ Cmd ═══
+const cmdIn=$('#cmdIn'),cmdB=$('#cmdB');
+cmdIn.addEventListener('input',()=>cmdB.disabled=!cmdIn.value.trim());
+cmdIn.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();cmdGo();}});
+async function cmdGo(){const v=cmdIn.value.trim();if(!v)return;cmdIn.value='';cmdB.disabled=true;
+  toast('处理中…');const r=await api(v);addLog(r.reply||v);toast(r.reply?.split('\n')[0]||'✅');setTimeout(fStates,1500);}
+
+// ═══ Activity ═══
+function addLog(t){const now=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+  log.unshift({time:now,text:t});if(log.length>30)log.pop();rLog();}
+function rLog(){$('#act').innerHTML=log.map(a=>`<div class="li"><span class="lt">${a.time}</span><span class="lx">${esc(a.text)}</span></div>`).join('')||'<div style="color:var(--sub);font-size:12px">暂无</div>';}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ═══ Init ═══
+(async()=>{
+  rScenes();rComfort();updTime();
+  await fStatus();await fDev();await fStates();
+  setInterval(fStates,10000);setInterval(fStatus,30000);setInterval(fDev,60000);setInterval(updTime,60000);
+})();
+</script>
+</body>
+</html>

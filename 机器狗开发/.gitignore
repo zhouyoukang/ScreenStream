@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# 诊断临时脚本和数据 (一次性产物，不入库)
+_*.py
+_*.json
+go1_deep2.json
+go1_deep_diag.json
+go1_mqtt_http_data.json
+go1_ssh_data.json
+
+# MuJoCo 临时地形文件
+terrain_*.xml

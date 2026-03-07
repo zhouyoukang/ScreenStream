@@ -1,0 +1,17 @@
+# Input Booleans for Notification Center
+
+notify_low_battery:
+  name: Low Battery Notifications
+  icon: mdi:battery-alert
+
+notify_high_power:
+  name: High Power Notifications
+  icon: mdi:flash-alert
+
+notify_device_offline:
+  name: Device Offline Notifications
+  icon: mdi:lan-disconnect
+
+notify_automation_complete:
+  name: Automation Complete Notifications
+  icon: mdi:check-circle

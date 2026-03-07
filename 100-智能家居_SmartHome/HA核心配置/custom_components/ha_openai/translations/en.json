@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up OpenAI API Compatible Server",
+        "description": "Configure a server that provides OpenAI API compatible endpoints",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "port": "Port",
+          "agent_id": "Conversation Agent",
+          "stream_responses": "Stream Responses",
+          "rate_limit": "Rate Limit (requests per minute)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Integration is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure OpenAI API Compatible Server",
+        "description": "Adjust settings for the OpenAI API compatible server",
+        "data": {
+          "agent_id": "Conversation Agent",
+          "stream_responses": "Stream Responses",
+          "rate_limit": "Rate Limit (requests per minute)",
+          "request_timeout": "Request Timeout (seconds)",
+          "max_retries": "Maximum Retries",
+          "retry_delay": "Retry Delay (seconds)",
+          "max_history_messages": "Maximum History Messages",
+          "temperature": "Temperature (0.0-2.0)",
+          "max_tokens": "Maximum Tokens",
+          "top_p": "Top P (0.0-1.0)"
+        }
+      }
+    }
+  },
+  "services": {
+    "restart": {
+      "name": "Restart",
+      "description": "Restarts the OpenAI API compatible server"
+    },
+    "clear_rate_limits": {
+      "name": "Clear Rate Limits",
+      "description": "Clears rate limits for one or all clients",
+      "fields": {
+        "client_id": {
+          "name": "Client ID",
+          "description": "ID of the client to clear rate limits for. If not specified, clears for all clients"
+        }
+      }
+    },
+    "test_api": {
+      "name": "Test API",
+      "description": "Tests the OpenAI API functionality",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Message to send to the API"
+        },
+        "agent_id": {
+          "name": "Agent ID",
+          "description": "ID of the conversation agent to use. If not specified, uses the default agent"
+        }
+      }
+    }
+  }
+} 

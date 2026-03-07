@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 3 Hello VR</title>
+    <style>
+        * { margin: 0; padding: 0; }
+        body { background: #000; overflow: hidden; font-family: system-ui; }
+        #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, rgba(26,26,46,0.85) 0%, rgba(22,33,62,0.75) 50%, rgba(15,52,96,0.65) 100%);
+            color: white; z-index: 10;
+        }
+        #overlay h1 { font-size: 2rem; margin-bottom: 1rem; }
+        #overlay p { font-size: 1.1rem; opacity: 0.7; margin-bottom: 2rem; }
+        #enter-vr {
+            padding: 16px 48px; font-size: 1.2rem; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, #e94560, #533483);
+            color: white; cursor: pointer; transition: transform 0.2s;
+        }
+        #enter-vr:hover { transform: scale(1.05); }
+        #enter-vr:disabled { opacity: 0.5; cursor: not-allowed; }
+        #status { margin-top: 1rem; font-size: 0.9rem; opacity: 0.6; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <h1>Quest 3 Hello VR</h1>
+        <p>WebXR入门示例 — 3D立方体 + 手部追踪</p>
+        <button id="enter-vr" disabled>检测WebXR中...</button>
+        <div id="status"></div>
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script type="module">
+        // === WebGL Setup ===
+        const canvas = document.getElementById('canvas');
+        const gl = canvas.getContext('webgl2', { xrCompatible: true });
+        const overlay = document.getElementById('overlay');
+        const enterBtn = document.getElementById('enter-vr');
+        const statusEl = document.getElementById('status');
+
+        if (!gl) {
+            statusEl.textContent = 'WebGL2不可用';
+            throw new Error('WebGL2 not supported');
+        }
+
+        // === Shader Programs ===
+        const vsSource = `#version 300 es
+            in vec4 aPosition;
+            in vec3 aNormal;
+            uniform mat4 uModelViewProjection;
+            uniform mat4 uModel;
+            out vec3 vNormal;
+            out vec3 vWorldPos;
+            void main() {
+                gl_Position = uModelViewProjection * aPosition;
+                vNormal = mat3(uModel) * aNormal;
+                vWorldPos = (uModel * aPosition).xyz;
+            }
+        `;
+
+        const fsSource = `#version 300 es
+            precision highp float;
+            in vec3 vNormal;
+            in vec3 vWorldPos;
+            uniform vec3 uColor;
+            uniform float uTime;
+            out vec4 fragColor;
+            void main() {
+                vec3 lightDir = normalize(vec3(1.0, 2.0, 1.5));
+                float diff = max(dot(normalize(vNormal), lightDir), 0.0);
+                float ambient = 0.3;
+                vec3 col = uColor * (ambient + diff * 0.7);
+                float pulse = 0.5 + 0.5 * sin(uTime * 2.0);
+                col += uColor * pulse * 0.1;
+                fragColor = vec4(col, 1.0);
+            }
+        `;
+
+        function compileShader(type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        const vs = compileShader(gl.VERTEX_SHADER, vsSource);
+        const fs = compileShader(gl.FRAGMENT_SHADER, fsSource);
+        const program = gl.createProgram();
+        gl.attachShader(program, vs);
+        gl.attachShader(program, fs);
+        gl.linkProgram(program);
+
+        const aPosition = gl.getAttribLocation(program, 'aPosition');
+        const aNormal = gl.getAttribLocation(program, 'aNormal');
+        const uMVP = gl.getUniformLocation(program, 'uModelViewProjection');
+        const uModel = gl.getUniformLocation(program, 'uModel');
+        const uColor = gl.getUniformLocation(program, 'uColor');
+        const uTime = gl.getUniformLocation(program, 'uTime');
+
+        // === Cube Geometry ===
+        const cubeVerts = new Float32Array([
+            // pos(3) + normal(3) per vertex, 6 faces
+            -1,-1, 1,  0, 0, 1,   1,-1, 1,  0, 0, 1,   1, 1, 1,  0, 0, 1,  -1, 1, 1,  0, 0, 1,
+            -1,-1,-1,  0, 0,-1,  -1, 1,-1,  0, 0,-1,   1, 1,-1,  0, 0,-1,   1,-1,-1,  0, 0,-1,
+            -1, 1,-1,  0, 1, 0,  -1, 1, 1,  0, 1, 0,   1, 1, 1,  0, 1, 0,   1, 1,-1,  0, 1, 0,
+            -1,-1,-1,  0,-1, 0,   1,-1,-1,  0,-1, 0,   1,-1, 1,  0,-1, 0,  -1,-1, 1,  0,-1, 0,
+             1,-1,-1,  1, 0, 0,   1, 1,-1,  1, 0, 0,   1, 1, 1,  1, 0, 0,   1,-1, 1,  1, 0, 0,
+            -1,-1,-1, -1, 0, 0,  -1,-1, 1, -1, 0, 0,  -1, 1, 1, -1, 0, 0,  -1, 1,-1, -1, 0, 0,
+        ]);
+
+        const cubeIndices = new Uint16Array([
+            0,1,2, 0,2,3, 4,5,6, 4,6,7, 8,9,10, 8,10,11,
+            12,13,14, 12,14,15, 16,17,18, 16,18,19, 20,21,22, 20,22,23
+        ]);
+
+        const vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
+
+        const vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, cubeVerts, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(aPosition);
+        gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 24, 0);
+        gl.enableVertexAttribArray(aNormal);
+        gl.vertexAttribPointer(aNormal, 3, gl.FLOAT, false, 24, 12);
+
+        const ebo = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, cubeIndices, gl.STATIC_DRAW);
+        gl.bindVertexArray(null);
+
+        // === Matrix Math ===
+        function mat4Perspective(fov, aspect, near, far) {
+            const f = 1.0 / Math.tan(fov / 2);
+            const nf = 1 / (near - far);
+            return new Float32Array([
+                f / aspect, 0, 0, 0,
+                0, f, 0, 0,
+                0, 0, (far + near) * nf, -1,
+                0, 0, 2 * far * near * nf, 0
+            ]);
+        }
+
+        function mat4Multiply(a, b) {
+            const out = new Float32Array(16);
+            for (let i = 0; i < 4; i++)
+                for (let j = 0; j < 4; j++) {
+                    out[i * 4 + j] = 0;
+                    for (let k = 0; k < 4; k++)
+                        out[i * 4 + j] += a[i * 4 + k] * b[k * 4 + j];
+                }
+            return out;
+        }
+
+        function mat4Identity() {
+            return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
+        }
+
+        function mat4Translate(x, y, z) {
+            return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1]);
+        }
+
+        function mat4Scale(s) {
+            return new Float32Array([s,0,0,0, 0,s,0,0, 0,0,s,0, 0,0,0,1]);
+        }
+
+        function mat4RotateY(angle) {
+            const c = Math.cos(angle), s = Math.sin(angle);
+            return new Float32Array([c,0,s,0, 0,1,0,0, -s,0,c,0, 0,0,0,1]);
+        }
+
+        function mat4LookAt(eye, center, up) {
+            const zx = eye[0]-center[0], zy = eye[1]-center[1], zz = eye[2]-center[2];
+            let len = Math.hypot(zx, zy, zz);
+            const fz = [zx/len, zy/len, zz/len];
+            const xx = up[1]*fz[2]-up[2]*fz[1], xy = up[2]*fz[0]-up[0]*fz[2], xz = up[0]*fz[1]-up[1]*fz[0];
+            len = Math.hypot(xx, xy, xz);
+            const fx = [xx/len, xy/len, xz/len];
+            const fy = [fz[1]*fx[2]-fz[2]*fx[1], fz[2]*fx[0]-fz[0]*fx[2], fz[0]*fx[1]-fz[1]*fx[0]];
+            return new Float32Array([
+                fx[0],fy[0],fz[0],0,
+                fx[1],fy[1],fz[1],0,
+                fx[2],fy[2],fz[2],0,
+                -(fx[0]*eye[0]+fx[1]*eye[1]+fx[2]*eye[2]),
+                -(fy[0]*eye[0]+fy[1]*eye[1]+fy[2]*eye[2]),
+                -(fz[0]*eye[0]+fz[1]*eye[1]+fz[2]*eye[2]),
+                1
+            ]);
+        }
+
+        // === Scene: colored cubes in a circle ===
+        const cubes = [
+            { pos: [0, 1.5, -3], color: [0.9, 0.2, 0.3], scale: 0.3 },
+            { pos: [-2, 1.0, -2], color: [0.2, 0.8, 0.3], scale: 0.25 },
+            { pos: [2, 1.0, -2], color: [0.2, 0.3, 0.9], scale: 0.25 },
+            { pos: [-1, 0.5, -4], color: [0.9, 0.8, 0.2], scale: 0.2 },
+            { pos: [1, 0.5, -4], color: [0.8, 0.2, 0.8], scale: 0.2 },
+            { pos: [0, 0.3, -2], color: [0.2, 0.8, 0.8], scale: 0.15 },
+        ];
+
+        // Floor grid
+        const floorCubes = [];
+        for (let x = -5; x <= 5; x += 1) {
+            for (let z = -5; z <= 5; z += 1) {
+                floorCubes.push({
+                    pos: [x, -0.05, z],
+                    color: [(x + 5) / 10 * 0.3 + 0.1, 0.1, (z + 5) / 5 * 0.3 + 0.1],
+                    scale: 0.45
+                });
+            }
+        }
+
+        function drawCube(vpMatrix, cube, time) {
+            const model = mat4Multiply(
+                mat4Translate(cube.pos[0], cube.pos[1], cube.pos[2]),
+                mat4Multiply(
+                    mat4RotateY(time + cube.pos[0]),
+                    mat4Scale(cube.scale)
+                )
+            );
+            const mvp = mat4Multiply(vpMatrix, model);
+            gl.uniformMatrix4fv(uMVP, false, mvp);
+            gl.uniformMatrix4fv(uModel, false, model);
+            gl.uniform3fv(uColor, cube.color);
+            gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
+        }
+
+        function drawFloorTile(vpMatrix, cube) {
+            const model = mat4Multiply(
+                mat4Translate(cube.pos[0], cube.pos[1], cube.pos[2]),
+                mat4Scale(cube.scale)
+            );
+            const mvp = mat4Multiply(vpMatrix, model);
+            gl.uniformMatrix4fv(uMVP, false, mvp);
+            gl.uniformMatrix4fv(uModel, false, model);
+            gl.uniform3fv(uColor, cube.color);
+            gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
+        }
+
+        // === WebXR Setup ===
+        let xrSession = null;
+        let xrRefSpace = null;
+        let xrGLLayer = null;
+
+        async function checkXR() {
+            if (!navigator.xr) {
+                enterBtn.textContent = 'WebXR不可用(需HTTPS)';
+                statusEl.textContent = '请使用HTTPS访问或在Quest浏览器中打开';
+                return;
+            }
+            const supported = await navigator.xr.isSessionSupported('immersive-vr');
+            if (supported) {
+                enterBtn.textContent = '进入VR';
+                enterBtn.disabled = false;
+                statusEl.textContent = 'WebXR就绪 ✓';
+            } else {
+                enterBtn.textContent = '设备不支持VR';
+                statusEl.textContent = '请在Quest浏览器中访问此页面';
+            }
+        }
+
+        enterBtn.addEventListener('click', async () => {
+            if (xrSession) return;
+            try {
+                xrSession = await navigator.xr.requestSession('immersive-vr', {
+                    optionalFeatures: ['local-floor', 'hand-tracking']
+                });
+                overlay.style.display = 'none';
+                xrGLLayer = new XRWebGLLayer(xrSession, gl);
+                xrSession.updateRenderState({ baseLayer: xrGLLayer });
+                try {
+                    xrRefSpace = await xrSession.requestReferenceSpace('local-floor');
+                } catch {
+                    xrRefSpace = await xrSession.requestReferenceSpace('local');
+                }
+                xrSession.requestAnimationFrame(xrRenderLoop);
+                xrSession.addEventListener('end', () => {
+                    xrSession = null;
+                    overlay.style.display = 'flex';
+                });
+            } catch (e) {
+                statusEl.textContent = `VR启动失败: ${e.message}`;
+            }
+        });
+
+        const startTime = performance.now() / 1000;
+
+        function xrRenderLoop(time, frame) {
+            const session = frame.session;
+            session.requestAnimationFrame(xrRenderLoop);
+            const pose = frame.getViewerPose(xrRefSpace);
+            if (!pose) return;
+
+            const t = performance.now() / 1000 - startTime;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, xrGLLayer.framebuffer);
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.CULL_FACE);
+            gl.clearColor(0.05, 0.05, 0.1, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.useProgram(program);
+            gl.uniform1f(uTime, t);
+            gl.bindVertexArray(vao);
+
+            for (const view of pose.views) {
+                const vp = xrGLLayer.getViewport(view);
+                gl.viewport(vp.x, vp.y, vp.width, vp.height);
+                const vpMatrix = mat4Multiply(
+                    view.projectionMatrix,
+                    view.transform.inverse.matrix
+                );
+                for (const cube of cubes) drawCube(vpMatrix, cube, t);
+                for (const tile of floorCubes) drawFloorTile(vpMatrix, tile);
+
+                // Draw hand joints if available
+                for (const inputSource of session.inputSources) {
+                    if (inputSource.hand) {
+                        for (const joint of inputSource.hand.values()) {
+                            const jointPose = frame.getJointPose(joint, xrRefSpace);
+                            if (jointPose) {
+                                const r = jointPose.radius || 0.008;
+                                const p = jointPose.transform.position;
+                                const handCube = {
+                                    pos: [p.x, p.y, p.z],
+                                    color: inputSource.handedness === 'left' ? [0.3, 0.9, 0.5] : [0.9, 0.5, 0.3],
+                                    scale: r * 2
+                                };
+                                drawFloorTile(vpMatrix, handCube);
+                            }
+                        }
+                    }
+                }
+            }
+            gl.bindVertexArray(null);
+        }
+
+        // === Inline (non-VR) Fallback ===
+        function inlineRender() {
+            if (xrSession) return;
+            requestAnimationFrame(inlineRender);
+            const w = window.innerWidth, h = window.innerHeight;
+            if (canvas.width !== w || canvas.height !== h) {
+                canvas.width = w; canvas.height = h;
+            }
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.CULL_FACE);
+            gl.clearColor(0.05, 0.05, 0.1, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.useProgram(program);
+
+            const t = performance.now() / 1000 - startTime;
+            gl.uniform1f(uTime, t);
+
+            const proj = mat4Perspective(Math.PI / 3, canvas.width / canvas.height, 0.1, 100);
+            const view = mat4LookAt([0, 1.6, 1], [0, 1, -2], [0, 1, 0]);
+            const vpMatrix = mat4Multiply(proj, view);
+
+            gl.bindVertexArray(vao);
+            for (const cube of cubes) drawCube(vpMatrix, cube, t);
+            for (const tile of floorCubes) drawFloorTile(vpMatrix, tile);
+            gl.bindVertexArray(null);
+        }
+
+        checkXR();
+        inlineRender();
+    </script>
+</body>
+</html>

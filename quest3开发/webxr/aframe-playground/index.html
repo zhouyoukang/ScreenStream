@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 3 A-Frame Playground</title>
+    <script src="/quest/libs/aframe.min.js"></script>
+    <!-- aframe-extras removed: not needed for this demo, CDN unreliable -->
+    <style>
+        .a-enter-vr-button {
+            background: linear-gradient(135deg, #e94560, #533483) !important;
+            border-radius: 12px !important;
+            font-size: 16px !important;
+        }
+    </style>
+</head>
+<body>
+    <a-scene
+        webxr="optionalFeatures: local-floor, hand-tracking;"
+        renderer="colorManagement: true; physicallyCorrectLights: true;"
+        background="color: #0a0a1a"
+    >
+        <!-- Assets -->
+        <a-assets>
+            <img id="grid" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23111'/%3E%3Cline x1='0' y1='0' x2='64' y2='0' stroke='%23333' stroke-width='1'/%3E%3Cline x1='0' y1='0' x2='0' y2='64' stroke='%23333' stroke-width='1'/%3E%3C/svg%3E" crossorigin="anonymous">
+        </a-assets>
+
+        <!-- Environment: Floor Grid -->
+        <a-plane
+            position="0 0 0" rotation="-90 0 0"
+            width="20" height="20"
+            material="src: #grid; repeat: 20 20; transparent: true; opacity: 0.5"
+        ></a-plane>
+
+        <!-- Floating Objects -->
+        <!-- Central Sphere (pulsing) -->
+        <a-sphere
+            position="0 1.5 -3" radius="0.3"
+            color="#e94560"
+            animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine"
+            animation__rotate="property: rotation; to: 0 360 0; dur: 8000; loop: true; easing: linear"
+            material="metalness: 0.3; roughness: 0.4"
+        ></a-sphere>
+
+        <!-- Orbiting Cubes -->
+        <a-entity position="0 1.5 -3" animation="property: rotation; to: 0 360 0; dur: 12000; loop: true; easing: linear">
+            <a-box position="1.5 0 0" width="0.15" height="0.15" depth="0.15" color="#4ade80"
+                animation="property: rotation; to: 360 360 0; dur: 4000; loop: true; easing: linear"
+                material="metalness: 0.5; roughness: 0.3"></a-box>
+            <a-box position="-1.5 0 0" width="0.15" height="0.15" depth="0.15" color="#38bdf8"
+                animation="property: rotation; to: 0 360 360; dur: 5000; loop: true; easing: linear"
+                material="metalness: 0.5; roughness: 0.3"></a-box>
+            <a-box position="0 0 1.5" width="0.15" height="0.15" depth="0.15" color="#f472b6"
+                animation="property: rotation; to: 360 0 360; dur: 3500; loop: true; easing: linear"
+                material="metalness: 0.5; roughness: 0.3"></a-box>
+            <a-box position="0 0 -1.5" width="0.15" height="0.15" depth="0.15" color="#fbbf24"
+                animation="property: rotation; to: 0 360 0; dur: 6000; loop: true; easing: linear"
+                material="metalness: 0.5; roughness: 0.3"></a-box>
+        </a-entity>
+
+        <!-- Floating Rings -->
+        <a-torus position="-2 1.2 -4" radius="0.4" radius-tubular="0.03" color="#7c3aed"
+            animation="property: rotation; to: 360 360 0; dur: 10000; loop: true; easing: linear"
+            material="metalness: 0.7; roughness: 0.2"></a-torus>
+        <a-torus position="2 1.8 -4" radius="0.3" radius-tubular="0.02" color="#06b6d4"
+            animation="property: rotation; to: 0 360 360; dur: 8000; loop: true; easing: linear"
+            material="metalness: 0.7; roughness: 0.2"></a-torus>
+
+        <!-- Interactive Cylinders (clickable) -->
+        <a-cylinder position="-1 0.5 -2" radius="0.15" height="1" color="#22c55e"
+            class="clickable"
+            animation__hover="property: scale; to: 1.3 1.3 1.3; startEvents: mouseenter; dur: 300"
+            animation__leave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 300"
+            material="metalness: 0.4; roughness: 0.5"></a-cylinder>
+        <a-cylinder position="1 0.5 -2" radius="0.15" height="1" color="#ef4444"
+            class="clickable"
+            animation__hover="property: scale; to: 1.3 1.3 1.3; startEvents: mouseenter; dur: 300"
+            animation__leave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 300"
+            material="metalness: 0.4; roughness: 0.5"></a-cylinder>
+
+        <!-- Particle-like small spheres -->
+        <a-entity id="particles">
+            <a-sphere position="-0.5 2.5 -3.5" radius="0.04" color="#fbbf24" material="emissive: #fbbf24; emissiveIntensity: 0.5"
+                animation="property: position; to: -0.5 2.8 -3.5; dir: alternate; dur: 3000; loop: true"></a-sphere>
+            <a-sphere position="0.3 2.2 -2.8" radius="0.03" color="#4ade80" material="emissive: #4ade80; emissiveIntensity: 0.5"
+                animation="property: position; to: 0.3 2.6 -2.8; dir: alternate; dur: 2500; loop: true"></a-sphere>
+            <a-sphere position="-0.8 1.8 -4" radius="0.05" color="#f472b6" material="emissive: #f472b6; emissiveIntensity: 0.5"
+                animation="property: position; to: -0.8 2.3 -4; dir: alternate; dur: 4000; loop: true"></a-sphere>
+            <a-sphere position="0.7 2.0 -3.2" radius="0.035" color="#38bdf8" material="emissive: #38bdf8; emissiveIntensity: 0.5"
+                animation="property: position; to: 0.7 2.5 -3.2; dir: alternate; dur: 3500; loop: true"></a-sphere>
+            <a-sphere position="0 2.8 -3" radius="0.025" color="#e879f9" material="emissive: #e879f9; emissiveIntensity: 0.5"
+                animation="property: position; to: 0 3.1 -3; dir: alternate; dur: 2000; loop: true"></a-sphere>
+        </a-entity>
+
+        <!-- Text Label -->
+        <a-text
+            value="Quest 3 A-Frame Playground"
+            position="0 3 -4" align="center"
+            color="#ffffff" width="5"
+            font="/quest/fonts/mozillavr.fnt"
+        ></a-text>
+        <a-text
+            value="声明式WebXR · 零JS代码 · 手部追踪"
+            position="0 2.7 -4" align="center"
+            color="#94a3b8" width="3"
+            font="/quest/fonts/mozillavr.fnt"
+        ></a-text>
+
+        <!-- Lighting -->
+        <a-light type="ambient" color="#404060" intensity="0.4"></a-light>
+        <a-light type="directional" color="#ffffff" intensity="0.8" position="1 3 2"></a-light>
+        <a-light type="point" color="#e94560" intensity="0.6" position="0 1.5 -3" distance="5"></a-light>
+
+        <!-- Sky gradient -->
+        <a-sky color="#0a0a1a"></a-sky>
+
+        <!-- Camera with cursor for interaction -->
+        <a-entity id="rig" position="0 0 0">
+            <a-camera position="0 1.6 0" look-controls="pointerLockEnabled: false">
+                <a-cursor
+                    color="#ffffff" opacity="0.6"
+                    raycaster="objects: .clickable"
+                    fuse="false"
+                ></a-cursor>
+            </a-camera>
+        </a-entity>
+
+        <!-- Hand tracking (Quest) -->
+        <a-entity hand-tracking-controls="hand: left;"></a-entity>
+        <a-entity hand-tracking-controls="hand: right;"></a-entity>
+    </a-scene>
+</body>
+</html>

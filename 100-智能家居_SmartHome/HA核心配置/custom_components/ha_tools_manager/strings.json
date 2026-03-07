@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HA Tools Manager Setup",
+        "description": "Configure connection to the Tools API server",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to API server",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This API server is already configured"
+    }
+  },
+  "services": {
+    "run_script": {
+      "name": "Run Script",
+      "description": "Run a PowerShell script from the Home Assistant tools library",
+      "fields": {
+        "script_path": {
+          "name": "Script Path",
+          "description": "Full path to the script to run"
+        },
+        "params": {
+          "name": "Parameters",
+          "description": "Parameters to pass to the script"
+        }
+      }
+    },
+    "restart_ha": {
+      "name": "Restart Home Assistant",
+      "description": "Restart Home Assistant using the tools library restart script"
+    }
+  }
+} 

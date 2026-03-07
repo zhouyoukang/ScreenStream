@@ -1,0 +1,18 @@
+{
+  "name": "Desktop Cast",
+  "short_name": "投屏",
+  "description": "手机远程查看和操控电脑桌面",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230a0e1a' width='100' height='100' rx='20'/><text y='.82em' x='50' text-anchor='middle' font-size='65'>🖥</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

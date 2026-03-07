@@ -1,0 +1,235 @@
+# AI Voice Command Enhancement - Cycle #4 Round #2
+
+# Voice command processor
+voice_processor:
+  platform: conversation
+  
+  # Natural language understanding
+  nlu_config:
+    language: zh-cn
+    confidence_threshold: 0.75
+    context_aware: true
+    multi_turn: true
+  
+  # Wake word detection
+  wake_words:
+    - "小康"
+    - "Hey Assistant"
+    - "智能助手"
+  
+  # Voice recognition
+  recognition:
+    engine: google
+    language: zh-CN
+    alternative: baidu
+    sample_rate: 16000
+
+# Command categories
+command_categories:
+  
+  # Device control
+  device_control:
+    patterns:
+      - "打开 {device}"
+      - "关闭 {device}"
+      - "调节 {device} 到 {value}"
+      - "{device} 开关"
+    
+    entities:
+      - light
+      - switch
+      - fan
+      - climate
+    
+    responses:
+      success: "好的，已经{action}{device}"
+      error: "抱歉，{device}无法{action}"
+  
+  # Scene activation
+  scene_control:
+    patterns:
+      - "激活 {scene} 模式"
+      - "切换到 {scene}"
+      - "我要 {scene}"
+      - "{scene} 场景"
+    
+    scenes:
+      - name: "回家"
+        aliases: ["到家", "回来了"]
+        script: script.home_mode
+      - name: "离开"
+        aliases: ["出门", "外出"]
+        script: script.away_mode
+      - name: "睡觉"
+        aliases: ["睡眠", "晚安"]
+        script: script.sleep_mode
+      - name: "工作"
+        aliases: ["办公", "专注"]
+        script: script.work_mode
+      - name: "早餐"
+        aliases: ["吃早餐", "早饭"]
+        script: script.breakfast_mode
+      - name: "午休"
+        aliases: ["午睡", "休息"]
+        script: script.lunch_break_mode
+      - name: "晚餐"
+        aliases: ["吃晚餐", "晚饭"]
+        script: script.dinner_mode
+    
+    responses:
+      success: "正在为您激活{scene}模式"
+      unavailable: "{scene}模式暂时不可用"
+  
+  # Information query
+  information_query:
+    patterns:
+      - "现在 {entity} 是多少"
+      - "告诉我 {entity}"
+      - "{entity} 的状态"
+      - "查询 {entity}"
+    
+    entities:
+      temperature: "sensor.miaomiaoc_temperature"
+      humidity: "sensor.miaomiaoc_humidity"
+      power: "sensor.sonoff_total_power_usage"
+      battery: "sensor.river_2_max_battery_level"
+    
+    responses:
+      temperature: "当前温度是{value}度"
+      humidity: "当前湿度是{value}%"
+      power: "当前功率是{value}瓦"
+      battery: "电池电量是{value}%"
+  
+  # Complex commands
+  complex_commands:
+    - pattern: "我要睡觉了"
+      actions:
+        - service: script.sleep_mode
+        - service: notify.mobile_app
+          data:
+            message: "晚安，睡个好觉"
+    
+    - pattern: "我出门了"
+      actions:
+        - service: script.away_mode
+        - service: lock.lock
+          target:
+            entity_id: lock.front_door
+        - service: notify.mobile_app
+          data:
+            message: "已为您关闭所有设备并锁门"
+    
+    - pattern: "今天的能耗"
+      actions:
+        - service: script.export_daily_report
+        - service: tts.speak
+          data:
+            message: "今天总共使用了{{ states('sensor.daily_energy') }}千瓦时电量"
+
+# Context understanding
+context_engine:
+  
+  # Previous command context
+  history_aware: true
+  history_depth: 5
+  
+  # Examples
+  context_examples:
+    - user: "打开灯"
+      assistant: "好的，已打开灯"
+      user: "调亮一点"  # Context: refers to the light
+      assistant: "已将亮度调高"
+    
+    - user: "现在温度是多少"
+      assistant: "当前温度25度"
+      user: "太热了"  # Context: temperature related
+      assistant: "为您打开风扇降温"
+
+# Smart responses
+smart_responses:
+  
+  # Time-based
+  time_awareness:
+    morning: "早上好！"
+    afternoon: "下午好！"
+    evening: "晚上好！"
+    night: "夜深了，注意休息"
+  
+  # Status-based
+  status_awareness:
+    high_power: "检测到高功耗，建议开启节能模式"
+    low_battery: "有设备电量不足，请及时充电"
+    all_offline: "多个设备离线，请检查网络"
+  
+  # Proactive suggestions
+  suggestions:
+    - condition: "time > 22:00 and lights_on"
+      message: "夜深了，要不要激活睡眠模式？"
+    
+    - condition: "temperature > 28"
+      message: "温度较高，要帮您开启风扇吗？"
+    
+    - condition: "away_mode and motion_detected"
+      message: "检测到家中有活动，需要查看监控吗？"
+
+# TTS settings
+tts_settings:
+  platform: google_translate
+  language: zh-cn
+  cache: true
+  cache_dir: /config/tts
+  time_memory: 300
+  
+  # Voice customization
+  voice_options:
+    speed: 1.0
+    pitch: 1.0
+    volume: 0.8
+    voice: "zh-CN-Wavenet-A"
+
+# Continuous conversation
+continuous_mode:
+  enabled: true
+  timeout: 30  # seconds
+  end_phrases:
+    - "谢谢"
+    - "没事了"
+    - "就这样"
+    - "结束"
+  
+  # Multi-turn example
+  conversation_flow:
+    - user: "我要设置闹钟"
+      assistant: "好的，几点钟？"
+    - user: "早上7点"
+      assistant: "每天都要响吗？"
+    - user: "只工作日"
+      assistant: "好的，已设置工作日早上7点闹钟"
+
+# Error handling
+error_responses:
+  not_understood: "抱歉，我没听清楚，能再说一遍吗？"
+  no_match: "我还不会这个操作，您可以说'帮助'查看我能做什么"
+  service_error: "操作失败了，请稍后再试"
+  timeout: "等待超时，需要帮助吗？"
+
+# Help system
+help_commands:
+  trigger: ["帮助", "help", "你能做什么"]
+  response: |
+    我可以帮您：
+    
+    🏠 设备控制
+    - "打开/关闭 灯/风扇"
+    - "调节亮度到50%"
+    
+    🎬 场景模式
+    - "激活回家/离家/睡眠模式"
+    - "切换到工作模式"
+    
+    📊 信息查询
+    - "现在温度多少"
+    - "今天的能耗"
+    
+    💡 智能建议
+    - 根据时间和环境主动建议

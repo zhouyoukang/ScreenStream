@@ -1,0 +1,56 @@
+name: Build and Deploy Docs to GitHub Pages
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages-deployment'
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Build Library
+        run: npm install && npm run build
+
+      - name: Build Example
+        run: cd example && npm install && npm run build && cd ..
+
+      - name: Build Documentation Site
+        run: npm run docs:build
+
+      - name: Move Example Build to Docs
+        run: mv example/dist/ docs/.vitepress/dist/example
+
+      - name: Upload Artifact for Deployment
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./docs/.vitepress/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1

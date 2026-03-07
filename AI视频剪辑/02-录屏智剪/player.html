@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <title>录屏智剪 — 成果展示</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin: 20px 0 5px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .video-container {
+      width: 90%;
+      max-width: 1200px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+      background: #111;
+    }
+
+    video {
+      width: 100%;
+      display: block;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      width: 90%;
+      max-width: 1200px;
+      margin-top: 24px;
+    }
+
+    .stat-card {
+      background: #1a1a2e;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      border: 1px solid #333;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .timeline {
+      width: 90%;
+      max-width: 1200px;
+      margin-top: 24px;
+    }
+
+    .timeline h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: #ccc;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid #222;
+      font-size: 13px;
+    }
+
+    th {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .score-high {
+      color: #4ade80;
+      font-weight: bold;
+    }
+
+    .score-mid {
+      color: #facc15;
+    }
+
+    .score-low {
+      color: #f87171;
+    }
+
+    .keep {
+      color: #4ade80;
+    }
+
+    .discard {
+      color: #f87171;
+    }
+
+    .summary {
+      width: 90%;
+      max-width: 1200px;
+      margin-top: 24px;
+      background: #1a1a2e;
+      border-radius: 8px;
+      padding: 20px;
+      border: 1px solid #333;
+    }
+
+    .summary h2 {
+      font-size: 18px;
+      color: #ccc;
+      margin-bottom: 12px;
+    }
+
+    .summary ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .summary li {
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #222;
+    }
+
+    .summary li:last-child {
+      border: none;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-right: 4px;
+    }
+
+    .tag-fix {
+      background: #7c3aed33;
+      color: #a78bfa;
+    }
+
+    .tag-feat {
+      background: #059669aa;
+      color: #6ee7b7;
+    }
+
+    .tag-clean {
+      background: #d9770633;
+      color: #fdba74;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>录屏智剪 — AI Agent 自动剪辑成果</h1>
+  <p class="subtitle">2026-02-22 · ffmpeg gdigrab + Python Agent 实时分析</p>
+
+  <div class="video-container">
+    <video controls autoplay>
+      <source src="showcase_v2.mp4" type="video/mp4">
+      浏览器不支持视频播放
+    </video>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value">10</div>
+      <div class="stat-label">录制分段</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">8</div>
+      <div class="stat-label">AI 分析</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">7</div>
+      <div class="stat-label">保留精华</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">1</div>
+      <div class="stat-label">丢弃废段</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">175s</div>
+      <div class="stat-label">最终时长</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">35MB</div>
+      <div class="stat-label">输出大小</div>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <h2>📊 Agent 逐段分析</h2>
+    <table>
+      <tr>
+        <th>分段</th>
+        <th>时长</th>
+        <th>场景变化</th>
+        <th>运动量</th>
+        <th>码率</th>
+        <th>总分</th>
+        <th>决策</th>
+        <th>内容</th>
+      </tr>
+      <tr>
+        <td>seg_0000</td>
+        <td>25s</td>
+        <td>0次</td>
+        <td>8%</td>
+        <td>1872k</td>
+        <td class="score-mid">18</td>
+        <td class="keep">★保留</td>
+        <td>IDE 编辑器静态画面</td>
+      </tr>
+      <tr>
+        <td>seg_0001</td>
+        <td>25s</td>
+        <td>1次</td>
+        <td>28%</td>
+        <td>1710k</td>
+        <td class="score-high">35</td>
+        <td class="keep">★保留</td>
+        <td>终端命令执行</td>
+      </tr>
+      <tr>
+        <td>seg_0002</td>
+        <td>25s</td>
+        <td>0次</td>
+        <td>14%</td>
+        <td>1704k</td>
+        <td class="score-mid">19</td>
+        <td class="keep">★保留</td>
+        <td>终端输出变化</td>
+      </tr>
+      <tr>
+        <td>seg_0003</td>
+        <td>25s</td>
+        <td>0次</td>
+        <td>10%</td>
+        <td>1421k</td>
+        <td class="score-mid">16</td>
+        <td class="keep">★保留</td>
+        <td>IDE 低活动</td>
+      </tr>
+      <tr>
+        <td>seg_0004</td>
+        <td>25s</td>
+        <td>2次</td>
+        <td>24%</td>
+        <td>2043k</td>
+        <td class="score-high">45</td>
+        <td class="keep">★保留</td>
+        <td>多窗口切换</td>
+      </tr>
+      <tr>
+        <td>seg_0005</td>
+        <td>25s</td>
+        <td>5次</td>
+        <td>10%</td>
+        <td>1841k</td>
+        <td class="score-high">48</td>
+        <td class="keep">★保留</td>
+        <td>B站 → 抖音 切换</td>
+      </tr>
+      <tr>
+        <td>seg_0006</td>
+        <td>25s</td>
+        <td>5次</td>
+        <td>20%</td>
+        <td>1138k</td>
+        <td class="score-high">49</td>
+        <td class="keep">★保留</td>
+        <td>抖音 → GitHub 切换</td>
+      </tr>
+      <tr>
+        <td>seg_0007</td>
+        <td>25s</td>
+        <td>0次</td>
+        <td>2%</td>
+        <td>288k</td>
+        <td class="score-low">7</td>
+        <td class="discard">✗丢弃</td>
+        <td>录制结束静态画面</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="summary">
+    <h2>🔧 本次对话全部成果</h2>
+    <ul>
+      <li><span class="tag tag-clean">清理</span> <b>D:\屏幕录制</b> 33个散落文件 → 4个时间段子目录归类</li>
+      <li><span class="tag tag-clean">清理</span> <b>E:\VideoEdit</b> 03-DJI导出 合并入01 + 07工程文件清空 + 释放 12.17GB</li>
+      <li><span class="tag tag-clean">清理</span> <b>E:\骑行拍摄</b> 清除 115个LRF预览文件（10.66GB）</li>
+      <li><span class="tag tag-fix">修复</span> 剪辑要法.md 6处 nvenc → CPU编码器（本机无NVIDIA GPU）</li>
+      <li><span class="tag tag-fix">修复</span> 素材编目.json 55→50条（删除已清理的DJI导出残留）</li>
+      <li><span class="tag tag-fix">修复</span> 剪辑要法.md 目录结构移除不存在的 03-DJI导出</li>
+      <li><span class="tag tag-feat">功能</span> 素材索引.md — 50个视频的完整编目（分辨率/时长/编码/大小）</li>
+      <li><span class="tag tag-feat">功能</span> 素材编目.json — 机器可读元数据</li>
+      <li><span class="tag tag-feat">功能</span> 素材时间线.md — 时间轴可视化</li>
+      <li><span class="tag tag-feat">功能</span> ffmpeg 实时录屏（gdigrab, 15s分段, 2880×2880）</li>
+      <li><span class="tag tag-feat">功能</span> Python 实时剪辑 Agent（场景检测+运动分析+码率评分）</li>
+      <li><span class="tag tag-fix">修复</span> Agent Bug: 未完成文件被读取 → SEGMENT_LAG=2</li>
+      <li><span class="tag tag-fix">修复</span> Agent Bug: 屏幕录制评分过严 → 自适应阈值</li>
+      <li><span class="tag tag-feat">功能</span> Playwright 自动屏幕活动（B站→抖音→GitHub）</li>
+      <li><span class="tag tag-feat">功能</span> 最终产出: highlight_final.mp4（175s / 35MB 精华合并）</li>
+    </ul>
+  </div>
+
+</body>
+
+</html>

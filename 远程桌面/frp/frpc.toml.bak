@@ -1,0 +1,41 @@
+serverAddr = "60.205.171.100"
+serverPort = 7000
+auth.method = "token"
+auth.token = "NKLQyCrSavf1MmYOGtkFzbh0"
+user = "laptop"
+loginFailExit = false
+
+[[proxies]]
+name = "remote_agent"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 9903
+remotePort = 19903
+
+[[proxies]]
+name = "rdp"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 3389
+remotePort = 13389
+
+[[proxies]]
+name = "gateway"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 8900
+remotePort = 18900
+
+[[proxies]]
+name = "ss"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 18080
+remotePort = 18086
+
+[[proxies]]
+name = "input"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 18084
+remotePort = 18084

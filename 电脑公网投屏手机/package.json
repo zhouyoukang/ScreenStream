@@ -1,0 +1,13 @@
+{
+  "name": "desktop-cast-relay",
+  "version": "2.3.0",
+  "description": "电脑公网投屏手机 — Desktop screen casting to phone via public network",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js --dev"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}

@@ -1,0 +1,132 @@
+[gd_scene load_steps=13 format=3 uid="uid://blrhy2uccrdn4"]
+
+[ext_resource type="Script" path="res://content/ui/components/input/input.gd" id="1_uml3t"]
+[ext_resource type="Script" path="res://content/ui/components/panel/panel.gd" id="3_3bvrj"]
+[ext_resource type="Shader" path="res://content/ui/components/panel/glass.gdshader" id="3_nl02b"]
+[ext_resource type="FontFile" uid="uid://drsixxc4tmvjf" path="res://assets/fonts/Montserrat-Medium.ttf" id="4_yukbj"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4vor6"]
+resource_local_to_scene = true
+render_priority = 10
+shader = ExtResource("3_nl02b")
+shader_parameter/color = Color(1, 1, 1, 0.3)
+shader_parameter/border_color = Color(1, 1, 1, 1)
+shader_parameter/edge_color = Color(0, 0, 0, 1)
+shader_parameter/size = Vector2(3.75, 0.75)
+shader_parameter/border_size = 0.01
+shader_parameter/border_fade_in = 0.05
+shader_parameter/border_fade_out = 0.0
+shader_parameter/corner_radius = 0.2
+shader_parameter/roughness = 0.3
+shader_parameter/grain_amount = 0.02
+
+[sub_resource type="QuadMesh" id="QuadMesh_dndsq"]
+size = Vector2(0.15, 0.03)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_x4yp8"]
+resource_local_to_scene = true
+size = Vector3(0.15, 0.03, 0.01)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_x1ra7"]
+shading_mode = 0
+
+[sub_resource type="BoxMesh" id="BoxMesh_2736g"]
+size = Vector3(0.001, 0.02, 0.001)
+
+[sub_resource type="Animation" id="Animation_65tpe"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Label/Caret:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [false]
+}
+
+[sub_resource type="Animation" id="Animation_8ny1h"]
+resource_name = "blink"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Label/Caret:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [true, false, true]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_1sy4t"]
+_data = {
+"RESET": SubResource("Animation_65tpe"),
+"blink": SubResource("Animation_8ny1h")
+}
+
+[node name="Input" type="Node3D" groups=["ui_focus"]]
+script = ExtResource("1_uml3t")
+placeholder = "Placeholder"
+text = "Example Text"
+size = Vector3(0.15, 0.03, 0.01)
+
+[node name="Body" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.005)
+collision_layer = 6
+collision_mask = 6
+
+[node name="Panel3D" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.005)
+material_override = SubResource("ShaderMaterial_4vor6")
+mesh = SubResource("QuadMesh_dndsq")
+script = ExtResource("3_3bvrj")
+size = Vector2(0.15, 0.03)
+
+[node name="Collision" type="CollisionShape3D" parent="Body"]
+shape = SubResource("BoxShape3D_x4yp8")
+
+[node name="Label" type="Label3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.073, 0, 0.005)
+pixel_size = 0.001
+double_sided = false
+render_priority = 30
+outline_render_priority = 29
+text = "Example Text"
+font = ExtResource("4_yukbj")
+font_size = 18
+outline_size = 0
+horizontal_alignment = 0
+
+[node name="Caret" type="MeshInstance3D" parent="Body/Label"]
+visible = false
+material_override = SubResource("StandardMaterial3D_x1ra7")
+mesh = SubResource("BoxMesh_2736g")
+skeleton = NodePath("../..")
+
+[node name="Placeholder" type="Label3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.073, 0, 0.005)
+visible = false
+pixel_size = 0.001
+double_sided = false
+render_priority = 30
+outline_render_priority = 29
+modulate = Color(0.470076, 0.470076, 0.470076, 1)
+text = "Placeholder"
+font = ExtResource("4_yukbj")
+font_size = 18
+outline_size = 0
+horizontal_alignment = 0
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+root_node = NodePath("../Body")
+libraries = {
+"": SubResource("AnimationLibrary_1sy4t")
+}
+
+[node name="SnapSound" type="AudioStreamPlayer" parent="."]

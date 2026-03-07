@@ -1,0 +1,44 @@
+# Monitoring and Alerting - Cycle #5 Round #12
+monitoring:
+  
+  # System metrics
+  metrics:
+    - cpu_usage
+    - memory_usage
+    - disk_usage
+    - network_traffic
+    - response_time
+    - error_rate
+  
+  # Health checks
+  health_checks:
+    interval: 60  # seconds
+    endpoints:
+      - /api/
+      - /api/websocket
+      - /api/states
+  
+  # Alerts
+  alerts:
+    - name: High CPU
+      condition: cpu_usage > 80
+      severity: warning
+      notify: admin
+    
+    - name: Memory Critical
+      condition: memory_usage > 90
+      severity: critical
+      notify: [admin, mobile_app]
+    
+    - name: Service Down
+      condition: health_check_failed
+      severity: critical
+      notify: [admin, mobile_app, email]
+  
+  # Logging
+  logging:
+    level: INFO
+    format: json
+    rotation:
+      max_size: 100MB
+      backup_count: 10

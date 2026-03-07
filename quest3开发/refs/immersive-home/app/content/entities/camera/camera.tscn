@@ -1,0 +1,40 @@
+[gd_scene load_steps=7 format=3 uid="uid://b0nq4wjfckxsa"]
+
+[ext_resource type="Script" path="res://content/entities/camera/camera.gd" id="1_htxq3"]
+[ext_resource type="Script" path="res://content/functions/movable.gd" id="2_e2u6o"]
+[ext_resource type="Script" path="res://content/functions/camera_follower.gd" id="3_j7lrc"]
+[ext_resource type="PackedScene" uid="uid://dejilst6cwqvi" path="res://content/entities/camera/settings.tscn" id="3_qlnvv"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_830bv"]
+size = Vector2(0.15, 0.15)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_te0pn"]
+size = Vector3(0.15, 0.15, 0.01)
+
+[node name="Camera" type="StaticBody3D"]
+script = ExtResource("1_htxq3")
+
+[node name="View" type="Sprite3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.00451169)
+mesh = SubResource("QuadMesh_830bv")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_te0pn")
+
+[node name="HTTPRequest" type="HTTPRequest" parent="."]
+
+[node name="Movable" type="Node" parent="."]
+script = ExtResource("2_e2u6o")
+resizable = true
+
+[node name="CameraFollower" type="Node" parent="." node_paths=PackedStringArray("focus_point")]
+script = ExtResource("3_j7lrc")
+focus_point = NodePath("../Settings")
+
+[node name="RefreshTimer" type="Timer" parent="."]
+wait_time = 0.1
+
+[node name="Settings" parent="." instance=ExtResource("3_qlnvv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0, 0)

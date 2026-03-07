@@ -1,0 +1,16 @@
+# 核心 (RS485电机 + MQTT控制 + 网络诊断)
+pyserial>=3.5
+paho-mqtt>=1.6
+numpy>=1.20
+
+# 仿真 (MuJoCo Go1模型)
+mujoco>=3.0
+
+# 视觉 (摄像头流)
+opencv-python>=4.5
+
+# RL训练 (可选, 仅go1_rl.py需要)
+gymnasium>=0.29
+stable-baselines3>=2.0
+torch>=2.0
+tensorboard>=2.10

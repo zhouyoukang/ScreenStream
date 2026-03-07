@@ -1,0 +1,99 @@
+# 移动端UI场景配置
+
+# 回家场景
+- name: 回家模式
+  icon: mdi:home-import-outline
+  entities:
+    switch.sonoff_10022dede9_1: on
+    switch.sonoff_10022dedc7_1: on
+    light.philips_strip3_12ad_light:
+      state: on
+      brightness: 180
+      color_temp: 370
+
+# 离家场景  
+- name: 离家模式
+  icon: mdi:home-export-outline
+  entities:
+    switch.sonoff_10022dede9_1: off
+    switch.sonoff_10022dedc7_1: off
+    light.philips_strip3_12ad_light: off
+    fan.dmaker_p221_5b47_fan: off
+    switch.xiaomi_x08e_8219_switch_status: off
+
+# 睡眠场景 - 已禁用 (2025-12-02 凌晨2:29 - 防止灯带自动变暗)
+# - name: 睡眠模式
+#   icon: mdi:sleep
+#   entities:
+#     switch.sonoff_10022dede9_1: off
+#     light.philips_strip3_12ad_light:
+#       state: on
+#       brightness: 30
+#       rgb_color: [255, 147, 41]
+#     fan.dmaker_p221_5b47_fan:
+#       state: on
+#       speed: 1
+
+# 工作场景
+- name: 工作模式
+  icon: mdi:laptop
+  entities:
+    switch.sonoff_10022dede9_1: on
+    switch.sonoff_10022dedc7_1: on
+    light.philips_strip3_12ad_light:
+      state: on
+      brightness: 255
+      color_temp: 250
+    fan.dmaker_p221_5b47_fan:
+      state: on
+      speed: 3
+
+# 娱乐场景
+- name: 娱乐模式
+  icon: mdi:movie-open
+  entities:
+    switch.sonoff_10022dede9_1: off
+    light.philips_strip3_12ad_light:
+      state: on
+      brightness: 120
+      rgb_color: [138, 43, 226]
+    fan.dmaker_p221_5b47_fan:
+      state: on
+      speed: 1
+
+# 清洁场景
+- name: 清洁模式
+  icon: mdi:broom
+  entities:
+    switch.sonoff_10022dede9_1: on
+    light.philips_strip3_12ad_light:
+      state: on
+      brightness: 255
+      color_temp: 200
+    fan.dmaker_p221_5b47_fan:
+      state: on
+      speed: 4
+
+# 节能场景
+- name: 节能模式
+  icon: mdi:leaf
+  entities:
+    switch.sonoff_10022dede9_1: off
+    switch.sonoff_10022dedc7_1: off
+    light.philips_strip3_12ad_light:
+      state: on
+      brightness: 50
+      color_temp: 400
+    fan.dmaker_p221_5b47_fan: off
+
+# 紧急场景
+- name: 紧急模式
+  icon: mdi:alert
+  entities:
+    switch.sonoff_10022dede9_1: on
+    switch.sonoff_10022dedc7_1: on
+    light.philips_strip3_12ad_light:
+      state: on
+      brightness: 255
+      rgb_color: [255, 0, 0]
+

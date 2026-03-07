@@ -1,0 +1,3641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest 3 Virtual Simulator</title>
+<style>
+:root {
+  --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a28;
+  --fg: #e0e0e8; --fg2: #8888a0; --accent: #00d4ff;
+  --accent2: #7c3aed; --green: #22c55e; --yellow: #eab308;
+  --red: #ef4444; --orange: #f97316;
+  --radius: 8px; --gap: 8px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--fg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* Header */
+header { background: var(--bg2); border-bottom: 1px solid var(--bg3); padding: 8px 16px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; height: 48px; }
+header h1 { font-size: 16px; font-weight: 600; white-space: nowrap; }
+header h1 span { font-size: 20px; margin-right: 6px; }
+.header-stats { display: flex; gap: 12px; font-size: 12px; color: var(--fg2); }
+.header-stats .stat { background: var(--bg3); padding: 3px 10px; border-radius: 12px; }
+.header-stats .stat.active { color: var(--green); border: 1px solid var(--green); }
+.header-actions { margin-left: auto; display: flex; gap: 8px; }
+.btn { background: var(--bg3); border: 1px solid #333; color: var(--fg); padding: 4px 12px; border-radius: var(--radius); cursor: pointer; font-size: 12px; transition: all .15s; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+.btn.primary:hover { background: #00b8dd; }
+.btn.danger { border-color: var(--red); color: var(--red); }
+
+/* Main layout */
+main { display: flex; flex: 1; overflow: hidden; }
+
+/* Left panel — Demo list */
+.panel-left { width: 220px; background: var(--bg2); border-right: 1px solid var(--bg3); display: flex; flex-direction: column; flex-shrink: 0; }
+.panel-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg2); padding: 10px 12px 6px; }
+.demo-list { flex: 1; overflow-y: auto; padding: 0 6px; }
+.demo-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: var(--radius); cursor: pointer; font-size: 13px; transition: all .15s; border: 1px solid transparent; margin-bottom: 2px; }
+.demo-item:hover { background: var(--bg3); }
+.demo-item.active { background: var(--bg3); border-color: var(--accent); color: var(--accent); }
+.demo-item .badge { font-size: 9px; padding: 1px 5px; border-radius: 4px; background: var(--bg); color: var(--fg2); margin-left: auto; white-space: nowrap; }
+.demo-item .badge.vr { color: var(--accent); }
+.demo-item .badge.ar { color: var(--orange); }
+.demo-item .status { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.demo-item .status.pass { background: var(--green); }
+.demo-item .status.fail { background: var(--red); }
+.demo-item .status.pending { background: var(--fg2); }
+
+/* Tab bar */
+.tab-bar { display: flex; border-bottom: 1px solid var(--bg3); flex-shrink: 0; }
+.tab-bar .tab { flex: 1; background: none; border: none; color: var(--fg2); padding: 8px 0; font-size: 12px; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; }
+.tab-bar .tab:hover { color: var(--fg); }
+.tab-bar .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* App list */
+.app-list { flex: 1; overflow-y: auto; padding: 0 6px; }
+.app-category { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg2); padding: 8px 6px 4px; margin-top: 4px; }
+.app-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--radius); cursor: pointer; font-size: 12px; transition: all .15s; border: 1px solid transparent; margin-bottom: 2px; }
+.app-item:hover { background: var(--bg3); }
+.app-item.active { background: var(--bg3); border-color: var(--accent); }
+.app-item .app-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+.app-item .app-info { flex: 1; min-width: 0; }
+.app-item .app-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-item .app-type { font-size: 9px; color: var(--fg2); }
+.app-item .app-launch { font-size: 9px; padding: 1px 5px; border-radius: 4px; background: var(--bg); white-space: nowrap; }
+.app-item .app-launch.web { color: var(--green); }
+.app-item .app-launch.adb { color: var(--yellow); }
+.app-item .app-launch.demo { color: var(--accent); }
+
+/* App detail panel in viewport */
+.app-detail { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--fg); gap: 12px; padding: 40px; text-align: center; }
+.app-detail .app-detail-icon { font-size: 72px; opacity: .8; }
+.app-detail h2 { font-size: 24px; font-weight: 600; }
+.app-detail .app-detail-meta { font-size: 13px; color: var(--fg2); line-height: 1.8; }
+.app-detail .app-actions { display: flex; gap: 12px; margin-top: 8px; }
+.app-detail .app-actions .btn { padding: 8px 20px; font-size: 13px; }
+
+/* Environment selector */
+.env-section { border-top: 1px solid var(--bg3); padding: 10px 12px; }
+.env-section select { width: 100%; background: var(--bg); border: 1px solid #333; color: var(--fg); padding: 5px 8px; border-radius: var(--radius); font-size: 12px; }
+.env-section label { font-size: 11px; color: var(--fg2); display: block; margin-bottom: 4px; }
+
+/* Center — Demo viewport */
+.panel-center { flex: 1; display: flex; flex-direction: column; position: relative; }
+.viewport-bar { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg2); border-bottom: 1px solid var(--bg3); font-size: 12px; }
+.viewport-bar .url { flex: 1; background: var(--bg); border: 1px solid #333; border-radius: var(--radius); padding: 4px 10px; color: var(--fg2); font-family: monospace; font-size: 11px; }
+.viewport-bar .xr-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+.viewport-bar .xr-badge.vr { background: rgba(0,212,255,.15); color: var(--accent); }
+.viewport-bar .xr-badge.ar { background: rgba(249,115,22,.15); color: var(--orange); }
+.viewport { flex: 1; position: relative; background: #000; }
+.viewport iframe { width: 100%; height: 100%; border: none; }
+.viewport .placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--fg2); gap: 16px; }
+.viewport .placeholder .icon { font-size: 64px; opacity: .3; }
+.viewport .placeholder p { font-size: 14px; }
+
+/* Right panel — Monitor */
+.panel-right { width: 280px; background: var(--bg2); border-left: 1px solid var(--bg3); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
+.monitor-section { border-bottom: 1px solid var(--bg3); padding: 10px 12px; }
+.monitor-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg2); margin-bottom: 8px; }
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.metric { background: var(--bg); border-radius: var(--radius); padding: 8px; }
+.metric .label { font-size: 10px; color: var(--fg2); }
+.metric .value { font-size: 18px; font-weight: 700; font-family: monospace; }
+.metric .value.green { color: var(--green); }
+.metric .value.yellow { color: var(--yellow); }
+.metric .value.red { color: var(--red); }
+
+/* Feature list */
+.feature-list { display: flex; flex-direction: column; gap: 3px; }
+.feature-item { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 0; }
+.feature-item .check { font-size: 12px; }
+
+/* Console */
+.console-log { background: var(--bg); border-radius: var(--radius); padding: 8px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: auto; line-height: 1.6; }
+.console-log .log { color: var(--fg2); }
+.console-log .warn { color: var(--yellow); }
+.console-log .error { color: var(--red); }
+.console-log .info { color: var(--accent); }
+
+/* XR Device Control */
+.device-control { display: flex; flex-direction: column; gap: 6px; }
+.device-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.device-row label { width: 60px; color: var(--fg2); flex-shrink: 0; }
+.device-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+.device-row .val { width: 40px; text-align: right; font-family: monospace; font-size: 11px; }
+
+/* Bottom bar — Keyboard shortcuts */
+footer { background: var(--bg2); border-top: 1px solid var(--bg3); padding: 6px 16px; display: flex; gap: 16px; font-size: 11px; color: var(--fg2); flex-shrink: 0; overflow-x: auto; }
+footer kbd { background: var(--bg3); border: 1px solid #444; padding: 1px 5px; border-radius: 3px; font-family: monospace; font-size: 10px; color: var(--fg); margin: 0 2px; }
+
+/* Test results overlay */
+.test-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; z-index: 1000; justify-content: center; align-items: center; }
+.test-overlay.visible { display: flex; }
+.test-panel { background: var(--bg2); border: 1px solid var(--bg3); border-radius: 12px; padding: 24px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; }
+.test-panel h2 { margin-bottom: 16px; }
+.test-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--bg3); font-size: 13px; }
+.test-row .name { flex: 1; }
+.test-row .result { font-weight: 600; }
+.test-row .result.pass { color: var(--green); }
+.test-row .result.fail { color: var(--red); }
+.test-row .result.running { color: var(--yellow); }
+.test-progress { margin-top: 16px; }
+.test-progress .bar { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.test-progress .bar .fill { height: 100%; background: var(--accent); transition: width .3s; }
+
+/* Input Mode Toggle */
+.input-mode-toggle { display: flex; gap: 4px; margin-bottom: 8px; }
+.input-mode-toggle .mode-btn { flex: 1; background: var(--bg); border: 1px solid #333; color: var(--fg2); padding: 5px 8px; border-radius: var(--radius); cursor: pointer; font-size: 11px; text-align: center; transition: all .15s; }
+.input-mode-toggle .mode-btn:hover { border-color: var(--accent); color: var(--fg); }
+.input-mode-toggle .mode-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+
+/* Controller Panel */
+.ctrl-panel { display: flex; flex-direction: column; gap: 6px; }
+.ctrl-hand-label { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+.ctrl-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.ctrl-btn { background: var(--bg); border: 1px solid #333; color: var(--fg2); padding: 6px 4px; border-radius: var(--radius); cursor: pointer; font-size: 10px; text-align: center; transition: all .1s; user-select: none; }
+.ctrl-btn:hover { border-color: var(--fg2); }
+.ctrl-btn.pressed { background: var(--accent); color: #000; border-color: var(--accent); transform: scale(.95); }
+.ctrl-btn.analog { border-color: var(--accent2); }
+.ctrl-btn.analog.pressed { background: var(--accent2); border-color: var(--accent2); }
+.ctrl-axes { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.ctrl-axes label { font-size: 10px; color: var(--fg2); width: 24px; flex-shrink: 0; }
+.ctrl-axes input[type="range"] { flex: 1; accent-color: var(--accent2); height: 14px; }
+.ctrl-axes .val { font-family: monospace; font-size: 10px; width: 32px; text-align: right; }
+
+/* Hand Tracking Panel */
+.hand-panel { display: flex; flex-direction: column; gap: 6px; }
+.hand-pose-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.hand-pose-btn { background: var(--bg); border: 1px solid #333; color: var(--fg2); padding: 4px 8px; border-radius: var(--radius); cursor: pointer; font-size: 10px; transition: all .15s; }
+.hand-pose-btn:hover { border-color: var(--fg2); }
+.hand-pose-btn.active { background: var(--green); color: #000; border-color: var(--green); }
+
+/* Mouse Look Indicator */
+.mouselook-indicator { position: absolute; top: 8px; right: 8px; background: rgba(0,212,255,.2); color: var(--accent); padding: 4px 10px; border-radius: 12px; font-size: 11px; pointer-events: none; z-index: 10; display: none; backdrop-filter: blur(4px); }
+.mouselook-indicator.active { display: block; }
+
+/* Quest Connection Status */
+.quest-status { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 6px 8px; background: var(--bg); border-radius: var(--radius); margin-bottom: 6px; }
+.quest-status .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.quest-status .dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.quest-status .dot.offline { background: var(--red); }
+.quest-status .dot.checking { background: var(--yellow); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+/* Section collapse */
+.section-toggle { cursor: pointer; user-select: none; }
+.section-toggle::after { content: ' ▾'; font-size: 9px; }
+.section-toggle.collapsed::after { content: ' ▸'; }
+.section-body.collapsed { display: none; }
+
+/* Sync Mode Toggle */
+.sync-toggle { display: flex; align-items: center; gap: 6px; }
+.sync-toggle .sync-btn { background: var(--bg3); border: 1px solid #444; color: var(--fg2); padding: 4px 12px; border-radius: var(--radius); cursor: pointer; font-size: 12px; transition: all .15s; }
+.sync-toggle .sync-btn.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 600; animation: sync-pulse 2s infinite; }
+@keyframes sync-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,.4); } 50% { box-shadow: 0 0 8px 2px rgba(34,197,94,.3); } }
+
+/* Screen Mirror */
+.screen-mirror { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 5; }
+.screen-mirror.active { display: flex; }
+.screen-mirror img { max-width: 100%; max-height: calc(100% - 44px); object-fit: contain; image-rendering: auto; border-radius: 4px; }
+.screen-mirror .mirror-bar { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg2); width: 100%; font-size: 11px; border-top: 1px solid var(--bg3); }
+.screen-mirror .mirror-bar .mirror-fps { color: var(--green); font-family: monospace; }
+.screen-mirror .mirror-controls { display: flex; gap: 4px; margin-left: auto; }
+.screen-mirror .mirror-controls .btn { padding: 3px 8px; font-size: 10px; }
+
+/* Device Status Bar */
+.device-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.device-bar .d-metric { background: var(--bg); border-radius: var(--radius); padding: 6px 8px; text-align: center; }
+.device-bar .d-metric .d-label { font-size: 9px; color: var(--fg2); text-transform: uppercase; }
+.device-bar .d-metric .d-val { font-size: 14px; font-weight: 700; font-family: monospace; margin-top: 2px; }
+
+/* Split View */
+.viewport.split { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.viewport.split iframe { border-right: 1px solid var(--accent); }
+.viewport.split .screen-mirror { position: relative; display: flex; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* ── Guardian System ── */
+.guardian-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 8; transition: opacity .3s; }
+.guardian-grid { position: absolute; inset: 0; border: 3px solid transparent; border-radius: 4px; transition: border-color .3s; }
+.guardian-grid.warn { border-color: rgba(234,179,8,.6); box-shadow: inset 0 0 40px rgba(234,179,8,.15); }
+.guardian-grid.danger { border-color: rgba(239,68,68,.8); box-shadow: inset 0 0 60px rgba(239,68,68,.2); animation: guardian-pulse .5s infinite; }
+@keyframes guardian-pulse { 0%,100% { border-color: rgba(239,68,68,.8); } 50% { border-color: rgba(239,68,68,.3); } }
+.guardian-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,.7); color: var(--red); padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; display: none; backdrop-filter: blur(4px); }
+.guardian-grid.danger .guardian-label { display: block; }
+.guardian-info { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,.5); color: var(--fg2); padding: 3px 8px; border-radius: 4px; font-size: 10px; backdrop-filter: blur(4px); }
+.guardian-ctrl { display: flex; flex-direction: column; gap: 6px; }
+.guardian-ctrl .mode-row { display: flex; gap: 4px; }
+.guardian-ctrl .mode-btn { flex: 1; background: var(--bg); border: 1px solid #333; color: var(--fg2); padding: 5px 6px; border-radius: var(--radius); cursor: pointer; font-size: 11px; text-align: center; transition: all .15s; }
+.guardian-ctrl .mode-btn:hover { border-color: var(--fg2); }
+.guardian-ctrl .mode-btn.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+.guardian-ctrl .size-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.guardian-ctrl .size-row label { width: 50px; color: var(--fg2); flex-shrink: 0; }
+.guardian-ctrl .size-row input[type="range"] { flex: 1; accent-color: var(--accent2); }
+.guardian-ctrl .size-row .val { width: 36px; text-align: right; font-family: monospace; font-size: 10px; }
+
+/* ── Passthrough ── */
+.passthrough-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; display: none; }
+.passthrough-layer.active { display: block; }
+.passthrough-layer video { width: 100%; height: 100%; object-fit: cover; }
+.passthrough-layer .synth-env { width: 100%; height: 100%; background: linear-gradient(135deg, #2a1a3e 0%, #1a2a3e 30%, #2a3a2e 60%, #3a2a1e 100%); }
+.passthrough-ctrl { display: flex; flex-direction: column; gap: 6px; }
+.passthrough-ctrl .pt-toggle { display: flex; gap: 4px; }
+.passthrough-ctrl .pt-btn { flex: 1; background: var(--bg); border: 1px solid #333; color: var(--fg2); padding: 5px 6px; border-radius: var(--radius); cursor: pointer; font-size: 11px; text-align: center; transition: all .15s; }
+.passthrough-ctrl .pt-btn:hover { border-color: var(--fg2); }
+.passthrough-ctrl .pt-btn.active { background: var(--green); color: #000; border-color: var(--green); }
+
+/* ── Eye Tracking ── */
+.gaze-cursor { position: absolute; width: 24px; height: 24px; border: 2px solid rgba(0,212,255,.7); border-radius: 50%; pointer-events: none; z-index: 9; transform: translate(-50%,-50%); display: none; transition: opacity .2s; }
+.gaze-cursor.active { display: block; }
+.gaze-cursor::after { content: ''; position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; transform: translate(-50%,-50%); }
+.gaze-cursor.fixated { border-color: var(--green); box-shadow: 0 0 12px rgba(34,197,94,.4); }
+.gaze-cursor.fixated::after { background: var(--green); width: 6px; height: 6px; }
+.eye-ctrl { display: flex; flex-direction: column; gap: 6px; }
+.eye-ctrl .eye-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.eye-ctrl .eye-row label { width: 44px; color: var(--fg2); flex-shrink: 0; }
+.eye-ctrl .eye-info { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.eye-ctrl .eye-metric { background: var(--bg); padding: 4px 6px; border-radius: 4px; text-align: center; }
+.eye-ctrl .eye-metric .elabel { font-size: 9px; color: var(--fg2); }
+.eye-ctrl .eye-metric .eval { font-size: 12px; font-family: monospace; color: var(--accent); }
+
+/* ── Haptic Feedback ── */
+.haptic-indicators { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 24px; z-index: 9; pointer-events: none; }
+.haptic-ind { display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: .6; }
+.haptic-ind .h-icon { width: 32px; height: 32px; border: 2px solid var(--fg2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; background: rgba(0,0,0,.5); backdrop-filter: blur(4px); transition: all .15s; }
+.haptic-ind.vibrating .h-icon { border-color: var(--accent); box-shadow: 0 0 16px rgba(0,212,255,.5); animation: haptic-vib .1s infinite; }
+@keyframes haptic-vib { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+.haptic-ind .h-label { font-size: 9px; color: var(--fg2); }
+.haptic-ind .h-bar { width: 32px; height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.haptic-ind .h-bar .h-fill { height: 100%; background: var(--accent); width: 0%; transition: width .1s; }
+
+/* ── System Menu ── */
+.system-menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; z-index: 1001; justify-content: center; align-items: flex-end; padding-bottom: 40px; backdrop-filter: blur(8px); }
+.system-menu-overlay.visible { display: flex; }
+.system-menu-panel { background: linear-gradient(180deg, #1a1a2e 0%, #16162a 100%); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 24px; width: 520px; max-width: 90vw; box-shadow: 0 -8px 40px rgba(0,0,0,.5); }
+.sys-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.sys-header h3 { font-size: 15px; font-weight: 600; }
+.sys-header .sys-time { font-size: 13px; color: var(--fg2); font-family: monospace; }
+.sys-quick-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+.sys-tile { background: var(--bg); border: 1px solid #333; border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; transition: all .15s; }
+.sys-tile:hover { border-color: var(--accent); }
+.sys-tile.on { background: rgba(0,212,255,.15); border-color: var(--accent); }
+.sys-tile .tile-icon { font-size: 20px; margin-bottom: 4px; }
+.sys-tile .tile-label { font-size: 10px; color: var(--fg2); }
+.sys-tile.on .tile-label { color: var(--accent); }
+.sys-sliders { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.sys-slider-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.sys-slider-row .s-icon { font-size: 16px; width: 24px; text-align: center; }
+.sys-slider-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+.sys-slider-row .s-val { width: 36px; text-align: right; font-family: monospace; font-size: 11px; color: var(--fg2); }
+.sys-bottom { display: flex; justify-content: space-between; align-items: center; }
+.sys-bottom .sys-bat { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg2); }
+.sys-bottom .sys-actions { display: flex; gap: 8px; }
+
+/* ── Scene Understanding ── */
+.scene-ctrl { display: flex; flex-direction: column; gap: 6px; }
+.scene-planes { display: flex; flex-direction: column; gap: 3px; }
+.scene-plane { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 3px 6px; background: var(--bg); border-radius: 4px; }
+.scene-plane .plane-type { color: var(--accent); font-weight: 600; font-size: 10px; width: 50px; }
+.scene-plane .plane-size { color: var(--fg2); font-family: monospace; font-size: 10px; }
+.scene-mesh-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.scene-mesh-stat { background: var(--bg); padding: 4px 6px; border-radius: 4px; text-align: center; }
+.scene-mesh-stat .sml { font-size: 9px; color: var(--fg2); }
+.scene-mesh-stat .smv { font-size: 12px; font-family: monospace; color: var(--green); }
+
+/* ── Enhanced Hand Gestures ── */
+.gesture-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+.gesture-btn { background: var(--bg); border: 1px solid #333; color: var(--fg2); padding: 6px 2px; border-radius: var(--radius); cursor: pointer; font-size: 10px; text-align: center; transition: all .15s; }
+.gesture-btn:hover { border-color: var(--fg2); }
+.gesture-btn.active { background: var(--green); color: #000; border-color: var(--green); }
+.gesture-btn .g-emoji { font-size: 16px; display: block; margin-bottom: 2px; }
+
+/* ── Android Launcher ── */
+.android-launcher { position: absolute; inset: 0; display: none; flex-direction: column; background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%); z-index: 6; overflow-y: auto; }
+.android-launcher.active { display: flex; }
+.android-launcher .al-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+.android-launcher .al-header h3 { font-size: 16px; }
+.android-launcher .al-search { margin: 0 20px 16px; background: rgba(255,255,255,.08); border: 1px solid #333; border-radius: 24px; padding: 8px 16px; color: var(--fg); font-size: 13px; outline: none; }
+.android-launcher .al-search:focus { border-color: var(--accent); }
+.android-launcher .al-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; padding: 0 20px 20px; }
+.android-launcher .al-app { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 12px; cursor: pointer; transition: all .15s; }
+.android-launcher .al-app:hover { background: rgba(255,255,255,.06); }
+.android-launcher .al-app .al-icon { font-size: 36px; }
+.android-launcher .al-app .al-name { font-size: 10px; color: var(--fg2); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 72px; }
+.android-launcher .al-statusbar { display: flex; justify-content: space-between; align-items: center; padding: 4px 16px; font-size: 10px; color: var(--fg2); background: rgba(0,0,0,.3); }
+
+/* ── Live App Viewport (Android Runtime) ── */
+.live-viewport { position: absolute; inset: 0; display: none; flex-direction: column; background: #000; z-index: 6; }
+.live-viewport.active { display: flex; }
+.live-viewport .lv-screen { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: crosshair; }
+.live-viewport .lv-screen img { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: auto; border-radius: 2px; user-select: none; -webkit-user-drag: none; }
+.live-viewport .lv-bar { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg2); border-top: 1px solid var(--bg3); font-size: 11px; flex-shrink: 0; }
+.live-viewport .lv-bar .lv-device { color: var(--accent); font-weight: 600; }
+.live-viewport .lv-bar .lv-app { color: var(--green); }
+.live-viewport .lv-bar .lv-fps { color: var(--yellow); font-family: monospace; }
+.live-viewport .lv-controls { display: flex; gap: 4px; margin-left: auto; }
+.live-viewport .lv-controls .btn { padding: 3px 8px; font-size: 10px; }
+.lv-touch-indicator { position: absolute; width: 24px; height: 24px; border: 2px solid var(--accent); border-radius: 50%; pointer-events: none; transform: translate(-50%,-50%); opacity: 0; transition: opacity .15s; }
+.lv-touch-indicator.show { opacity: 1; }
+
+/* ── App Test Runner ── */
+.app-test-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.9); display: none; z-index: 1002; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+.app-test-overlay.visible { display: flex; }
+.app-test-panel { background: var(--bg2); border: 1px solid var(--bg3); border-radius: 12px; padding: 24px; max-width: 800px; width: 95%; max-height: 85vh; overflow-y: auto; }
+.app-test-panel h2 { margin-bottom: 4px; }
+.app-test-panel .atp-subtitle { font-size: 12px; color: var(--fg2); margin-bottom: 16px; }
+.app-test-panel .atp-device { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 8px 12px; background: var(--bg); border-radius: var(--radius); }
+.app-test-panel .atp-device label { font-size: 12px; color: var(--fg2); }
+.app-test-panel .atp-device select { flex: 1; background: var(--bg3); border: 1px solid #444; color: var(--fg); padding: 4px 8px; border-radius: var(--radius); font-size: 12px; }
+.atp-results { display: flex; flex-direction: column; gap: 4px; }
+.atp-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--radius); font-size: 12px; background: var(--bg); }
+.atp-row .atp-icon { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
+.atp-row .atp-name { flex: 1; }
+.atp-row .atp-pkg { font-size: 10px; color: var(--fg2); font-family: monospace; }
+.atp-row .atp-status { font-weight: 600; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+.atp-row .atp-status.pass { color: var(--green); background: rgba(34,197,94,.1); }
+.atp-row .atp-status.fail { color: var(--red); background: rgba(239,68,68,.1); }
+.atp-row .atp-status.skip { color: var(--fg2); background: rgba(136,136,160,.1); }
+.atp-row .atp-status.running { color: var(--yellow); background: rgba(234,179,8,.1); }
+.atp-row .atp-status.wait { color: var(--fg2); }
+.atp-summary { display: flex; gap: 16px; margin-top: 16px; padding: 12px; background: var(--bg); border-radius: var(--radius); }
+.atp-summary .atp-stat { text-align: center; }
+.atp-summary .atp-stat .atp-num { font-size: 24px; font-weight: 700; font-family: monospace; }
+.atp-summary .atp-stat .atp-label { font-size: 10px; color: var(--fg2); text-transform: uppercase; }
+.atp-progress { margin-top: 12px; }
+.atp-progress .bar { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.atp-progress .bar .fill { height: 100%; background: var(--accent); transition: width .3s; }
+
+/* ── Device Selector ── */
+.device-selector { border-top: 1px solid var(--bg3); padding: 10px 12px; }
+.device-selector label { font-size: 11px; color: var(--fg2); display: block; margin-bottom: 4px; }
+.device-selector select { width: 100%; background: var(--bg); border: 1px solid #333; color: var(--fg); padding: 5px 8px; border-radius: var(--radius); font-size: 11px; }
+.device-selector .ds-status { font-size: 10px; color: var(--fg2); margin-top: 4px; }
+.device-selector .ds-status .online { color: var(--green); }
+
+/* ── Notifications Panel ── */
+.notif-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; z-index: 1003; justify-content: flex-end; padding: 60px 16px 16px 0; backdrop-filter: blur(4px); }
+.notif-overlay.visible { display: flex; }
+.notif-panel { width: 360px; max-width: 90vw; background: var(--bg2); border: 1px solid var(--bg3); border-radius: 16px; display: flex; flex-direction: column; max-height: 80vh; overflow: hidden; }
+.notif-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; border-bottom: 1px solid var(--bg3); }
+.notif-header h3 { font-size: 14px; }
+.notif-header .notif-badge { background: var(--red); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 700; }
+.notif-list { flex: 1; overflow-y: auto; padding: 8px 12px; }
+.notif-item { display: flex; gap: 10px; padding: 10px; border-radius: var(--radius); margin-bottom: 6px; background: var(--bg); cursor: pointer; transition: all .15s; border-left: 3px solid transparent; }
+.notif-item:hover { background: var(--bg3); }
+.notif-item.unread { border-left-color: var(--accent); }
+.notif-item .ni-icon { font-size: 20px; flex-shrink: 0; }
+.notif-item .ni-body { flex: 1; min-width: 0; }
+.notif-item .ni-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.notif-item .ni-text { font-size: 11px; color: var(--fg2); line-height: 1.4; }
+.notif-item .ni-time { font-size: 9px; color: var(--fg2); margin-top: 4px; }
+.notif-empty { text-align: center; padding: 40px 0; color: var(--fg2); font-size: 13px; }
+.notif-actions { padding: 8px 12px; border-top: 1px solid var(--bg3); display: flex; justify-content: space-between; }
+
+/* ── Settings Overlay ── */
+.settings-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); display: none; z-index: 1004; justify-content: center; align-items: center; backdrop-filter: blur(6px); }
+.settings-overlay.visible { display: flex; }
+.settings-panel { background: var(--bg2); border: 1px solid var(--bg3); border-radius: 16px; width: 640px; max-width: 95vw; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
+.settings-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--bg3); }
+.settings-header h3 { font-size: 15px; }
+.settings-tabs { display: flex; border-bottom: 1px solid var(--bg3); }
+.settings-tabs .s-tab { flex: 1; background: none; border: none; color: var(--fg2); padding: 10px 0; font-size: 12px; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; }
+.settings-tabs .s-tab:hover { color: var(--fg); }
+.settings-tabs .s-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.settings-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.settings-group { margin-bottom: 20px; }
+.settings-group h4 { font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid var(--bg3); }
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.03); }
+.setting-row .s-label { flex: 1; }
+.setting-row .s-desc { font-size: 10px; color: var(--fg2); margin-top: 2px; }
+.setting-row .s-control { flex-shrink: 0; }
+.s-toggle { width: 40px; height: 22px; background: var(--bg3); border: none; border-radius: 11px; cursor: pointer; position: relative; transition: background .2s; }
+.s-toggle.on { background: var(--accent); }
+.s-toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: left .2s; }
+.s-toggle.on::after { left: 21px; }
+.s-select { background: var(--bg); border: 1px solid #333; color: var(--fg); padding: 4px 8px; border-radius: var(--radius); font-size: 12px; }
+.s-range-row { display: flex; align-items: center; gap: 8px; }
+.s-range-row input[type="range"] { width: 120px; accent-color: var(--accent); }
+.s-range-row .s-range-val { font-family: monospace; font-size: 11px; width: 40px; text-align: right; color: var(--fg2); }
+
+/* ── Depth Sensing ── */
+.depth-ctrl { display: flex; flex-direction: column; gap: 6px; }
+.depth-viz { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.depth-stat { background: var(--bg); padding: 4px 6px; border-radius: 4px; text-align: center; }
+.depth-stat .dl { font-size: 9px; color: var(--fg2); }
+.depth-stat .dv { font-size: 12px; font-family: monospace; color: var(--accent); }
+
+/* ── Spatial Audio ── */
+.audio-ctrl { display: flex; flex-direction: column; gap: 6px; }
+.audio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.audio-stat { background: var(--bg); padding: 4px 6px; border-radius: 4px; text-align: center; }
+.audio-stat .al { font-size: 9px; color: var(--fg2); }
+.audio-stat .av { font-size: 12px; font-family: monospace; color: var(--green); }
+
+/* ── Body Tracking ── */
+.body-ctrl { display: flex; flex-direction: column; gap: 6px; }
+.body-joints { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.body-joint { background: var(--bg); padding: 4px 6px; border-radius: 4px; text-align: center; font-size: 10px; }
+.body-joint .bj-icon { font-size: 14px; }
+.body-joint .bj-name { font-size: 8px; color: var(--fg2); margin-top: 2px; }
+.body-joint.tracked { border: 1px solid var(--green); }
+.body-joint.tracked .bj-name { color: var(--green); }
+
+/* ── Quick Actions Bar in System Menu ── */
+.sys-quick-actions { display: flex; gap: 8px; margin-bottom: 16px; justify-content: center; }
+.sys-quick-actions .qa-btn { background: var(--bg); border: 1px solid #333; border-radius: 12px; padding: 10px 16px; cursor: pointer; font-size: 11px; color: var(--fg2); display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all .15s; min-width: 72px; }
+.sys-quick-actions .qa-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sys-quick-actions .qa-btn .qa-icon { font-size: 18px; }
+.sys-quick-actions .qa-btn.recording { border-color: var(--red); color: var(--red); animation: rec-pulse 1s infinite; }
+@keyframes rec-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.3); } 50% { box-shadow: 0 0 8px 2px rgba(239,68,68,.2); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>🥽</span>Quest 3 Virtual Simulator</h1>
+  <div class="header-stats">
+    <span class="stat" id="statDemos">30 Demos</span>
+    <span class="stat" id="statXR">XR: —</span>
+    <span class="stat" id="statProxy">Proxy: —</span>
+    <span class="stat" id="statDevice">Device: Quest 3</span>
+  </div>
+  <div class="sync-toggle">
+    <button class="sync-btn" id="btnSync" onclick="toggleSyncMode()">🔗 同步</button>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="toggleSystemMenu()">☰ 菜单</button>
+    <button class="btn" onclick="openAndroidLauncher()">📱 Apps</button>
+    <button class="btn" onclick="runAllTests()">▶ Demo测试</button>
+    <button class="btn" onclick="openAppTestOverlay()">🧪 App测试</button>
+    <button class="btn" onclick="reloadDemo()">🔄 重载</button>
+    <button class="btn" onclick="toggleFullscreen()">⛶ 全屏</button>
+  </div>
+</header>
+
+<main>
+  <!-- Left: Demo List + App Center -->
+  <div class="panel-left">
+    <div class="tab-bar">
+      <button class="tab active" id="tabDemos" onclick="switchTab('demos')">Demos</button>
+      <button class="tab" id="tabApps" onclick="switchTab('apps')">Apps</button>
+    </div>
+    <div class="demo-list" id="demoList"></div>
+    <div class="app-list" id="appList" style="display:none"></div>
+    <div class="env-section">
+      <label>🏠 合成环境 (SEM)</label>
+      <select id="envSelect" onchange="switchEnvironment(this.value)">
+        <option value="living_room">客厅 (Living Room)</option>
+        <option value="meeting_room">会议室 (Meeting Room)</option>
+        <option value="music_room">音乐室 (Music Room)</option>
+        <option value="office_large">大办公室 (Office Large)</option>
+        <option value="office_small">小办公室 (Office Small)</option>
+      </select>
+    </div>
+    <div class="env-section">
+      <label>🎮 输入模式</label>
+      <select id="inputMode" onchange="setInputMode(this.value === 'hands' ? 'hand' : 'controller')">
+        <option value="controllers">手柄控制器</option>
+        <option value="hands">双手追踪</option>
+      </select>
+    </div>
+    <div class="device-selector">
+      <label>📱 目标设备</label>
+      <select id="deviceSelect" onchange="onDeviceChanged(this.value)">
+        <option value="">加载中...</option>
+      </select>
+      <div class="ds-status" id="dsStatus"></div>
+    </div>
+  </div>
+
+  <!-- Center: Viewport -->
+  <div class="panel-center">
+    <div class="viewport-bar">
+      <span class="url" id="currentUrl">选择一个Demo开始</span>
+      <span class="xr-badge vr" id="xrBadge" style="display:none">VR</span>
+      <button class="btn" id="btnEnterXR" onclick="enterXR()" style="display:none">▶ Enter XR</button>
+    </div>
+    <div class="viewport" id="viewport">
+      <div class="placeholder" id="placeholder">
+        <div class="icon">🥽</div>
+        <p>选择左侧Demo启动虚拟仿真</p>
+        <p style="font-size:12px;color:#555">IWER已就绪 · 无需实体Quest 3设备</p>
+      </div>
+      <iframe id="demoFrame" style="display:none" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+      <div class="screen-mirror" id="screenMirror">
+        <img id="mirrorImg" alt="Quest 3 Screen" draggable="false">
+        <div class="mirror-bar">
+          <span>📺 Quest 3 实时画面</span>
+          <span class="mirror-fps" id="mirrorFPS">— FPS</span>
+          <div class="mirror-controls">
+            <button class="btn" onclick="sendInput('back')">◀ Back</button>
+            <button class="btn" onclick="sendInput('home')">🏠 Home</button>
+            <button class="btn" onclick="stopMirror()">✕ 关闭</button>
+          </div>
+        </div>
+      </div>
+      <div class="mouselook-indicator" id="mouselookIndicator">🎯 Mouse Look · ESC退出</div>
+      <!-- Guardian Boundary Overlay -->
+      <div class="guardian-overlay" id="guardianOverlay">
+        <div class="guardian-grid" id="guardianGrid">
+          <div class="guardian-label">⚠️ Guardian Boundary — 返回安全区域</div>
+        </div>
+        <div class="guardian-info" id="guardianInfo">🛡️ Guardian: Roomscale 3.0×3.0m</div>
+      </div>
+      <!-- Passthrough Layer -->
+      <div class="passthrough-layer" id="passthroughLayer">
+        <video id="passthroughVideo" autoplay muted playsinline style="display:none"></video>
+        <div class="synth-env" id="synthPassthrough"></div>
+      </div>
+      <!-- Eye Tracking Gaze Cursor -->
+      <div class="gaze-cursor" id="gazeCursor"></div>
+      <!-- Haptic Feedback Indicators -->
+      <div class="haptic-indicators" id="hapticIndicators">
+        <div class="haptic-ind" id="hapticL">
+          <div class="h-icon">L</div>
+          <div class="h-bar"><div class="h-fill" id="hapticFillL"></div></div>
+          <div class="h-label">Left</div>
+        </div>
+        <div class="haptic-ind" id="hapticR">
+          <div class="h-icon">R</div>
+          <div class="h-bar"><div class="h-fill" id="hapticFillR"></div></div>
+          <div class="h-label">Right</div>
+        </div>
+      </div>
+      <!-- Android Launcher -->
+      <div class="android-launcher" id="androidLauncher">
+        <div class="al-statusbar">
+          <span id="alTime">12:00</span>
+          <span>Quest 3 · Android 12</span>
+          <span id="alBat">🔋 100%</span>
+        </div>
+        <div class="al-header">
+          <h3>📱 Quest 3 应用</h3>
+          <button class="btn" onclick="closeAndroidLauncher()">✕ 关闭</button>
+        </div>
+        <input class="al-search" id="alSearch" placeholder="🔍 搜索应用..." oninput="filterAndroidApps(this.value)">
+        <div class="al-grid" id="alGrid"></div>
+      </div>
+      <!-- Live App Viewport (Android Runtime) -->
+      <div class="live-viewport" id="liveViewport">
+        <div class="lv-screen" id="lvScreen">
+          <img id="lvImg" alt="Live App Screen" draggable="false">
+          <div class="lv-touch-indicator" id="lvTouch"></div>
+        </div>
+        <div class="lv-bar">
+          <span>📱 <span class="lv-device" id="lvDevice">—</span></span>
+          <span>App: <span class="lv-app" id="lvApp">—</span></span>
+          <span class="lv-fps" id="lvFPS">— FPS</span>
+          <div class="lv-controls">
+            <button class="btn" onclick="lvSendInput('back')">◀ Back</button>
+            <button class="btn" onclick="lvSendInput('home')">🏠 Home</button>
+            <button class="btn" onclick="lvSendInput('recents')">☰ Recents</button>
+            <button class="btn danger" onclick="closeLiveViewport()">✕ 关闭</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Test Runner Overlay -->
+  <div class="app-test-overlay" id="appTestOverlay">
+    <div class="app-test-panel" id="appTestPanel">
+      <h2>🧪 Android App 全量测试</h2>
+      <div class="atp-subtitle">自动测试39个App的安装/启动/前台/崩溃状态</div>
+      <div class="atp-device">
+        <label>目标设备:</label>
+        <select id="atpDeviceSelect"><option value="">选择设备...</option></select>
+        <button class="btn primary" id="atpRunBtn" onclick="runAppTests()">▶ 开始测试</button>
+        <button class="btn" onclick="closeAppTestOverlay()">✕ 关闭</button>
+      </div>
+      <div class="atp-progress" id="atpProgress" style="display:none">
+        <div class="bar"><div class="fill" id="atpFill" style="width:0%"></div></div>
+        <div style="font-size:11px;color:var(--fg2);margin-top:4px" id="atpProgressText">0/39</div>
+      </div>
+      <div class="atp-results" id="atpResults"></div>
+      <div class="atp-summary" id="atpSummary" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Right: Monitor -->
+  <div class="panel-right">
+    <div class="monitor-section" id="deviceStatusSection">
+      <h3 class="section-toggle" onclick="toggleSection(this)">📱 Quest 3 实机状态</h3>
+      <div class="section-body">
+        <div class="device-bar">
+          <div class="d-metric"><div class="d-label">电量</div><div class="d-val" id="devBattery">—</div></div>
+          <div class="d-metric"><div class="d-label">温度</div><div class="d-val" id="devTemp">—</div></div>
+          <div class="d-metric"><div class="d-label">CPU</div><div class="d-val" id="devCPU">—</div></div>
+          <div class="d-metric"><div class="d-label">状态</div><div class="d-val" id="devCharging">—</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--fg2);margin-top:6px">
+          当前应用: <span id="devCurrentApp" style="color:var(--accent)">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3>📊 性能监控</h3>
+      <div class="metric-grid">
+        <div class="metric"><div class="label">FPS</div><div class="value green" id="metricFPS">—</div></div>
+        <div class="metric"><div class="label">帧时间</div><div class="value" id="metricFrame">—</div></div>
+        <div class="metric"><div class="label">JS堆</div><div class="value" id="metricMemory">—</div></div>
+        <div class="metric"><div class="label">WebGL</div><div class="value" id="metricWebGL">—</div></div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3 class="section-toggle" onclick="toggleSection(this)">🔧 XR头显控制</h3>
+      <div class="section-body">
+        <div class="device-control">
+          <div class="device-row">
+            <label>位置 X</label>
+            <input type="range" min="-5" max="5" step="0.05" value="0" oninput="updateDevice('px',this.value)">
+            <span class="val" id="devPX">0.0</span>
+          </div>
+          <div class="device-row">
+            <label>位置 Y</label>
+            <input type="range" min="0" max="3" step="0.05" value="1.6" oninput="updateDevice('py',this.value)">
+            <span class="val" id="devPY">1.6</span>
+          </div>
+          <div class="device-row">
+            <label>位置 Z</label>
+            <input type="range" min="-5" max="5" step="0.05" value="0" oninput="updateDevice('pz',this.value)">
+            <span class="val" id="devPZ">0.0</span>
+          </div>
+          <div class="device-row">
+            <label>旋转 Y</label>
+            <input type="range" min="-180" max="180" step="1" value="0" oninput="updateDevice('ry',this.value)">
+            <span class="val" id="devRY">0°</span>
+          </div>
+          <div class="device-row">
+            <label>旋转 X</label>
+            <input type="range" min="-90" max="90" step="1" value="0" oninput="updateDevice('rx',this.value)">
+            <span class="val" id="devRX">0°</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3 class="section-toggle" onclick="toggleSection(this)">🛡️ Guardian 系统</h3>
+      <div class="section-body">
+        <div class="guardian-ctrl">
+          <div class="mode-row">
+            <button class="mode-btn active" id="guardStationary" onclick="setGuardianMode('stationary')">📍 固定</button>
+            <button class="mode-btn" id="guardRoomscale" onclick="setGuardianMode('roomscale')">🏠 房间</button>
+            <button class="mode-btn" id="guardOff" onclick="setGuardianMode('off')">❌ 关闭</button>
+          </div>
+          <div class="size-row">
+            <label>宽度</label>
+            <input type="range" min="1" max="10" step="0.5" value="3" oninput="setGuardianSize('w',this.value)" id="guardW">
+            <span class="val" id="guardWVal">3.0m</span>
+          </div>
+          <div class="size-row">
+            <label>深度</label>
+            <input type="range" min="1" max="10" step="0.5" value="3" oninput="setGuardianSize('d',this.value)" id="guardD">
+            <span class="val" id="guardDVal">3.0m</span>
+          </div>
+          <div class="size-row">
+            <label>灵敏度</label>
+            <input type="range" min="0.1" max="1" step="0.05" value="0.7" oninput="guardianSensitivity=parseFloat(this.value);document.getElementById('guardSVal').textContent=this.value">
+            <span class="val" id="guardSVal">0.7</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3 class="section-toggle" onclick="toggleSection(this)">📷 Passthrough</h3>
+      <div class="section-body">
+        <div class="passthrough-ctrl">
+          <div class="pt-toggle">
+            <button class="pt-btn" id="ptOff" onclick="setPassthrough('off')">关闭</button>
+            <button class="pt-btn" id="ptSynth" onclick="setPassthrough('synth')">合成</button>
+            <button class="pt-btn" id="ptCam" onclick="setPassthrough('camera')">📷 摄像头</button>
+          </div>
+          <div class="size-row" style="display:flex;align-items:center;gap:6px;font-size:11px">
+            <label style="width:50px;color:var(--fg2)">透明度</label>
+            <input type="range" min="0" max="1" step="0.05" value="0.5" oninput="setPassthroughOpacity(this.value)" id="ptOpacity">
+            <span class="val" style="width:36px;text-align:right;font-family:monospace;font-size:10px" id="ptOpacityVal">50%</span>
+          </div>
+          <div style="font-size:10px;color:var(--fg2)">Quest 3 彩色透视 · 4MP立体摄像头</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3 class="section-toggle" onclick="toggleSection(this)">👁️ 眼动追踪</h3>
+      <div class="section-body">
+        <div class="eye-ctrl">
+          <div class="pt-toggle" style="display:flex;gap:4px;margin-bottom:4px">
+            <button class="pt-btn" id="eyeOff" onclick="setEyeTracking(false)">关闭</button>
+            <button class="pt-btn" id="eyeOn" onclick="setEyeTracking(true)">👁️ 开启</button>
+          </div>
+          <div class="eye-row">
+            <label>IPD</label>
+            <input type="range" min="56" max="72" step="0.5" value="63" oninput="setIPD(this.value)" id="ipdSlider">
+            <span class="val" style="width:40px;text-align:right;font-family:monospace;font-size:10px" id="ipdVal">63mm</span>
+          </div>
+          <div class="eye-info">
+            <div class="eye-metric"><div class="elabel">注视X</div><div class="eval" id="gazeX">0.0</div></div>
+            <div class="eye-metric"><div class="elabel">注视Y</div><div class="eval" id="gazeY">0.0</div></div>
+            <div class="eye-metric"><div class="elabel">注视状态</div><div class="eval" id="gazeState">—</div></div>
+            <div class="eye-metric"><div class="elabel">瞳孔直径</div><div class="eval" id="pupilDiam">4.0mm</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3 class="section-toggle" onclick="toggleSection(this)">🗺️ 场景理解</h3>
+      <div class="section-body">
+        <div class="scene-ctrl">
+          <div class="scene-mesh-stats">
+            <div class="scene-mesh-stat"><div class="sml">平面</div><div class="smv" id="scenePlanes">0</div></div>
+            <div class="scene-mesh-stat"><div class="sml">锚点</div><div class="smv" id="sceneAnchors">0</div></div>
+            <div class="scene-mesh-stat"><div class="sml">网格顶点</div><div class="smv" id="sceneMeshVerts">0</div></div>
+            <div class="scene-mesh-stat"><div class="sml">语义标签</div><div class="smv" id="sceneLabels">0</div></div>
+          </div>
+          <div class="scene-planes" id="scenePlaneList">
+            <div class="scene-plane"><span class="plane-type">FLOOR</span><span class="plane-size">3.0×3.0m</span><span style="color:var(--green);font-size:10px">✓</span></div>
+            <div class="scene-plane"><span class="plane-type">WALL</span><span class="plane-size">4.2×2.6m</span><span style="color:var(--green);font-size:10px">✓</span></div>
+            <div class="scene-plane"><span class="plane-type">WALL</span><span class="plane-size">3.8×2.6m</span><span style="color:var(--green);font-size:10px">✓</span></div>
+            <div class="scene-plane"><span class="plane-type">CEILING</span><span class="plane-size">3.0×3.0m</span><span style="color:var(--green);font-size:10px">✓</span></div>
+            <div class="scene-plane"><span class="plane-type">TABLE</span><span class="plane-size">1.2×0.6m</span><span style="color:var(--green);font-size:10px">✓</span></div>
+          </div>
+          <button class="btn" onclick="regenerateScene()" style="width:100%;font-size:11px;margin-top:4px">🔄 重新扫描房间</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3 class="section-toggle" onclick="toggleSection(this)">🎮 输入模拟</h3>
+      <div class="section-body">
+        <div class="input-mode-toggle">
+          <button class="mode-btn active" id="modeCtrl" onclick="setInputMode('controller')">🎮 控制器</button>
+          <button class="mode-btn" id="modeHand" onclick="setInputMode('hand')">✋ 手部追踪</button>
+        </div>
+
+        <!-- Controller Input -->
+        <div id="controllerPanel" class="ctrl-panel">
+          <div class="ctrl-hand-label">左手 (Left)</div>
+          <div class="ctrl-buttons">
+            <button class="ctrl-btn analog" onmousedown="ctrlBtn('left','trigger',1)" onmouseup="ctrlBtn('left','trigger',0)" ontouchstart="ctrlBtn('left','trigger',1)" ontouchend="ctrlBtn('left','trigger',0)">Trigger</button>
+            <button class="ctrl-btn analog" onmousedown="ctrlBtn('left','squeeze',1)" onmouseup="ctrlBtn('left','squeeze',0)" ontouchstart="ctrlBtn('left','squeeze',1)" ontouchend="ctrlBtn('left','squeeze',0)">Grip</button>
+            <button class="ctrl-btn" onmousedown="ctrlBtn('left','thumbstick',1)" onmouseup="ctrlBtn('left','thumbstick',0)">Stick</button>
+            <button class="ctrl-btn" onmousedown="ctrlBtn('left','x-button',1)" onmouseup="ctrlBtn('left','x-button',0)">X</button>
+            <button class="ctrl-btn" onmousedown="ctrlBtn('left','y-button',1)" onmouseup="ctrlBtn('left','y-button',0)">Y</button>
+            <button class="ctrl-btn" onmousedown="ctrlBtn('left','thumbrest',1)" onmouseup="ctrlBtn('left','thumbrest',0)">Rest</button>
+          </div>
+          <div class="ctrl-axes">
+            <label>L·X</label>
+            <input type="range" min="-1" max="1" step="0.05" value="0" oninput="ctrlAxis('left','x',this.value)" id="axisLX">
+            <span class="val" id="valLX">0</span>
+          </div>
+          <div class="ctrl-axes">
+            <label>L·Y</label>
+            <input type="range" min="-1" max="1" step="0.05" value="0" oninput="ctrlAxis('left','y',this.value)" id="axisLY">
+            <span class="val" id="valLY">0</span>
+          </div>
+
+          <div class="ctrl-hand-label">右手 (Right)</div>
+          <div class="ctrl-buttons">
+            <button class="ctrl-btn analog" onmousedown="ctrlBtn('right','trigger',1)" onmouseup="ctrlBtn('right','trigger',0)" ontouchstart="ctrlBtn('right','trigger',1)" ontouchend="ctrlBtn('right','trigger',0)">Trigger</button>
+            <button class="ctrl-btn analog" onmousedown="ctrlBtn('right','squeeze',1)" onmouseup="ctrlBtn('right','squeeze',0)" ontouchstart="ctrlBtn('right','squeeze',1)" ontouchend="ctrlBtn('right','squeeze',0)">Grip</button>
+            <button class="ctrl-btn" onmousedown="ctrlBtn('right','thumbstick',1)" onmouseup="ctrlBtn('right','thumbstick',0)">Stick</button>
+            <button class="ctrl-btn" onmousedown="ctrlBtn('right','a-button',1)" onmouseup="ctrlBtn('right','a-button',0)">A</button>
+            <button class="ctrl-btn" onmousedown="ctrlBtn('right','b-button',1)" onmouseup="ctrlBtn('right','b-button',0)">B</button>
+            <button class="ctrl-btn" onmousedown="ctrlBtn('right','thumbrest',1)" onmouseup="ctrlBtn('right','thumbrest',0)">Rest</button>
+          </div>
+          <div class="ctrl-axes">
+            <label>R·X</label>
+            <input type="range" min="-1" max="1" step="0.05" value="0" oninput="ctrlAxis('right','x',this.value)" id="axisRX">
+            <span class="val" id="valRX">0</span>
+          </div>
+          <div class="ctrl-axes">
+            <label>R·Y</label>
+            <input type="range" min="-1" max="1" step="0.05" value="0" oninput="ctrlAxis('right','y',this.value)" id="axisRY">
+            <span class="val" id="valRY">0</span>
+          </div>
+        </div>
+
+        <!-- Hand Tracking (Enhanced with full gesture set) -->
+        <div id="handPanel" class="hand-panel" style="display:none">
+          <div class="ctrl-hand-label">左手 手势</div>
+          <div class="gesture-grid">
+            <button class="gesture-btn active" onclick="setHandGesture('left','default',this)"><span class="g-emoji">✋</span>展开</button>
+            <button class="gesture-btn" onclick="setHandGesture('left','pinch',this)"><span class="g-emoji">🤏</span>捏合</button>
+            <button class="gesture-btn" onclick="setHandGesture('left','fist',this)"><span class="g-emoji">✊</span>握拳</button>
+            <button class="gesture-btn" onclick="setHandGesture('left','point',this)"><span class="g-emoji">👆</span>指向</button>
+            <button class="gesture-btn" onclick="setHandGesture('left','thumbsup',this)"><span class="g-emoji">👍</span>赞</button>
+            <button class="gesture-btn" onclick="setHandGesture('left','peace',this)"><span class="g-emoji">✌️</span>和平</button>
+            <button class="gesture-btn" onclick="setHandGesture('left','ok',this)"><span class="g-emoji">👌</span>OK</button>
+            <button class="gesture-btn" onclick="setHandGesture('left','grab',this)"><span class="g-emoji">🫳</span>抓取</button>
+          </div>
+          <div class="ctrl-axes">
+            <label>捏力</label>
+            <input type="range" min="0" max="1" step="0.05" value="0" oninput="setHandPinch('left',this.value)" id="pinchL">
+            <span class="val" id="valPinchL">0</span>
+          </div>
+
+          <div class="ctrl-hand-label">右手 手势</div>
+          <div class="gesture-grid">
+            <button class="gesture-btn active" onclick="setHandGesture('right','default',this)"><span class="g-emoji">✋</span>展开</button>
+            <button class="gesture-btn" onclick="setHandGesture('right','pinch',this)"><span class="g-emoji">🤏</span>捏合</button>
+            <button class="gesture-btn" onclick="setHandGesture('right','fist',this)"><span class="g-emoji">✊</span>握拳</button>
+            <button class="gesture-btn" onclick="setHandGesture('right','point',this)"><span class="g-emoji">👆</span>指向</button>
+            <button class="gesture-btn" onclick="setHandGesture('right','thumbsup',this)"><span class="g-emoji">👍</span>赞</button>
+            <button class="gesture-btn" onclick="setHandGesture('right','peace',this)"><span class="g-emoji">✌️</span>和平</button>
+            <button class="gesture-btn" onclick="setHandGesture('right','ok',this)"><span class="g-emoji">👌</span>OK</button>
+            <button class="gesture-btn" onclick="setHandGesture('right','grab',this)"><span class="g-emoji">🫳</span>抓取</button>
+          </div>
+          <div class="ctrl-axes">
+            <label>捏力</label>
+            <input type="range" min="0" max="1" step="0.05" value="0" oninput="setHandPinch('right',this.value)" id="pinchR">
+            <span class="val" id="valPinchR">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3 class="section-toggle" onclick="toggleSection(this)">📡 Quest 3 连接</h3>
+      <div class="section-body">
+        <div class="quest-status" id="questStatus">
+          <span class="dot offline" id="questDot"></span>
+          <span id="questStatusText">未检测</span>
+        </div>
+        <button class="btn" onclick="checkQuestConnection()" style="width:100%;margin-bottom:4px">🔍 检测连接</button>
+        <button class="btn" onclick="deployToQuest()" style="width:100%" id="btnDeploy" disabled>🚀 部署到Quest 3</button>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3 class="section-toggle" onclick="toggleSection(this)">🔬 深度感知</h3>
+      <div class="section-body">
+        <div class="depth-ctrl">
+          <div class="pt-toggle" style="display:flex;gap:4px;margin-bottom:4px">
+            <button class="pt-btn active" id="depthOff" onclick="setDepthSensing(false)">关闭</button>
+            <button class="pt-btn" id="depthOn" onclick="setDepthSensing(true)">🔬 开启</button>
+          </div>
+          <div class="depth-viz">
+            <div class="depth-stat"><div class="dl">模式</div><div class="dv" id="depthMode">CPU</div></div>
+            <div class="depth-stat"><div class="dl">精度</div><div class="dv" id="depthAccuracy">±2cm</div></div>
+            <div class="depth-stat"><div class="dl">范围</div><div class="dv" id="depthRange">0.2-10m</div></div>
+            <div class="depth-stat"><div class="dl">分辨率</div><div class="dv" id="depthRes">256×192</div></div>
+          </div>
+          <div style="font-size:10px;color:var(--fg2);margin-top:4px">Quest 3 环境深度 · dToF传感器</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3 class="section-toggle" onclick="toggleSection(this)">🔊 空间音频</h3>
+      <div class="section-body">
+        <div class="audio-ctrl">
+          <div class="pt-toggle" style="display:flex;gap:4px;margin-bottom:4px">
+            <button class="pt-btn active" id="audioStereo" onclick="setSpatialAudio('stereo')">立体声</button>
+            <button class="pt-btn" id="audioHRTF" onclick="setSpatialAudio('hrtf')">🔊 HRTF</button>
+            <button class="pt-btn" id="audioAmbi" onclick="setSpatialAudio('ambisonics')">🌐 全景声</button>
+          </div>
+          <div class="audio-grid">
+            <div class="audio-stat"><div class="al">渲染器</div><div class="av" id="audioRenderer">Stereo</div></div>
+            <div class="audio-stat"><div class="al">采样率</div><div class="av" id="audioSampleRate">48kHz</div></div>
+            <div class="audio-stat"><div class="al">通道</div><div class="av" id="audioChannels">2ch</div></div>
+            <div class="audio-stat"><div class="al">延迟</div><div class="av" id="audioLatency">12ms</div></div>
+          </div>
+          <div class="size-row" style="display:flex;align-items:center;gap:6px;font-size:11px;margin-top:4px">
+            <label style="width:50px;color:var(--fg2)">音量</label>
+            <input type="range" min="0" max="100" value="80" oninput="setSimVolume(this.value)" id="simVolume">
+            <span class="val" style="width:36px;text-align:right;font-family:monospace;font-size:10px" id="simVolVal">80%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3 class="section-toggle" onclick="toggleSection(this)">🦴 身体追踪</h3>
+      <div class="section-body">
+        <div class="body-ctrl">
+          <div class="pt-toggle" style="display:flex;gap:4px;margin-bottom:4px">
+            <button class="pt-btn active" id="bodyOff" onclick="setBodyTracking(false)">关闭</button>
+            <button class="pt-btn" id="bodyOn" onclick="setBodyTracking(true)">🦴 开启</button>
+          </div>
+          <div class="body-joints" id="bodyJoints">
+            <div class="body-joint" id="bjHead"><div class="bj-icon">🗣️</div><div class="bj-name">头部</div></div>
+            <div class="body-joint" id="bjNeck"><div class="bj-icon">🦴</div><div class="bj-name">颈部</div></div>
+            <div class="body-joint" id="bjChest"><div class="bj-icon">👕</div><div class="bj-name">胸部</div></div>
+            <div class="body-joint" id="bjLShoulder"><div class="bj-icon">💪</div><div class="bj-name">左肩</div></div>
+            <div class="body-joint" id="bjRShoulder"><div class="bj-icon">💪</div><div class="bj-name">右肩</div></div>
+            <div class="body-joint" id="bjLElbow"><div class="bj-icon">🦾</div><div class="bj-name">左肘</div></div>
+            <div class="body-joint" id="bjRElbow"><div class="bj-icon">🦾</div><div class="bj-name">右肘</div></div>
+            <div class="body-joint" id="bjLWrist"><div class="bj-icon">🤚</div><div class="bj-name">左腕</div></div>
+            <div class="body-joint" id="bjRWrist"><div class="bj-icon">🤚</div><div class="bj-name">右腕</div></div>
+            <div class="body-joint" id="bjHips"><div class="bj-icon">🦴</div><div class="bj-name">髋部</div></div>
+            <div class="body-joint" id="bjSpine"><div class="bj-icon">🦴</div><div class="bj-name">脊柱</div></div>
+            <div class="body-joint" id="bjRoot"><div class="bj-icon">⬇️</div><div class="bj-name">根节点</div></div>
+          </div>
+          <div style="font-size:10px;color:var(--fg2);margin-top:4px">Meta Body Tracking API · 上半身12关节</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3>✅ XR特性检测</h3>
+      <div class="feature-list" id="featureList">
+        <div class="feature-item"><span class="check">⏳</span> 等待Demo加载...</div>
+      </div>
+    </div>
+
+    <div class="monitor-section">
+      <h3>🖥 控制台</h3>
+      <div class="console-log" id="consoleLog">
+        <div class="info">Quest 3 Virtual Simulator v6.0 — SXR2230P | Adreno 740 | Full System 1:1</div>
+        <div class="info">IWER 2.0 + Guardian · Passthrough · EyeTrack · Haptics · SceneAPI · Depth · Audio · BodyTrack</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span><kbd>1</kbd>-<kbd>=</kbd> Demo</span>
+  <span><kbd>WASD</kbd> 移动</span>
+  <span><kbd>QE</kbd> 偏航</span>
+  <span><kbd>JK</kbd> 俯仰</span>
+  <span><kbd>RF</kbd> 升降</span>
+  <span><kbd>Space</kbd> Enter XR</span>
+  <span><kbd>Tab</kbd> 控制器/手</span>
+  <span><kbd>G</kbd> L-Trigger</span>
+  <span><kbd>H</kbd> L-Grip</span>
+  <span><kbd>M</kbd> 系统菜单</span>
+  <span><kbd>P</kbd> Passthrough</span>
+  <span><kbd>L</kbd> Launcher</span>
+  <span><kbd>N</kbd> 通知</span>
+  <span><kbd>,</kbd> 设置</span>
+  <span>🖱️ 点击视口=Mouse Look</span>
+</footer>
+
+<!-- System Menu Overlay -->
+<div class="system-menu-overlay" id="systemMenuOverlay">
+  <div class="system-menu-panel">
+    <div class="sys-header">
+      <h3>🥽 Quest 3 系统菜单</h3>
+      <span class="sys-time" id="sysTime">12:00</span>
+    </div>
+    <div class="sys-quick-actions">
+      <div class="qa-btn" onclick="takeSimScreenshot()"><div class="qa-icon">📸</div>截图</div>
+      <div class="qa-btn" id="qaRecord" onclick="toggleSimRecording()"><div class="qa-icon">⏺</div>录屏</div>
+      <div class="qa-btn" onclick="toggleSystemMenu();toggleNotifications()"><div class="qa-icon">🔔</div>通知</div>
+      <div class="qa-btn" onclick="toggleSystemMenu();toggleSettings()"><div class="qa-icon">⚙️</div>设置</div>
+      <div class="qa-btn" onclick="toggleSystemMenu();startMirror()"><div class="qa-icon">📺</div>投屏</div>
+    </div>
+    <div class="sys-quick-tiles">
+      <div class="sys-tile on" id="sysTileWifi" onclick="toggleSysTile(this)">
+        <div class="tile-icon">📡</div>
+        <div class="tile-label">WiFi 6</div>
+      </div>
+      <div class="sys-tile on" id="sysTileBT" onclick="toggleSysTile(this)">
+        <div class="tile-icon">🔷</div>
+        <div class="tile-label">Bluetooth</div>
+      </div>
+      <div class="sys-tile" id="sysTileAirplane" onclick="toggleSysTile(this)">
+        <div class="tile-icon">✈️</div>
+        <div class="tile-label">飞行模式</div>
+      </div>
+      <div class="sys-tile on" id="sysTileGuardian" onclick="toggleSysTile(this)">
+        <div class="tile-icon">🛡️</div>
+        <div class="tile-label">Guardian</div>
+      </div>
+      <div class="sys-tile on" id="sysTilePassthrough" onclick="toggleSysTile(this)">
+        <div class="tile-icon">📷</div>
+        <div class="tile-label">Passthrough</div>
+      </div>
+      <div class="sys-tile on" id="sysTileHand" onclick="toggleSysTile(this)">
+        <div class="tile-icon">✋</div>
+        <div class="tile-label">手部追踪</div>
+      </div>
+      <div class="sys-tile" id="sysTileCast" onclick="toggleSysTile(this)">
+        <div class="tile-icon">📺</div>
+        <div class="tile-label">投屏</div>
+      </div>
+      <div class="sys-tile" id="sysTileDND" onclick="toggleSysTile(this)">
+        <div class="tile-icon">🔕</div>
+        <div class="tile-label">免打扰</div>
+      </div>
+    </div>
+    <div class="sys-sliders">
+      <div class="sys-slider-row">
+        <span class="s-icon">🔆</span>
+        <input type="range" min="0" max="100" value="80" oninput="document.getElementById('sysBrightVal').textContent=this.value+'%'">
+        <span class="s-val" id="sysBrightVal">80%</span>
+      </div>
+      <div class="sys-slider-row">
+        <span class="s-icon">🔊</span>
+        <input type="range" min="0" max="100" value="60" oninput="document.getElementById('sysVolVal').textContent=this.value+'%'">
+        <span class="s-val" id="sysVolVal">60%</span>
+      </div>
+    </div>
+    <div class="sys-bottom">
+      <div class="sys-bat">
+        <span>🔋</span>
+        <span id="sysBatLevel">85%</span>
+        <span style="font-size:10px">· SXR2230P · Adreno 740</span>
+      </div>
+      <div class="sys-actions">
+        <button class="btn" onclick="toggleSystemMenu()">✕ 关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Test Overlay -->
+<div class="test-overlay" id="testOverlay">
+  <div class="test-panel">
+    <h2>🧪 全量测试 — Quest 3 虚拟化验证</h2>
+    <div id="testResults"></div>
+    <div class="test-progress">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span id="testStatus">准备中...</span>
+        <span id="testCount">0/0</span>
+      </div>
+      <div class="bar"><div class="fill" id="testBar" style="width:0"></div></div>
+    </div>
+    <div style="margin-top:16px;text-align:right">
+      <button class="btn" onclick="closeTestOverlay()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notifications Overlay -->
+<div class="notif-overlay" id="notifOverlay">
+  <div class="notif-panel">
+    <div class="notif-header">
+      <h3>🔔 通知</h3>
+      <span class="notif-badge" id="notifBadge">0</span>
+      <button class="btn" onclick="toggleNotifications()" style="margin-left:auto">✕</button>
+    </div>
+    <div class="notif-list" id="notifList"></div>
+    <div class="notif-actions">
+      <button class="btn" onclick="clearAllNotifications()">清除全部</button>
+      <button class="btn" onclick="toggleNotifications()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Overlay -->
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-panel">
+    <div class="settings-header">
+      <h3>⚙️ Quest 3 设置</h3>
+      <button class="btn" onclick="toggleSettings()">✕ 关闭</button>
+    </div>
+    <div class="settings-tabs">
+      <button class="s-tab active" onclick="switchSettingsTab('display',this)">📺 显示</button>
+      <button class="s-tab" onclick="switchSettingsTab('tracking',this)">👁️ 追踪</button>
+      <button class="s-tab" onclick="switchSettingsTab('audio',this)">🔊 音频</button>
+      <button class="s-tab" onclick="switchSettingsTab('developer',this)">🔧 开发者</button>
+      <button class="s-tab" onclick="switchSettingsTab('system',this)">📱 系统</button>
+    </div>
+    <div class="settings-body" id="settingsBody"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// Demo Registry
+// ============================================================
+const DEMOS = [
+  { id: 'hello-vr', name: 'Hello VR', tech: 'WebGL2', mode: 'vr', path: '/hello-vr/' },
+  { id: 'mr-passthrough', name: 'MR Passthrough', tech: 'WebGL2', mode: 'ar', path: '/mr-passthrough/' },
+  { id: 'aframe-playground', name: 'A-Frame Playground', tech: 'A-Frame', mode: 'vr', path: '/aframe-playground/' },
+  { id: 'hand-grab', name: 'Hand Grab Lab', tech: 'A-Frame', mode: 'vr', path: '/hand-grab/' },
+  { id: 'shared-space', name: 'Shared Space', tech: 'A-Frame', mode: 'vr', path: '/shared-space/' },
+  { id: 'smart-home', name: 'Smart Home MR', tech: 'A-Frame', mode: 'ar', path: '/smart-home/' },
+  { id: 'ar-placement', name: 'AR Placement', tech: 'Three.js', mode: 'ar', path: '/ar-placement/' },
+  { id: 'hand-physics', name: 'Hand Physics', tech: 'Three.js', mode: 'vr', path: '/hand-physics/' },
+  { id: 'controller-shooter', name: 'Controller Shooter', tech: 'Three.js', mode: 'vr', path: '/controller-shooter/' },
+  { id: 'spatial-audio', name: 'Spatial Audio', tech: 'Three.js', mode: 'vr', path: '/spatial-audio/' },
+  { id: 'gaussian-splat', name: '3D Gaussian Splat', tech: 'A-Frame', mode: 'vr', path: '/gaussian-splat/' },
+  { id: 'vr-painter', name: 'VR Painter', tech: 'Three.js', mode: 'vr', path: '/vr-painter/' },
+  // ── refs demos (junction linked) ──
+  { id: 'ht-basic', name: 'Hand Track Basic', tech: 'Three.js', mode: 'vr', path: '/hand-tracking-basic/basic.html' },
+  { id: 'ht-leap', name: 'Hand Mesh Leap', tech: 'Three.js', mode: 'vr', path: '/hand-tracking-basic/hand-model-leap-motion.html' },
+  { id: 'ht-aframe', name: 'Hand A-Frame UI', tech: 'A-Frame', mode: 'vr', path: '/hand-tracking-basic/aframe.html' },
+  { id: 'ht-physics', name: 'Hand Physics AF', tech: 'A-Frame', mode: 'vr', path: '/hand-tracking-basic/aframe-physics.html' },
+  { id: 'ht-mesh', name: 'Hand Mesh Color', tech: 'A-Frame', mode: 'vr', path: '/hand-tracking-basic/aframe-hand-mesh.html' },
+  { id: 'ht-drawing', name: '3D Drawing', tech: 'Three.js', mode: 'vr', path: '/hand-tracking-basic/3d-drawing.html' },
+  { id: 'passtracing', name: 'Passtracing', tech: 'Three.js', mode: 'ar', path: '/passtracing/' },
+  // ── enva-xr AR demos (junction linked) ──
+  { id: 'enva-basic', name: 'enva AR Basic', tech: 'enva-xr', mode: 'ar', path: '/enva-xr/basic/basic.html' },
+  { id: 'enva-cursor', name: 'enva AR Cursor', tech: 'enva-xr', mode: 'ar', path: '/enva-xr/cursor/cursor.html' },
+  { id: 'enva-depth', name: 'enva Depth', tech: 'enva-xr', mode: 'ar', path: '/enva-xr/depth/depth.html' },
+  { id: 'enva-depth-canvas', name: 'enva Depth Canvas', tech: 'enva-xr', mode: 'ar', path: '/enva-xr/depth-canvas/depth-canvas.html' },
+  { id: 'enva-image', name: 'enva Image Target', tech: 'enva-xr', mode: 'ar', path: '/enva-xr/image-target/image-target.html' },
+  { id: 'enva-light', name: 'enva Light Probe', tech: 'enva-xr', mode: 'ar', path: '/enva-xr/light-probe/light-probe.html' },
+  { id: 'enva-multi', name: 'enva Multi Feature', tech: 'enva-xr', mode: 'ar', path: '/enva-xr/multi-feature/multi-feature.html' },
+  // ── custom Quest 3 demos ──
+  { id: 'vr-cinema', name: 'VR Cinema', tech: 'Three.js', mode: 'vr', path: '/vr-cinema/' },
+  { id: 'beat-vr', name: 'Beat VR', tech: 'Three.js', mode: 'vr', path: '/beat-vr/' },
+  { id: 'depth-lab', name: 'Depth Lab', tech: 'Three.js', mode: 'ar', path: '/depth-lab/' },
+  { id: 'teleport', name: 'VR Teleport', tech: 'Three.js', mode: 'vr', path: '/teleport/' },
+];
+
+const XR_FEATURES = [
+  'immersive-vr', 'immersive-ar', 'inline',
+  'hand-tracking', 'local-floor', 'bounded-floor',
+  'hit-test', 'plane-detection', 'mesh-detection',
+  'anchors', 'layers', 'dom-overlay', 'depth-sensing', 'camera-access'
+];
+
+let currentDemo = null;
+let monitorInterval = null;
+let consoleLogs = [];
+
+// ============================================================
+// Initialize
+// ============================================================
+function init() {
+  renderDemoList();
+  checkProxy();
+  detectXR();
+  setupKeyboard();
+  setupMouseLook();
+  // Auto-check Quest connection on load
+  setTimeout(checkQuestConnection, 2000);
+}
+
+function renderDemoList() {
+  const list = document.getElementById('demoList');
+  list.innerHTML = DEMOS.map((d, i) => `
+    <div class="demo-item" id="demo-${d.id}" onclick="loadDemo('${d.id}')" title="${d.tech} · ${d.mode.toUpperCase()}">
+      <div class="status pending"></div>
+      <span>${d.name}</span>
+      <span class="badge ${d.mode}">${d.tech}</span>
+    </div>
+  `).join('');
+  document.getElementById('tabDemos').textContent = `Demos (${DEMOS.length})`;
+  document.getElementById('statDemos').textContent = `${DEMOS.length} Demos`;
+}
+
+async function checkProxy() {
+  try {
+    const r = await fetch('/iwe.min.js', { method: 'HEAD' });
+    document.getElementById('statProxy').textContent = 'Proxy: ✅ :8444';
+    document.getElementById('statProxy').classList.add('active');
+  } catch {
+    document.getElementById('statProxy').textContent = 'Proxy: ❌';
+  }
+}
+
+async function detectXR() {
+  if (!navigator.xr) {
+    document.getElementById('statXR').textContent = 'XR: ❌';
+    return;
+  }
+  let count = 0;
+  for (const f of ['immersive-vr', 'immersive-ar', 'inline']) {
+    try { if (await navigator.xr.isSessionSupported(f)) count++; } catch {}
+  }
+  document.getElementById('statXR').textContent = `XR: ${count}/3`;
+  if (count > 0) document.getElementById('statXR').classList.add('active');
+}
+
+// ============================================================
+// Demo Loading
+// ============================================================
+function loadDemo(id) {
+  const demo = DEMOS.find(d => d.id === id);
+  if (!demo) return;
+  currentDemo = demo;
+
+  // Update UI
+  document.querySelectorAll('.demo-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(`demo-${id}`).classList.add('active');
+  document.getElementById('currentUrl').textContent = `http://localhost:8444${demo.path}`;
+  document.getElementById('xrBadge').style.display = '';
+  document.getElementById('xrBadge').textContent = demo.mode.toUpperCase();
+  document.getElementById('xrBadge').className = `xr-badge ${demo.mode}`;
+  document.getElementById('btnEnterXR').style.display = '';
+  document.getElementById('placeholder').style.display = 'none';
+  const appDetail = document.getElementById('appDetail');
+  if (appDetail) appDetail.style.display = 'none';
+
+  // Load iframe
+  const frame = document.getElementById('demoFrame');
+  frame.style.display = 'block';
+  frame.src = demo.path;
+
+  // Clear console
+  consoleLogs = [];
+  document.getElementById('consoleLog').innerHTML = `<div class="info">Loading ${demo.name}...</div>`;
+
+  // Start monitoring
+  if (monitorInterval) clearInterval(monitorInterval);
+  frame.onload = () => {
+    addLog('info', `${demo.name} loaded — IWER active`);
+    startMonitor();
+    interceptConsole();
+    // Delay feature detection to let IWER patches (G1/G4/G5) apply first
+    setTimeout(() => detectDemoFeatures(), 500);
+    // Re-detect after patches fully settled (setInterval 50ms × ~100 iterations max)
+    setTimeout(() => detectDemoFeatures(), 2500);
+  };
+}
+
+function reloadDemo() {
+  if (!currentDemo) return;
+  loadDemo(currentDemo.id);
+}
+
+// ============================================================
+// Performance Monitor
+// ============================================================
+function startMonitor() {
+  let lastTime = performance.now();
+
+  if (monitorInterval) clearInterval(monitorInterval);
+
+  // RAF-based frame counting (accurate FPS)
+  let rafCount = 0;
+  const countFrames = () => { rafCount++; requestAnimationFrame(countFrames); };
+  requestAnimationFrame(countFrames);
+
+  monitorInterval = setInterval(() => {
+    const frame = document.getElementById('demoFrame');
+    if (!frame.contentWindow) return;
+
+    try {
+      const perf = frame.contentWindow.performance;
+      // Use memory if available
+      if (perf.memory) {
+        const mb = (perf.memory.usedJSHeapSize / 1048576).toFixed(1);
+        const el = document.getElementById('metricMemory');
+        el.textContent = mb + 'MB';
+        el.className = 'value ' + (mb > 200 ? 'red' : mb > 100 ? 'yellow' : 'green');
+      }
+
+      // Check IWER device
+      const iwerDevice = findIWERDevice(frame.contentWindow);
+      if (iwerDevice) {
+        document.getElementById('metricWebGL').textContent = '✅ IWER';
+        document.getElementById('metricWebGL').className = 'value green';
+      }
+    } catch (e) {
+      // Cross-origin or security error
+    }
+
+    // FPS from RAF counter
+    const elapsed = performance.now() - lastTime;
+    if (elapsed >= 1000) {
+      const fps = Math.round(rafCount * 1000 / elapsed);
+      const el = document.getElementById('metricFPS');
+      el.textContent = fps;
+      el.className = 'value ' + (fps >= 50 ? 'green' : fps >= 30 ? 'yellow' : 'red');
+      document.getElementById('metricFrame').textContent = (elapsed / rafCount).toFixed(1) + 'ms';
+      rafCount = 0;
+      lastTime = performance.now();
+    }
+  }, 200);
+}
+
+// ============================================================
+// IWER Device Discovery (shared helper)
+// ============================================================
+function findIWERDevice(win) {
+  try {
+    var xr = win.navigator.xr;
+    if (!xr) return null;
+    var syms = Object.getOwnPropertySymbols ? Object.getOwnPropertySymbols(xr) : [];
+    for (var i = 0; i < syms.length; i++) {
+      try {
+        var v = xr[syms[i]];
+        if (v && v.supportedFeatures) return v;
+        if (v && v.device && v.device.supportedFeatures) return v.device;
+      } catch(e) {}
+    }
+  } catch(e) {}
+  return null;
+}
+
+// ============================================================
+// Feature Detection (in demo iframe)
+// ============================================================
+async function detectDemoFeatures() {
+  const frame = document.getElementById('demoFrame');
+  const list = document.getElementById('featureList');
+  
+  try {
+    const xr = frame.contentWindow.navigator.xr;
+    if (!xr) {
+      list.innerHTML = '<div class="feature-item"><span class="check">❌</span> WebXR不可用</div>';
+      return;
+    }
+
+    const results = [];
+    const SESSION_MODES = ['immersive-vr', 'immersive-ar', 'inline'];
+    const DEVICE_FEATURES = ['hand-tracking', 'local-floor', 'bounded-floor',
+      'hit-test', 'plane-detection', 'mesh-detection', 'anchors', 'layers', 'dom-overlay', 'depth-sensing', 'camera-access'];
+
+    // Check session modes via isSessionSupported
+    for (const mode of SESSION_MODES) {
+      try {
+        const supported = await xr.isSessionSupported(mode);
+        results.push({ name: mode, supported });
+      } catch {
+        results.push({ name: mode, supported: false });
+      }
+    }
+
+    // Check device features via IWER internal device.supportedFeatures
+    const dev = findIWERDevice(frame.contentWindow);
+    const devFeats = dev ? dev.supportedFeatures : new Set();
+    for (const feat of DEVICE_FEATURES) {
+      const supported = devFeats.has ? devFeats.has(feat) : (devFeats.includes ? devFeats.includes(feat) : false);
+      results.push({ name: feat, supported });
+    }
+
+    list.innerHTML = results.map(r => `
+      <div class="feature-item">
+        <span class="check">${r.supported ? '✅' : '⬜'}</span>
+        <span>${r.name}</span>
+      </div>
+    `).join('');
+
+    const supported = results.filter(r => r.supported).length;
+    addLog('info', `XR Features: ${supported}/${results.length} supported`);
+    if (dev) addLog('info', `IWER Device: ${dev.name || 'detected'} (stereo=${dev.stereoEnabled}, fovy=${dev.fovy?.toFixed(2)})`);
+  } catch (e) {
+    list.innerHTML = '<div class="feature-item"><span class="check">⚠️</span> 检测中断: ' + e.message + '</div>';
+  }
+}
+
+// ============================================================
+// Console Interception
+// ============================================================
+function interceptConsole() {
+  const frame = document.getElementById('demoFrame');
+  try {
+    const win = frame.contentWindow;
+    ['log', 'warn', 'error', 'info'].forEach(level => {
+      const orig = win.console[level];
+      win.console[level] = function() {
+        const msg = Array.from(arguments).map(a => 
+          typeof a === 'object' ? JSON.stringify(a).substring(0, 200) : String(a)
+        ).join(' ');
+        addLog(level === 'warn' ? 'warn' : level === 'error' ? 'error' : 'log', msg);
+        orig.apply(win.console, arguments);
+      };
+    });
+
+    // Capture unhandled errors
+    win.addEventListener('error', (e) => {
+      addLog('error', `${e.message} @ ${e.filename}:${e.lineno}`);
+    });
+  } catch (e) {
+    addLog('warn', 'Console interception limited (sandbox)');
+  }
+}
+
+function addLog(level, msg) {
+  if (msg.length > 300) msg = msg.substring(0, 300) + '...';
+  consoleLogs.push({ level, msg, time: new Date() });
+  if (consoleLogs.length > 200) consoleLogs.shift();
+
+  const container = document.getElementById('consoleLog');
+  const div = document.createElement('div');
+  div.className = level;
+  const time = new Date().toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  div.textContent = `[${time}] ${msg}`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+
+  // Update demo status if error
+  if (level === 'error' && currentDemo) {
+    const status = document.querySelector(`#demo-${currentDemo.id} .status`);
+    if (status) { status.className = 'status fail'; }
+  }
+}
+
+// ============================================================
+// XR Device Control — Actually drives IWER device
+// ============================================================
+const deviceState = { px: 0, py: 1.6, pz: 0, rx: 0, ry: 0 };
+
+function updateDevice(param, value) {
+  const labels = { px: 'devPX', py: 'devPY', pz: 'devPZ', ry: 'devRY', rx: 'devRX' };
+  const el = document.getElementById(labels[param]);
+  const v = parseFloat(value);
+  deviceState[param] = v;
+  if (param === 'ry' || param === 'rx') {
+    el.textContent = v + '°';
+  } else {
+    el.textContent = v.toFixed(1);
+  }
+  applyDeviceTransform();
+}
+
+function applyDeviceTransform() {
+  try {
+    const frame = document.getElementById('demoFrame');
+    if (!frame.contentWindow) return;
+    const dev = findIWERDevice(frame.contentWindow);
+    if (!dev) return;
+
+    // Set position — IWER getter returns mutable Vector3 reference
+    dev.position.x = deviceState.px;
+    dev.position.y = deviceState.py;
+    dev.position.z = deviceState.pz;
+
+    // Set rotation — convert Euler (rx, ry) to Quaternion
+    const pitch = deviceState.rx * Math.PI / 180; // X-axis
+    const yaw   = deviceState.ry * Math.PI / 180; // Y-axis
+    // Quaternion from Euler YXZ order (standard for head tracking)
+    const cy = Math.cos(yaw / 2), sy = Math.sin(yaw / 2);
+    const cp = Math.cos(pitch / 2), sp = Math.sin(pitch / 2);
+    dev.quaternion.x = sp * cy;
+    dev.quaternion.y = cp * sy;
+    dev.quaternion.z = -sp * sy;
+    dev.quaternion.w = cp * cy;
+  } catch (e) {
+    // Silently fail if iframe not ready
+  }
+}
+
+function enterXR() {
+  if (!currentDemo) return;
+  try {
+    const frame = document.getElementById('demoFrame');
+    const win = frame.contentWindow;
+    const doc = win.document;
+
+    // Step 1: Auto-grant IWER session offer
+    const dev = findIWERDevice(win);
+    if (dev && typeof dev.grantOfferedSession === 'function') {
+      try {
+        dev.grantOfferedSession();
+        addLog('info', 'IWER: auto-granted XR session offer');
+      } catch (e) {
+        addLog('log', 'IWER grantOfferedSession: ' + e.message);
+      }
+    }
+
+    // Step 2: Find and click XR entry button in demo
+    const selectors = [
+      '.a-enter-vr-button', '.a-enter-ar-button',
+      'button[id*="vr"]', 'button[id*="xr"]', 'button[id*="enter"]',
+      'button[onclick*="requestSession"]',
+      '#startBtn', '#vrButton', '#xr-button',
+      'button'
+    ];
+    
+    for (const sel of selectors) {
+      const btns = doc.querySelectorAll(sel);
+      for (const btn of btns) {
+        const text = (btn.textContent || '').toLowerCase();
+        if (text.includes('vr') || text.includes('xr') || text.includes('enter') || text.includes('start') || text.includes('开始') || sel.startsWith('.a-enter')) {
+          btn.click();
+          addLog('info', `Clicked XR button: "${btn.textContent.trim().substring(0, 30)}"`);
+          // After click, try granting again (session may be offered after click)
+          setTimeout(() => {
+            try {
+              const d2 = findIWERDevice(win);
+              if (d2 && typeof d2.grantOfferedSession === 'function') d2.grantOfferedSession();
+            } catch {}
+          }, 500);
+          return;
+        }
+      }
+    }
+
+    addLog('warn', 'No XR entry button found — try clicking in the demo viewport');
+  } catch (e) {
+    addLog('error', 'Cannot access demo iframe: ' + e.message);
+  }
+}
+
+// ============================================================
+// Environment Switching
+// ============================================================
+async function switchEnvironment(envId) {
+  try {
+    const frame = document.getElementById('demoFrame');
+    const device = frame.contentWindow.__xrDevice;
+    if (device && device.sem) {
+      device.sem.loadDefaultEnvironment(envId);
+      addLog('info', `Environment switched to: ${envId}`);
+    } else {
+      addLog('warn', 'XRDevice/SEM not accessible — reload demo to apply');
+    }
+  } catch (e) {
+    addLog('warn', 'Environment switch requires active demo with IWER');
+  }
+}
+
+// ============================================================
+// Full Test Suite
+// ============================================================
+async function runAllTests() {
+  const overlay = document.getElementById('testOverlay');
+  overlay.classList.add('visible');
+  const results = document.getElementById('testResults');
+  const status = document.getElementById('testStatus');
+  const count = document.getElementById('testCount');
+  const bar = document.getElementById('testBar');
+
+  results.innerHTML = DEMOS.map(d => `
+    <div class="test-row" id="test-${d.id}">
+      <div class="name">${d.name} <span style="color:var(--fg2);font-size:11px">(${d.tech})</span></div>
+      <div class="result running">⏳</div>
+    </div>
+  `).join('');
+
+  let passed = 0, failed = 0;
+  
+  for (let i = 0; i < DEMOS.length; i++) {
+    const demo = DEMOS[i];
+    status.textContent = `Testing: ${demo.name}`;
+    count.textContent = `${i}/${DEMOS.length}`;
+    bar.style.width = `${(i / DEMOS.length) * 100}%`;
+
+    const result = await testSingleDemo(demo);
+    const row = document.getElementById(`test-${demo.id}`);
+    const resEl = row.querySelector('.result');
+
+    if (result.pass) {
+      passed++;
+      resEl.textContent = `✅ ${result.time}ms`;
+      resEl.className = 'result pass';
+      // Update demo list status
+      const demoStatus = document.querySelector(`#demo-${demo.id} .status`);
+      if (demoStatus) demoStatus.className = 'status pass';
+    } else {
+      failed++;
+      resEl.textContent = `❌ ${result.error}`;
+      resEl.className = 'result fail';
+      const demoStatus = document.querySelector(`#demo-${demo.id} .status`);
+      if (demoStatus) demoStatus.className = 'status fail';
+    }
+  }
+
+  count.textContent = `${DEMOS.length}/${DEMOS.length}`;
+  bar.style.width = '100%';
+  status.textContent = `完成: ${passed} PASS / ${failed} FAIL`;
+}
+
+function testSingleDemo(demo) {
+  return new Promise((resolve) => {
+    const testFrame = document.createElement('iframe');
+    testFrame.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
+    testFrame.sandbox = 'allow-scripts allow-same-origin';
+    document.body.appendChild(testFrame);
+
+    const start = performance.now();
+    let hasError = false;
+    let errorMsg = '';
+    const timeout = setTimeout(() => {
+      cleanup();
+      resolve({ pass: false, error: 'timeout' });
+    }, 15000);
+
+    testFrame.onload = () => {
+      const time = Math.round(performance.now() - start);
+      // Check for errors
+      try {
+        const doc = testFrame.contentWindow.document;
+        const title = doc.title;
+        if (!title || title === 'Error') {
+          cleanup();
+          resolve({ pass: false, error: 'no title' });
+          return;
+        }
+        // Brief delay to catch initial errors
+        setTimeout(() => {
+          cleanup();
+          resolve({ pass: !hasError, time, error: hasError ? errorMsg : '' });
+        }, 1000);
+      } catch (e) {
+        cleanup();
+        resolve({ pass: false, error: e.message });
+      }
+    };
+
+    testFrame.onerror = () => {
+      cleanup();
+      resolve({ pass: false, error: 'load error' });
+    };
+
+    function cleanup() {
+      clearTimeout(timeout);
+      if (testFrame.parentNode) testFrame.parentNode.removeChild(testFrame);
+    }
+
+    testFrame.src = demo.path;
+  });
+}
+
+function closeTestOverlay() {
+  document.getElementById('testOverlay').classList.remove('visible');
+}
+
+// ============================================================
+// Section Toggle (collapsible panels)
+// ============================================================
+function toggleSection(el) {
+  el.classList.toggle('collapsed');
+  const body = el.nextElementSibling;
+  if (body) body.classList.toggle('collapsed');
+}
+
+// ============================================================
+// Input Mode Switching (controller ↔ hand)
+// ============================================================
+let currentInputMode = 'controller';
+
+function setInputMode(mode) {
+  currentInputMode = mode;
+  document.getElementById('modeCtrl').classList.toggle('active', mode === 'controller');
+  document.getElementById('modeHand').classList.toggle('active', mode === 'hand');
+  document.getElementById('controllerPanel').style.display = mode === 'controller' ? '' : 'none';
+  document.getElementById('handPanel').style.display = mode === 'hand' ? '' : 'none';
+
+  // Update IWER device input mode
+  try {
+    const frame = document.getElementById('demoFrame');
+    if (!frame.contentWindow) return;
+    const dev = findIWERDevice(frame.contentWindow);
+    if (dev) {
+      dev.primaryInputMode = mode === 'hand' ? 'hand' : 'controller';
+      // Connect the appropriate inputs
+      if (mode === 'controller') {
+        if (dev.controllers) {
+          dev.controllers.left.connected = true;
+          dev.controllers.right.connected = true;
+        }
+        if (dev.hands) {
+          dev.hands.left.connected = false;
+          dev.hands.right.connected = false;
+        }
+      } else {
+        if (dev.hands) {
+          dev.hands.left.connected = true;
+          dev.hands.right.connected = true;
+        }
+        if (dev.controllers) {
+          dev.controllers.left.connected = false;
+          dev.controllers.right.connected = false;
+        }
+      }
+      addLog('info', `Input mode: ${mode}`);
+    }
+  } catch (e) {
+    addLog('log', 'Input mode switch: ' + e.message);
+  }
+}
+
+// ============================================================
+// Controller Input Simulation
+// ============================================================
+function ctrlBtn(hand, btnId, value) {
+  try {
+    const frame = document.getElementById('demoFrame');
+    const dev = findIWERDevice(frame.contentWindow);
+    if (!dev || !dev.controllers) return;
+    const ctrl = dev.controllers[hand];
+    if (!ctrl) return;
+    ctrl.updateButtonValue(btnId, value);
+    if (value > 0) {
+      ctrl.updateButtonTouch(btnId, true);
+    } else {
+      ctrl.updateButtonTouch(btnId, false);
+    }
+  } catch (e) {}
+
+  // Visual feedback on the button
+  const btns = document.querySelectorAll(`#controllerPanel .ctrl-btn`);
+  // Find the button by text content matching
+  const labelMap = { 'trigger': 'Trigger', 'squeeze': 'Grip', 'thumbstick': 'Stick',
+    'x-button': 'X', 'y-button': 'Y', 'a-button': 'A', 'b-button': 'B', 'thumbrest': 'Rest' };
+  const label = labelMap[btnId];
+  btns.forEach(b => {
+    if (b.textContent.trim() === label) {
+      b.classList.toggle('pressed', value > 0);
+    }
+  });
+}
+
+function ctrlAxis(hand, axis, value) {
+  const v = parseFloat(value);
+  const suffix = hand === 'left' ? 'L' : 'R';
+  const axId = axis.toUpperCase();
+  document.getElementById(`val${suffix}${axId}`).textContent = v.toFixed(1);
+
+  try {
+    const frame = document.getElementById('demoFrame');
+    const dev = findIWERDevice(frame.contentWindow);
+    if (!dev || !dev.controllers) return;
+    const ctrl = dev.controllers[hand];
+    if (!ctrl) return;
+    // Get current axis values
+    const lx = parseFloat(document.getElementById(`axis${suffix}X`).value);
+    const ly = parseFloat(document.getElementById(`axis${suffix}Y`).value);
+    if (axis === 'x') {
+      ctrl.updateAxes('thumbstick', v, ly);
+    } else {
+      ctrl.updateAxes('thumbstick', lx, v);
+    }
+  } catch (e) {}
+}
+
+// ============================================================
+// Hand Tracking Simulation
+// ============================================================
+function setHandPose(hand, poseId, btnEl) {
+  try {
+    const frame = document.getElementById('demoFrame');
+    const dev = findIWERDevice(frame.contentWindow);
+    if (dev && dev.hands && dev.hands[hand]) {
+      dev.hands[hand].poseId = poseId;
+      dev.hands[hand].updateHandPose();
+      addLog('log', `Hand ${hand} pose: ${poseId}`);
+    }
+  } catch (e) {}
+
+  // Visual feedback
+  if (btnEl) {
+    const parent = btnEl.parentElement;
+    parent.querySelectorAll('.hand-pose-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+  }
+}
+
+function setHandPinch(hand, value) {
+  const v = parseFloat(value);
+  const suffix = hand === 'left' ? 'L' : 'R';
+  document.getElementById(`valPinch${suffix}`).textContent = v.toFixed(1);
+
+  try {
+    const frame = document.getElementById('demoFrame');
+    const dev = findIWERDevice(frame.contentWindow);
+    if (dev && dev.hands && dev.hands[hand]) {
+      dev.hands[hand].updatePinchValue(v);
+    }
+  } catch (e) {}
+}
+
+// ============================================================
+// Mouse Look (Pointer Lock)
+// ============================================================
+let mouseLookActive = false;
+let mouseSensitivity = 0.15;
+
+function setupMouseLook() {
+  const viewport = document.getElementById('viewport');
+
+  viewport.addEventListener('click', (e) => {
+    // Only activate if clicking on the viewport itself (not controls)
+    if (e.target === viewport || e.target.id === 'demoFrame' || e.target.id === 'placeholder') {
+      if (!mouseLookActive) {
+        viewport.requestPointerLock();
+      }
+    }
+  });
+
+  document.addEventListener('pointerlockchange', () => {
+    mouseLookActive = document.pointerLockElement === viewport;
+    document.getElementById('mouselookIndicator').classList.toggle('active', mouseLookActive);
+    if (mouseLookActive) {
+      addLog('info', 'Mouse look ON — move mouse to look, click=trigger, right-click=grip, ESC=exit');
+    }
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!mouseLookActive) return;
+    // Update yaw and pitch from mouse movement
+    deviceState.ry = Math.max(-180, Math.min(180, deviceState.ry + e.movementX * mouseSensitivity));
+    deviceState.rx = Math.max(-90, Math.min(90, deviceState.rx + e.movementY * mouseSensitivity));
+    applyDeviceTransform();
+    // Update slider displays
+    document.getElementById('devRY').textContent = Math.round(deviceState.ry) + '°';
+    document.getElementById('devRX').textContent = Math.round(deviceState.rx) + '°';
+    // Sync sliders
+    const sliders = document.querySelectorAll('.device-row input[type="range"]');
+    if (sliders[3]) sliders[3].value = deviceState.ry;
+    if (sliders[4]) sliders[4].value = deviceState.rx;
+  });
+
+  // Mouse buttons → controller trigger/grip during pointer lock
+  document.addEventListener('mousedown', (e) => {
+    if (!mouseLookActive) return;
+    if (e.button === 0) ctrlBtn('right', 'trigger', 1);  // Left click = trigger
+    if (e.button === 2) ctrlBtn('right', 'squeeze', 1);  // Right click = grip
+  });
+  document.addEventListener('mouseup', (e) => {
+    if (!mouseLookActive) return;
+    if (e.button === 0) ctrlBtn('right', 'trigger', 0);
+    if (e.button === 2) ctrlBtn('right', 'squeeze', 0);
+  });
+  // Prevent context menu during pointer lock
+  viewport.addEventListener('contextmenu', (e) => {
+    if (mouseLookActive) e.preventDefault();
+  });
+
+  // Scroll → right thumbstick Y
+  document.addEventListener('wheel', (e) => {
+    if (!mouseLookActive) return;
+    e.preventDefault();
+    const v = e.deltaY > 0 ? 0.5 : -0.5;
+    ctrlAxis('right', 'y', v);
+    // Reset after a short delay
+    setTimeout(() => ctrlAxis('right', 'y', 0), 200);
+  }, { passive: false });
+}
+
+// ============================================================
+// Quest 3 Connection & Deploy
+// ============================================================
+async function checkQuestConnection() {
+  const dot = document.getElementById('questDot');
+  const text = document.getElementById('questStatusText');
+  const btn = document.getElementById('btnDeploy');
+  dot.className = 'dot checking';
+  text.textContent = '检测中...';
+
+  try {
+    const r = await fetch('/api/status');
+    const data = await r.json();
+    const questSerial = data.adb ? data.adb.find(s => s.startsWith('2G0YC5')) : null;
+    if (questSerial) {
+      dot.className = 'dot online';
+      text.textContent = `Quest 3 已连接 (${questSerial})`;
+      btn.disabled = false;
+      addLog('info', `✅ Quest 3 connected via ADB: ${questSerial}`);
+    } else if (data.adb && data.adb.length > 0) {
+      dot.className = 'dot online';
+      text.textContent = `已连接 ${data.adb.length} 设备 (无Quest 3)`;
+      btn.disabled = true;
+    } else {
+      dot.className = 'dot offline';
+      text.textContent = '未连接 — 请连接USB或WiFi ADB';
+      btn.disabled = true;
+    }
+  } catch (e) {
+    dot.className = 'dot offline';
+    text.textContent = 'API不可用 (xr-proxy未运行?)';
+    btn.disabled = true;
+  }
+}
+
+async function deployToQuest() {
+  addLog('info', '🚀 Deploying current demo to Quest 3...');
+  if (!currentDemo) {
+    addLog('warn', 'No demo selected');
+    return;
+  }
+  try {
+    // Open in Quest browser via ADB
+    const url = `http://${location.hostname}:8444${currentDemo.path}`;
+    const r = await fetch(`/api/launch-url?url=${encodeURIComponent(url)}`);
+    const data = await r.json();
+    if (data.ok) {
+      addLog('info', `✅ Opened on Quest 3: ${url}`);
+    } else {
+      addLog('error', '❌ Deploy failed: ' + (data.error || 'unknown'));
+    }
+  } catch (e) {
+    addLog('warn', '⚠️ Deploy API not available');
+    addLog('info', `Manual: adb shell am start -a android.intent.action.VIEW -d "http://${location.hostname}:8444${currentDemo.path}"`);  
+  }
+}
+
+// ============================================================
+// Keyboard Shortcuts
+// ============================================================
+function setupKeyboard() {
+  document.addEventListener('keydown', (e) => {
+    // Don't intercept when typing in inputs
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+
+    // Number keys 1-9, 0, -, = for demo switching
+    const numKeys = ['1','2','3','4','5','6','7','8','9','0','-','='];
+    const idx = numKeys.indexOf(e.key);
+    if (idx >= 0 && idx < DEMOS.length) {
+      e.preventDefault();
+      loadDemo(DEMOS[idx].id);
+      return;
+    }
+
+    // Movement keys — update device sliders
+    const step = 0.2;
+    const rotStep = 15;
+    const k = e.key.toLowerCase();
+
+    // During mouse look, WASD moves relative to current facing direction
+    if (mouseLookActive) {
+      const yawRad = deviceState.ry * Math.PI / 180;
+      const cosY = Math.cos(yawRad), sinY = Math.sin(yawRad);
+      switch(k) {
+        case 'w': e.preventDefault(); deviceState.pz -= step * cosY; deviceState.px -= step * sinY; applyDeviceTransform(); syncSliders(); break;
+        case 's': e.preventDefault(); deviceState.pz += step * cosY; deviceState.px += step * sinY; applyDeviceTransform(); syncSliders(); break;
+        case 'a': e.preventDefault(); deviceState.px -= step * cosY; deviceState.pz += step * sinY; applyDeviceTransform(); syncSliders(); break;
+        case 'd': e.preventDefault(); deviceState.px += step * cosY; deviceState.pz -= step * sinY; applyDeviceTransform(); syncSliders(); break;
+        case 'r': e.preventDefault(); nudgeSlider('py', step); break;
+        case 'f': e.preventDefault(); nudgeSlider('py', -step); break;
+      }
+      // Controller buttons via keyboard during mouse look
+      if (k === 'g') ctrlBtn('left', 'trigger', 1);  // G = left trigger
+      if (k === 'h') ctrlBtn('left', 'squeeze', 1);   // H = left grip
+      if (k === 't') ctrlBtn('right', 'a-button', 1);  // T = A button
+      if (k === 'y') ctrlBtn('right', 'b-button', 1);  // Y = B button
+      return;
+    }
+
+    switch(k) {
+      case 'w': nudgeSlider('pz', -step); break;
+      case 's': nudgeSlider('pz', step); break;
+      case 'a': nudgeSlider('px', -step); break;
+      case 'd': nudgeSlider('px', step); break;
+      case 'r': nudgeSlider('py', step); break;
+      case 'f': nudgeSlider('py', -step); break;
+      case 'q': nudgeSlider('ry', -rotStep); break;
+      case 'e': nudgeSlider('ry', rotStep); break;
+      case 'j': nudgeSlider('rx', rotStep); break;
+      case 'k': nudgeSlider('rx', -rotStep); break;
+      case ' ':
+        e.preventDefault();
+        enterXR();
+        break;
+      case 'f11':
+        e.preventDefault();
+        toggleFullscreen();
+        break;
+      case 'tab':
+        e.preventDefault();
+        // Toggle input mode
+        setInputMode(currentInputMode === 'controller' ? 'hand' : 'controller');
+        break;
+    }
+  });
+
+  // Key up — release controller buttons
+  document.addEventListener('keyup', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (!mouseLookActive) return;
+    const k = e.key.toLowerCase();
+    if (k === 'g') ctrlBtn('left', 'trigger', 0);
+    if (k === 'h') ctrlBtn('left', 'squeeze', 0);
+    if (k === 't') ctrlBtn('right', 'a-button', 0);
+    if (k === 'y') ctrlBtn('right', 'b-button', 0);
+  });
+}
+
+function nudgeSlider(param, delta) {
+  const paramOrder = ['px', 'py', 'pz', 'ry', 'rx'];
+  const sliders = document.querySelectorAll('.device-row input[type="range"]');
+  const paramIndex = paramOrder.indexOf(param);
+  if (paramIndex < 0 || !sliders[paramIndex]) return;
+  
+  const slider = sliders[paramIndex];
+  const newVal = Math.max(parseFloat(slider.min), Math.min(parseFloat(slider.max), parseFloat(slider.value) + delta));
+  slider.value = newVal;
+  updateDevice(param, newVal);
+}
+
+function syncSliders() {
+  const paramOrder = ['px', 'py', 'pz', 'ry', 'rx'];
+  const labels = { px: 'devPX', py: 'devPY', pz: 'devPZ', ry: 'devRY', rx: 'devRX' };
+  const sliders = document.querySelectorAll('.device-row input[type="range"]');
+  paramOrder.forEach((p, i) => {
+    if (sliders[i]) {
+      sliders[i].value = deviceState[p];
+      const el = document.getElementById(labels[p]);
+      if (el) {
+        el.textContent = (p === 'ry' || p === 'rx') ? Math.round(deviceState[p]) + '°' : deviceState[p].toFixed(1);
+      }
+    }
+  });
+}
+
+function toggleFullscreen() {
+  const viewport = document.getElementById('viewport');
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    viewport.requestFullscreen();
+  }
+}
+
+// ============================================================
+// Quest 3 App Center — Real device apps (from ADB 2026-03-06)
+// ============================================================
+const APP_REGISTRY = [
+  // 🤖 AI
+  { id: 'chatgpt', name: 'ChatGPT', icon: '🤖', cat: 'AI', pkg: 'com.openai.chatgpt', mode: 'web', url: 'https://chatgpt.com', desc: 'OpenAI ChatGPT' },
+  { id: 'deepseek', name: 'DeepSeek', icon: '🔮', cat: 'AI', pkg: 'com.deepseek.chat', mode: 'web', url: 'https://chat.deepseek.com', desc: 'DeepSeek AI Chat' },
+  { id: 'kimi', name: 'Kimi', icon: '🌙', cat: 'AI', pkg: 'com.moonshot.kimichat', mode: 'web', url: 'https://kimi.moonshot.cn', desc: 'Moonshot Kimi Chat' },
+  { id: 'tongyi', name: '通义千问', icon: '🧠', cat: 'AI', pkg: 'com.aliyun.tongyi', mode: 'web', url: 'https://tongyi.aliyun.com', desc: 'Alibaba Tongyi Qianwen' },
+  { id: 'kizuna', name: 'Kizuna AI VR', icon: '💜', cat: 'AI', pkg: 'com.activ8.kizunaaivr', mode: 'adb', desc: 'Kizuna AI VR Experience' },
+  // 📺 Media
+  { id: 'youtube', name: 'YouTube VR', icon: '▶️', cat: 'Media', pkg: 'com.google.android.apps.youtube.vr.oculus', mode: 'web', url: 'https://www.youtube.com', desc: 'YouTube VR 360/180 Video' },
+  { id: 'bilibili', name: 'Bilibili', icon: '📺', cat: 'Media', pkg: 'tv.danmaku.bili', mode: 'web', url: 'https://www.bilibili.com', desc: 'Bilibili Video Platform' },
+  { id: 'bigscreen', name: 'Bigscreen', icon: '🎬', cat: 'Media', pkg: 'com.bigscreenvr.bigscreen', mode: 'adb', desc: 'Virtual Cinema & Desktop' },
+  { id: 'heresphere', name: 'HereSphere', icon: '🎥', cat: 'Media', pkg: 'com.heresphere.vrvideoplayerdemo', mode: 'adb', desc: 'VR Video Player' },
+  { id: 'pluto', name: 'Pluto TV', icon: '📡', cat: 'Media', pkg: 'tv.pluto.oculus.pwa', mode: 'web', url: 'https://pluto.tv', desc: 'Free Live TV & Movies' },
+  // 🖥 Remote
+  { id: 'virtualdesktop', name: 'Virtual Desktop', icon: '🖥️', cat: 'Remote', pkg: 'VirtualDesktop.Android', mode: 'adb', desc: 'PC VR Streaming & Desktop' },
+  { id: 'steamlink', name: 'Steam Link VR', icon: '🎮', cat: 'Remote', pkg: 'com.valvesoftware.steamlinkvr', mode: 'adb', desc: 'Steam Game Streaming' },
+  { id: 'moonlight', name: 'Moonlight', icon: '🌕', cat: 'Remote', pkg: 'com.limelight', mode: 'adb', desc: 'NVIDIA GameStream Client' },
+  { id: 'todesk', name: 'ToDesk', icon: '🔗', cat: 'Remote', pkg: 'youqu.android.todesk', mode: 'web', url: 'https://www.todesk.com/web/', desc: 'Remote Desktop Control' },
+  { id: 'spacedesk', name: 'SpaceDesk', icon: '📱', cat: 'Remote', pkg: 'ph.spacedesk.beta', mode: 'adb', desc: 'Virtual Display Extension' },
+  { id: 'bvnc', name: 'bVNC', icon: '🖲️', cat: 'Remote', pkg: 'com.iiordanov.freebVNC', mode: 'adb', desc: 'VNC Remote Access' },
+  { id: 'easycontrol', name: 'EasyControl', icon: '📲', cat: 'Remote', pkg: 'top.eiyooooo.easycontrol.app', mode: 'adb', desc: 'Phone Mirror Control' },
+  // 🏠 Smart Home
+  { id: 'homeassistant', name: 'Home Assistant', icon: '🏠', cat: 'SmartHome', pkg: 'io.homeassistant.companion.android', mode: 'web', url: 'http://192.168.31.141:8123', desc: 'Smart Home Dashboard' },
+  { id: 'immersivehome', name: 'Immersive Home', icon: '🏡', cat: 'SmartHome', pkg: 'de.nitwel.immersivehome', mode: 'demo', demo: 'smart-home', desc: 'MR Smart Home Control' },
+  { id: 'djironin', name: 'DJI Ronin', icon: '🎯', cat: 'SmartHome', pkg: 'com.dji.ronin', mode: 'adb', desc: 'DJI Stabilizer Control' },
+  // 🎮 Games
+  { id: 'beatsaber', name: 'Beat Saber', icon: '⚔️', cat: 'Games', pkg: 'com.beatgames.beatsaber', mode: 'adb', desc: 'VR Rhythm Game · Most Popular' },
+  { id: 'vrchat', name: 'VRChat', icon: '🌐', cat: 'Games', pkg: 'com.vrchat.oculus.quest', mode: 'adb', desc: 'Social VR Platform' },
+  { id: 'gorillatag', name: 'Gorilla Tag', icon: '🦍', cat: 'Games', pkg: 'com.AnotherAxiom.GorillaTag', mode: 'adb', desc: 'Tag Game in VR' },
+  { id: 'eleven', name: 'Eleven Table Tennis', icon: '🏓', cat: 'Games', pkg: 'quest.eleven.forfunlabs', mode: 'adb', desc: 'Realistic VR Ping Pong' },
+  { id: 'grab', name: 'GRAB', icon: '🧗', cat: 'Games', pkg: 'com.slindev.grab_demo', mode: 'adb', desc: 'Climbing & Parkour VR' },
+  { id: 'firsthand', name: 'First Hand', icon: '✋', cat: 'Games', pkg: 'com.oculus.samples.firsthand', mode: 'demo', demo: 'hand-grab', desc: 'Hand Tracking Demo by Meta' },
+  { id: 'beatlabs', name: 'Beat Labs', icon: '🎵', cat: 'Games', pkg: 'com.marekstoj.beatlabs', mode: 'adb', desc: 'Community Rhythm Game' },
+  { id: 'paradiddle', name: 'Paradiddle', icon: '🥁', cat: 'Games', pkg: 'com.tanirganemre.paradiddle', mode: 'adb', desc: 'VR Drums' },
+  { id: 'unplugged', name: 'Unplugged VR', icon: '🎸', cat: 'Games', pkg: 'com.Anotherway.UnpluggedVR', mode: 'adb', desc: 'Air Guitar VR' },
+  { id: 'rollercoasters', name: 'Epic Roller Coasters', icon: '🎢', cat: 'Games', pkg: 'games.b4t.epicrollercoasters.oculus', mode: 'adb', desc: 'VR Roller Coaster Rides' },
+  // 🔧 Tools
+  { id: 'questtool', name: 'QuestTool', icon: '🔧', cat: 'Tools', pkg: 'com.vrzwk.QuestTool', mode: 'adb', desc: 'Quest System Toolkit' },
+  { id: 'clash', name: 'Clash Meta', icon: '🛡️', cat: 'Tools', pkg: 'com.github.metacubex.clash.meta', mode: 'adb', desc: 'Network Proxy (Top Usage)' },
+  { id: 'screenstream', name: 'ScreenStream', icon: '📡', cat: 'Tools', pkg: 'info.dvkr.screenstream.dev', mode: 'adb', desc: 'Screen Mirroring v4.2.9-dev' },
+  { id: 'chrome', name: 'Chrome', icon: '🌐', cat: 'Tools', pkg: 'com.android.chrome', mode: 'web', url: 'https://www.google.com', desc: 'Chrome Browser v132' },
+  { id: 'quark', name: 'Quark Browser', icon: '🔍', cat: 'Tools', pkg: 'com.quark.browser', mode: 'adb', desc: 'Quark Browser' },
+  { id: 'frp', name: 'FRP Tunnel', icon: '🚇', cat: 'Tools', pkg: 'com.tools.frp', mode: 'adb', desc: 'Fast Reverse Proxy' },
+  { id: 'automate', name: 'Automate', icon: '⚙️', cat: 'Tools', pkg: 'com.llamalab.automate', mode: 'adb', desc: 'Task Automation' },
+  // 💬 Social
+  { id: 'whatsapp', name: 'WhatsApp', icon: '💬', cat: 'Social', pkg: 'com.whatsapp', mode: 'web', url: 'https://web.whatsapp.com', desc: 'WhatsApp Messaging' },
+  { id: 'messenger', name: 'Messenger', icon: '💭', cat: 'Social', pkg: 'com.facebook.orca', mode: 'web', url: 'https://www.messenger.com', desc: 'Meta Messenger' },
+];
+
+const APP_CATEGORIES = [
+  { id: 'AI', label: '🤖 AI Chat', },
+  { id: 'Media', label: '📺 Media' },
+  { id: 'Remote', label: '🖥 Remote' },
+  { id: 'SmartHome', label: '🏠 Smart Home' },
+  { id: 'Games', label: '🎮 Games' },
+  { id: 'Tools', label: '🔧 Tools' },
+  { id: 'Social', label: '💬 Social' },
+];
+
+let currentApp = null;
+
+function switchTab(tab) {
+  const demoList = document.getElementById('demoList');
+  const appList = document.getElementById('appList');
+  const tabDemos = document.getElementById('tabDemos');
+  const tabApps = document.getElementById('tabApps');
+
+  if (tab === 'demos') {
+    demoList.style.display = '';
+    appList.style.display = 'none';
+    tabDemos.classList.add('active');
+    tabApps.classList.remove('active');
+  } else {
+    demoList.style.display = 'none';
+    appList.style.display = '';
+    tabDemos.classList.remove('active');
+    tabApps.classList.add('active');
+    if (!appList.innerHTML) renderAppList();
+  }
+}
+
+function renderAppList() {
+  const list = document.getElementById('appList');
+  let html = '';
+  for (const cat of APP_CATEGORIES) {
+    const apps = APP_REGISTRY.filter(a => a.cat === cat.id);
+    if (!apps.length) continue;
+    html += `<div class="app-category">${cat.label} (${apps.length})</div>`;
+    for (const app of apps) {
+      const modeLabel = app.mode === 'web' ? 'WEB' : app.mode === 'demo' ? 'DEMO' : 'ADB';
+      const modeClass = app.mode === 'web' ? 'web' : app.mode === 'demo' ? 'demo' : 'adb';
+      html += `<div class="app-item" id="app-${app.id}" onclick="loadApp('${app.id}')">
+        <div class="app-icon">${app.icon}</div>
+        <div class="app-info">
+          <div class="app-name">${app.name}</div>
+          <div class="app-type">${app.desc}</div>
+        </div>
+        <span class="app-launch ${modeClass}">${modeLabel}</span>
+      </div>`;
+    }
+  }
+  list.innerHTML = html;
+  document.getElementById('tabApps').textContent = `Apps (${APP_REGISTRY.length})`;
+}
+
+function loadApp(id) {
+  const app = APP_REGISTRY.find(a => a.id === id);
+  if (!app) return;
+  currentApp = app;
+  currentDemo = null;
+
+  // Highlight in list
+  document.querySelectorAll('.app-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.demo-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById(`app-${id}`);
+  if (el) el.classList.add('active');
+
+  if (app.mode === 'demo' && app.demo) {
+    // Switch to demos tab and load the related demo
+    switchTab('demos');
+    loadDemo(app.demo);
+    return;
+  }
+
+  if (app.mode === 'web' && app.url) {
+    // Show app detail with web launch option
+    showAppDetail(app);
+    return;
+  }
+
+  // ADB-only app: show detail with launch button
+  showAppDetail(app);
+}
+
+function showAppDetail(app) {
+  const frame = document.getElementById('demoFrame');
+  frame.style.display = 'none';
+  const placeholder = document.getElementById('placeholder');
+  placeholder.style.display = 'none';
+
+  // Remove previous detail panel
+  let detail = document.getElementById('appDetail');
+  if (!detail) {
+    detail = document.createElement('div');
+    detail.id = 'appDetail';
+    detail.className = 'app-detail';
+    document.getElementById('viewport').appendChild(detail);
+  }
+  detail.style.display = '';
+
+  const modeInfo = app.mode === 'web'
+    ? `<div style="color:var(--green)">✅ Web版可用 — 可在浏览器中直接运行</div>`
+    : `<div style="color:var(--yellow)">📱 原生应用 — 需通过ADB在Quest 3上启动</div>`;
+
+  detail.innerHTML = `
+    <div class="app-detail-icon">${app.icon}</div>
+    <h2>${app.name}</h2>
+    <div class="app-detail-meta">
+      ${app.desc}<br>
+      <code style="font-size:11px;color:var(--fg2)">${app.pkg}</code><br>
+      ${modeInfo}
+    </div>
+    <div class="app-actions">
+      ${app.mode === 'web' ? `<button class="btn primary" onclick="openWebApp('${app.id}')">🌐 在视口中打开</button>
+      <button class="btn" onclick="window.open('${app.url}','_blank')">↗ 新标签页打开</button>` : ''}
+      <button class="btn ${app.mode !== 'web' ? 'primary' : ''}" onclick="launchOnDevice('${app.id}')">📱 Quest 3上启动</button>
+    </div>
+  `;
+
+  document.getElementById('currentUrl').textContent = app.mode === 'web' ? app.url : `quest3://${app.pkg}`;
+  document.getElementById('xrBadge').style.display = '';
+  document.getElementById('xrBadge').textContent = app.mode === 'web' ? 'WEB' : 'NATIVE';
+  document.getElementById('xrBadge').className = 'xr-badge ' + (app.mode === 'web' ? 'vr' : 'ar');
+  document.getElementById('btnEnterXR').style.display = 'none';
+  addLog('info', `App selected: ${app.name} (${app.mode})`);
+}
+
+function openWebApp(id) {
+  const app = APP_REGISTRY.find(a => a.id === id);
+  if (!app || !app.url) return;
+
+  // Hide detail, show iframe
+  const detail = document.getElementById('appDetail');
+  if (detail) detail.style.display = 'none';
+
+  const frame = document.getElementById('demoFrame');
+  frame.style.display = 'block';
+  frame.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox';
+  frame.src = app.url;
+
+  document.getElementById('currentUrl').textContent = app.url;
+  addLog('info', `Loading web app: ${app.name} → ${app.url}`);
+
+  frame.onload = () => {
+    addLog('info', `${app.name} web app loaded`);
+  };
+  frame.onerror = () => {
+    addLog('warn', `${app.name} may block iframe embedding — try "新标签页打开"`);
+  };
+}
+
+async function launchOnDevice(id) {
+  const app = APP_REGISTRY.find(a => a.id === id);
+  if (!app) return;
+
+  addLog('info', `Launching ${app.name} on Quest 3...`);
+
+  try {
+    const r = await fetch(`/api/launch?pkg=${encodeURIComponent(app.pkg)}`);
+    const data = await r.json();
+    if (data.ok) {
+      addLog('info', `✅ ${app.name} launched on Quest 3`);
+    } else {
+      addLog('error', `❌ Launch failed: ${data.error || 'unknown'}`);
+    }
+  } catch (e) {
+    addLog('warn', `⚠️ ADB launch API not available (proxy offline or no device)`);
+    addLog('info', `Manual: adb shell monkey -p ${app.pkg} -c android.intent.category.LAUNCHER 1`);
+  }
+}
+
+// ============================================================
+// Sync Mode — 1:1 双启动 + 屏幕镜像 + 设备状态
+// ============================================================
+let syncMode = false;
+let mirrorActive = false;
+let mirrorInterval = null;
+let deviceInfoInterval = null;
+let mirrorFrameCount = 0;
+let mirrorLastTime = 0;
+
+function toggleSyncMode() {
+  syncMode = !syncMode;
+  const btn = document.getElementById('btnSync');
+  btn.classList.toggle('active', syncMode);
+  btn.textContent = syncMode ? '🔗 同步中' : '🔗 同步';
+  addLog('info', syncMode ? '🔗 同步模式已开启 — 操作将同时在PC和Quest 3上执行' : '🔗 同步模式已关闭');
+
+  if (syncMode) {
+    startDeviceInfoPolling();
+  } else {
+    stopDeviceInfoPolling();
+    stopMirror();
+  }
+}
+
+// ── Device Info Polling ──
+function startDeviceInfoPolling() {
+  if (deviceInfoInterval) return;
+  pollDeviceInfo();
+  deviceInfoInterval = setInterval(pollDeviceInfo, 3000);
+}
+
+function stopDeviceInfoPolling() {
+  if (deviceInfoInterval) { clearInterval(deviceInfoInterval); deviceInfoInterval = null; }
+}
+
+async function pollDeviceInfo() {
+  try {
+    const r = await fetch('/api/device-info');
+    const d = await r.json();
+    if (!d.ok) return;
+
+    const bat = document.getElementById('devBattery');
+    bat.textContent = d.battery.level != null ? d.battery.level + '%' : '—';
+    bat.style.color = d.battery.level > 20 ? 'var(--green)' : 'var(--red)';
+
+    const temp = document.getElementById('devTemp');
+    temp.textContent = d.battery.temp != null ? d.battery.temp.toFixed(1) + '°' : '—';
+    temp.style.color = d.battery.temp > 40 ? 'var(--red)' : d.battery.temp > 35 ? 'var(--yellow)' : 'var(--green)';
+
+    const cpu = document.getElementById('devCPU');
+    cpu.textContent = d.cpuTemp ? d.cpuTemp.toFixed(1) + '°' : '—';
+
+    const charging = document.getElementById('devCharging');
+    charging.textContent = d.battery.charging ? '⚡充电' : '🔋放电';
+    charging.style.color = d.battery.charging ? 'var(--green)' : 'var(--fg2)';
+
+    const appName = d.currentApp !== 'unknown' ? d.currentApp.split('.').pop() : '—';
+    document.getElementById('devCurrentApp').textContent = appName;
+    document.getElementById('devCurrentApp').title = d.currentApp;
+  } catch(e) {}
+}
+
+// ── Screen Mirror ──
+async function startMirror() {
+  if (mirrorActive) return;
+  addLog('info', '📺 正在启动屏幕镜像 (scrcpy)...');
+  try {
+    const r = await fetch('/api/mirror/start');
+    const d = await r.json();
+    if (!d.ok) { addLog('error', '📺 镜像启动失败: ' + (d.error || 'unknown')); return; }
+    addLog('info', `📺 scrcpy已启动 (${d.status}) — 等待画面...`);
+  } catch(e) { addLog('error', '📺 镜像API不可用'); return; }
+
+  // Wait for scrcpy window to appear
+  await new Promise(r => setTimeout(r, 2500));
+
+  mirrorActive = true;
+  mirrorFrameCount = 0;
+  mirrorLastTime = performance.now();
+
+  const mirror = document.getElementById('screenMirror');
+  mirror.classList.add('active');
+  addLog('info', '📺 屏幕镜像已启动 — 实时显示Quest 3画面');
+  pollMirrorFrame();
+}
+
+async function stopMirror() {
+  mirrorActive = false;
+  const mirror = document.getElementById('screenMirror');
+  mirror.classList.remove('active');
+  if (mirrorInterval) { clearTimeout(mirrorInterval); mirrorInterval = null; }
+  try {
+    await fetch('/api/mirror/stop');
+    addLog('info', '📺 屏幕镜像已关闭');
+  } catch(e) {}
+}
+
+function pollMirrorFrame() {
+  if (!mirrorActive) return;
+  const img = document.getElementById('mirrorImg');
+  const newImg = new Image();
+  const t0 = performance.now();
+  newImg.onload = () => {
+    img.src = newImg.src;
+    mirrorFrameCount++;
+    const elapsed = performance.now() - mirrorLastTime;
+    if (elapsed >= 1000) {
+      const fps = Math.round(mirrorFrameCount * 1000 / elapsed);
+      document.getElementById('mirrorFPS').textContent = fps + ' FPS';
+      mirrorFrameCount = 0;
+      mirrorLastTime = performance.now();
+    }
+    const frameTime = performance.now() - t0;
+    const delay = Math.max(50, 200 - frameTime);
+    mirrorInterval = setTimeout(pollMirrorFrame, delay);
+  };
+  newImg.onerror = () => {
+    mirrorInterval = setTimeout(pollMirrorFrame, 1000);
+  };
+  newImg.src = '/api/screen?t=' + Date.now();
+}
+
+// ── Input Forwarding ──
+async function sendInput(type, params) {
+  try {
+    const body = { type, ...params };
+    const r = await fetch('/api/input', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (d.ok) addLog('log', `📱 Input sent: ${type}`);
+    else addLog('warn', `📱 Input failed: ${type}`);
+  } catch(e) {
+    addLog('warn', '📱 Input API unavailable');
+  }
+}
+
+// Mirror click → forward as tap to Quest 3
+document.getElementById('mirrorImg').addEventListener('click', function(e) {
+  if (!mirrorActive) return;
+  const rect = this.getBoundingClientRect();
+  const imgW = this.naturalWidth || 2064;
+  const imgH = this.naturalHeight || 2208;
+  const scaleX = imgW / rect.width;
+  const scaleY = imgH / rect.height;
+  const x = Math.round((e.clientX - rect.left) * scaleX);
+  const y = Math.round((e.clientY - rect.top) * scaleY);
+  sendInput('tap', { x, y });
+  addLog('log', `📱 Tap forwarded: (${x}, ${y})`);
+});
+
+// ── Sync-aware Launch ──
+function syncLaunchDemo(demoId) {
+  if (!syncMode) return;
+  const demo = DEMOS.find(d => d.id === demoId);
+  if (!demo) return;
+
+  const fullUrl = `http://localhost:8444${demo.path}`;
+  fetch(`/api/launch-url?url=${encodeURIComponent(fullUrl)}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.ok) addLog('info', `🔗 同步: Quest 3浏览器已打开 ${demo.name}`);
+      else addLog('warn', `🔗 同步: Quest 3打开失败 — ${d.error}`);
+    })
+    .catch(() => addLog('warn', '🔗 同步: Quest 3不可达'));
+}
+
+function syncLaunchApp(appId) {
+  if (!syncMode) return;
+  const app = APP_REGISTRY.find(a => a.id === appId);
+  if (!app) return;
+
+  if (app.mode === 'web' && app.url) {
+    fetch(`/api/launch-url?url=${encodeURIComponent(app.url)}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.ok) addLog('info', `🔗 同步: Quest 3浏览器已打开 ${app.name}`);
+      })
+      .catch(() => {});
+  } else if (app.pkg) {
+    fetch(`/api/launch?pkg=${encodeURIComponent(app.pkg)}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.ok) {
+          addLog('info', `🔗 同步: Quest 3已启动 ${app.name}`);
+          startMirror();
+        }
+      })
+      .catch(() => {});
+  }
+}
+
+// Monkey-patch loadDemo to add sync behavior
+const _baseLoadDemo = loadDemo;
+loadDemo = function(id) {
+  _baseLoadDemo(id);
+  if (syncMode) syncLaunchDemo(id);
+};
+
+// Monkey-patch openWebApp to add sync behavior
+const _baseOpenWebApp = openWebApp;
+openWebApp = function(id) {
+  _baseOpenWebApp(id);
+  if (syncMode) syncLaunchApp(id);
+};
+
+// Monkey-patch launchOnDevice to also start mirror
+const _baseLaunchOnDevice = launchOnDevice;
+launchOnDevice = async function(id) {
+  await _baseLaunchOnDevice(id);
+  if (syncMode) startMirror();
+};
+
+// Update showAppDetail to add sync-specific buttons
+const _baseShowAppDetail = showAppDetail;
+showAppDetail = function(app) {
+  _baseShowAppDetail(app);
+  if (syncMode) {
+    const detail = document.getElementById('appDetail');
+    if (!detail) return;
+    const syncBtns = document.createElement('div');
+    syncBtns.className = 'app-actions';
+    syncBtns.style.marginTop = '8px';
+
+    if (app.mode === 'web') {
+      syncBtns.innerHTML = `<button class="btn primary" onclick="openWebApp('${app.id}'); syncLaunchApp('${app.id}')">🔗 同步打开 (PC + Quest 3)</button>`;
+    } else {
+      syncBtns.innerHTML = `<button class="btn primary" onclick="launchOnDevice('${app.id}')">🔗 同步启动 + 镜像</button>`;
+    }
+    detail.appendChild(syncBtns);
+  }
+};
+
+// Device info polling starts only when sync mode is activated (toggleSyncMode)
+
+// ============================================================
+// Guardian System — Boundary visualization
+// ============================================================
+let guardianMode = 'stationary'; // stationary | roomscale | off
+let guardianSize = { w: 3.0, d: 3.0 };
+let guardianSensitivity = 0.7;
+
+function setGuardianMode(mode) {
+  guardianMode = mode;
+  document.querySelectorAll('.guardian-ctrl .mode-btn').forEach(b => b.classList.remove('active'));
+  const btnMap = { stationary: 'guardStationary', roomscale: 'guardRoomscale', off: 'guardOff' };
+  document.getElementById(btnMap[mode])?.classList.add('active');
+  const overlay = document.getElementById('guardianOverlay');
+  overlay.style.display = mode === 'off' ? 'none' : '';
+  updateGuardianInfo();
+  addLog('info', `Guardian: ${mode === 'off' ? '关闭' : mode === 'stationary' ? '固定模式' : '房间模式 ' + guardianSize.w + '×' + guardianSize.d + 'm'}`);
+}
+
+function setGuardianSize(axis, value) {
+  const v = parseFloat(value);
+  if (axis === 'w') { guardianSize.w = v; document.getElementById('guardWVal').textContent = v.toFixed(1) + 'm'; }
+  else { guardianSize.d = v; document.getElementById('guardDVal').textContent = v.toFixed(1) + 'm'; }
+  updateGuardianInfo();
+}
+
+function updateGuardianInfo() {
+  const info = document.getElementById('guardianInfo');
+  if (guardianMode === 'off') { info.style.display = 'none'; return; }
+  info.style.display = '';
+  info.textContent = guardianMode === 'stationary'
+    ? '🛡️ Guardian: Stationary (1m radius)'
+    : `🛡️ Guardian: Roomscale ${guardianSize.w.toFixed(1)}×${guardianSize.d.toFixed(1)}m`;
+}
+
+function updateGuardianBoundary() {
+  if (guardianMode === 'off') return;
+  const grid = document.getElementById('guardianGrid');
+  const halfW = guardianMode === 'stationary' ? 1.0 : guardianSize.w / 2;
+  const halfD = guardianMode === 'stationary' ? 1.0 : guardianSize.d / 2;
+  const dx = Math.abs(deviceState.px);
+  const dz = Math.abs(deviceState.pz);
+  const maxDist = Math.max(dx / halfW, dz / halfD);
+  const threshold = guardianSensitivity;
+
+  if (maxDist > 1.0) {
+    grid.className = 'guardian-grid danger';
+  } else if (maxDist > threshold) {
+    grid.className = 'guardian-grid warn';
+  } else {
+    grid.className = 'guardian-grid';
+  }
+}
+
+// Hook into device transform to check guardian
+const _origApplyDeviceTransform = applyDeviceTransform;
+applyDeviceTransform = function() {
+  _origApplyDeviceTransform();
+  updateGuardianBoundary();
+};
+
+// ============================================================
+// Passthrough System — Webcam or synthetic environment
+// ============================================================
+let passthroughMode = 'off'; // off | synth | camera
+let passthroughStream = null;
+
+function setPassthrough(mode) {
+  passthroughMode = mode;
+  const layer = document.getElementById('passthroughLayer');
+  const video = document.getElementById('passthroughVideo');
+  const synth = document.getElementById('synthPassthrough');
+
+  document.querySelectorAll('.passthrough-ctrl .pt-btn').forEach(b => b.classList.remove('active'));
+  const btnMap = { off: 'ptOff', synth: 'ptSynth', camera: 'ptCam' };
+  document.getElementById(btnMap[mode])?.classList.add('active');
+
+  if (mode === 'off') {
+    layer.classList.remove('active');
+    stopPassthroughCamera();
+    addLog('info', 'Passthrough: 关闭');
+    return;
+  }
+
+  layer.classList.add('active');
+
+  if (mode === 'synth') {
+    video.style.display = 'none';
+    synth.style.display = '';
+    stopPassthroughCamera();
+    addLog('info', 'Passthrough: 合成环境 (SEM)');
+  } else if (mode === 'camera') {
+    synth.style.display = 'none';
+    startPassthroughCamera();
+  }
+}
+
+async function startPassthroughCamera() {
+  const video = document.getElementById('passthroughVideo');
+  try {
+    passthroughStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: 1280, height: 720 } });
+    video.srcObject = passthroughStream;
+    video.style.display = '';
+    addLog('info', 'Passthrough: 摄像头已激活 (模拟Quest 3 彩色透视)');
+  } catch (e) {
+    addLog('warn', 'Passthrough: 摄像头不可用 — ' + e.message + ' (回退合成模式)');
+    setPassthrough('synth');
+  }
+}
+
+function stopPassthroughCamera() {
+  if (passthroughStream) {
+    passthroughStream.getTracks().forEach(t => t.stop());
+    passthroughStream = null;
+  }
+}
+
+function setPassthroughOpacity(value) {
+  const v = parseFloat(value);
+  document.getElementById('ptOpacityVal').textContent = Math.round(v * 100) + '%';
+  document.getElementById('passthroughLayer').style.opacity = v;
+}
+
+// ============================================================
+// Eye Tracking System — Mouse-based gaze simulation
+// ============================================================
+let eyeTrackingEnabled = false;
+let gazeData = { x: 0, y: 0, fixated: false, fixationTime: 0, lastMoveTime: 0 };
+
+function setEyeTracking(enabled) {
+  eyeTrackingEnabled = enabled;
+  document.getElementById('eyeOff').classList.toggle('active', !enabled);
+  document.getElementById('eyeOn').classList.toggle('active', enabled);
+  document.getElementById('gazeCursor').classList.toggle('active', enabled);
+  addLog('info', `Eye Tracking: ${enabled ? '开启 (鼠标模拟注视点)' : '关闭'}`);
+}
+
+function setIPD(value) {
+  document.getElementById('ipdVal').textContent = value + 'mm';
+  addLog('log', `IPD: ${value}mm`);
+  // Update IWER device IPD if available
+  try {
+    const frame = document.getElementById('demoFrame');
+    const dev = findIWERDevice(frame.contentWindow);
+    if (dev && dev.ipd !== undefined) dev.ipd = parseFloat(value) / 1000;
+  } catch (e) {}
+}
+
+// Track mouse movement over viewport for eye tracking
+document.getElementById('viewport').addEventListener('mousemove', function(e) {
+  if (!eyeTrackingEnabled || mouseLookActive) return;
+  const rect = this.getBoundingClientRect();
+  const nx = ((e.clientX - rect.left) / rect.width * 2 - 1).toFixed(2);
+  const ny = (-(e.clientY - rect.top) / rect.height * 2 + 1).toFixed(2);
+  gazeData.x = parseFloat(nx);
+  gazeData.y = parseFloat(ny);
+  gazeData.lastMoveTime = performance.now();
+  gazeData.fixated = false;
+
+  // Move gaze cursor
+  const cursor = document.getElementById('gazeCursor');
+  cursor.style.left = e.clientX - rect.left + 'px';
+  cursor.style.top = e.clientY - rect.top + 'px';
+  cursor.classList.remove('fixated');
+
+  // Update display
+  document.getElementById('gazeX').textContent = nx;
+  document.getElementById('gazeY').textContent = ny;
+  document.getElementById('gazeState').textContent = '扫视';
+});
+
+// Fixation detection (when mouse stays still > 300ms)
+setInterval(() => {
+  if (!eyeTrackingEnabled) return;
+  const elapsed = performance.now() - gazeData.lastMoveTime;
+  if (elapsed > 300 && !gazeData.fixated) {
+    gazeData.fixated = true;
+    gazeData.fixationTime = performance.now();
+    document.getElementById('gazeCursor').classList.add('fixated');
+    document.getElementById('gazeState').textContent = '注视';
+  }
+  // Simulate pupil dilation based on brightness (random walk)
+  const pupil = 3.0 + Math.sin(performance.now() / 3000) * 1.0 + Math.random() * 0.3;
+  document.getElementById('pupilDiam').textContent = pupil.toFixed(1) + 'mm';
+}, 100);
+
+// ============================================================
+// Haptic Feedback Visualization
+// ============================================================
+let hapticTimers = { left: null, right: null };
+
+function triggerHaptic(hand, intensity, duration) {
+  intensity = Math.min(1, Math.max(0, intensity || 0.5));
+  duration = duration || 100;
+  const side = hand === 'left' ? 'L' : 'R';
+  const ind = document.getElementById('haptic' + side);
+  const fill = document.getElementById('hapticFill' + side);
+
+  ind.classList.add('vibrating');
+  fill.style.width = (intensity * 100) + '%';
+
+  if (hapticTimers[hand]) clearTimeout(hapticTimers[hand]);
+  hapticTimers[hand] = setTimeout(() => {
+    ind.classList.remove('vibrating');
+    fill.style.width = '0%';
+    hapticTimers[hand] = null;
+  }, duration);
+}
+
+// Auto-trigger haptics when controller buttons are pressed
+const _origCtrlBtn = ctrlBtn;
+ctrlBtn = function(hand, btnId, value) {
+  _origCtrlBtn(hand, btnId, value);
+  if (value > 0) {
+    const intensity = (btnId === 'trigger' || btnId === 'squeeze') ? 0.8 : 0.3;
+    const duration = (btnId === 'trigger' || btnId === 'squeeze') ? 150 : 80;
+    triggerHaptic(hand, intensity, duration);
+  }
+};
+
+// ============================================================
+// System Menu (Quest 3 Universal Menu)
+// ============================================================
+function toggleSystemMenu() {
+  const overlay = document.getElementById('systemMenuOverlay');
+  const visible = overlay.classList.toggle('visible');
+  if (visible) {
+    // Update time
+    const now = new Date();
+    document.getElementById('sysTime').textContent = now.toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit' });
+  }
+}
+
+function toggleSysTile(el) {
+  el.classList.toggle('on');
+  const label = el.querySelector('.tile-label').textContent;
+  const isOn = el.classList.contains('on');
+  addLog('info', `系统: ${label} ${isOn ? '开启' : '关闭'}`);
+
+  // Link system tiles to actual simulator features
+  if (el.id === 'sysTileGuardian') {
+    setGuardianMode(isOn ? 'roomscale' : 'off');
+  } else if (el.id === 'sysTilePassthrough') {
+    setPassthrough(isOn ? 'synth' : 'off');
+  } else if (el.id === 'sysTileHand') {
+    setInputMode(isOn ? 'hand' : 'controller');
+  } else if (el.id === 'sysTileCast') {
+    if (isOn) startMirror(); else stopMirror();
+  }
+}
+
+// ============================================================
+// Scene Understanding API — Simulated room data
+// ============================================================
+const SCENE_TEMPLATES = {
+  living_room: {
+    planes: [
+      { type: 'FLOOR', w: 5.0, d: 4.0 },
+      { type: 'WALL', w: 5.0, d: 2.8 },
+      { type: 'WALL', w: 5.0, d: 2.8 },
+      { type: 'WALL', w: 4.0, d: 2.8 },
+      { type: 'WALL', w: 4.0, d: 2.8 },
+      { type: 'CEILING', w: 5.0, d: 4.0 },
+      { type: 'TABLE', w: 1.4, d: 0.8 },
+      { type: 'COUCH', w: 2.0, d: 0.9 },
+    ],
+    meshVerts: 12480, anchors: 3, labels: 6
+  },
+  meeting_room: {
+    planes: [
+      { type: 'FLOOR', w: 6.0, d: 4.0 },
+      { type: 'WALL', w: 6.0, d: 3.0 },
+      { type: 'WALL', w: 6.0, d: 3.0 },
+      { type: 'WALL', w: 4.0, d: 3.0 },
+      { type: 'WALL', w: 4.0, d: 3.0 },
+      { type: 'CEILING', w: 6.0, d: 4.0 },
+      { type: 'TABLE', w: 3.0, d: 1.2 },
+      { type: 'SCREEN', w: 2.0, d: 1.2 },
+    ],
+    meshVerts: 18720, anchors: 5, labels: 8
+  },
+  music_room: {
+    planes: [
+      { type: 'FLOOR', w: 4.0, d: 3.5 },
+      { type: 'WALL', w: 4.0, d: 2.6 },
+      { type: 'WALL', w: 4.0, d: 2.6 },
+      { type: 'WALL', w: 3.5, d: 2.6 },
+      { type: 'CEILING', w: 4.0, d: 3.5 },
+      { type: 'TABLE', w: 1.0, d: 0.5 },
+    ],
+    meshVerts: 9840, anchors: 2, labels: 5
+  },
+  office_large: {
+    planes: [
+      { type: 'FLOOR', w: 8.0, d: 6.0 },
+      { type: 'WALL', w: 8.0, d: 3.0 },
+      { type: 'WALL', w: 8.0, d: 3.0 },
+      { type: 'WALL', w: 6.0, d: 3.0 },
+      { type: 'WALL', w: 6.0, d: 3.0 },
+      { type: 'CEILING', w: 8.0, d: 6.0 },
+      { type: 'DESK', w: 1.6, d: 0.8 },
+      { type: 'DESK', w: 1.6, d: 0.8 },
+      { type: 'WINDOW', w: 2.0, d: 1.5 },
+    ],
+    meshVerts: 24560, anchors: 6, labels: 10
+  },
+  office_small: {
+    planes: [
+      { type: 'FLOOR', w: 3.0, d: 3.0 },
+      { type: 'WALL', w: 3.0, d: 2.6 },
+      { type: 'WALL', w: 3.0, d: 2.6 },
+      { type: 'WALL', w: 3.0, d: 2.6 },
+      { type: 'WALL', w: 3.0, d: 2.6 },
+      { type: 'CEILING', w: 3.0, d: 3.0 },
+      { type: 'DESK', w: 1.2, d: 0.6 },
+    ],
+    meshVerts: 7200, anchors: 1, labels: 4
+  }
+};
+
+function updateSceneData(envId) {
+  const scene = SCENE_TEMPLATES[envId] || SCENE_TEMPLATES.living_room;
+  document.getElementById('scenePlanes').textContent = scene.planes.length;
+  document.getElementById('sceneAnchors').textContent = scene.anchors;
+  document.getElementById('sceneMeshVerts').textContent = scene.meshVerts.toLocaleString();
+  document.getElementById('sceneLabels').textContent = scene.labels;
+
+  const planeList = document.getElementById('scenePlaneList');
+  planeList.innerHTML = scene.planes.map(p =>
+    `<div class="scene-plane"><span class="plane-type">${p.type}</span><span class="plane-size">${p.w.toFixed(1)}×${p.d.toFixed(1)}m</span><span style="color:var(--green);font-size:10px">✓</span></div>`
+  ).join('');
+}
+
+function regenerateScene() {
+  const envId = document.getElementById('envSelect').value;
+  addLog('info', '🗺️ 重新扫描房间...');
+  // Simulate scanning delay
+  document.getElementById('scenePlanes').textContent = '...';
+  document.getElementById('sceneMeshVerts').textContent = '...';
+  setTimeout(() => {
+    updateSceneData(envId);
+    addLog('info', '🗺️ 房间扫描完成 — 平面/网格/锚点已更新');
+  }, 1500);
+}
+
+// Hook environment switch to update scene data
+const _origSwitchEnv = switchEnvironment;
+switchEnvironment = async function(envId) {
+  await _origSwitchEnv(envId);
+  updateSceneData(envId);
+};
+
+// ============================================================
+// Enhanced Hand Gestures
+// ============================================================
+const GESTURE_MAP = {
+  default: { joints: 'open', pinch: 0 },
+  pinch: { joints: 'pinch', pinch: 1 },
+  fist: { joints: 'fist', pinch: 0 },
+  point: { joints: 'point', pinch: 0 },
+  thumbsup: { joints: 'thumbsup', pinch: 0 },
+  peace: { joints: 'peace', pinch: 0 },
+  ok: { joints: 'ok', pinch: 0.8 },
+  grab: { joints: 'grab', pinch: 0.6 },
+};
+
+function setHandGesture(hand, gestureId, btnEl) {
+  const gesture = GESTURE_MAP[gestureId];
+  if (!gesture) return;
+
+  // Update IWER hand pose
+  try {
+    const frame = document.getElementById('demoFrame');
+    const dev = findIWERDevice(frame.contentWindow);
+    if (dev && dev.hands && dev.hands[hand]) {
+      dev.hands[hand].poseId = gestureId;
+      if (typeof dev.hands[hand].updateHandPose === 'function') dev.hands[hand].updateHandPose();
+      if (typeof dev.hands[hand].updatePinchValue === 'function') dev.hands[hand].updatePinchValue(gesture.pinch);
+    }
+  } catch (e) {}
+
+  // Visual feedback
+  if (btnEl) {
+    const container = btnEl.closest('.gesture-grid');
+    if (container) container.querySelectorAll('.gesture-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+  }
+
+  // Update pinch slider
+  const suffix = hand === 'left' ? 'L' : 'R';
+  const pinchSlider = document.getElementById('pinch' + suffix);
+  if (pinchSlider) {
+    pinchSlider.value = gesture.pinch;
+    document.getElementById('valPinch' + suffix).textContent = gesture.pinch.toFixed(1);
+  }
+
+  addLog('log', `Hand ${hand}: ${gestureId}`);
+
+  // Trigger haptic for grab/fist
+  if (gestureId === 'grab' || gestureId === 'fist') {
+    triggerHaptic(hand, 0.4, 100);
+  }
+}
+
+// ============================================================
+// Android Launcher
+// ============================================================
+function openAndroidLauncher() {
+  const launcher = document.getElementById('androidLauncher');
+  launcher.classList.add('active');
+  renderAndroidGrid();
+  // Update status bar
+  const now = new Date();
+  document.getElementById('alTime').textContent = now.toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit' });
+  addLog('info', '📱 Android Launcher 已打开');
+}
+
+function closeAndroidLauncher() {
+  document.getElementById('androidLauncher').classList.remove('active');
+}
+
+function renderAndroidGrid(filter) {
+  const grid = document.getElementById('alGrid');
+  let apps = APP_REGISTRY;
+  if (filter) {
+    const q = filter.toLowerCase();
+    apps = apps.filter(a => a.name.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q) || a.pkg.toLowerCase().includes(q));
+  }
+  grid.innerHTML = apps.map(app => `
+    <div class="al-app" onclick="launchFromAndroid('${app.id}')" title="${app.pkg}">
+      <div class="al-icon">${app.icon}</div>
+      <div class="al-name">${app.name}</div>
+    </div>
+  `).join('');
+}
+
+function filterAndroidApps(query) {
+  renderAndroidGrid(query);
+}
+
+function launchFromAndroid(id) {
+  const app = APP_REGISTRY.find(a => a.id === id);
+  if (!app) return;
+  closeAndroidLauncher();
+
+  if (app.mode === 'demo' && app.demo) {
+    switchTab('demos');
+    loadDemo(app.demo);
+  } else if (app.mode === 'web' && app.url) {
+    switchTab('apps');
+    openWebApp(id);
+  } else {
+    switchTab('apps');
+    showAppDetail(app);
+    launchOnDevice(id);
+  }
+}
+
+// ============================================================
+// Notifications System
+// ============================================================
+let _notifications = [];
+let _notifIdCounter = 0;
+
+const SAMPLE_NOTIFICATIONS = [
+  { icon: '🔋', title: '电池电量低', text: '当前电量 15%，请及时充电', time: '2分钟前', unread: true },
+  { icon: '📡', title: 'WiFi 已连接', text: '已连接到 ZYK_5G (192.168.31.136)', time: '5分钟前', unread: true },
+  { icon: '🛡️', title: 'Guardian 已更新', text: '房间边界已重新扫描完成', time: '10分钟前', unread: false },
+  { icon: '📦', title: 'Beat Saber 更新可用', text: 'v1.40.0 — 新增10首歌曲包', time: '1小时前', unread: true },
+  { icon: '👥', title: '好友上线', text: 'Player_VR 已在线，正在玩 VRChat', time: '2小时前', unread: false },
+  { icon: '📷', title: '截图已保存', text: '已保存到 /Pictures/Screenshots/', time: '3小时前', unread: false },
+  { icon: '🔄', title: '系统更新', text: 'v71.0.0.186 可用 — 包含性能改进', time: '1天前', unread: true },
+  { icon: '🎮', title: '手柄电量低', text: '右手柄电量 10%', time: '1天前', unread: false },
+];
+
+function initNotifications() {
+  _notifications = SAMPLE_NOTIFICATIONS.map((n, i) => ({ ...n, id: i }));
+  _notifIdCounter = _notifications.length;
+  renderNotifications();
+}
+
+function toggleNotifications() {
+  const overlay = document.getElementById('notifOverlay');
+  overlay.classList.toggle('visible');
+  if (overlay.classList.contains('visible')) renderNotifications();
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notifList');
+  const badge = document.getElementById('notifBadge');
+  const unreadCount = _notifications.filter(n => n.unread).length;
+  badge.textContent = unreadCount;
+  badge.style.display = unreadCount > 0 ? '' : 'none';
+
+  if (_notifications.length === 0) {
+    list.innerHTML = '<div class="notif-empty">🔕 没有通知</div>';
+    return;
+  }
+  list.innerHTML = _notifications.map(n => `
+    <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="markNotifRead(${n.id})">
+      <div class="ni-icon">${n.icon}</div>
+      <div class="ni-body">
+        <div class="ni-title">${n.title}</div>
+        <div class="ni-text">${n.text}</div>
+        <div class="ni-time">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function markNotifRead(id) {
+  const n = _notifications.find(x => x.id === id);
+  if (n) n.unread = false;
+  renderNotifications();
+}
+
+function clearAllNotifications() {
+  _notifications = [];
+  renderNotifications();
+  addLog('info', '🔔 通知已全部清除');
+}
+
+function pushNotification(icon, title, text) {
+  _notifications.unshift({ id: _notifIdCounter++, icon, title, text, time: '刚刚', unread: true });
+  renderNotifications();
+}
+
+// ============================================================
+// Settings System
+// ============================================================
+const SETTINGS_DATA = {
+  display: {
+    title: '📺 显示设置',
+    groups: [
+      { name: '刷新率', items: [
+        { label: '刷新率模式', type: 'select', options: ['72Hz', '90Hz', '120Hz'], value: '120Hz', key: 'refreshRate' },
+        { label: '渲染分辨率', type: 'range', min: 50, max: 150, value: 100, unit: '%', key: 'renderRes' },
+        { label: '固定注视点渲染', type: 'toggle', value: true, key: 'ffr', desc: 'Quest 3 动态FFR' },
+      ]},
+      { name: '色彩', items: [
+        { label: '色彩空间', type: 'select', options: ['sRGB', 'P3', 'Rec.2020'], value: 'P3', key: 'colorSpace' },
+        { label: '亮度', type: 'range', min: 0, max: 100, value: 80, unit: '%', key: 'brightness' },
+        { label: '夜间模式', type: 'toggle', value: false, key: 'nightMode' },
+      ]},
+    ]
+  },
+  tracking: {
+    title: '👁️ 追踪设置',
+    groups: [
+      { name: '追踪系统', items: [
+        { label: '6DoF 追踪', type: 'toggle', value: true, key: 'sixdof', desc: 'Inside-out SLAM' },
+        { label: '手部追踪 v2.2', type: 'toggle', value: true, key: 'handTrack' },
+        { label: '眼动追踪', type: 'toggle', value: true, key: 'eyeTrack' },
+        { label: '身体追踪', type: 'toggle', value: false, key: 'bodyTrack' },
+      ]},
+      { name: '空间感知', items: [
+        { label: '平面检测', type: 'toggle', value: true, key: 'planeDetect' },
+        { label: '网格重建', type: 'toggle', value: true, key: 'meshRecon' },
+        { label: '锚点持久化', type: 'toggle', value: true, key: 'anchorPersist' },
+        { label: '场景模型', type: 'toggle', value: true, key: 'sceneModel', desc: '存储房间3D模型' },
+      ]},
+    ]
+  },
+  audio: {
+    title: '🔊 音频设置',
+    groups: [
+      { name: '输出', items: [
+        { label: '空间音频', type: 'select', options: ['关闭', '立体声', 'HRTF', '全景声'], value: 'HRTF', key: 'spatialAudio' },
+        { label: '主音量', type: 'range', min: 0, max: 100, value: 80, unit: '%', key: 'volume' },
+        { label: '通知音', type: 'toggle', value: true, key: 'notifSound' },
+      ]},
+      { name: '麦克风', items: [
+        { label: '麦克风', type: 'toggle', value: true, key: 'mic' },
+        { label: '降噪', type: 'toggle', value: true, key: 'noiseCancellation' },
+        { label: '输入增益', type: 'range', min: 0, max: 100, value: 70, unit: '%', key: 'micGain' },
+      ]},
+    ]
+  },
+  developer: {
+    title: '🔧 开发者选项',
+    groups: [
+      { name: '调试', items: [
+        { label: 'USB调试', type: 'toggle', value: true, key: 'usbDebug' },
+        { label: 'WiFi ADB', type: 'toggle', value: true, key: 'wifiAdb', desc: 'TCP/IP :5555' },
+        { label: 'OVR Metrics', type: 'toggle', value: false, key: 'ovrMetrics' },
+        { label: 'GPU Profiling', type: 'toggle', value: false, key: 'gpuProfile' },
+      ]},
+      { name: 'WebXR', items: [
+        { label: 'WebXR DevTools', type: 'toggle', value: true, key: 'webxrDevtools' },
+        { label: 'IWER 自动注入', type: 'toggle', value: true, key: 'iwerInject' },
+        { label: '控制台日志', type: 'select', options: ['关闭', '错误', '警告', '全部'], value: '全部', key: 'logLevel' },
+      ]},
+    ]
+  },
+  system: {
+    title: '📱 系统信息',
+    groups: [
+      { name: '设备', items: [
+        { label: '型号', type: 'info', value: 'Meta Quest 3 (Eureka)' },
+        { label: 'SoC', type: 'info', value: 'Snapdragon XR2 Gen 2 (SXR2230P)' },
+        { label: 'GPU', type: 'info', value: 'Adreno 740' },
+        { label: '内存', type: 'info', value: '12GB LPDDR5' },
+        { label: '显示', type: 'info', value: '2064×2208 per eye · LCD · 120Hz' },
+        { label: 'FOV', type: 'info', value: '110° (H) × 96° (V)' },
+        { label: '摄像头', type: 'info', value: '2× RGB 4MP (彩色透视)' },
+        { label: '深度传感器', type: 'info', value: 'dToF · 256×192 · 0.2-10m' },
+      ]},
+      { name: '软件', items: [
+        { label: 'Horizon OS', type: 'info', value: 'v71.0' },
+        { label: 'Android', type: 'info', value: '12 (API 32)' },
+        { label: '运行时', type: 'info', value: 'OpenXR 1.0.34' },
+        { label: '仿真器版本', type: 'info', value: 'v6.0 (1:1 Full System)' },
+      ]},
+    ]
+  }
+};
+
+let _currentSettingsTab = 'display';
+let _settingsState = {};
+
+function toggleSettings() {
+  const overlay = document.getElementById('settingsOverlay');
+  const visible = overlay.classList.toggle('visible');
+  if (visible) renderSettingsTab(_currentSettingsTab);
+}
+
+function switchSettingsTab(tab, btnEl) {
+  _currentSettingsTab = tab;
+  document.querySelectorAll('.settings-tabs .s-tab').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  renderSettingsTab(tab);
+}
+
+function renderSettingsTab(tab) {
+  const data = SETTINGS_DATA[tab];
+  if (!data) return;
+  const body = document.getElementById('settingsBody');
+  let html = '';
+  for (const group of data.groups) {
+    html += `<div class="settings-group"><h4>${group.name}</h4>`;
+    for (const item of group.items) {
+      const stateKey = item.key || item.label;
+      if (!(stateKey in _settingsState)) _settingsState[stateKey] = item.value;
+      const val = _settingsState[stateKey];
+      html += `<div class="setting-row"><div class="s-label">${item.label}`;
+      if (item.desc) html += `<div class="s-desc">${item.desc}</div>`;
+      html += `</div><div class="s-control">`;
+      if (item.type === 'toggle') {
+        html += `<button class="s-toggle ${val ? 'on' : ''}" onclick="toggleSetting('${stateKey}',this)"></button>`;
+      } else if (item.type === 'select') {
+        html += `<select class="s-select" onchange="setSetting('${stateKey}',this.value)">`;
+        for (const opt of item.options) {
+          html += `<option ${opt === val ? 'selected' : ''}>${opt}</option>`;
+        }
+        html += `</select>`;
+      } else if (item.type === 'range') {
+        html += `<div class="s-range-row"><input type="range" min="${item.min}" max="${item.max}" value="${val}" oninput="setSetting('${stateKey}',this.value);this.nextElementSibling.textContent=this.value+'${item.unit||''}'"><span class="s-range-val">${val}${item.unit||''}</span></div>`;
+      } else if (item.type === 'info') {
+        html += `<span style="font-size:12px;color:var(--fg2)">${item.value}</span>`;
+      }
+      html += `</div></div>`;
+    }
+    html += `</div>`;
+  }
+  body.innerHTML = html;
+}
+
+function toggleSetting(key, el) {
+  _settingsState[key] = !_settingsState[key];
+  el.classList.toggle('on');
+  addLog('log', `设置: ${key} = ${_settingsState[key]}`);
+}
+
+function setSetting(key, value) {
+  _settingsState[key] = value;
+  addLog('log', `设置: ${key} = ${value}`);
+}
+
+// ============================================================
+// Depth Sensing System
+// ============================================================
+let depthSensingEnabled = false;
+
+function setDepthSensing(enabled) {
+  depthSensingEnabled = enabled;
+  document.getElementById('depthOff').classList.toggle('active', !enabled);
+  document.getElementById('depthOn').classList.toggle('active', enabled);
+  addLog('info', `深度感知: ${enabled ? '开启 (dToF · 256×192)' : '关闭'}`);
+  if (enabled) {
+    document.getElementById('depthMode').textContent = 'GPU';
+    document.getElementById('depthAccuracy').textContent = '±1cm';
+  } else {
+    document.getElementById('depthMode').textContent = 'CPU';
+    document.getElementById('depthAccuracy').textContent = '±2cm';
+  }
+}
+
+// ============================================================
+// Spatial Audio System
+// ============================================================
+let spatialAudioMode = 'stereo';
+
+function setSpatialAudio(mode) {
+  spatialAudioMode = mode;
+  document.getElementById('audioStereo').classList.toggle('active', mode === 'stereo');
+  document.getElementById('audioHRTF').classList.toggle('active', mode === 'hrtf');
+  document.getElementById('audioAmbi').classList.toggle('active', mode === 'ambisonics');
+
+  const labels = { stereo: 'Stereo', hrtf: 'HRTF 3D', ambisonics: 'Ambisonics' };
+  const channels = { stereo: '2ch', hrtf: '2ch (binaural)', ambisonics: '4ch (FOA)' };
+  document.getElementById('audioRenderer').textContent = labels[mode];
+  document.getElementById('audioChannels').textContent = channels[mode];
+  addLog('info', `空间音频: ${labels[mode]}`);
+}
+
+function setSimVolume(value) {
+  document.getElementById('simVolVal').textContent = value + '%';
+}
+
+// ============================================================
+// Body Tracking System
+// ============================================================
+let bodyTrackingEnabled = false;
+let _bodyTrackTimer = null;
+const BODY_JOINTS = ['bjHead','bjNeck','bjChest','bjLShoulder','bjRShoulder','bjLElbow','bjRElbow','bjLWrist','bjRWrist','bjHips','bjSpine','bjRoot'];
+
+function setBodyTracking(enabled) {
+  bodyTrackingEnabled = enabled;
+  document.getElementById('bodyOff').classList.toggle('active', !enabled);
+  document.getElementById('bodyOn').classList.toggle('active', enabled);
+  addLog('info', `身体追踪: ${enabled ? '开启 (12关节 · 上半身)' : '关闭'}`);
+
+  if (enabled) {
+    // Simulate tracking — light up joints progressively
+    let idx = 0;
+    _bodyTrackTimer = setInterval(() => {
+      if (idx >= BODY_JOINTS.length) { clearInterval(_bodyTrackTimer); return; }
+      document.getElementById(BODY_JOINTS[idx]).classList.add('tracked');
+      idx++;
+    }, 150);
+  } else {
+    if (_bodyTrackTimer) clearInterval(_bodyTrackTimer);
+    BODY_JOINTS.forEach(id => document.getElementById(id).classList.remove('tracked'));
+  }
+}
+
+// ============================================================
+// Quick Actions — Screenshot & Recording
+// ============================================================
+let _simRecording = false;
+
+function takeSimScreenshot() {
+  addLog('info', '📸 截图已保存 — /Pictures/Screenshots/quest3_sim_' + Date.now() + '.png');
+  pushNotification('📸', '截图已保存', '已保存到 /Pictures/Screenshots/');
+  // Flash viewport white briefly
+  const vp = document.getElementById('viewport');
+  vp.style.transition = 'background .1s';
+  vp.style.background = '#fff';
+  setTimeout(() => { vp.style.background = '#000'; }, 100);
+}
+
+function toggleSimRecording() {
+  _simRecording = !_simRecording;
+  const btn = document.getElementById('qaRecord');
+  if (_simRecording) {
+    btn.classList.add('recording');
+    btn.querySelector('.qa-icon').textContent = '⏹';
+    btn.lastChild.textContent = '停止';
+    addLog('info', '⏺ 录屏已开始');
+    pushNotification('⏺', '录屏中', '正在录制屏幕...');
+  } else {
+    btn.classList.remove('recording');
+    btn.querySelector('.qa-icon').textContent = '⏺';
+    btn.lastChild.textContent = '录屏';
+    addLog('info', '⏹ 录屏已停止并保存');
+    pushNotification('🎬', '录屏已保存', '已保存到 /Videos/Recordings/');
+  }
+}
+
+// ============================================================
+// Updated Keyboard Shortcuts
+// ============================================================
+const _origSetupKeyboard = setupKeyboard;
+setupKeyboard = function() {
+  _origSetupKeyboard();
+
+  // Add new keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    const k = e.key.toLowerCase();
+
+    if (k === 'm' && !mouseLookActive) {
+      e.preventDefault();
+      toggleSystemMenu();
+    }
+    if (k === 'p' && !mouseLookActive) {
+      e.preventDefault();
+      const modes = ['off', 'synth', 'camera'];
+      const nextIdx = (modes.indexOf(passthroughMode) + 1) % modes.length;
+      setPassthrough(modes[nextIdx]);
+    }
+    if (k === 'l' && !mouseLookActive) {
+      e.preventDefault();
+      openAndroidLauncher();
+    }
+    if (k === 'n' && !mouseLookActive) {
+      e.preventDefault();
+      toggleNotifications();
+    }
+    if (k === ',' && !mouseLookActive) {
+      e.preventDefault();
+      toggleSettings();
+    }
+    if (k === 'escape') {
+      // Close overlays in priority order (topmost first)
+      if (document.getElementById('settingsOverlay').classList.contains('visible')) {
+        toggleSettings(); e.preventDefault(); return;
+      }
+      if (document.getElementById('notifOverlay').classList.contains('visible')) {
+        toggleNotifications(); e.preventDefault(); return;
+      }
+      if (document.getElementById('appTestOverlay').classList.contains('visible')) {
+        closeAppTestOverlay(); e.preventDefault(); return;
+      }
+      if (document.getElementById('liveViewport').classList.contains('active')) {
+        closeLiveViewport(); e.preventDefault(); return;
+      }
+      if (document.getElementById('systemMenuOverlay').classList.contains('visible')) {
+        toggleSystemMenu(); e.preventDefault(); return;
+      }
+      if (document.getElementById('androidLauncher').classList.contains('active')) {
+        closeAndroidLauncher(); e.preventDefault(); return;
+      }
+    }
+  });
+};
+
+// ============================================================
+// Android Runtime — Device Selector + Live Viewport + App Tests
+// ============================================================
+let _selectedDevice = '';
+let _lvPollTimer = null;
+let _lvFrameCount = 0;
+let _lvFPSTimer = null;
+let _lvCurrentPkg = '';
+let _lvDeviceRes = { w: 1080, h: 1920 }; // default, updated on first frame
+let _appTestRunning = false;
+
+// ─── Device Selector ───
+async function loadDeviceList() {
+  try {
+    const r = await fetch('/api/devices');
+    const data = await r.json();
+    if (!data.ok) return;
+    const sel = document.getElementById('deviceSelect');
+    const atpSel = document.getElementById('atpDeviceSelect');
+    const onlineDevices = data.devices.filter(d => d.status === 'device');
+    sel.innerHTML = onlineDevices.map(d =>
+      `<option value="${d.serial}">${d.model || d.serial} (${d.serial.substring(0,12)})</option>`
+    ).join('');
+    if (atpSel) {
+      atpSel.innerHTML = onlineDevices.map(d =>
+        `<option value="${d.serial}">${d.model || d.serial} (${d.serial.substring(0,12)})</option>`
+      ).join('');
+    }
+    const statusEl = document.getElementById('dsStatus');
+    statusEl.innerHTML = `<span class="online">${onlineDevices.length} 在线</span> / ${data.count} 总设备`;
+    if (onlineDevices.length > 0) {
+      _selectedDevice = sel.value;
+    }
+    document.getElementById('statDevice').textContent = `Device: ${onlineDevices.length}台`;
+  } catch (e) {
+    document.getElementById('dsStatus').textContent = '⚠ 代理离线';
+  }
+}
+
+function onDeviceChanged(serial) {
+  _selectedDevice = serial;
+  addLog('info', `📱 目标设备切换: ${serial}`);
+}
+
+function getSelectedDevice() {
+  return _selectedDevice || document.getElementById('deviceSelect').value;
+}
+
+// ─── Live App Viewport ───
+function openLiveViewport(serial, pkg, appName) {
+  const device = serial || getSelectedDevice();
+  if (!device) { addLog('error', '❌ 未选择设备'); return; }
+  _lvCurrentPkg = pkg;
+
+  // Update UI
+  document.getElementById('lvDevice').textContent = device.substring(0, 16);
+  document.getElementById('lvApp').textContent = appName || pkg;
+  document.getElementById('liveViewport').classList.add('active');
+
+  // Hide other viewport content
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('demoFrame').style.display = 'none';
+  document.getElementById('currentUrl').textContent = `📱 ${appName || pkg} @ ${device}`;
+
+  // Launch app on device
+  fetch(`/api/launch?pkg=${encodeURIComponent(pkg)}&device=${encodeURIComponent(device)}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.ok) addLog('info', `✅ ${appName} 已在 ${device} 上启动`);
+      else addLog('error', `❌ 启动失败: ${d.error}`);
+    })
+    .catch(() => addLog('warn', '⚠ ADB不可用'));
+
+  // Start screenshot polling (500ms interval for responsiveness)
+  _lvFrameCount = 0;
+  startLVPolling(device);
+
+  // Setup touch-to-tap on screen image
+  const screen = document.getElementById('lvScreen');
+  screen.onclick = (e) => lvHandleTap(e, device);
+
+  addLog('info', `🖥️ Live Viewport 已打开: ${appName} @ ${device}`);
+}
+
+function startLVPolling(device) {
+  stopLVPolling();
+  const img = document.getElementById('lvImg');
+  let loading = false;
+
+  _lvPollTimer = setInterval(() => {
+    if (loading) return;
+    loading = true;
+    const url = `/api/screenshot?device=${encodeURIComponent(device)}&_t=${Date.now()}`;
+    const tmpImg = new Image();
+    tmpImg.onload = () => {
+      img.src = tmpImg.src;
+      _lvFrameCount++;
+      _lvDeviceRes = { w: tmpImg.naturalWidth, h: tmpImg.naturalHeight };
+      loading = false;
+    };
+    tmpImg.onerror = () => { loading = false; };
+    tmpImg.src = url;
+  }, 500);
+
+  // FPS counter
+  _lvFPSTimer = setInterval(() => {
+    document.getElementById('lvFPS').textContent = `${_lvFrameCount * 2} FPS`;
+    _lvFrameCount = 0;
+  }, 500);
+}
+
+function stopLVPolling() {
+  if (_lvPollTimer) { clearInterval(_lvPollTimer); _lvPollTimer = null; }
+  if (_lvFPSTimer) { clearInterval(_lvFPSTimer); _lvFPSTimer = null; }
+}
+
+function closeLiveViewport() {
+  stopLVPolling();
+  document.getElementById('liveViewport').classList.remove('active');
+  document.getElementById('placeholder').style.display = '';
+  document.getElementById('currentUrl').textContent = '选择一个Demo开始';
+  _lvCurrentPkg = '';
+  addLog('info', '🖥️ Live Viewport 已关闭');
+}
+
+function lvHandleTap(e, device) {
+  const img = document.getElementById('lvImg');
+  const rect = img.getBoundingClientRect();
+  // Map click position to device screen coordinates
+  const relX = (e.clientX - rect.left) / rect.width;
+  const relY = (e.clientY - rect.top) / rect.height;
+  const devX = Math.round(relX * _lvDeviceRes.w);
+  const devY = Math.round(relY * _lvDeviceRes.h);
+
+  if (devX < 0 || devY < 0 || devX > _lvDeviceRes.w || devY > _lvDeviceRes.h) return;
+
+  // Show touch indicator
+  const touch = document.getElementById('lvTouch');
+  touch.style.left = e.clientX - document.getElementById('lvScreen').getBoundingClientRect().left + 'px';
+  touch.style.top = e.clientY - document.getElementById('lvScreen').getBoundingClientRect().top + 'px';
+  touch.classList.add('show');
+  setTimeout(() => touch.classList.remove('show'), 300);
+
+  // Send tap to device
+  fetch('/api/input', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'tap', x: devX, y: devY, device })
+  }).then(r => r.json()).then(d => {
+    if (d.ok) addLog('log', `Tap(${devX},${devY})`);
+  }).catch(() => {});
+}
+
+function lvSendInput(type, device) {
+  const dev = device || getSelectedDevice();
+  const bodyMap = {
+    'back': { type: 'back', device: dev },
+    'home': { type: 'home', device: dev },
+    'recents': { type: 'key', keycode: '187', device: dev }
+  };
+  fetch('/api/input', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(bodyMap[type] || { type, device: dev })
+  }).then(r => r.json()).then(d => {
+    if (d.ok) addLog('log', `Input: ${type}`);
+  }).catch(() => {});
+}
+
+// ─── App Test Runner ───
+function openAppTestOverlay() {
+  document.getElementById('appTestOverlay').classList.add('visible');
+  // Populate device selector in test overlay
+  loadDeviceList();
+  // Pre-populate results as waiting
+  const results = document.getElementById('atpResults');
+  const adbApps = APP_REGISTRY.filter(a => a.mode === 'adb');
+  results.innerHTML = adbApps.map(app => `
+    <div class="atp-row" id="atp-${app.id}">
+      <div class="atp-icon">${app.icon}</div>
+      <div class="atp-name">${app.name}<br><span class="atp-pkg">${app.pkg}</span></div>
+      <div class="atp-status wait">⏳ 等待</div>
+    </div>
+  `).join('');
+  document.getElementById('atpSummary').style.display = 'none';
+  document.getElementById('atpProgress').style.display = 'none';
+}
+
+function closeAppTestOverlay() {
+  document.getElementById('appTestOverlay').classList.remove('visible');
+}
+
+async function runAppTests() {
+  if (_appTestRunning) return;
+  const device = document.getElementById('atpDeviceSelect').value;
+  if (!device) { addLog('error', '请选择目标设备'); return; }
+
+  _appTestRunning = true;
+  document.getElementById('atpRunBtn').disabled = true;
+  document.getElementById('atpRunBtn').textContent = '⏳ 测试中...';
+  document.getElementById('atpProgress').style.display = 'block';
+
+  const adbApps = APP_REGISTRY.filter(a => a.mode === 'adb');
+  let pass = 0, fail = 0, skip = 0;
+  const results = [];
+
+  for (let i = 0; i < adbApps.length; i++) {
+    const app = adbApps[i];
+    const rowEl = document.getElementById(`atp-${app.id}`);
+    const statusEl = rowEl ? rowEl.querySelector('.atp-status') : null;
+
+    // Update progress
+    const pct = ((i + 1) / adbApps.length * 100).toFixed(0);
+    document.getElementById('atpFill').style.width = pct + '%';
+    document.getElementById('atpProgressText').textContent = `${i + 1}/${adbApps.length} — 正在测试 ${app.name}`;
+
+    if (statusEl) { statusEl.className = 'atp-status running'; statusEl.textContent = '🔄 测试中'; }
+
+    try {
+      const r = await fetch(`/api/app/test?pkg=${encodeURIComponent(app.pkg)}&device=${encodeURIComponent(device)}`);
+      const data = await r.json();
+      results.push({ app, data });
+
+      if (!data.steps.installed) {
+        skip++;
+        if (statusEl) { statusEl.className = 'atp-status skip'; statusEl.textContent = '⬜ 未安装'; }
+      } else if (data.ok && !data.steps.crashed) {
+        pass++;
+        if (statusEl) { statusEl.className = 'atp-status pass'; statusEl.textContent = '✅ 通过'; }
+      } else {
+        fail++;
+        const reason = data.steps.crashed ? '💥 崩溃' : data.error === 'launch_failed' ? '❌ 启动失败' : '❌ 异常';
+        if (statusEl) { statusEl.className = 'atp-status fail'; statusEl.textContent = reason; }
+      }
+    } catch (e) {
+      fail++;
+      if (statusEl) { statusEl.className = 'atp-status fail'; statusEl.textContent = '❌ API错误'; }
+      results.push({ app, data: { ok: false, error: e.message } });
+    }
+
+    // Small delay between tests to avoid overwhelming ADB
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  // Show summary
+  const summaryEl = document.getElementById('atpSummary');
+  summaryEl.style.display = 'flex';
+  summaryEl.innerHTML = `
+    <div class="atp-stat"><div class="atp-num" style="color:var(--green)">${pass}</div><div class="atp-label">通过</div></div>
+    <div class="atp-stat"><div class="atp-num" style="color:var(--red)">${fail}</div><div class="atp-label">失败</div></div>
+    <div class="atp-stat"><div class="atp-num" style="color:var(--fg2)">${skip}</div><div class="atp-label">未安装</div></div>
+    <div class="atp-stat"><div class="atp-num">${adbApps.length}</div><div class="atp-label">总计</div></div>
+  `;
+  document.getElementById('atpProgressText').textContent = `测试完成: ${pass}通过 / ${fail}失败 / ${skip}未安装`;
+
+  _appTestRunning = false;
+  document.getElementById('atpRunBtn').disabled = false;
+  document.getElementById('atpRunBtn').textContent = '▶ 重新测试';
+
+  addLog('info', `🧪 App测试完成: ${pass}✅ ${fail}❌ ${skip}⬜ (设备: ${device})`);
+}
+
+// ─── Enhanced showAppDetail — add Live Run button for ADB apps ───
+const _origShowAppDetailV2 = typeof showAppDetail === 'function' ? showAppDetail : null;
+showAppDetail = function(app) {
+  if (_origShowAppDetailV2) _origShowAppDetailV2(app);
+
+  // After original renders, add Live Run button for ADB apps
+  setTimeout(() => {
+    const viewport = document.getElementById('viewport');
+    const detail = viewport.querySelector('.app-detail');
+    if (!detail || app.mode !== 'adb') return;
+
+    // Check if our button already exists
+    if (detail.querySelector('.live-run-btn')) return;
+
+    const actions = detail.querySelector('.app-actions');
+    if (actions) {
+      const liveBtn = document.createElement('button');
+      liveBtn.className = 'btn primary live-run-btn';
+      liveBtn.textContent = '🖥️ Live Run (实时画面)';
+      liveBtn.onclick = () => openLiveViewport(getSelectedDevice(), app.pkg, app.name);
+      actions.appendChild(liveBtn);
+    }
+  }, 50);
+};
+
+// ============================================================
+// Updated Init — initialize all new systems
+// ============================================================
+const _origInit = init;
+init = function() {
+  _origInit();
+  // Initialize scene data for default environment
+  updateSceneData('living_room');
+  // Set initial guardian mode
+  setGuardianMode('stationary');
+  // Load device list for Android Runtime
+  loadDeviceList();
+  // Initialize notifications
+  initNotifications();
+  // Log version
+  addLog('info', 'Quest 3 Full System Sim v6.0 — 1:1 System Replica');
+  addLog('info', 'Guardian · Passthrough · EyeTrack · Depth · Audio · BodyTrack · Haptics · SceneAPI · Notifications · Settings · AndroidRuntime');
+};
+
+init();
+</script>
+</body>
+</html>

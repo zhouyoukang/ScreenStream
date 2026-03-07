@@ -1,0 +1,160 @@
+# 移动端UI自动化配置
+# 循环#10：智能自动化增强
+
+# 早晨自动唤醒
+- alias: "🌅 早晨自动唤醒"
+  description: "工作日早晨7点自动开启工作模式"
+  trigger:
+    - platform: time
+      at: "07:00:00"
+  condition:
+    - condition: time
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+  action:
+    - service: script.work_mode
+    - service: notify.persistent_notification
+      data:
+        title: "☀️ 早安"
+        message: "新的一天开始了！工作环境已就绪"
+
+# 晚间自动放松
+- alias: "🌙 晚间自动模式"
+  description: "晚上10点提醒进入睡眠模式"
+  trigger:
+    - platform: time
+      at: "22:00:00"
+  action:
+    - service: notify.persistent_notification
+      data:
+        title: "🌙 晚安提醒"
+        message: "该休息了，是否启动睡眠模式？"
+        data:
+          actions:
+            - action: "ACTIVATE_SLEEP_MODE"
+              title: "启动睡眠模式"
+
+# 高温自动风扇
+- alias: "🔥 高温自动开启风扇"
+  description: "温度超过28度自动开启风扇"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.miaomiaoc_cn_blt_3_1ioerl71o4g02_t9_temperature_p_3_1001
+      above: 28
+  condition:
+    - condition: state
+      entity_id: fan.dmaker_p221_5b47_fan
+      state: "off"
+  action:
+    - service: fan.turn_on
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+      data:
+        percentage: 50
+    - service: notify.persistent_notification
+      data:
+        title: "🌡️ 温度提醒"
+        message: "室内温度{{ states('sensor.miaomiaoc_cn_blt_3_1ioerl71o4g02_t9_temperature_p_3_1001') }}°C，已自动开启风扇"
+
+# 低温自动关闭风扇
+- alias: "❄️ 低温自动关闭风扇"
+  description: "温度低于24度自动关闭风扇"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.miaomiaoc_cn_blt_3_1ioerl71o4g02_t9_temperature_p_3_1001
+      below: 24
+  condition:
+    - condition: state
+      entity_id: fan.dmaker_p221_5b47_fan
+      state: "on"
+  action:
+    - service: fan.turn_off
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+    - service: notify.persistent_notification
+      data:
+        title: "🌡️ 温度舒适"
+        message: "温度已降至{{ states('sensor.miaomiaoc_cn_blt_3_1ioerl71o4g02_t9_temperature_p_3_1001') }}°C，已关闭风扇"
+
+# 高能耗警告
+- alias: "⚡ 高能耗警告"
+  description: "功耗超过500W时发送警告"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.sonoff_total_power_usage
+      above: 500
+      for:
+        minutes: 5
+  action:
+    - service: notify.persistent_notification
+      data:
+        title: "⚡ 高能耗警告"
+        message: "当前功耗{{ states('sensor.sonoff_total_power_usage') }}W持续超标，请注意用电安全"
+
+# 低电量警告
+- alias: "🔋 设备低电量警告"
+  description: "传感器电量低于20%时提醒"
+  trigger:
+    - platform: numeric_state
+      entity_id: 
+        - sensor.miaomiaoc_cn_blt_3_1ioerl71o4g02_t9_battery_level_p_2_1003
+        - sensor.xiaomi_cn_blt_3_1kd2sgr5oco00_03_battery_level_p_3_1003
+      below: 20
+  action:
+    - service: notify.persistent_notification
+      data:
+        title: "🔋 低电量警告"
+        message: "{{ trigger.to_state.name }}电量仅剩{{ trigger.to_state.state }}%，请及时充电"
+
+# 打印完成通知
+- alias: "🖨️ 3D打印完成通知"
+  description: "打印完成后发送通知"
+  trigger:
+    - platform: state
+      entity_id: sensor.a1_039199442400125_print_status
+      to: "idle"
+      from: "printing"
+  action:
+    - service: notify.persistent_notification
+      data:
+        title: "✅ 打印完成"
+        message: "3D打印任务已完成，请及时取出模型"
+
+# 离家自动关闭
+- alias: "🚪 离家自动关闭设备"
+  description: "检测到所有人离家时自动关闭设备"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.xiaomi_cn_blt_3_1kd2sgr5oco00_03_occupancy_status_p_2_1078
+      to: "off"
+      for:
+        minutes: 30
+  action:
+    - service: script.away_mode
+    - service: notify.persistent_notification
+      data:
+        title: "🏠 离家检测"
+        message: "检测到长时间无人，已自动启动离家模式"
+
+# 回家自动开启
+- alias: "🏠 回家自动欢迎"
+  description: "检测到有人回家时自动开启欢迎模式"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.xiaomi_cn_blt_3_1kd2sgr5oco00_03_occupancy_status_p_2_1078
+      to: "on"
+      from: "off"
+  condition:
+    - condition: time
+      after: "17:00:00"
+      before: "23:00:00"
+  action:
+    - service: script.home_mode
+    - service: notify.persistent_notification
+      data:
+        title: "🏠 欢迎回家"
+        message: "检测到您回家了，已为您开启舒适环境"

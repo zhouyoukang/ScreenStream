@@ -1,0 +1,173 @@
+# 默认配置，启用系统基本功能
+default_config:
+
+# 设置区域、语言、单位等
+homeassistant:
+  name: My Home
+  latitude: 40.7128         # 替换为你的经度
+  longitude: -74.0060       # 替换为你的纬度
+  elevation: 15             # 替换为你的海拔高度
+  unit_system: metric       # metric: 公制，imperial: 英制
+  currency: CNY             # 替换为你的货币
+  country: CN               # 替换为你的国家
+  time_zone: Asia/Shanghai  # 替换为你的时区
+  # 设置自定义的实体显示名称和图标
+  customize:
+    switch.sonoff_10022dede9_1:
+      friendly_name: 四号开关
+      icon: mdi:lightbulb
+    switch.sonoff_10022dedc7_1:
+      friendly_name: 五号开关
+      icon: mdi:power-socket
+
+# 引用脚本文件
+script: !include scripts.yaml
+
+# 引用场景文件
+scene: !include scenes.yaml
+
+# 设置日志级别（可用于调试）
+logger:
+  default: info  # 可选值：debug, info, warning, error, critical
+  logs:
+    homeassistant.components: debug
+    custom_components.ha_openai: debug  # 启用ha_openai集成的调试日志
+
+# 设置前端资源（用于自定义卡片）
+lovelace:
+  mode: storage
+
+# 通知服务示例（如通过 Telegram 推送消息）
+notify:
+  - name: my_telegram
+    platform: telegram
+    chat_id: 123456789
+    api_key: your_telegram_bot_api_key
+
+# Zigbee 配置示例（如果使用 Zigbee）
+zha:
+  database_path: /config/zigbee.db
+  radio_type: ezsp
+  usb_path: /dev/ttyUSB0
+
+# 启用历史记录和日志
+history:
+recorder:
+  purge_keep_days: 10    # 数据保存天数
+  db_url: sqlite:///config/home-assistant_v2.db
+
+# 输入选择器（如果有需要）
+input_select:
+  light_mode:
+    name: 灯光模式
+    options:
+      - 白天
+      - 夜晚
+      - 自动
+    initial: 自动
+
+# 合并所有sensor配置
+sensor:
+  # 时间传感器（可用于自动化）
+  - platform: time_date
+    display_options:
+      - 'time'
+      - 'date'
+      - 'date_time'
+  # 和风天气传感器
+  - platform: heweather
+    location: 101130107    # 替换为城市代码
+    key: 3f4e3680737d4063b0eca635e5c6d87b       # 替换为和风天气 API 密钥
+    disasterlevel: 3
+    disastermsg: allmsg
+  # OpenHardwareMonitor
+  - platform: openhardwaremonitor
+    host: 192.168.31.141
+    port: 8085
+
+# 和风天气
+weather:
+  - platform: heweather
+    location: 101130107    # 替换为城市代码
+    key: 3f4e3680737d4063b0eca635e5c6d87b           # 替换为和风天气 API 密钥
+
+# 合并前端配置
+frontend:
+  themes: !include themes.yaml
+  extra_module_url:
+    - /local/chat - card/ha - chat - card.js
+
+# REST 命令
+rest_command:
+  rasa_send_message:
+    url: "http://localhost:5005/webhooks/rest/webhook"
+    method: POST
+    headers:
+      content-type: application/json
+    payload: '{"message": "{{ message }}"}'
+
+# 模板传感器
+template:
+  - sensor:
+      - name: "Sonoff Total Power Usage"
+        unique_id: "sonoff_total_power_usage"
+        unit_of_measurement: "W"
+        state: >
+          {{ 
+            (states('sensor.sonoff_10022cf70f_power')|float(0)) +
+            (states('sensor.sonoff_10022cf6a2_power')|float(0)) +
+            (states('sensor.sonoff_10022cf570_power')|float(0)) +
+            (states('sensor.sonoff_10022de30e_power')|float(0)) +
+            (states('sensor.sonoff_10022cf71d_power')|float(0))
+          }}
+
+      - name: "RIVER 2 MAX Total Output Power"
+        unique_id: "river_2_max_total_output_power"
+        unit_of_measurement: "W"
+        state: >
+          {{ 
+            (states('sensor.river_2_max_ac_out_power')|float(0)) +
+            (states('sensor.river_2_max_dc_out_power')|float(0)) +
+            (states('sensor.river_2_max_type_c_out_power')|float(0)) +
+            (states('sensor.river_2_max_usb_out_power')|float(0))
+          }}
+
+# 摄像头配置
+camera:
+  - platform: ffmpeg
+    name: IP Webcam FFmpeg
+    input: "http://192.168.31.228:8080/video"
+
+  - platform: ffmpeg
+    name: Phone Screen
+    input: "http://192.168.31.232:8080"
+
+# OpenRGB配置
+openrgb:
+  host: "192.168.31.141"  # 替换为你的 OpenRGB 服务器的 IP 地址
+  port: 6742           # OpenRGB 服务器的端口，默认是 6742
+
+# 文本转语音
+tts:
+  - platform: edge_tts
+    language: zh-CN  # 默认语言或语音（可选）
+
+# 语音转文本 - 修复配置为列表格式
+stt:
+  - platform: remote_whisper
+    name: Whisper ASR
+    url: "http://192.168.31.141:9000/asr"
+    method: POST
+    content_type: "multipart/form-data"
+    file_key: "file"
+
+# 沉浸式主页
+immersive_home:
+
+# OpenAI配置
+ha_openai:
+  host: "0.0.0.0"
+  port: 8337
+
+# 引用自动化规则文件
+automation: !include automations.yaml

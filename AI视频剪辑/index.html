@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Agent 视频工坊 — 全盘精华汇总</title>
+<style>
+:root{--bg:#0a0a0f;--s:#14141f;--s2:#1e1e2e;--bd:#2a2a3e;--t:#e0e0e8;--td:#8888a0;--ac:#6c5ce7;--ac2:#00cec9;--gold:#fdcb6e;--red:#e17055}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI','Noto Sans SC',sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
+.hero{text-align:center;padding:48px 20px 32px;background:linear-gradient(180deg,#1a1a2e,var(--bg));position:relative}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(108,92,231,.15),transparent 60%);pointer-events:none}
+h1{font-size:2.2rem;font-weight:700;background:linear-gradient(135deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.sub{color:var(--td);font-size:1rem;margin-bottom:20px}
+.sub strong{color:var(--t)}
+.stats{display:flex;justify-content:center;gap:28px;flex-wrap:wrap}
+.stat-n{font-size:1.7rem;font-weight:700;color:var(--gold)}
+.stat-l{font-size:.78rem;color:var(--td);margin-top:2px}
+.tabs{display:flex;justify-content:center;gap:6px;padding:0 16px 28px;flex-wrap:wrap}
+.tab{padding:9px 20px;border-radius:20px;border:1px solid var(--bd);background:var(--s);color:var(--td);cursor:pointer;font-size:.9rem;transition:.2s}
+.tab:hover{border-color:var(--ac);color:var(--t)}
+.tab.on{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}
+.sec{display:none;padding:0 16px 48px;max-width:1100px;margin:0 auto}
+.sec.on{display:block}
+.vc{background:var(--s);border-radius:14px;overflow:hidden;border:1px solid var(--bd);margin-bottom:28px;transition:transform .3s,box-shadow .3s}
+.vc:hover{transform:translateY(-3px);box-shadow:0 10px 36px rgba(108,92,231,.12)}
+.vc.feat{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 6px 28px rgba(253,203,110,.08)}
+.badge{background:var(--gold);color:#000;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:0 0 8px 0;position:absolute;top:0;left:0;z-index:2}
+.vw{position:relative;background:#000}
+.vw video{width:100%;display:block;max-height:480px;object-fit:contain;background:#000}
+.cb{padding:18px 22px}
+.ct{font-size:1.15rem;font-weight:600;margin-bottom:6px}
+.cd{color:var(--td);font-size:.88rem;line-height:1.55;margin-bottom:10px}
+.cm{display:flex;gap:10px;flex-wrap:wrap}
+.mt{font-size:.75rem;padding:3px 9px;border-radius:5px;background:var(--s2);color:var(--td)}
+.chs{margin-top:14px;border-top:1px solid var(--bd);padding-top:14px}
+.chs h4{font-size:.82rem;color:var(--td);margin-bottom:8px}
+.cl{display:flex;flex-wrap:wrap;gap:5px}
+.ch{padding:4px 10px;border-radius:7px;background:var(--s2);border:1px solid var(--bd);color:var(--ac2);font-size:.78rem;cursor:pointer;transition:.2s}
+.ch:hover{background:var(--ac);color:#fff;border-color:var(--ac)}
+.info{margin-top:28px;padding:18px 22px;background:var(--s);border-radius:12px;border:1px solid var(--bd)}
+.info h4{margin-bottom:10px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.g4i{padding:10px;background:var(--s2);border-radius:7px}
+.g4t{color:var(--gold);font-weight:600;font-size:.85rem;margin-bottom:3px}
+.g4d{color:var(--td);font-size:.8rem}
+.sli{background:var(--s);border-radius:14px;border:1px solid var(--bd);overflow:hidden}
+.sli iframe{width:100%;height:600px;border:none}
+.sli-info{padding:18px 22px;border-top:1px solid var(--bd)}
+.kbd{display:inline-block;padding:1px 7px;border-radius:3px;background:var(--s2);border:1px solid var(--bd);font-family:monospace;font-size:.78rem;color:var(--ac2)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 14px;border-bottom:2px solid var(--bd);color:var(--td);font-size:.78rem;text-transform:uppercase;letter-spacing:.4px}
+td{padding:8px 14px;border-bottom:1px solid var(--bd);font-size:.87rem}
+tr:hover td{background:var(--s2)}
+.bg{display:inline-block;padding:2px 7px;border-radius:4px;font-size:.7rem;font-weight:600}
+.bg-g{background:rgba(253,203,110,.15);color:var(--gold)}
+.bg-gr{background:rgba(0,206,201,.15);color:var(--ac2)}
+.bg-d{background:rgba(136,136,160,.1);color:var(--td)}
+.bg-r{background:rgba(225,112,85,.15);color:var(--red)}
+.ft{text-align:center;padding:32px 16px;color:var(--td);font-size:.8rem;border-top:1px solid var(--bd)}
+@media(max-width:640px){h1{font-size:1.5rem}.stats{gap:16px}.stat-n{font-size:1.3rem}.sli iframe{height:340px}}
+</style>
+</head>
+<body>
+<div class="hero">
+<h1>Agent 视频工坊</h1>
+<p class="sub">全盘搜索 C/D/E 三盘 · 去其杂 · 留其精<br><strong>5个项目 · 8个最终视频 · 汇之于此</strong></p>
+<div class="stats">
+<div style="text-align:center"><div class="stat-n">5</div><div class="stat-l">独立项目</div></div>
+<div style="text-align:center"><div class="stat-n">8</div><div class="stat-l">最终视频</div></div>
+<div style="text-align:center"><div class="stat-n">15:01</div><div class="stat-l">总时长</div></div>
+<div style="text-align:center"><div class="stat-n">961MB</div><div class="stat-l">总大小</div></div>
+</div>
+</div>
+
+<div class="tabs">
+<div class="tab on" onclick="sw('p1',this)">B站科技视频</div>
+<div class="tab" onclick="sw('p2',this)">录屏智剪</div>
+<div class="tab" onclick="sw('p3',this)">相机AI剪辑</div>
+<div class="tab" onclick="sw('p4',this)">智能精华</div>
+<div class="tab" onclick="sw('p5',this)">旅行电影</div>
+<div class="tab" onclick="sw('sl',this)">交互幻灯片</div>
+<div class="tab" onclick="sw('inv',this)">全盘清单</div>
+</div>
+
+<div class="sec on" id="p1">
+<div class="vc feat"><div class="vw"><div class="badge">★ 最终版</div>
+<video id="vF" controls preload="metadata"><source src="01-B站科技视频/v16_final.mp4" type="video/mp4"></video>
+</div><div class="cb">
+<div class="ct">v16_final.mp4 — 完整版（字幕 + BGM）</div>
+<div class="cd">最终交付版本。7段TTS解说 + 烧入字幕 + BGM sidechain ducking + Ken Burns微动画 + fade过渡 + 可变呼吸间隔。B站发布推荐版本。</div>
+<div class="cm"><span class="mt">H.264</span><span class="mt">1920×1080</span><span class="mt">4:46</span><span class="mt">15MB</span><span class="mt">441kbps</span></div>
+<div class="chs"><h4>章节跳转</h4><div class="cl">
+<div class="ch" onclick="sk(0)">0:00 Hook</div>
+<div class="ch" onclick="sk(24)">0:24 分化</div>
+<div class="ch" onclick="sk(65)">1:05 趋同</div>
+<div class="ch" onclick="sk(118)">1:58 机制</div>
+<div class="ch" onclick="sk(170)">2:50 损失函数</div>
+<div class="ch" onclick="sk(204)">3:24 遗忘</div>
+<div class="ch" onclick="sk(239)">3:59 AGI之路</div>
+</div></div></div></div>
+
+<div class="vc"><div class="vw">
+<video controls preload="metadata"><source src="01-B站科技视频/v16_subtitled.mp4" type="video/mp4"></video>
+</div><div class="cb">
+<div class="ct">v16_subtitled.mp4 — 字幕版</div>
+<div class="cd">烧入字幕版本。适合静音观看。</div>
+<div class="cm"><span class="mt">1920×1080</span><span class="mt">14.9MB</span></div>
+</div></div>
+
+<div class="vc"><div class="vw">
+<video controls preload="metadata"><source src="01-B站科技视频/v16_no_subtitle.mp4" type="video/mp4"></video>
+</div><div class="cb">
+<div class="ct">v16_no_subtitle.mp4 — 纯净版</div>
+<div class="cd">无字幕纯净版。适合二次创作、外挂字幕。</div>
+<div class="cm"><span class="mt">1920×1080</span><span class="mt">10.3MB</span></div>
+</div></div>
+</div>
+
+<div class="sec" id="p2">
+<div class="vc feat"><div class="vw"><div class="badge">★ V5最终版</div>
+<video controls preload="metadata"><source src="02-录屏智剪/showcase_v5.mp4" type="video/mp4"></video>
+</div><div class="cb">
+<div class="ct">showcase_v5.mp4 — 录屏智剪 V5</div>
+<div class="cd">AI全自动视频剪辑系统最终演示。PPT过渡页 + TTS虚拟人声 + 智能字幕 + 三维评分筛选（场景变化+运动量+码率）。</div>
+<div class="cm"><span class="mt">1920×1080</span><span class="mt">2:07</span><span class="mt">9.2MB</span><span class="mt">TTS解说</span><span class="mt">PPT过渡</span></div>
+</div></div>
+
+<div class="vc"><div class="vw">
+<video controls preload="metadata"><source src="02-录屏智剪/showcase_v3.mp4" type="video/mp4"></video>
+</div><div class="cb">
+<div class="ct">showcase_v3.mp4 — 录屏智剪 V3 精华版</div>
+<div class="cd">早期版本。ffmpeg gdigrab录屏 + Python Agent实时分析，8段中保留7段精华。</div>
+<div class="cm"><span class="mt">1920×1080</span><span class="mt">2:12</span><span class="mt">5MB</span></div>
+</div></div>
+
+<div class="info">
+<h4 style="color:var(--ac2)">录屏智剪技术栈</h4>
+<div class="grid4">
+<div class="g4i"><div class="g4t">录制</div><div class="g4d">ffmpeg gdigrab · 15s分段</div></div>
+<div class="g4i"><div class="g4t">分析</div><div class="g4d">场景+运动+码率三维评分</div></div>
+<div class="g4i"><div class="g4t">筛选</div><div class="g4d">自适应阈值·保留精华</div></div>
+<div class="g4i"><div class="g4t">合成</div><div class="g4d">edge-tts + SRT + PPT过渡</div></div>
+</div>
+</div>
+</div>
+
+<div class="sec" id="p3">
+<div class="vc feat"><div class="vw"><div class="badge">★ AI Video Editor</div>
+<video controls preload="metadata"><source src="03-相机AI剪辑/final_july2025_bgm.mp4" type="video/mp4"></video>
+</div><div class="cb">
+<div class="ct">final_july2025_bgm.mp4 — AI剪辑成品 + BGM</div>
+<div class="cd">元数据 artist="AI Video Editor"。AI从26个相机原始录像自动筛选拼接。原片94.6%静音，已自动混入ambient BGM修复观看体验。</div>
+<div class="cm"><span class="mt">H.264</span><span class="mt">1920×1080</span><span class="mt">3:41</span><span class="mt">472MB</span><span class="mt">17.8Mbps</span><span class="mt">AAC 48kHz Stereo</span><span class="mt" style="background:rgba(0,206,201,.15);color:var(--ac2)">+BGM修复</span></div>
+</div></div>
+<div class="info">
+<h4 style="color:var(--ac2)">素材来源</h4>
+<p style="color:var(--td);font-size:.88rem;line-height:1.6">源: <code style="color:var(--ac)">E:\VideoEdit\</code> · 26个手机/相机原始录像 → rough_cut(4:11) → final(3:41)</p>
+</div>
+</div>
+
+<div class="sec" id="p4">
+<div class="vc feat"><div class="vw"><div class="badge">★ AI智能提取</div>
+<video controls preload="metadata"><source src="04-智能精华/smart_highlight.mp4" type="video/mp4"></video>
+</div><div class="cb">
+<div class="ct">smart_highlight.mp4 — 50素材→15精华→自动成片</div>
+<div class="cd">Smart Cut管线从50个原始素材(19航拍+31相机, 22GB)中自动扫描评分→提取Top15精华片段→统一1080p30fps+fade→拼接+BGM。全流程零人工干预。</div>
+<div class="cm"><span class="mt">H.264</span><span class="mt">1920×1080</span><span class="mt">2:54</span><span class="mt">240MB</span><span class="mt">15片段</span><span class="mt">+BGM</span><span class="mt" style="background:rgba(0,206,201,.15);color:var(--ac2)">全自动</span></div>
+</div></div>
+<div class="info">
+<h4 style="color:var(--ac2)">Smart Cut 技术</h4>
+<div class="grid4">
+<div class="g4i"><div class="g4t">扫描</div><div class="g4d">ffprobe元数据 + ffmpeg场景检测</div></div>
+<div class="g4i"><div class="g4t">评分</div><div class="g4d">分辨率·帧率·码率·场景·音频 五维</div></div>
+<div class="g4i"><div class="g4t">提取</div><div class="g4d">Top15素材各取12s精华 + fade</div></div>
+<div class="g4i"><div class="g4t">合成</div><div class="g4d">统一1080p30fps + BGM淡入淡出</div></div>
+</div>
+<p style="color:var(--td);font-size:.85rem;margin-top:10px">一键运行: <code style="color:var(--ac)">python smart_cut.py all</code></p>
+</div>
+</div>
+
+<div class="sec" id="p5">
+<div class="vc feat"><div class="vw"><div class="badge">★★ v2 叙事驱动</div>
+<video controls preload="metadata"><source src="05-旅行电影/travel_film_v2.mp4" type="video/mp4"></video>
+</div><div class="cb">
+<div class="ct">travel_film_v2.mp4 — v2 叙事驱动旅行电影</div>
+<div class="cd">59素材运动分析→21精华智能选片→5幕叙事(钩子·启程·在路上·高潮·余韵) + crossfade转场 + 5段式情绪BGM(sidechain ducking) + curves场景调色 + loudnorm -16 LUFS + 4K@120fps天然慢动作。</div>
+<div class="cm"><span class="mt">H.264</span><span class="mt">1920×1080</span><span class="mt">2:13</span><span class="mt">252MB</span><span class="mt">21片段</span><span class="mt">crossfade</span><span class="mt">sidechain</span><span class="mt">loudnorm</span><span class="mt" style="background:rgba(253,203,110,.15);color:var(--gold)">v2</span></div>
+<div class="chs"><h4>叙事章节</h4><div class="cl">
+<div class="ch" onclick="document.querySelector('#p5 video').currentTime=0">0:00 悬念·钩子</div>
+<div class="ch" onclick="document.querySelector('#p5 video').currentTime=6">0:06 序章·启程</div>
+<div class="ch" onclick="document.querySelector('#p5 video').currentTime=30">0:30 在路上</div>
+<div class="ch" onclick="document.querySelector('#p5 video').currentTime=63">1:03 此刻·高潮</div>
+<div class="ch" onclick="document.querySelector('#p5 video').currentTime=112">1:52 余韵·归途</div>
+</div></div>
+</div></div>
+
+<div class="vc"><div class="vw">
+<video controls preload="metadata"><source src="05-旅行电影/travel_film_final.mp4" type="video/mp4"></video>
+</div><div class="cb">
+<div class="ct">travel_film_final.mp4 — v1.2 旧版</div>
+<div class="cd">69素材→15精华→5段旁白 + cinematic BGM + 色彩增强。</div>
+<div class="cm"><span class="mt">1920×1080</span><span class="mt">1:22</span><span class="mt">148MB</span><span class="mt" style="background:rgba(136,136,160,.1);color:var(--td)">旧版</span></div>
+</div></div>
+
+<div class="info">
+<h4 style="color:var(--ac2)">v2 技术特性</h4>
+<div class="grid4">
+<div class="g4i"><div class="g4t">选片</div><div class="g4d">运动分析 + 亮度分析 + 综合评分</div></div>
+<div class="g4i"><div class="g4t">转场</div><div class="g4d">ffmpeg xfade crossfade 0.6s</div></div>
+<div class="g4i"><div class="g4t">BGM</div><div class="g4d">5段式情绪曲线 · sidechain ducking</div></div>
+<div class="g4i"><div class="g4t">调色</div><div class="g4d">curves精细调色 · 每幕独立方案</div></div>
+<div class="g4i"><div class="g4t">音频</div><div class="g4d">loudnorm -16 LUFS (B站标准)</div></div>
+<div class="g4i"><div class="g4t">慢动作</div><div class="g4d">4K@120fps天然慢动作 · 0.4x</div></div>
+</div>
+<p style="color:var(--td);font-size:.85rem;margin-top:10px">一键运行: <code style="color:var(--ac)">python 05-旅行电影/build_v2.py</code></p>
+</div>
+</div>
+
+<div class="sec" id="sl">
+<div class="sli">
+<iframe src="01-B站科技视频/slides.html" title="交互幻灯片"></iframe>
+<div class="sli-info">
+<h3 style="margin-bottom:6px">22张交互式HTML幻灯片（项目一配套）</h3>
+<p style="color:var(--td);font-size:.88rem">键盘: <span class="kbd">←</span> <span class="kbd">→</span> 翻页 | <span class="kbd">F5</span> 演示 | <span class="kbd">H</span> 高对比度</p>
+</div></div>
+</div>
+
+<div class="sec" id="inv">
+<h3 style="margin-bottom:16px">全盘搜索 · 去杂留精</h3>
+<div style="overflow-x:auto"><table>
+<tr><th>分类</th><th>文件</th><th>大小</th><th>说明</th></tr>
+<tr><td colspan="4" style="padding:12px 0 6px;color:var(--ac2);font-weight:600;border-bottom:2px solid var(--bd)">项目一：B站科技视频 · E:\道\道生一\_video\</td></tr>
+<tr><td><span class="bg bg-g">精华</span></td><td>v16_final.mp4</td><td>15MB</td><td>★ 完整版（字幕+BGM）</td></tr>
+<tr><td><span class="bg bg-g">精华</span></td><td>v16_subtitled.mp4</td><td>14.9MB</td><td>字幕版</td></tr>
+<tr><td><span class="bg bg-g">精华</span></td><td>v16_no_subtitle.mp4</td><td>10.3MB</td><td>纯净版</td></tr>
+<tr><td><span class="bg bg-gr">配套</span></td><td>slides.html + 脚本 + BGM + TTS</td><td>~47KB+6MB</td><td>幻灯片+音频+文档</td></tr>
+<tr><td><span class="bg bg-d">工具</span></td><td>build_*.py (×5)</td><td>~34KB</td><td>Python构建管线</td></tr>
+<tr><td><span class="bg bg-r">杂</span></td><td>clip/seg/breath/concat (×56)</td><td>~36MB</td><td>中间产物·可删</td></tr>
+<tr><td colspan="4" style="padding:12px 0 6px;color:var(--ac2);font-weight:600;border-bottom:2px solid var(--bd)">项目二：录屏智剪 · D:\屏幕录制\</td></tr>
+<tr><td><span class="bg bg-g">精华</span></td><td>showcase_v5.mp4</td><td>9.2MB</td><td>★ V5完整版</td></tr>
+<tr><td><span class="bg bg-g">精华</span></td><td>showcase_v3.mp4</td><td>5MB</td><td>V3精华版</td></tr>
+<tr><td><span class="bg bg-d">工具</span></td><td>build_v5.py / auto_editor.py等</td><td>~55KB</td><td>构建脚本</td></tr>
+<tr><td><span class="bg bg-r">杂</span></td><td>segments/clips (×30+) + MKV (×9)</td><td>~14GB</td><td>中间产物+原始录屏</td></tr>
+<tr><td colspan="4" style="padding:12px 0 6px;color:var(--ac2);font-weight:600;border-bottom:2px solid var(--bd)">项目三：相机AI剪辑 · E:\VideoEdit\</td></tr>
+<tr><td><span class="bg bg-g">精华</span></td><td>final_july2025.mp4</td><td>471MB</td><td>★ AI成品(17.8Mbps)</td></tr>
+<tr><td><span class="bg bg-r">杂</span></td><td>原始录像 (×26) + rough_cut</td><td>~数GB</td><td>相机素材+粗剪</td></tr>
+<tr><td colspan="4" style="padding:12px 0 6px;color:var(--td);font-weight:600;border-bottom:2px solid var(--bd)">排除（非Agent产出）</td></tr>
+<tr><td><span class="bg bg-d">排除</span></td><td>C:\CrossDevice\*.mp4 (×60+)</td><td>-</td><td>手机同步视频</td></tr>
+<tr><td><span class="bg bg-d">排除</span></td><td>嗨格式录屏 + 剪映草稿</td><td>-</td><td>手动录制/编辑</td></tr>
+</table></div>
+
+<div class="info" style="margin-top:24px">
+<h4 style="color:var(--gold);margin-bottom:6px">总结</h4>
+<p style="color:var(--td);font-size:.88rem;line-height:1.6">
+全盘扫描C/D/E三盘120+视频文件 →
+<span style="color:var(--gold)">6个精华</span>已汇聚到 <code style="color:var(--ac)">AI视频剪辑/</code> ·
+<span style="color:var(--red)">中间产物~14GB</span>可安全清理 ·
+非Agent产出已排除
+</p></div>
+</div>
+
+<div class="ft">Agent 视频工坊 · <span style="color:var(--ac)">AI视频剪辑/</span> · 5个项目 · 8个最终视频 · 去杂留精之精华</div>
+
+<script>
+function sw(id,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');el.classList.add('on')}
+function sk(s){const v=document.getElementById('vF');if(v){v.currentTime=s;v.play()}}
+</script>
+</body>
+</html>

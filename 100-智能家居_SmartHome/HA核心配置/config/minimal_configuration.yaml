@@ -1,0 +1,27 @@
+# 最小化配置文件，用于初始化数据库
+# Minimal configuration file for database initialization
+
+# 基本配置
+homeassistant:
+  name: My Home
+  time_zone: Asia/Shanghai
+  unit_system: metric
+  currency: CNY
+
+# 日志配置
+logger:
+  default: info
+
+# 数据库配置 - 使用新的数据库文件
+recorder:
+  db_url: sqlite:///home-assistant_v2.db
+  purge_keep_days: 7
+  commit_interval: 1
+  auto_purge: true
+  auto_repack: true
+
+# 前端配置
+frontend:
+
+# 空配置，通过UI配置
+ha_openai: 

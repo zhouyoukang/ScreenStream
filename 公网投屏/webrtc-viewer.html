@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>远程协助</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#e0e0e8;font-family:-apple-system,system-ui,"Microsoft YaHei",sans-serif;height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;-webkit-user-select:none;user-select:none}
+
+#gate{position:fixed;inset:0;background:#0a0a0f;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px}
+#gate.off{display:none}
+#gate h1{font-size:28px;font-weight:700}
+#gate h1 em{color:#22c55e;font-style:normal}
+.sub{color:#888;font-size:15px;text-align:center;line-height:1.6}
+.form{display:flex;flex-direction:column;gap:10px;width:min(340px,90vw)}
+.form input{padding:16px 20px;background:#14141f;border:2px solid #2a2a3a;border-radius:12px;color:#fff;font-size:32px;text-align:center;letter-spacing:10px;outline:none;font-family:'Courier New',monospace}
+.form input:focus{border-color:#22c55e}
+.form input::placeholder{font-size:15px;letter-spacing:2px;color:#555}
+.form button{padding:16px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer}
+.form button:active{transform:scale(.97)}
+.form button:disabled{opacity:.4}
+.err{color:#f87171;font-size:14px;text-align:center;min-height:22px}
+.hint{color:#555;font-size:12px;text-align:center}
+
+#bar{height:30px;background:#111;border-bottom:1px solid #222;display:flex;align-items:center;padding:0 10px;gap:10px;font-size:12px;flex-shrink:0}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dg{background:#4ade80;box-shadow:0 0 5px #4ade80}.dy{background:#fbbf24}.dr{background:#f87171}.dx{background:#555}
+#bar .sp{flex:1}
+#bar .st{color:#888}
+
+#vid{flex:1;display:flex;align-items:center;justify-content:center;background:#000;position:relative;overflow:hidden;touch-action:none}
+#video{max-width:100%;max-height:100%;object-fit:contain}
+#ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);color:#888;font-size:15px;flex-direction:column;gap:10px}
+#ov.off{display:none}
+.spin{width:32px;height:32px;border:3px solid #333;border-top-color:#22c55e;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+#ctrl{height:46px;background:#111;border-top:1px solid #222;display:flex;align-items:center;justify-content:center;gap:2px;padding:0 4px;flex-shrink:0}
+.cb{padding:9px 11px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#e0e0e8;font-size:16px;cursor:pointer;white-space:nowrap}
+.cb:active{background:#22c55e33;border-color:#22c55e}
+
+#reconn{position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;text-align:center;padding:8px;font-size:13px;font-weight:600;z-index:50;display:none}
+
+@media(max-width:480px){.cb{padding:10px 8px;font-size:18px}#bar{font-size:11px;height:26px}}
+</style>
+</head>
+<body>
+
+<div id="gate">
+<h1>📱 <em>远程</em>协助</h1>
+<p class="sub">输入房间码，即可看到并操控家人手机<br>P2P直连 · 不经任何服务器 · 端到端加密</p>
+<div class="form">
+<input id="inp" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="房间码" maxlength="8" autocomplete="off">
+<button id="btn" onclick="go()">连接</button>
+</div>
+<div class="err" id="err"></div>
+<div class="hint">房间码在家人手机APP中显示</div>
+</div>
+
+<div id="reconn">连接断开，正在重连...</div>
+
+<div id="bar">
+<span class="dot dx" id="cdot"></span>
+<span id="ctxt">未连接</span>
+<span class="sp"></span>
+<span class="st" id="ice">-</span>
+<span class="st" id="res">-</span>
+</div>
+
+<div id="vid">
+<video id="video" autoplay playsinline muted></video>
+<div id="ov"><div class="spin"></div><span id="ovt">等待视频流...</span></div>
+</div>
+
+<div id="ctrl">
+<button class="cb" onclick="ctl('back')">◀</button>
+<button class="cb" onclick="ctl('home')">●</button>
+<button class="cb" onclick="ctl('recents')">▣</button>
+<button class="cb" onclick="ctl('volume_up')">🔊</button>
+<button class="cb" onclick="ctl('volume_down')">🔉</button>
+<button class="cb" onclick="ctl('notifications')">🔔</button>
+<button class="cb" onclick="ctl('power')">⏻</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  WebRTC P2P Viewer — 接收原生MediaStream视频流
+//  浏览器 ←WebRTC PeerConnection→ 手机ScreenStream
+//  信令: aiotvr.xyz/signal/ (仅SDP/ICE交换，零媒体中转)
+//  控制: DataChannel JSON → 手机InputService
+// ═══════════════════════════════════════════════════════════
+
+const SIGNAL_BASE = (location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/signal/';
+const ICE = [
+    {urls:'stun:stun.l.google.com:19302'},
+    {urls:'stun:stun1.l.google.com:19302'},
+    {urls:'stun:stun.miwifi.com:3478'},
+    {urls:'stun:stun.chat.bilibili.com:3478'},
+    {urls:'turn:a.relay.metered.ca:80',username:'e8dd65b92f6dfe65e84a0e73',credential:'4F5qRhMPjmG/jKXF'},
+    {urls:'turn:a.relay.metered.ca:443?transport=tcp',username:'e8dd65b92f6dfe65e84a0e73',credential:'4F5qRhMPjmG/jKXF'},
+];
+
+let ws = null, pc = null, dc = null, video;
+let currentRoom = '', reconnAttempt = 0, myViewerId = '';
+
+window.addEventListener('DOMContentLoaded', () => {
+    video = document.getElementById('video');
+    const inp = document.getElementById('inp');
+    inp.focus();
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    setupTouch();
+
+    const p = new URLSearchParams(location.search);
+    if (p.get('room')) { inp.value = p.get('room'); go(); }
+});
+
+// ─── 连接信令 ──────────────────────────────────────
+function go() {
+    const room = document.getElementById('inp').value.trim();
+    if (!room) { document.getElementById('err').textContent = '请输入房间码'; return; }
+    currentRoom = room;
+    document.getElementById('err').textContent = '连接中...';
+    document.getElementById('btn').disabled = true;
+    reconnAttempt = 0;
+    connectSignaling(room);
+}
+
+function connectSignaling(room) {
+    if (ws) { try { ws.close(); } catch(e){} }
+    if (pc) { try { pc.close(); } catch(e){} pc = null; }
+
+    const url = SIGNAL_BASE + '?role=viewer&room=' + room;
+    ws = new WebSocket(url);
+
+    ws.onopen = () => {
+        document.getElementById('cdot').className = 'dot dy';
+        document.getElementById('ctxt').textContent = '信令已连接';
+    };
+
+    ws.onmessage = ev => {
+        try { handleSignaling(JSON.parse(ev.data)); } catch(e){}
+    };
+
+    ws.onclose = e => {
+        document.getElementById('cdot').className = 'dot dr';
+        document.getElementById('ctxt').textContent = '断开';
+        if (e.code === 4004) {
+            document.getElementById('err').textContent = '房间不存在，请确认手机已开始共享';
+            document.getElementById('btn').disabled = false;
+            document.getElementById('gate').classList.remove('off');
+            // Auto-retry for 2 minutes
+            if (reconnAttempt < 24) {
+                reconnAttempt++;
+                setTimeout(() => connectSignaling(currentRoom), 5000);
+            }
+            return;
+        }
+        if (reconnAttempt < 30) {
+            reconnAttempt++;
+            document.getElementById('reconn').style.display = 'block';
+            setTimeout(() => connectSignaling(currentRoom), 3000);
+        }
+    };
+    ws.onerror = () => {};
+}
+
+function handleSignaling(msg) {
+    switch (msg.type) {
+        case 'joined':
+            myViewerId = msg.data?.viewerId || '';
+            document.getElementById('gate').classList.add('off');
+            document.getElementById('reconn').style.display = 'none';
+            document.getElementById('err').textContent = '';
+            break;
+
+        case 'offer':
+            // SDP offer from phone → create PeerConnection and answer
+            handleOffer(msg.data);
+            break;
+
+        case 'candidate':
+            // ICE candidate from phone
+            if (pc && msg.data) {
+                pc.addIceCandidate(new RTCIceCandidate({
+                    candidate: msg.data.candidate,
+                    sdpMid: msg.data.sdpMid,
+                    sdpMLineIndex: msg.data.sdpMLineIndex
+                })).catch(() => {});
+            }
+            break;
+
+        case 'provider_disconnected':
+            document.getElementById('ov').classList.remove('off');
+            document.getElementById('ovt').textContent = '手机已断开';
+            document.getElementById('cdot').className = 'dot dy';
+            break;
+
+        case 'provider_reconnected':
+            document.getElementById('ovt').textContent = '手机已重连，等待视频...';
+            break;
+
+        case 'error':
+            document.getElementById('err').textContent = msg.data?.message || '连接错误';
+            break;
+    }
+}
+
+// ─── WebRTC PeerConnection ──────────────────────────
+async function handleOffer(data) {
+    if (!data || !data.sdp) return;
+
+    // Create PeerConnection
+    if (pc) { try { pc.close(); } catch(e){} }
+    pc = new RTCPeerConnection({ iceServers: ICE });
+
+    // ICE candidates → send to phone via signaling
+    pc.onicecandidate = ev => {
+        if (ev.candidate && ws && ws.readyState === 1) {
+            ws.send(JSON.stringify({
+                type: 'candidate',
+                data: {
+                    candidate: ev.candidate.candidate,
+                    sdpMid: ev.candidate.sdpMid,
+                    sdpMLineIndex: ev.candidate.sdpMLineIndex
+                }
+            }));
+        }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+        const state = pc.iceConnectionState;
+        document.getElementById('ice').textContent = state;
+        if (state === 'connected' || state === 'completed') {
+            document.getElementById('cdot').className = 'dot dg';
+            document.getElementById('ctxt').textContent = '已连接 (P2P)';
+            reconnAttempt = 0;
+        } else if (state === 'disconnected' || state === 'failed') {
+            document.getElementById('cdot').className = 'dot dr';
+            document.getElementById('ctxt').textContent = 'P2P断开';
+        }
+    };
+
+    // Receive video track
+    pc.ontrack = ev => {
+        if (ev.streams && ev.streams[0]) {
+            video.srcObject = ev.streams[0];
+            video.play().catch(() => {});
+            document.getElementById('ov').classList.add('off');
+
+            // Get video resolution when metadata loads
+            video.onloadedmetadata = () => {
+                document.getElementById('res').textContent = video.videoWidth + '×' + video.videoHeight;
+            };
+        }
+    };
+
+    // Receive DataChannel for control
+    pc.ondatachannel = ev => {
+        dc = ev.channel;
+        dc.onopen = () => console.log('DataChannel open');
+        dc.onmessage = ev => console.log('DC msg:', ev.data);
+    };
+
+    // Set remote offer and create answer
+    try {
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        // Send answer to phone via signaling
+        if (ws && ws.readyState === 1) {
+            ws.send(JSON.stringify({
+                type: 'answer',
+                data: { sdp: answer.sdp, type: 'answer' }
+            }));
+        }
+    } catch (e) {
+        console.error('WebRTC handshake failed:', e);
+        document.getElementById('err').textContent = 'WebRTC握手失败: ' + e.message;
+    }
+}
+
+// ─── 触控 ──────────────────────────────────────────
+function setupTouch() {
+    const area = document.getElementById('vid');
+    let st = 0, sp = null, lt = null;
+
+    function pos(e) {
+        const r = video.getBoundingClientRect();
+        const t = e.touches ? e.touches[0] : e;
+        return { x: Math.max(0, Math.min(1, (t.clientX-r.left)/r.width)), y: Math.max(0, Math.min(1, (t.clientY-r.top)/r.height)) };
+    }
+
+    function down(e) {
+        e.preventDefault(); st = Date.now(); sp = pos(e);
+        lt = setTimeout(() => { send({type:'touch',data:{action:'longpress',...sp}}); sp=null; }, 600);
+    }
+    function up(e) {
+        e.preventDefault(); clearTimeout(lt);
+        if (!sp) return;
+        const p2 = e.changedTouches
+            ? (()=>{const r=video.getBoundingClientRect(),t=e.changedTouches[0];return{x:Math.max(0,Math.min(1,(t.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(t.clientY-r.top)/r.height))};})()
+            : pos(e);
+        const dt = Date.now()-st, dist = Math.sqrt((p2.x-sp.x)**2+(p2.y-sp.y)**2);
+        if (dist<0.02 && dt<500) send({type:'touch',data:{action:'tap',...p2}});
+        else if (dist>=0.02) send({type:'touch',data:{action:'swipe',fromX:sp.x,fromY:sp.y,toX:p2.x,toY:p2.y,duration:Math.max(100,dt)}});
+        sp=null;
+    }
+
+    area.addEventListener('mousedown', down);
+    area.addEventListener('mouseup', up);
+    area.addEventListener('touchstart', down, {passive:false});
+    area.addEventListener('touchend', up, {passive:false});
+    area.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+    area.addEventListener('wheel', e=>{e.preventDefault();send({type:'scroll',data:{...pos(e),deltaY:e.deltaY>0?300:-300}});}, {passive:false});
+}
+
+function send(msg) {
+    if (dc && dc.readyState === 'open') {
+        dc.send(JSON.stringify(msg));
+    } else if (ws && ws.readyState === 1) {
+        // Fallback: send via signaling (will be forwarded to phone)
+        ws.send(JSON.stringify(msg));
+    }
+}
+function ctl(a) { send({type:'control',data:{action:a}}); }
+</script>
+</body>
+</html>

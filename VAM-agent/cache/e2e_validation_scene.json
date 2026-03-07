@@ -1,0 +1,330 @@
+{
+   "version": "1.22",
+   "playerHeightAdjust": "0",
+   "atoms": [
+      {
+         "type": "Person",
+         "on": "true",
+         "position": {
+            "x": "0",
+            "y": "0",
+            "z": "0"
+         },
+         "rotation": {
+            "x": "0",
+            "y": "0",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "geometry",
+               "character": "Female",
+               "clothing": [],
+               "hair": []
+            },
+            {
+               "id": "rescaleObject",
+               "scale": "1.0"
+            },
+            {
+               "id": "geometry",
+               "morphs": [
+                  {
+                     "uid": "FBMBodyTone",
+                     "value": "0.6"
+                  },
+                  {
+                     "uid": "FBMMuscular",
+                     "value": "0.3"
+                  },
+                  {
+                     "uid": "FBMTall",
+                     "value": "0.1"
+                  },
+                  {
+                     "uid": "GlutesSize",
+                     "value": "0.3"
+                  }
+               ]
+            },
+            {
+               "id": "expression",
+               "morphs": [
+                  {
+                     "uid": "Smile_Open",
+                     "value": "0.5"
+                  },
+                  {
+                     "uid": "BrowInnerUp",
+                     "value": "0.2"
+                  }
+               ]
+            },
+            {
+               "id": "plugin#1_VamTimeline.AtomPlugin",
+               "pluginPath": "Custom/Scripts/AcidBubbles/Timeline/VamTimeline.AtomPlugin.cs",
+               "animations": [
+                  {
+                     "AnimationName": "Xiangcao_breathing",
+                     "AnimationLength": "3.0",
+                     "Loop": "true",
+                     "Speed": "1.0",
+                     "Layers": [
+                        {
+                           "Controllers": [
+                              {
+                                 "target": "chestControl",
+                                 "param": "position.y",
+                                 "keys": [
+                                    {
+                                       "t": "0.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "0.6000000000000001",
+                                       "v": "0.006999999999999999",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "1.5",
+                                       "v": "0.01",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "2.1",
+                                       "v": "0.003",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "3.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    }
+                                 ]
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  {
+                     "AnimationName": "Xiangcao_idle",
+                     "AnimationLength": "4.0",
+                     "Loop": "true",
+                     "Speed": "1.0",
+                     "Layers": [
+                        {
+                           "Controllers": [
+                              {
+                                 "target": "hipControl",
+                                 "param": "position.x",
+                                 "keys": [
+                                    {
+                                       "t": "0.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "1.0",
+                                       "v": "0.02",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "2.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "3.0",
+                                       "v": "-0.02",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "4.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    }
+                                 ]
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  {
+                     "AnimationName": "Xiangcao_expression",
+                     "AnimationLength": "3.0",
+                     "Loop": "true",
+                     "Speed": "1.0",
+                     "Layers": [
+                        {
+                           "Controllers": [],
+                           "FloatParams": [
+                              {
+                                 "Name": "Smile_Open",
+                                 "keys": [
+                                    {
+                                       "t": "0",
+                                       "v": "0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "1.5",
+                                       "v": "0.8",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "3.0",
+                                       "v": "0",
+                                       "c": "SmoothLocal"
+                                    }
+                                 ]
+                              },
+                              {
+                                 "Name": "BrowInnerUp",
+                                 "keys": [
+                                    {
+                                       "t": "0",
+                                       "v": "0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "1.0",
+                                       "v": "0.3",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "2.0",
+                                       "v": "0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "3.0",
+                                       "v": "0",
+                                       "c": "SmoothLocal"
+                                    }
+                                 ]
+                              }
+                           ]
+                        }
+                     ]
+                  }
+               ]
+            },
+            {
+               "id": "PluginManager",
+               "plugins": {
+                  "plugin#1": "Custom/Scripts/AcidBubbles/Timeline/VamTimeline.AtomPlugin.cs"
+               }
+            }
+         ],
+         "id": "Xiangcao"
+      },
+      {
+         "id": "KeyLight",
+         "type": "InvisibleLight",
+         "on": "true",
+         "position": {
+            "x": "-2",
+            "y": "3",
+            "z": "2"
+         },
+         "rotation": {
+            "x": "50",
+            "y": "30",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "Light",
+               "type": "Directional",
+               "intensity": "1.2",
+               "color": {
+                  "r": "1",
+                  "g": "0.98",
+                  "b": "0.95"
+               },
+               "shadowType": "Soft"
+            }
+         ]
+      },
+      {
+         "id": "FillLight",
+         "type": "InvisibleLight",
+         "on": "true",
+         "position": {
+            "x": "2",
+            "y": "2.5",
+            "z": "1"
+         },
+         "rotation": {
+            "x": "40",
+            "y": "-30",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "Light",
+               "type": "Point",
+               "intensity": "0.6",
+               "color": {
+                  "r": "0.85",
+                  "g": "0.9",
+                  "b": "1.0"
+               },
+               "shadowType": "Soft",
+               "range": "10.0"
+            }
+         ]
+      },
+      {
+         "id": "BackLight",
+         "type": "InvisibleLight",
+         "on": "true",
+         "position": {
+            "x": "0",
+            "y": "3",
+            "z": "-2"
+         },
+         "rotation": {
+            "x": "60",
+            "y": "180",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "Light",
+               "type": "Point",
+               "intensity": "0.8",
+               "color": {
+                  "r": "1",
+                  "g": "1",
+                  "b": "1"
+               },
+               "shadowType": "Soft",
+               "range": "10.0"
+            }
+         ]
+      },
+      {
+         "id": "PortraitCam",
+         "type": "WindowCamera",
+         "on": "true",
+         "position": {
+            "x": "0",
+            "y": "1.6",
+            "z": "-0.8"
+         },
+         "rotation": {
+            "x": "0",
+            "y": "0",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "CameraControl",
+               "FOV": "50"
+            }
+         ]
+      }
+   ]
+}

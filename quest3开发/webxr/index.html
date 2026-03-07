@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quest 3 WebXR Lab — 10个沉浸式VR/MR/AR体验demo，包含手部追踪、空间音频、多人协作、智能家居控制等">
+    <title>Quest 3 WebXR Lab</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh; font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #415a77 100%);
+            color: white; display: flex; flex-direction: column; align-items: center;
+            padding: 2rem;
+        }
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .subtitle { opacity: 0.6; margin-bottom: 2rem; font-size: 1.1rem; }
+        .xr-status {
+            background: rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 24px;
+            margin-bottom: 2rem; font-size: 0.95rem;
+        }
+        .xr-status .ok { color: #4ade80; }
+        .xr-status .no { color: #f87171; }
+        .grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem; width: 100%; max-width: 900px;
+        }
+        .card {
+            background: rgba(255,255,255,0.08); border-radius: 16px; padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s, border-color 0.2s;
+            text-decoration: none; color: white; display: block;
+        }
+        .card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.3); }
+        .card h2 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+        .card .tag {
+            display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem;
+            margin-right: 6px; margin-bottom: 8px;
+        }
+        .tag-vr { background: rgba(233,69,96,0.3); color: #f8a4b8; }
+        .tag-mr { background: rgba(0,180,216,0.3); color: #7dd3fc; }
+        .tag-hand { background: rgba(74,222,128,0.3); color: #86efac; }
+        .card p { opacity: 0.7; font-size: 0.9rem; line-height: 1.5; }
+        .card .features { margin-top: 0.8rem; font-size: 0.85rem; opacity: 0.5; }
+        footer { margin-top: 3rem; opacity: 0.4; font-size: 0.85rem; text-align: center; }
+        footer a { color: #7dd3fc; }
+    </style>
+</head>
+<body>
+    <h1>Quest 3 WebXR Lab</h1>
+    <p class="subtitle">Agent全链路开发 · 纯代码 · 无GUI依赖 · HTTPS即运行</p>
+    <div class="xr-status" id="xr-status">检测WebXR...</div>
+
+    <div class="grid">
+        <a class="card" href="hello-vr/">
+            <h2>🎲 Hello VR</h2>
+            <span class="tag tag-vr">VR</span>
+            <span class="tag tag-hand">手部追踪</span>
+            <p>WebXR入门——旋转立方体 + 地板网格 + 手部关节可视化。纯WebGL2，零依赖。</p>
+            <div class="features">WebGL2 · immersive-vr · hand-tracking · local-floor</div>
+        </a>
+        <a class="card" href="mr-passthrough/">
+            <h2>🔮 MR Passthrough</h2>
+            <span class="tag tag-mr">MR</span>
+            <span class="tag tag-hand">手部追踪</span>
+            <p>混合现实透视——发光球体漂浮在真实世界中。Quest 3 Passthrough + 手部追踪。</p>
+            <div class="features">immersive-ar · passthrough · alpha-blend · sphere-geometry</div>
+        </a>
+        <a class="card" href="aframe-playground/">
+            <h2>🎨 A-Frame Playground</h2>
+            <span class="tag tag-vr">VR</span>
+            <span class="tag tag-hand">手部追踪</span>
+            <p>声明式WebXR——HTML标签构建3D场景，零JS代码。轨道动画 + 交互高亮 + 粒子。</p>
+            <div class="features">A-Frame 1.6 · declarative · animation · hand-tracking</div>
+        </a>
+        <a class="card" href="hand-grab/">
+            <h2>✋ Hand Grab Lab</h2>
+            <span class="tag tag-vr">VR</span>
+            <span class="tag tag-hand">手部追踪</span>
+            <p>手部抓取交互——捏合手指抓取物体，松开释放。桌面物理布局 + 目标区域。</p>
+            <div class="features">A-Frame 1.6 · hand-tracking-grab-controls · grabbable · pinch</div>
+        </a>
+        <a class="card" href="shared-space/">
+            <h2>🌐 Shared Space</h2>
+            <span class="tag tag-vr">VR</span>
+            <span class="tag tag-mr">多人</span>
+            <span class="tag tag-hand">手部追踪</span>
+            <p>多人共享空间——WebSocket同步位置+聊天，实时看到其他玩家的化身。</p>
+            <div class="features">WebSocket · multiplayer · chat · avatar-sync · hand-tracking</div>
+        </a>
+        <a class="card" href="smart-home/">
+            <h2>🏠 Smart Home MR</h2>
+            <span class="tag tag-mr">MR</span>
+            <span class="tag tag-hand">手部追踪</span>
+            <p>智能家居MR控制——连接Home Assistant，在VR/MR中实时操控灯光、开关等设备。</p>
+            <div class="features">Home Assistant · WebSocket · entity-control · 3D-panels · hand-tracking</div>
+        </a>
+        <a class="card" href="ar-placement/">
+            <h2>🎯 AR Placement</h2>
+            <span class="tag tag-mr">AR</span>
+            <span class="tag tag-hand">Hit Test</span>
+            <p>混合现实物体放置——检测真实平面，点击放置3D物体，锚定到真实世界。</p>
+            <div class="features">Three.js · hit-test · plane-detection · anchors · RATK模式</div>
+        </a>
+        <a class="card" href="hand-physics/">
+            <h2>✋ Hand Physics</h2>
+            <span class="tag tag-vr">VR</span>
+            <span class="tag tag-hand">手部追踪</span>
+            <p>Three.js官方手部模型+物理交互——捏合抓取，松开抛出，重力+碰撞。</p>
+            <div class="features">Three.js · XRHandModelFactory · physics · grab · throw</div>
+        </a>
+        <a class="card" href="controller-shooter/">
+            <h2>🔫 Controller Shooter</h2>
+            <span class="tag tag-vr">VR</span>
+            <span class="tag tag-hand">控制器</span>
+            <p>控制器射击游戏——扣动扳机射击靶标，碰撞检测+粒子爆炸+触觉反馈+分数追踪。</p>
+            <div class="features">Three.js · XRControllerModelFactory · gamepad · haptics · collision</div>
+        </a>
+        <a class="card" href="spatial-audio/">
+            <h2>🎵 Spatial Audio</h2>
+            <span class="tag tag-vr">VR</span>
+            <span class="tag tag-hand">音频</span>
+            <p>空间音频体验——3D音源定位，头部追踪驱动HRTF渲染，距离衰减+方向锥。</p>
+            <div class="features">Web Audio API · PositionalAudio · HRTF · oscillator · directional-cone</div>
+        </a>
+        <a class="card" href="gaussian-splat/">
+            <h2>🔮 3D Gaussian Splatting</h2>
+            <span class="tag tag-vr">VR</span>
+            <span class="tag tag-hand">手部追踪</span>
+            <p>沉浸式查看photorealistic 3D高斯溅射场景——多场景切换，3DGS前沿渲染。</p>
+            <div class="features">A-Frame · 3DGS · photorealistic · multi-scene · hand-tracking</div>
+        </a>
+        <a class="card" href="vr-painter/">
+            <h2>🎨 VR Painter</h2>
+            <span class="tag tag-vr">VR</span>
+            <span class="tag tag-hand">手部追踪</span>
+            <p>3D空间自由绘画——手部追踪/手柄捏合画线，多色调色板，撤销重做。</p>
+            <div class="features">Three.js · CatmullRomCurve3 · hand-tracking · drawing · undo</div>
+        </a>
+    </div>
+
+    <div style="text-align:center;margin:1.5rem 0;display:flex;justify-content:center;gap:0.8rem;flex-wrap:wrap;">
+        <a href="simulator.html" style="color:#00d4ff;text-decoration:none;padding:0.6rem 1.5rem;border:1px solid #00d4ff33;border-radius:0.5rem;display:inline-block;background:rgba(0,212,255,0.08);">
+            🥽 Virtual Simulator — Quest 3虚拟仿真环境
+        </a>
+        <a href="devops.html" style="color:#58a6ff;text-decoration:none;padding:0.6rem 1.5rem;border:1px solid #30363d;border-radius:0.5rem;display:inline-block;">
+            🔬 DevOps Portal — 全链路测试/管理/监控
+        </a>
+    </div>
+
+    <footer>
+        <p>Powered by Agent · 部署于 <a href="https://aiotvr.xyz">aiotvr.xyz</a></p>
+        <p>Quest浏览器访问: https://aiotvr.xyz/quest/</p>
+    </footer>
+
+    <script>
+        (async () => {
+            const el = document.getElementById('xr-status');
+            if (!navigator.xr) {
+                el.innerHTML = '<span class="no">✗ WebXR不可用</span> — 请在Quest浏览器中访问此页面';
+                return;
+            }
+            const vr = await navigator.xr.isSessionSupported('immersive-vr').catch(() => false);
+            const ar = await navigator.xr.isSessionSupported('immersive-ar').catch(() => false);
+            let msg = '';
+            if (ar) msg += '<span class="ok">✓ MR Passthrough</span> ';
+            if (vr) msg += '<span class="ok">✓ VR</span> ';
+            if (!vr && !ar) msg = '<span class="no">✗ 设备不支持XR</span>';
+            el.innerHTML = msg;
+        })();
+    </script>
+</body>
+</html>

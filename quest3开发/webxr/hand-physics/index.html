@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 3 Hand Physics</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+        canvas { display: block; }
+        #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1a1a2e 100%);
+            z-index: 10;
+        }
+        h1 { font-size: 2em; margin-bottom: 0.3em; }
+        .sub { color: #94a3b8; margin-bottom: 1.5em; text-align: center; line-height: 1.6; }
+        #enter-btn {
+            padding: 16px 48px; font-size: 18px; border: none; border-radius: 12px; cursor: pointer;
+            background: linear-gradient(135deg, #f59e0b, #ef4444); color: white;
+        }
+        #enter-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        #status { margin-top: 12px; font-size: 14px; color: #94a3b8; }
+        .tag { display: inline-block; padding: 2px 10px; border-radius: 8px; font-size: 12px; margin: 2px; }
+        .tag-vr { background: #ef4444; color: white; }
+        .tag-feat { background: #f59e0b; color: white; }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <h1>✋ Hand Physics</h1>
+        <div>
+            <span class="tag tag-vr">VR</span>
+            <span class="tag tag-feat">手部追踪</span>
+            <span class="tag tag-feat">物理交互</span>
+            <span class="tag tag-feat">真实手模型</span>
+        </div>
+        <p class="sub">
+            Three.js官方手部模型 + 物理交互<br>
+            捏合抓取物体，松开释放。<br>
+            基于 Three.js XRHandModelFactory + webxr-handtracking 模式。
+        </p>
+        <button id="enter-btn" disabled>检测中...</button>
+        <div id="status"></div>
+    </div>
+
+    <!-- Three.js CDN (matching IWER version) -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        // === Patterns from: webxr-handtracking/basic.html + Three.js official XR hand examples ===
+        import * as THREE from 'three';
+        import { XRHandModelFactory } from 'three/addons/webxr/XRHandModelFactory.js';
+
+        const overlay = document.getElementById('overlay');
+        const enterBtn = document.getElementById('enter-btn');
+        const statusEl = document.getElementById('status');
+
+        let renderer, scene, camera;
+        let xrSession = null;
+        let hand1, hand2, handModel1, handModel2;
+        const interactables = [];
+        const grabState = { left: null, right: null };
+
+        // Physics state
+        const gravity = new THREE.Vector3(0, -2.0, 0);
+        const velocity = new Map();
+        const tmpVec = new THREE.Vector3();
+        const prevHandPos = { left: new THREE.Vector3(), right: new THREE.Vector3() };
+
+        // === Init Scene ===
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+            camera.position.set(0, 1.6, 3);
+
+            // Lighting
+            scene.add(new THREE.HemisphereLight(0x888888, 0x444444));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            dirLight.position.set(2, 4, 2);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.set(1024, 1024);
+            scene.add(dirLight);
+
+            // Floor
+            const floorGeo = new THREE.PlaneGeometry(10, 10);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x222244, roughness: 0.9 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Table
+            const tableGeo = new THREE.BoxGeometry(1.2, 0.05, 0.6);
+            const tableMat = new THREE.MeshStandardMaterial({ color: 0x8b5e3c, roughness: 0.7 });
+            const table = new THREE.Mesh(tableGeo, tableMat);
+            table.position.set(0, 0.75, -0.5);
+            table.castShadow = true;
+            table.receiveShadow = true;
+            scene.add(table);
+
+            // Table legs
+            const legGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.75, 8);
+            const legMat = new THREE.MeshStandardMaterial({ color: 0x6b4226 });
+            [[-0.55, -0.25], [0.55, -0.25], [-0.55, 0.25], [0.55, 0.25]].forEach(([x, z]) => {
+                const leg = new THREE.Mesh(legGeo, legMat);
+                leg.position.set(x, 0.375, z - 0.5);
+                leg.castShadow = true;
+                scene.add(leg);
+            });
+
+            // Interactable objects on table
+            createInteractable(new THREE.BoxGeometry(0.08, 0.08, 0.08), 0xff4444, -0.3, 0.82, -0.5);
+            createInteractable(new THREE.SphereGeometry(0.05, 16, 16), 0x44ff44, -0.1, 0.83, -0.5);
+            createInteractable(new THREE.ConeGeometry(0.05, 0.1, 8), 0x4444ff, 0.1, 0.83, -0.5);
+            createInteractable(new THREE.TorusGeometry(0.04, 0.015, 8, 16), 0xff44ff, 0.3, 0.82, -0.5);
+            createInteractable(new THREE.DodecahedronGeometry(0.05), 0xffaa00, 0, 0.83, -0.4);
+            createInteractable(new THREE.CylinderGeometry(0.03, 0.03, 0.1, 8), 0x00ffff, -0.2, 0.83, -0.4);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.xr.enabled = true;
+            renderer.shadowMap.enabled = true;
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            document.body.appendChild(renderer.domElement);
+
+            // === Hand setup (from Three.js XR hand tracking examples) ===
+            const handModelFactory = new XRHandModelFactory();
+
+            // Hand 1 (left)
+            hand1 = renderer.xr.getHand(0);
+            handModel1 = handModelFactory.createHandModel(hand1, 'mesh');
+            hand1.add(handModel1);
+            scene.add(hand1);
+
+            // Hand 2 (right)
+            hand2 = renderer.xr.getHand(1);
+            handModel2 = handModelFactory.createHandModel(hand2, 'mesh');
+            hand2.add(handModel2);
+            scene.add(hand2);
+
+            // Fallback: joint spheres (from webxr-handtracking/basic.html pattern)
+            // Visible when GLTF hand models fail to load from CDN
+            const jointGeo = new THREE.SphereGeometry(0.008, 8, 8);
+            const jointMatL = new THREE.MeshBasicMaterial({ color: 0x44aaff });
+            const jointMatR = new THREE.MeshBasicMaterial({ color: 0xff6644 });
+            [hand1, hand2].forEach((hand, i) => {
+                hand.addEventListener('connected', () => {
+                    // If no children besides the model group, add fallback spheres
+                    setTimeout(() => {
+                        if (!hand.userData.fallbackAdded) {
+                            hand.userData.fallbackAdded = true;
+                            hand.userData.jointSpheres = [];
+                            for (let j = 0; j < 25; j++) {
+                                const s = new THREE.Mesh(jointGeo, i === 0 ? jointMatL : jointMatR);
+                                s.visible = false;
+                                scene.add(s);
+                                hand.userData.jointSpheres.push(s);
+                            }
+                        }
+                    }, 2000); // Wait for GLTF to load first
+                });
+            });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            renderer.setAnimationLoop(render);
+        }
+
+        function createInteractable(geo, color, x, y, z) {
+            const mat = new THREE.MeshStandardMaterial({
+                color, roughness: 0.3, metalness: 0.5
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, y, z);
+            mesh.castShadow = true;
+            mesh.userData.originalColor = color;
+            mesh.userData.isInteractable = true;
+            scene.add(mesh);
+            interactables.push(mesh);
+            velocity.set(mesh, new THREE.Vector3());
+        }
+
+        // === Pinch detection (from webxr-handtracking/basic.html grabCheck pattern) ===
+        function getPinchDistance(hand) {
+            const indexTip = hand.joints['index-finger-tip'];
+            const thumbTip = hand.joints['thumb-tip'];
+            if (!indexTip || !thumbTip) return Infinity;
+            return indexTip.position.distanceTo(thumbTip.position);
+        }
+
+        function getPinchPosition(hand) {
+            const indexTip = hand.joints['index-finger-tip'];
+            const thumbTip = hand.joints['thumb-tip'];
+            if (!indexTip || !thumbTip) return null;
+            return new THREE.Vector3().addVectors(indexTip.position, thumbTip.position).multiplyScalar(0.5);
+        }
+
+        function findClosest(pos, maxDist) {
+            let closest = null, closestDist = maxDist;
+            for (const obj of interactables) {
+                if (obj.userData.grabbed) continue;
+                const d = pos.distanceTo(obj.position);
+                if (d < closestDist) { closestDist = d; closest = obj; }
+            }
+            return closest;
+        }
+
+        function handleGrab(hand, handedness, delta) {
+            const pinchDist = getPinchDistance(hand);
+            const pinchPos = getPinchPosition(hand);
+            if (!pinchPos) return;
+
+            const isPinching = pinchDist < 0.03;
+
+            if (isPinching && !grabState[handedness]) {
+                // Try to grab
+                const target = findClosest(pinchPos, 0.15);
+                if (target) {
+                    grabState[handedness] = target;
+                    target.userData.grabbed = true;
+                    target.material.emissive.setHex(0x444444);
+                    velocity.get(target).set(0, 0, 0);
+                    prevHandPos[handedness].copy(pinchPos);
+                }
+            } else if (isPinching && grabState[handedness]) {
+                // Move grabbed object to hand
+                const obj = grabState[handedness];
+                // Track velocity for throw (from hand movement delta)
+                tmpVec.subVectors(pinchPos, prevHandPos[handedness]).divideScalar(Math.max(delta, 0.001));
+                velocity.get(obj).lerp(tmpVec, 0.5);
+                obj.position.copy(pinchPos);
+                prevHandPos[handedness].copy(pinchPos);
+            } else if (!isPinching && grabState[handedness]) {
+                // Release with velocity
+                const obj = grabState[handedness];
+                obj.userData.grabbed = false;
+                obj.material.emissive.setHex(0x000000);
+                // Flash feedback
+                obj.material.emissive.setHex(0x222222);
+                setTimeout(() => { if (!obj.userData.grabbed) obj.material.emissive.setHex(0x000000); }, 200);
+                grabState[handedness] = null;
+            }
+        }
+
+        // === Physics update (simple gravity + floor collision) ===
+        function updatePhysics(delta) {
+            for (const obj of interactables) {
+                if (obj.userData.grabbed) continue;
+                const vel = velocity.get(obj);
+
+                // Apply gravity
+                vel.addScaledVector(gravity, delta);
+
+                // Apply velocity
+                obj.position.addScaledVector(vel, delta);
+
+                // Floor collision
+                const minY = 0.05;
+                if (obj.position.y < minY) {
+                    obj.position.y = minY;
+                    vel.y = Math.abs(vel.y) * 0.3; // Bounce
+                    vel.x *= 0.9; // Friction
+                    vel.z *= 0.9;
+                    if (Math.abs(vel.y) < 0.05) vel.y = 0;
+                }
+
+                // Table collision (simple AABB)
+                if (obj.position.x > -0.65 && obj.position.x < 0.65 &&
+                    obj.position.z > -0.85 && obj.position.z < -0.15 &&
+                    obj.position.y < 0.82 && obj.position.y > 0.72) {
+                    obj.position.y = 0.82;
+                    vel.y = Math.abs(vel.y) * 0.2;
+                    vel.x *= 0.95;
+                    vel.z *= 0.95;
+                }
+
+                // Damping
+                vel.multiplyScalar(0.995);
+            }
+        }
+
+        // === Check XR ===
+        async function checkXR() {
+            if (!navigator.xr) { statusEl.textContent = 'WebXR不可用'; return; }
+            const vrOk = await navigator.xr.isSessionSupported('immersive-vr');
+            if (vrOk) {
+                enterBtn.disabled = false;
+                enterBtn.textContent = '进入VR手部物理';
+                statusEl.textContent = 'WebXR就绪 ✓';
+            } else {
+                statusEl.textContent = 'VR不可用';
+            }
+        }
+
+        // === Enter VR ===
+        enterBtn.addEventListener('click', async () => {
+            if (xrSession) return;
+            try {
+                xrSession = await navigator.xr.requestSession('immersive-vr', {
+                    optionalFeatures: ['local-floor', 'hand-tracking']
+                });
+                overlay.style.display = 'none';
+
+                renderer.xr.setReferenceSpaceType('local-floor');
+                await renderer.xr.setSession(xrSession);
+
+                xrSession.addEventListener('end', () => {
+                    xrSession = null;
+                    overlay.style.display = 'flex';
+                    // Reset grab state
+                    Object.keys(grabState).forEach(k => {
+                        if (grabState[k]) { grabState[k].userData.grabbed = false; grabState[k].material.emissive.setHex(0); }
+                        grabState[k] = null;
+                    });
+                    // Hide fallback joint spheres
+                    [hand1, hand2].forEach(h => {
+                        (h.userData.jointSpheres || []).forEach(s => s.visible = false);
+                    });
+                });
+            } catch(e) {
+                statusEl.textContent = '启动失败: ' + e.message;
+            }
+        });
+
+        // === Render Loop ===
+        let lastTime = 0;
+        function render(time, frame) {
+            const delta = Math.min((time - lastTime) * 0.001, 0.05);
+            lastTime = time;
+
+            // Handle hand grab for both hands
+            if (hand1.joints && Object.keys(hand1.joints).length > 0) {
+                handleGrab(hand1, 'left', delta);
+                updateFallbackJoints(hand1);
+            }
+            if (hand2.joints && Object.keys(hand2.joints).length > 0) {
+                handleGrab(hand2, 'right', delta);
+                updateFallbackJoints(hand2);
+            }
+
+            updatePhysics(delta);
+            renderer.render(scene, camera);
+        }
+
+        // === Fallback joint sphere update (when GLTF models don't load) ===
+        function updateFallbackJoints(hand) {
+            const spheres = hand.userData.jointSpheres;
+            if (!spheres) return;
+            const jointNames = Object.keys(hand.joints);
+            for (let i = 0; i < spheres.length && i < jointNames.length; i++) {
+                const joint = hand.joints[jointNames[i]];
+                if (joint && joint.visible !== undefined) {
+                    spheres[i].visible = true;
+                    spheres[i].position.copy(joint.position);
+                    spheres[i].scale.setScalar(joint.jointRadius ? joint.jointRadius * 20 : 1);
+                } else {
+                    spheres[i].visible = false;
+                }
+            }
+        }
+
+        // Inline render for non-VR preview
+        function inlineRender() {
+            if (xrSession) return;
+            const t = performance.now() * 0.001;
+            // Gentle camera orbit
+            camera.position.x = Math.sin(t * 0.2) * 1.5;
+            camera.position.z = Math.cos(t * 0.2) * 1.5 + 0.5;
+            camera.position.y = 1.6;
+            camera.lookAt(0, 0.8, -0.5);
+        }
+
+        // === Bootstrap ===
+        init();
+        checkXR();
+        // Override render for inline preview
+        const origRender = render;
+        renderer.setAnimationLoop((time, frame) => {
+            if (!frame) inlineRender();
+            origRender(time || performance.now(), frame);
+        });
+    </script>
+</body>
+</html>

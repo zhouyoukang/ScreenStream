@@ -1,0 +1,96 @@
+{
+  "project": "chibi_mech",
+  "created": "2026-03-01 12:07:32",
+  "iterations": [
+    {
+      "deviations": [
+        "Head too spherical (pure sphere)",
+        "Arms invisible (hidden by body)",
+        "No mech aesthetic (too smooth)",
+        "Torso too narrow/round"
+      ],
+      "fixes": [
+        "Complete rewrite: dome helmet with hull(sphere+cube)",
+        "Added shoulder pads, boxy torso, segmented arms",
+        "Added ear pods, weapon, knee armor, split-toe feet",
+        "Parametric Customizer-compatible design"
+      ],
+      "metrics": {
+        "geometry_match": "30%",
+        "proportion_match": "50%",
+        "function_complete": "70%",
+        "printability_score": 77
+      },
+      "verdict": "Major structural rewrite needed",
+      "converged": false,
+      "iteration": 1,
+      "timestamp": "2026-03-01 12:24:30"
+    },
+    {
+      "deviations": [
+        "Head still too boxy (corner radius 3 too small)",
+        "Arms hidden (angle 30 too narrow)",
+        "Face features not visible",
+        "Panel lines too thin (0.5mm)"
+      ],
+      "fixes": [
+        "Hull corner radius 3->6",
+        "arm_angle 30->50, arm offset +2mm",
+        "Eyes/mouth moved forward, sizes increased",
+        "Panel lines 0.5->1.5mm thickness"
+      ],
+      "metrics": {
+        "geometry_match": "55%",
+        "proportion_match": "70%",
+        "function_complete": "85%",
+        "printability_score": 9
+      },
+      "verdict": "Non-manifold mesh from thin decorations",
+      "converged": false,
+      "iteration": 2,
+      "timestamp": "2026-03-01 12:24:31"
+    },
+    {
+      "deviations": [
+        "Non-manifold mesh (self-intersections)",
+        "Head still angular (hull with cubes)",
+        "Ear pod junction creates 0.04mm thin wall"
+      ],
+      "fixes": [
+        "Helmet rewritten: resize(sphere)+cube hull for dome shape",
+        "Removed thin panel lines causing intersections",
+        "Ear pods integrated into union() properly"
+      ],
+      "metrics": {
+        "geometry_match": "80%",
+        "proportion_match": "85%",
+        "function_complete": "95%",
+        "printability_score": 79
+      },
+      "verdict": "Major improvement, dome shape achieved",
+      "converged": false,
+      "iteration": 3,
+      "timestamp": "2026-03-01 12:24:32"
+    },
+    {
+      "deviations": [
+        "Ear pod ring decoration extends beyond cylinder (0.24mm edge)"
+      ],
+      "fixes": [
+        "ear_d 6->8 for thicker pods",
+        "Ear pods moved inward (hw-2) for solid overlap",
+        "Quality 32->48 for smoother dome"
+      ],
+      "metrics": {
+        "geometry_match": "88%",
+        "proportion_match": "90%",
+        "function_complete": "95%",
+        "printability_score": 79
+      },
+      "verdict": "Converged - CSG edge artifact only",
+      "converged": true,
+      "iteration": 4,
+      "timestamp": "2026-03-01 12:24:34"
+    }
+  ]
+}

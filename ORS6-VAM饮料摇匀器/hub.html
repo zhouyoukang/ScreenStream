@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORS6 全链路开发中枢</title>
+<style>
+:root{--bg:#0a0a0f;--bg2:#12121f;--bg3:#1a1a2e;--bg4:#16213e;--fg:#e0e0e0;--fg2:#888;--fg3:#555;
+--cyan:#0af;--green:#4f4;--red:#f44;--orange:#fa0;--pink:#f0a;--yellow:#ff0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow:hidden;height:100vh}
+#app{display:grid;grid-template-rows:44px 1fr 260px;height:100vh}
+
+/* Header */
+header{background:var(--bg4);display:flex;align-items:center;padding:0 16px;gap:12px;border-bottom:1px solid #222}
+header h1{font-size:15px;font-weight:700;color:var(--cyan);white-space:nowrap}
+.ws-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.ws-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+.ws-dot.off{background:var(--red);box-shadow:0 0 6px var(--red)}
+.hstat{font-size:11px;color:var(--fg2);font-variant-numeric:tabular-nums}
+.hstat b{color:var(--fg);font-weight:600}
+header .spacer{flex:1}
+.btn-sm{font-size:11px;padding:3px 10px;border:1px solid #333;border-radius:4px;background:var(--bg3);color:var(--fg);cursor:pointer;transition:all .15s}
+.btn-sm:hover{border-color:var(--cyan);color:var(--cyan)}
+.btn-sm.danger{border-color:#600;color:var(--red)}
+.btn-sm.danger:hover{background:#300;border-color:var(--red)}
+
+/* Main area */
+#main{display:grid;grid-template-columns:1fr 280px;gap:1px;background:#111;overflow:hidden}
+#viewport{background:var(--bg);position:relative}
+#canvas3d{width:100%;height:100%;display:block}
+#vpOverlay{position:absolute;bottom:8px;left:8px;display:flex;gap:6px}
+#vpHud{position:absolute;top:8px;right:8px;font-size:10px;color:var(--fg3);text-align:right;pointer-events:none;font-variant-numeric:tabular-nums;line-height:1.5}
+#vpHud .hl{color:var(--cyan)}
+#vpHud .hr{color:var(--orange)}
+#vpPatLabel{position:absolute;top:8px;left:8px;font-size:12px;color:var(--cyan);pointer-events:none;opacity:0.7}
+#vpFps{position:absolute;bottom:8px;right:8px;font-size:10px;color:var(--fg3);pointer-events:none;font-variant-numeric:tabular-nums}
+
+/* Sidebar */
+#sidebar{background:var(--bg2);padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+#sidebar h3{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--fg3);margin-bottom:2px}
+.ax{background:var(--bg3);border-radius:5px;padding:7px 9px;border-left:3px solid var(--cyan)}
+.ax.R{border-color:var(--orange)}.ax.V{border-color:var(--pink)}
+.ax .top{display:flex;justify-content:space-between;align-items:center}
+.ax .lbl{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--fg2)}
+.ax .val{font-size:20px;font-weight:300;color:#fff;font-variant-numeric:tabular-nums;line-height:1.1}
+.ax .bar{height:3px;background:#222;border-radius:2px;margin-top:3px}
+.ax .fill{height:100%;border-radius:2px;transition:width 60ms linear}
+.ax .fill.L{background:linear-gradient(90deg,#024,var(--cyan))}.ax .fill.R{background:linear-gradient(90deg,#420,var(--orange))}.ax .fill.V{background:linear-gradient(90deg,#402,var(--pink))}
+.ax .meta{font-size:9px;color:var(--fg3);margin-top:2px;display:flex;justify-content:space-between}
+.mdot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse .5s infinite alternate}
+@keyframes pulse{0%{opacity:.3}100%{opacity:1}}
+
+/* Bottom tabs */
+#bottom{display:flex;flex-direction:column;background:var(--bg2);border-top:1px solid #222}
+#tabs{display:flex;gap:0;background:var(--bg4);border-bottom:1px solid #222;flex-shrink:0}
+.tab{font-size:12px;padding:6px 14px;border:none;background:transparent;color:var(--fg2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.tab:hover{color:var(--fg)}.tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+#tabBody{flex:1;overflow-y:auto;padding:10px 14px}
+.tp{display:none}.tp.active{display:block}
+
+/* Control tab */
+.ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.slider-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.slider-row label{font-size:11px;width:24px;color:var(--fg2);text-align:right;font-weight:700}
+.slider-row input[type=range]{flex:1;accent-color:var(--cyan);height:16px}
+.slider-row .sv{font-size:11px;width:36px;color:var(--fg);font-variant-numeric:tabular-nums}
+.tcode-box{display:flex;flex-direction:column;gap:6px}
+.tcode-box input{background:var(--bg3);border:1px solid #333;color:#0f0;font-family:'Cascadia Code',monospace;font-size:13px;padding:6px 8px;border-radius:4px;width:100%}
+.tcode-box input:focus{outline:none;border-color:var(--cyan)}
+.qcmds{display:flex;flex-wrap:wrap;gap:4px}
+.qcmds button{font-size:10px;padding:2px 8px;background:var(--bg3);border:1px solid #333;color:var(--fg2);border-radius:3px;cursor:pointer}
+.qcmds button:hover{border-color:var(--cyan);color:var(--cyan)}
+h4{font-size:11px;color:var(--fg3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+
+/* Patterns tab */
+.pat-bar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.pat-bar select{flex:1;min-width:200px;background:var(--bg3);color:var(--cyan);border:1px solid #333;padding:5px;border-radius:4px;font-size:12px}
+.pat-bar input[type=number]{width:56px;background:var(--bg3);color:var(--orange);border:1px solid #333;padding:5px;border-radius:4px;text-align:center;font-size:12px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;max-height:140px;overflow-y:auto}
+.pcard{background:var(--bg3);border:1px solid #222;border-radius:5px;padding:6px 8px;cursor:pointer;transition:all .15s}
+.pcard:hover{border-color:var(--cyan);transform:translateY(-1px)}
+.pcard.active{border-color:var(--cyan);background:#0a1a2e}
+.pcard .pn{font-size:11px;font-weight:600;color:var(--fg)}
+.pcard .pm{font-size:9px;color:var(--fg3);margin-top:2px}
+
+/* Test tab */
+.test-bar{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.test-bar .summary{font-size:12px;color:var(--fg2);margin-left:auto}
+.tresults{display:flex;flex-direction:column;gap:3px;max-height:160px;overflow-y:auto}
+.tr{display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--bg3);border-radius:4px;font-size:12px}
+.tr .icon{width:16px;text-align:center}
+.tr.pass .icon{color:var(--green)}.tr.fail .icon{color:var(--red)}
+.tr .tn{flex:1}.tr .te{font-size:10px;color:var(--red);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Log tab */
+.log-bar{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.log{font-family:'Cascadia Code',monospace;font-size:11px;color:var(--fg3);display:flex;flex-direction:column-reverse;gap:1px;max-height:170px;overflow-y:auto}
+.log .l{white-space:nowrap}.log .lt{color:#444}.log .lc{color:#0a8}
+
+/* Funscript tab */
+.fs-bar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.fs-info{font-size:12px;color:var(--fg2)}
+.fs-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:8px}
+.fs-stat{background:var(--bg3);border-radius:5px;padding:8px;text-align:center}
+.fs-stat .n{font-size:10px;color:var(--fg3);text-transform:uppercase}
+.fs-stat .v{font-size:18px;font-weight:300;color:var(--cyan);margin-top:2px}
+#fsCanvas{width:100%;height:80px;background:var(--bg3);border-radius:4px;margin-top:6px}
+
+/* Connection tab */
+.conn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.conn-card{background:var(--bg3);border-radius:6px;padding:12px;border:1px solid #222}
+.conn-card h4{color:var(--cyan);margin-bottom:8px}
+.conn-card .status{font-size:11px;padding:2px 6px;border-radius:3px;display:inline-block;margin-bottom:6px}
+.conn-card .status.ok{background:#1a3a1a;color:var(--green)}
+.conn-card .status.off{background:#3a1a1a;color:var(--red)}
+.conn-card .status.sim{background:#1a2a3a;color:var(--cyan)}
+.conn-card p{font-size:11px;color:var(--fg2);line-height:1.4}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>ORS6 全链路中枢</h1>
+    <span class="ws-dot off" id="wsDot"></span>
+    <span class="hstat" id="hsConn">离线</span>
+    <span class="hstat">运行 <b id="hsUp">0s</b></span>
+    <span class="hstat">命令 <b id="hsCmds">0</b></span>
+    <span class="hstat">Tick <b id="hsTicks">0</b></span>
+    <span class="spacer"></span>
+    <button class="btn-sm danger" onclick="sendCmd('D0')">紧急停止</button>
+    <button class="btn-sm" onclick="sendCmd('D1')">全轴归位</button>
+  </header>
+
+  <div id="main">
+    <div id="viewport">
+      <canvas id="canvas3d"></canvas>
+      <div id="vpHud"></div>
+      <div id="vpPatLabel"></div>
+      <div id="vpFps"></div>
+    </div>
+    <div id="sidebar">
+      <h3>轴状态 实时</h3>
+      <div id="axisCards"></div>
+    </div>
+  </div>
+
+  <div id="bottom">
+    <div id="tabs">
+      <button class="tab active" data-t="control">控制</button>
+      <button class="tab" data-t="patterns">模式</button>
+      <button class="tab" data-t="funscript">视频同步</button>
+      <button class="tab" data-t="connect">连接</button>
+      <button class="tab" data-t="tests">测试</button>
+      <button class="tab" data-t="log">日志</button>
+    </div>
+    <div id="tabBody">
+
+      <!-- Control -->
+      <div class="tp active" id="tp-control">
+        <div class="ctrl-grid">
+          <div>
+            <h4>手动轴控制</h4>
+            <div id="sliders"></div>
+          </div>
+          <div class="tcode-box">
+            <h4>TCode 命令终端</h4>
+            <input id="cmdIn" placeholder="输入TCode命令 (如 L09999I1000)" autocomplete="off">
+            <div class="qcmds">
+              <button onclick="sendCmd('D0')">D0 停止</button>
+              <button onclick="sendCmd('D1')">D1 归位</button>
+              <button onclick="sendCmd('D2')">D2 信息</button>
+              <button onclick="sendCmd('L09999I500')">L0 顶</button>
+              <button onclick="sendCmd('L00000I500')">L0 底</button>
+              <button onclick="sendCmd('R09999I500')">R0 正</button>
+              <button onclick="sendCmd('R00000I500')">R0 反</button>
+              <button onclick="sendCmd('L09999I300 R09999I300 L19999I300')">多轴</button>
+            </div>
+            <h4 style="margin-top:8px">协议信息</h4>
+            <div style="font-size:11px;color:var(--fg3);line-height:1.6">
+              <div>TCode v0.3 | 11轴 (L0-L2, R0-R2, V0-V1, A0-A2)</div>
+              <div>格式: &lt;轴&gt;&lt;位置&gt;[I&lt;时间ms&gt;][S&lt;速度&gt;]</div>
+              <div>范围: 0-9999 (5000=中位)</div>
+              <div>设备: D0=停止 D1=归位 D2=信息 DSTOP=新版停止</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Patterns -->
+      <div class="tp" id="tp-patterns">
+        <div class="pat-bar">
+          <select id="patSel"><option value="">-- 选择运动模式 --</option></select>
+          <label style="font-size:11px;color:var(--fg2)">BPM:</label>
+          <input type="number" id="bpmIn" value="60" min="10" max="300">
+          <button class="btn-sm" onclick="playPattern()" style="border-color:var(--green);color:var(--green)">播放</button>
+          <button class="btn-sm danger" onclick="stopPattern()">停止</button>
+          <span class="hstat" id="patStatus"></span>
+        </div>
+        <div class="pgrid" id="patGrid"></div>
+      </div>
+
+      <!-- Video Sync -->
+      <div class="tp" id="tp-funscript">
+        <div class="fs-bar">
+          <input type="file" id="fsFile" accept=".funscript,.json" multiple style="display:none">
+          <input type="file" id="vidFile" accept="video/*" style="display:none">
+          <button class="btn-sm" onclick="document.getElementById('vidFile').click()" style="border-color:var(--orange);color:var(--orange)">加载视频</button>
+          <button class="btn-sm" onclick="document.getElementById('fsFile').click()" style="border-color:var(--cyan);color:var(--cyan)">加载脚本</button>
+          <button class="btn-sm" onclick="scanLocalScripts()" style="border-color:#888;color:#888">扫描本地</button>
+          <span style="color:#333">|</span>
+          <button class="btn-sm" id="btnSyncPlay" disabled onclick="syncPlay()" style="border-color:var(--green);color:var(--green)">同步播放</button>
+          <button class="btn-sm" id="btnSyncPause" disabled onclick="syncPause()">暂停</button>
+          <button class="btn-sm danger" id="btnSyncStop" disabled onclick="syncStop()">停止</button>
+          <span style="color:#333">|</span>
+          <label style="font-size:11px;color:var(--fg2)">速度:</label>
+          <select id="syncSpeed" style="background:var(--bg3);color:var(--orange);border:1px solid #333;padding:2px 4px;border-radius:3px;font-size:11px" onchange="syncSetSpeed(this.value)">
+            <option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="0.75">0.75x</option>
+            <option value="1" selected>1x</option><option value="1.25">1.25x</option><option value="1.5">1.5x</option><option value="2">2x</option>
+          </select>
+          <span class="fs-info" id="fsInfo">未加载</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <video id="syncVideo" style="max-width:280px;max-height:120px;border-radius:4px;background:#000;display:none" controls></video>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+            <canvas id="fsCanvas" height="80"></canvas>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--fg2)">
+              <span id="syncTime">00:00.0</span>
+              <input type="range" id="syncSeek" min="0" max="1000" value="0" style="flex:1;accent-color:var(--cyan);height:12px" oninput="syncSeekTo(this.value)">
+              <span id="syncDur">00:00.0</span>
+              <span id="syncStatus" style="color:var(--fg3)">待命</span>
+            </div>
+          </div>
+        </div>
+        <div class="fs-stats" id="fsStats"></div>
+      </div>
+
+      <!-- Connect -->
+      <div class="tp" id="tp-connect">
+        <div class="conn-grid">
+          <div class="conn-card">
+            <h4>虚拟设备</h4>
+            <span class="status sim">仿真中</span>
+            <p>VirtualORS6 — 6轴物理仿真引擎<br>120Hz tick率 | MG996R舵机模型<br>S曲线插值 | 加减速模拟 | 抖动噪声</p>
+          </div>
+          <div class="conn-card">
+            <h4>USB 串口</h4>
+            <span class="status off">未连接</span>
+            <p>TCodeSerial — pyserial<br>波特率: 115200<br>适用: ESP32 DevKit / Arduino<br><em style="color:var(--fg3)">需物理设备</em></p>
+          </div>
+          <div class="conn-card">
+            <h4>WiFi UDP</h4>
+            <span class="status off">未连接</span>
+            <p>TCodeWiFi — UDP广播<br>端口: 8000<br>适用: TCodeESP32 WiFi模式<br><em style="color:var(--fg3)">需同网段ESP32</em></p>
+          </div>
+          <div class="conn-card">
+            <h4>蓝牙 BLE</h4>
+            <span class="status off">未连接</span>
+            <p>TCodeBLE — bleak库<br>适用: osr-esp32 BLE固件<br>支持BLE Streaming TCode<br><em style="color:var(--fg3)">需bleak依赖</em></p>
+          </div>
+          <div class="conn-card">
+            <h4>Buttplug.io</h4>
+            <span class="status off">未连接</span>
+            <p>ButtplugBridge — WebSocket<br>端口: ws://127.0.0.1:12345<br>适用: Intiface Central<br>支持: Linear/Vibrate/Rotate<br><em style="color:var(--fg3)">需Intiface Central运行</em></p>
+          </div>
+          <div class="conn-card">
+            <h4>WebSerial (浏览器)</h4>
+            <span class="status off" id="wsSerialStatus">不可用</span>
+            <p>Web Serial API — 浏览器直连<br>Chrome 89+ / Edge 89+<br>无需Python后端 | 115200 baud<br><button class="btn-sm" style="margin-top:4px" id="wsSerialBtn" onclick="tryWebSerial()">连接/断开</button></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tests -->
+      <div class="tp" id="tp-tests">
+        <div class="test-bar">
+          <button class="btn-sm" onclick="runTests('all')" style="border-color:var(--cyan);color:var(--cyan)">全部测试</button>
+          <button class="btn-sm" onclick="runTests('protocol')">协议</button>
+          <button class="btn-sm" onclick="runTests('device')">设备</button>
+          <button class="btn-sm" onclick="runTests('tempest')">TempestStroke</button>
+          <span class="summary" id="testSum"></span>
+        </div>
+        <div class="tresults" id="testRes"></div>
+      </div>
+
+      <!-- Log -->
+      <div class="tp" id="tp-log">
+        <div class="log-bar">
+          <button class="btn-sm" onclick="document.getElementById('logEl').innerHTML=''">清除</button>
+          <label style="font-size:11px;color:var(--fg2)"><input type="checkbox" id="autoScr" checked> 自动滚动</label>
+          <span class="hstat" id="logCount">0 条</span>
+        </div>
+        <div class="log" id="logEl"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.170.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ══════════════════════════════════════════
+// Three.js Scene
+// ══════════════════════════════════════════
+const canvas = document.getElementById('canvas3d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d1117);
+scene.fog = new THREE.Fog(0x0d1117, 15, 35);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+camera.position.set(5, 3, 6);
+
+const ctrl = new OrbitControls(camera, canvas);
+ctrl.target.set(0, 1.2, 0);
+ctrl.enableDamping = true;
+ctrl.dampingFactor = 0.05;
+ctrl.update();
+
+scene.add(new THREE.AmbientLight(0x404060, 0.6));
+const dLight = new THREE.DirectionalLight(0xffffff, 1.2);
+dLight.position.set(5, 8, 4); dLight.castShadow = true;
+dLight.shadow.mapSize.set(1024, 1024);
+scene.add(dLight);
+scene.add(new THREE.PointLight(0x00aaff, 0.5, 20).translateX(-3).translateY(6).translateZ(-2));
+
+const gnd = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshStandardMaterial({color:0x111122,roughness:0.9}));
+gnd.rotation.x = -Math.PI/2; gnd.receiveShadow = true; scene.add(gnd);
+scene.add(new THREE.GridHelper(20, 40, 0x222244, 0x16162a));
+
+// ── SR6 Realistic 3D Model (based on Ayva Stroker Lite reference) ──
+// Materials
+const mFrame = new THREE.MeshStandardMaterial({color:0x3a5a8a,metalness:0.7,roughness:0.35});
+const mFrameDark = new THREE.MeshStandardMaterial({color:0x1a2a3e,metalness:0.8,roughness:0.2});
+const mServo = new THREE.MeshStandardMaterial({color:0x2a4a7e,metalness:0.6,roughness:0.4});
+const mHorn = new THREE.MeshStandardMaterial({color:0x00aaff,metalness:0.8,roughness:0.2,emissive:0x002244});
+const mRod = new THREE.MeshStandardMaterial({color:0xbbbbcc,metalness:0.9,roughness:0.1});
+const mBall = new THREE.MeshStandardMaterial({color:0x00ddff,metalness:0.9,roughness:0.1,emissive:0x003355});
+const mRecv = new THREE.MeshStandardMaterial({color:0x1a1a1a,metalness:0.3,roughness:0.6});
+const mRecvRing = new THREE.MeshStandardMaterial({color:0x333344,metalness:0.5,roughness:0.4});
+const mCradle = new THREE.MeshStandardMaterial({color:0x3a5a8a,metalness:0.6,roughness:0.3});
+const mActive = new THREE.MeshStandardMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:0.5});
+const mAccent = new THREE.MeshStandardMaterial({color:0x00aaff,emissive:0x004488,emissiveIntensity:0.3});
+
+// Shared geometries
+const gBall = new THREE.SphereGeometry(0.05, 10, 10);
+const gRod = new THREE.CylinderGeometry(0.025, 0.025, 1, 8);
+
+// ── Frame dimensions (real SR6 proportions) ──
+const FW = 3.2, FD = 2.4, FH = 1.8; // frame width, depth, height
+const WALL = 0.08; // wall thickness
+const BASE_Y = 0; // base sits on ground
+
+// ── Base frame (rectangular open box) ──
+const frameGroup = new THREE.Group();
+scene.add(frameGroup);
+
+// Bottom plate
+const bottomPlate = new THREE.Mesh(new THREE.BoxGeometry(FW, WALL, FD), mFrameDark);
+bottomPlate.position.set(0, BASE_Y + WALL/2, 0);
+bottomPlate.castShadow=true; bottomPlate.receiveShadow=true; frameGroup.add(bottomPlate);
+
+// Frame edge accent lines
+const edgeGeo = new THREE.BoxGeometry(FW+0.02, 0.02, 0.02);
+[-FD/2, FD/2].forEach(z => {
+  const edge = new THREE.Mesh(edgeGeo, mAccent);
+  edge.position.set(0, WALL+0.01, z); frameGroup.add(edge);
+});
+
+// Left and right walls (partial — open frame with structural posts)
+const postGeo = new THREE.BoxGeometry(WALL, FH, WALL);
+const crossGeo = new THREE.BoxGeometry(WALL, WALL, FD-WALL*2);
+[[-FW/2+WALL/2, 'L'], [FW/2-WALL/2, 'R']].forEach(([x, side]) => {
+  // Front and back posts
+  [-FD/2+WALL/2, FD/2-WALL/2].forEach(z => {
+    const post = new THREE.Mesh(postGeo, mFrame);
+    post.position.set(x, BASE_Y+WALL+FH/2, z);
+    post.castShadow=true; frameGroup.add(post);
+  });
+  // Top cross beam
+  const beam = new THREE.Mesh(crossGeo, mFrame);
+  beam.position.set(x, BASE_Y+WALL+FH, 0);
+  beam.castShadow=true; frameGroup.add(beam);
+  // Mid cross beam
+  const midBeam = new THREE.Mesh(crossGeo, mFrame);
+  midBeam.position.set(x, BASE_Y+WALL+FH*0.5, 0);
+  midBeam.castShadow=true; frameGroup.add(midBeam);
+});
+
+// Front and back cross beams
+const fbBeamGeo = new THREE.BoxGeometry(FW-WALL*2, WALL, WALL);
+[[-FD/2+WALL/2, 'F'], [FD/2-WALL/2, 'B']].forEach(([z]) => {
+  const topB = new THREE.Mesh(fbBeamGeo, mFrame);
+  topB.position.set(0, BASE_Y+WALL+FH, z);
+  topB.castShadow=true; frameGroup.add(topB);
+});
+
+// ── Servos (6 servos mounted in frame walls) ──
+// SR6 layout: 3 pairs, each pair on opposite walls
+// Pair 0 (L0 stroke): Left-front + Right-front — main vertical stroke
+// Pair 1 (L1/R1): Left-mid + Right-mid
+// Pair 2 (L2/R2): Left-back + Right-back
+const SERVO_W = 0.4, SERVO_H = 0.2, SERVO_D = 0.2;
+const gServo = new THREE.BoxGeometry(SERVO_W, SERVO_H, SERVO_D);
+const HORN_LEN = 0.4;
+const gHornGeo = new THREE.BoxGeometry(0.06, 0.03, HORN_LEN);
+
+const servoPositions = [
+  // idx 0: Left-front
+  {x: -FW/2+WALL+SERVO_W/2, y: BASE_Y+WALL+FH*0.35, z: -FD*0.28, faceOut: -1},
+  // idx 1: Right-front
+  {x:  FW/2-WALL-SERVO_W/2, y: BASE_Y+WALL+FH*0.35, z: -FD*0.28, faceOut: 1},
+  // idx 2: Left-mid
+  {x: -FW/2+WALL+SERVO_W/2, y: BASE_Y+WALL+FH*0.55, z: 0,        faceOut: -1},
+  // idx 3: Right-mid
+  {x:  FW/2-WALL-SERVO_W/2, y: BASE_Y+WALL+FH*0.55, z: 0,        faceOut: 1},
+  // idx 4: Left-back
+  {x: -FW/2+WALL+SERVO_W/2, y: BASE_Y+WALL+FH*0.35, z:  FD*0.28, faceOut: -1},
+  // idx 5: Right-back
+  {x:  FW/2-WALL-SERVO_W/2, y: BASE_Y+WALL+FH*0.35, z:  FD*0.28, faceOut: 1},
+];
+
+const servos = [], horns = [], rods = [], rodGroups = [], baseBalls = [], topBalls = [];
+const topAnchorsLocal = [];
+
+// Cradle/top platform anchor positions (in cradle local space)
+const CRADLE_W = 1.2, CRADLE_H = 0.6;
+const topAnchorDefs = [
+  {x: -CRADLE_W/2, y: -CRADLE_H*0.3, z: -0.3},  // pair with servo 0
+  {x:  CRADLE_W/2, y: -CRADLE_H*0.3, z: -0.3},  // pair with servo 1
+  {x: -CRADLE_W/2, y:  0,            z:  0},      // pair with servo 2
+  {x:  CRADLE_W/2, y:  0,            z:  0},      // pair with servo 3
+  {x: -CRADLE_W/2, y: -CRADLE_H*0.3, z:  0.3},  // pair with servo 4
+  {x:  CRADLE_W/2, y: -CRADLE_H*0.3, z:  0.3},  // pair with servo 5
+];
+
+for(let i=0; i<6; i++){
+  const sp = servoPositions[i];
+
+  // Servo body
+  const servo = new THREE.Mesh(gServo, mServo);
+  servo.position.set(sp.x, sp.y, sp.z);
+  servo.castShadow=true; frameGroup.add(servo); servos.push(servo);
+
+  // Servo horn (arm that rotates)
+  const hornGroup = new THREE.Group();
+  hornGroup.position.set(sp.x + sp.faceOut * SERVO_W*0.3, sp.y + SERVO_H/2, sp.z);
+  frameGroup.add(hornGroup);
+  const horn = new THREE.Mesh(gHornGeo, mHorn);
+  horn.position.set(0, 0, HORN_LEN/2);
+  horn.castShadow=true; hornGroup.add(horn);
+  // Ball joint at horn tip
+  const bb = new THREE.Mesh(gBall, mBall);
+  bb.position.set(0, 0, HORN_LEN);
+  hornGroup.add(bb);
+  horns.push(hornGroup); baseBalls.push(bb);
+
+  // Push rod
+  const rodG = new THREE.Group(); scene.add(rodG);
+  const rod = new THREE.Mesh(gRod, mRod);
+  rod.castShadow=true; rodG.add(rod);
+  const tb = new THREE.Mesh(gBall, mBall); rodG.add(tb);
+  rods.push(rod); rodGroups.push(rodG); topBalls.push(tb);
+
+  // Top anchor in cradle local space
+  const ta = topAnchorDefs[i];
+  topAnchorsLocal.push(new THREE.Vector3(ta.x, ta.y, ta.z));
+}
+
+// ── Receiver cradle (top platform - this is what moves) ──
+const topGroup = new THREE.Group();
+topGroup.position.set(0, BASE_Y + WALL + FH * 0.75, 0);
+scene.add(topGroup);
+
+// Cradle arms (U-shaped bracket holding the receiver)
+const cradleArmGeo = new THREE.BoxGeometry(0.06, CRADLE_H, 0.06);
+[-CRADLE_W/2, CRADLE_W/2].forEach(x => {
+  const arm = new THREE.Mesh(cradleArmGeo, mCradle);
+  arm.position.set(x, 0, 0);
+  arm.castShadow=true; topGroup.add(arm);
+});
+// Cradle bottom cross bar
+const cradleCross = new THREE.Mesh(new THREE.BoxGeometry(CRADLE_W, 0.06, 0.06), mCradle);
+cradleCross.position.set(0, -CRADLE_H/2, 0);
+cradleCross.castShadow=true; topGroup.add(cradleCross);
+
+// ── Receiver tube (large black cylinder — the main visual element) ──
+const recvLen = 2.0;
+const receiver = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.4, 0.45, recvLen, 24),
+  mRecv
+);
+receiver.rotation.x = Math.PI/2; // horizontal, pointing along Z
+receiver.position.set(0, 0.1, -recvLen*0.15);
+receiver.castShadow=true; topGroup.add(receiver);
+
+// Receiver accent rings
+[-0.6, -0.1, 0.5].forEach(z => {
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.015, 8, 24), mRecvRing);
+  ring.position.set(0, 0.1, z);
+  topGroup.add(ring);
+});
+
+// Receiver flared opening (front)
+const flare = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.48, 0.4, 0.15, 24),
+  mRecvRing
+);
+flare.rotation.x = Math.PI/2;
+flare.position.set(0, 0.1, -recvLen*0.15 - recvLen/2 - 0.05);
+flare.castShadow=true; topGroup.add(flare);
+
+// Status LED on receiver
+const statusRing = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.015, 8, 24), mActive);
+statusRing.position.set(0, 0.1, -recvLen*0.15 + recvLen/2);
+topGroup.add(statusRing);
+
+// Top anchor markers
+topAnchorsLocal.forEach(p => {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.035,8,8), mBall);
+  m.position.copy(p); topGroup.add(m);
+});
+
+// ── Helpers for IK ──
+const _v3 = new THREE.Vector3();
+function getTopAnchorWorld(idx) {
+  _v3.copy(topAnchorsLocal[idx]);
+  topGroup.localToWorld(_v3);
+  return _v3.clone();
+}
+function getHornTipWorld(idx) {
+  _v3.set(0,0,0);
+  baseBalls[idx].localToWorld(_v3);
+  return _v3.clone();
+}
+
+// Update rod to connect horn tip → top anchor (quaternion-based)
+const _up = new THREE.Vector3(0, 1, 0);
+const _dir = new THREE.Vector3();
+const _quat = new THREE.Quaternion();
+function updateRod(idx) {
+  const from = getHornTipWorld(idx);
+  const to = getTopAnchorWorld(idx);
+  const mid = from.clone().add(to).multiplyScalar(0.5);
+  _dir.subVectors(to, from);
+  const len = _dir.length();
+  _dir.normalize();
+  _quat.setFromUnitVectors(_up, _dir);
+  rodGroups[idx].position.copy(mid);
+  rodGroups[idx].quaternion.copy(_quat);
+  rods[idx].scale.set(1, len, 1);
+  rods[idx].position.set(0, 0, 0);
+  topBalls[idx].position.set(0, len/2, 0);
+}
+
+// ── Apply axis state to SR6 ──
+const STROKE_MIN_Y = BASE_Y + WALL + FH*0.45;
+const STROKE_MAX_Y = BASE_Y + WALL + FH*1.15;
+const SURGE_MAX = 0.4;
+const SWAY_MAX = 0.4;
+const TWIST_MAX = Math.PI * 0.35;
+const ROLL_MAX = Math.PI * 0.18;
+const PITCH_MAX = Math.PI * 0.18;
+
+function applyAxes(axes) {
+  if (!axes) return;
+  const n = v => (v - 5000) / 5000;
+  const p = v => v / 9999;
+
+  const l0 = axes.L0 ? p(axes.L0.current) : 0.5;
+  const l1 = axes.L1 ? n(axes.L1.current) : 0;
+  const l2 = axes.L2 ? n(axes.L2.current) : 0;
+  const r0 = axes.R0 ? n(axes.R0.current) : 0;
+  const r1 = axes.R1 ? n(axes.R1.current) : 0;
+  const r2 = axes.R2 ? n(axes.R2.current) : 0;
+
+  topGroup.position.y = STROKE_MIN_Y + l0 * (STROKE_MAX_Y - STROKE_MIN_Y);
+  topGroup.position.z = l1 * SURGE_MAX;
+  topGroup.position.x = l2 * SWAY_MAX;
+  topGroup.rotation.y = r0 * TWIST_MAX;
+  topGroup.rotation.z = r1 * ROLL_MAX;
+  topGroup.rotation.x = r2 * PITCH_MAX;
+
+  // Update horn angles and rods via IK
+  for(let i=0; i<6; i++){
+    const topW = getTopAnchorWorld(i);
+    const hornBase = horns[i].position.clone();
+    frameGroup.localToWorld(hornBase);
+    const dist = topW.distanceTo(hornBase);
+    const nominalDist = 1.5;
+    const delta = (dist - nominalDist) / nominalDist;
+    // Rotate horn arms to track rod length changes
+    const sp = servoPositions[i];
+    horns[i].rotation.x = delta * Math.PI * 0.4;
+    horns[i].rotation.z = sp.faceOut * delta * Math.PI * 0.15;
+    updateRod(i);
+  }
+
+  // Status indicators
+  const moving = Object.values(axes).some(a => a.is_moving);
+  mActive.emissiveIntensity = moving ? 1.0 : 0.3;
+  mActive.color.setHex(moving ? 0x00ff44 : 0x00ff88);
+  mHorn.emissive.setHex(moving ? 0x004466 : 0x002244);
+}
+
+function onResize() {
+  const vp = document.getElementById('viewport');
+  const w=vp.clientWidth, h=vp.clientHeight;
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+  renderer.setSize(w,h);
+}
+window.addEventListener('resize', onResize);
+setTimeout(onResize, 100);
+new ResizeObserver(onResize).observe(document.getElementById('viewport'));
+
+let lastState = null;
+let fpsFrames = 0, fpsLast = performance.now(), fpsVal = 0;
+const hudEl = document.getElementById('vpHud');
+const fpsEl = document.getElementById('vpFps');
+const patLabelEl = document.getElementById('vpPatLabel');
+
+let hudThrottle = 0;
+function updateHud(axes) {
+  if(!axes) return;
+  const now = performance.now();
+  if(now - hudThrottle < 100) return;
+  hudThrottle = now;
+  const v = a => axes[a] ? Math.round(axes[a].current) : 5000;
+  hudEl.innerHTML =
+    `<span class="hl">L0 ${v('L0')}</span> Stroke<br>` +
+    `<span class="hl">L1 ${v('L1')}</span> Surge<br>` +
+    `<span class="hl">L2 ${v('L2')}</span> Sway<br>` +
+    `<span class="hr">R0 ${v('R0')}</span> Twist<br>` +
+    `<span class="hr">R1 ${v('R1')}</span> Roll<br>` +
+    `<span class="hr">R2 ${v('R2')}</span> Pitch`;
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  ctrl.update();
+  if(lastState) {
+    applyAxes(lastState.axes);
+    updateHud(lastState.axes);
+  }
+  renderer.render(scene, camera);
+  // FPS
+  fpsFrames++;
+  const now = performance.now();
+  if(now - fpsLast >= 1000) {
+    fpsVal = fpsFrames;
+    fpsFrames = 0;
+    fpsLast = now;
+    fpsEl.textContent = fpsVal + ' fps';
+  }
+}
+// Initial rod positioning
+for(let i=0;i<6;i++) updateRod(i);
+animate();
+
+// ══════════════════════════════════════════
+// WebSocket
+// ══════════════════════════════════════════
+let ws=null, reconnTimer=null, logCount=0, httpFallback=null;
+
+function connectWS() {
+  try { ws = new WebSocket(`ws://${location.host}/ws`); } catch(e) { startHttpFallback(); return; }
+  ws.onopen = () => {
+    setOnline(true);
+    if(reconnTimer){clearInterval(reconnTimer);reconnTimer=null}
+    if(httpFallback){clearInterval(httpFallback);httpFallback=null}
+    ws.send(JSON.stringify({type:'get_patterns'}));
+  };
+  ws.onclose = () => {
+    setOnline(false);
+    if(!reconnTimer) reconnTimer = setInterval(connectWS, 3000);
+    startHttpFallback();
+  };
+  ws.onerror = () => {};
+  ws.onmessage = (e) => {
+    try { handleMsg(JSON.parse(e.data)); } catch(err){}
+  };
+}
+
+function startHttpFallback() {
+  if(httpFallback) return;
+  // Load patterns via HTTP
+  fetch('/api/patterns').then(r=>r.json()).then(d=>{
+    if(d.names) populatePatterns(d.names);
+  }).catch(()=>{});
+  // Poll state via HTTP
+  httpFallback = setInterval(()=>{
+    if(ws && ws.readyState===1){clearInterval(httpFallback);httpFallback=null;return}
+    fetch('/api/state').then(r=>r.json()).then(d=>{
+      handleMsg({type:'state',data:d});
+    }).catch(()=>{});
+    fetch('/api/history').then(r=>r.json()).then(d=>{
+      handleMsg({type:'history',data:d});
+    }).catch(()=>{});
+  }, 500);
+}
+connectWS();
+
+function handleMsg(msg) {
+  switch(msg.type) {
+    case 'state':
+      lastState = msg.data;
+      updateAxCards(msg.data);
+      updateHeader(msg.data);
+      break;
+    case 'history':
+      updateLog(msg.data);
+      break;
+    case 'patterns':
+      populatePatterns(msg.data);
+      break;
+    case 'test_results':
+      showTests(msg.data);
+      break;
+    case 'funscript_parsed':
+      showFsStats(msg.data);
+      break;
+    case 'funscript_error':
+      document.getElementById('fsInfo').textContent = 'Error: ' + msg.error;
+      break;
+    case 'funscript_status':
+      updateSyncStatus(msg.data);
+      break;
+    case 'funscript_loaded':
+      onFunscriptLoaded(msg.data);
+      break;
+  }
+}
+
+window.sendCmd = function(cmd) {
+  if(ws && ws.readyState===1) {
+    ws.send(JSON.stringify({type:'command', cmd}));
+  } else {
+    // HTTP fallback
+    fetch('/api/send/'+encodeURIComponent(cmd)).catch(()=>{});
+  }
+  // Also send via WebSerial if connected
+  if(serialWriter) sendSerial(cmd);
+  addLogLine(`> ${cmd}`, 'cmd');
+};
+
+function sendMsg(obj) { if(ws&&ws.readyState===1) ws.send(JSON.stringify(obj)); }
+
+function setOnline(on) {
+  const dot = document.getElementById('wsDot');
+  dot.className = 'ws-dot ' + (on?'on':'off');
+  document.getElementById('hsConn').textContent = on?'在线':'离线';
+}
+
+// ══════════════════════════════════════════
+// UI Updates
+// ══════════════════════════════════════════
+const AX_META = {
+  L0:{lbl:'Stroke',cls:'L'},L1:{lbl:'Surge',cls:'L'},L2:{lbl:'Sway',cls:'L'},
+  R0:{lbl:'Twist',cls:'R'},R1:{lbl:'Roll',cls:'R'},R2:{lbl:'Pitch',cls:'R'},
+};
+
+let axCardsBuilt = false;
+function updateAxCards(state) {
+  if(!state.axes) return;
+  const container = document.getElementById('axisCards');
+  // Build cards once, then update values only
+  if(!axCardsBuilt) {
+    let h='';
+    for(const [ax,m] of Object.entries(AX_META)) {
+      h += `<div class="ax ${m.cls}" id="ax-${ax}"><div class="top"><span class="lbl">${ax} ${m.lbl}</span><span id="dot-${ax}"></span></div>
+        <div class="val" id="val-${ax}">5000</div>
+        <div class="bar"><div class="fill ${m.cls}" id="fill-${ax}" style="width:50%"></div></div>
+        <div class="meta"><span id="tgt-${ax}">T:5000</span><span id="vel-${ax}">V:0/s</span><span id="cnt-${ax}">#0</span></div></div>`;
+    }
+    container.innerHTML = h;
+    axCardsBuilt = true;
+  }
+  // Targeted value updates (no DOM rebuild)
+  for(const [ax] of Object.entries(AX_META)) {
+    const a = state.axes[ax]; if(!a) continue;
+    const valEl = document.getElementById('val-'+ax);
+    const cur = Math.round(a.current);
+    if(valEl.textContent != cur) valEl.textContent = cur;
+    document.getElementById('fill-'+ax).style.width = a.position_pct+'%';
+    document.getElementById('dot-'+ax).innerHTML = a.is_moving ? '<span class="mdot"></span>' : '';
+    document.getElementById('tgt-'+ax).textContent = 'T:'+Math.round(a.target);
+    document.getElementById('vel-'+ax).textContent = 'V:'+Math.round(a.velocity)+'/s';
+    document.getElementById('cnt-'+ax).textContent = '#'+a.command_count;
+  }
+  // Sync sliders with device state
+  document.querySelectorAll('#sliders input[type=range]').forEach(sl=>{
+    const ax = sl.dataset.ax;
+    if(state.axes[ax] && document.activeElement !== sl) {
+      const v = Math.round(state.axes[ax].current);
+      if(Math.abs(parseInt(sl.value)-v) > 50) {
+        sl.value = v;
+        sl.nextElementSibling.textContent = v;
+      }
+    }
+  });
+}
+
+function updateHeader(state) {
+  document.getElementById('hsUp').textContent = state.uptime_sec+'s';
+  document.getElementById('hsCmds').textContent = state.total_commands;
+  document.getElementById('hsTicks').textContent = state.tick_count;
+}
+
+// ══════════════════════════════════════════
+// Tabs
+// ══════════════════════════════════════════
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tp').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('tp-'+t.dataset.t).classList.add('active');
+  });
+});
+
+// ══════════════════════════════════════════
+// Control Sliders
+// ══════════════════════════════════════════
+const sliderEl = document.getElementById('sliders');
+['L0','L1','L2','R0','R1','R2'].forEach(ax => {
+  const row = document.createElement('div');
+  row.className = 'slider-row';
+  row.innerHTML = `<label>${ax}</label><input type="range" min="0" max="9999" value="5000" data-ax="${ax}"><span class="sv">5000</span>`;
+  sliderEl.appendChild(row);
+  const sl = row.querySelector('input');
+  sl.addEventListener('input', () => {
+    row.querySelector('.sv').textContent = sl.value;
+    sendCmd(`${ax}${sl.value.padStart(4,'0')}I200`);
+  });
+});
+
+document.getElementById('cmdIn').addEventListener('keydown', e => {
+  if(e.key==='Enter' && e.target.value.trim()) {
+    sendCmd(e.target.value.trim());
+    e.target.value = '';
+  }
+});
+
+// ══════════════════════════════════════════
+// Patterns
+// ══════════════════════════════════════════
+function populatePatterns(names) {
+  const sel = document.getElementById('patSel');
+  sel.innerHTML = '<option value="">-- 选择运动模式 ('+names.length+'种) --</option>';
+  const grid = document.getElementById('patGrid');
+  grid.innerHTML = '';
+  names.forEach(n => {
+    sel.innerHTML += `<option value="${n}">${n}</option>`;
+    const card = document.createElement('div');
+    card.className = 'pcard';
+    card.dataset.name = n;
+    card.innerHTML = `<div class="pn">${n}</div><div class="pm">click to play</div>`;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.pcard').forEach(c=>c.classList.remove('active'));
+      card.classList.add('active');
+      document.getElementById('patSel').value = n;
+      playPattern();
+    });
+    grid.appendChild(card);
+  });
+}
+
+window.playPattern = function() {
+  const name = document.getElementById('patSel').value;
+  const bpm = parseInt(document.getElementById('bpmIn').value) || 60;
+  if(!name) return;
+  if(ws && ws.readyState===1) {
+    sendMsg({type:'pattern_play', name, bpm});
+  } else {
+    fetch(`/api/play/${encodeURIComponent(name)}/${bpm}`).catch(()=>{});
+  }
+  document.getElementById('patStatus').textContent = `${name} @ ${bpm}bpm`;
+  patLabelEl.textContent = `▶ ${name} @ ${bpm}bpm`;
+  patLabelEl.style.opacity = '1';
+  document.querySelectorAll('.pcard').forEach(c => {
+    c.classList.toggle('active', c.dataset.name === name);
+  });
+};
+
+window.stopPattern = function() {
+  if(ws && ws.readyState===1) {
+    sendMsg({type:'pattern_stop'});
+  } else {
+    fetch('/api/stop').catch(()=>{});
+  }
+  document.getElementById('patStatus').textContent = '';
+  patLabelEl.textContent = '';
+  patLabelEl.style.opacity = '0.7';
+  document.querySelectorAll('.pcard').forEach(c=>c.classList.remove('active'));
+};
+
+// ══════════════════════════════════════════
+// Video Sync Engine (Frontend)
+// ══════════════════════════════════════════
+let fsData = null, fsAllScripts = {}, fsDurationMs = 0, fsSyncTimer = null;
+const AXIS_COLORS = {L0:'#0af',L1:'#0cf',L2:'#09f',R0:'#fa0',R1:'#f80',R2:'#f60',V0:'#f0a',V1:'#f06'};
+
+// ── Video file loading ──
+document.getElementById('vidFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const vid = document.getElementById('syncVideo');
+  vid.src = URL.createObjectURL(file);
+  vid.style.display = 'block';
+  vid.onloadedmetadata = () => {
+    document.getElementById('syncDur').textContent = fmtTime(vid.duration*1000);
+    document.getElementById('syncSeek').max = Math.floor(vid.duration*1000);
+  };
+});
+
+// ── Funscript file loading (multi-axis) ──
+document.getElementById('fsFile').addEventListener('change', e => {
+  const files = Array.from(e.target.files);
+  if(!files.length) return;
+  let loaded = 0;
+  const scripts = {};
+  const SUFFIX_MAP = {'':'L0','.surge':'L1','.sway':'L2','.twist':'R0','.roll':'R1','.pitch':'R2','.vib':'V0','.suction':'A0'};
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        const stem = file.name.replace(/\.funscript$/i,'').replace(/\.json$/i,'');
+        let axis = 'L0';
+        for(const [suf,ax] of Object.entries(SUFFIX_MAP)) {
+          if(suf && stem.endsWith(suf.replace('.',''))) { axis=ax; break; }
+        }
+        scripts[axis] = data;
+        fsAllScripts[axis] = data.actions || [];
+      } catch(err) { console.error('Parse error:', file.name, err); }
+      loaded++;
+      if(loaded === files.length) {
+        // Send all to backend engine
+        sendMsg({type:'funscript_load', scripts, title: files[0].name});
+        const totalActions = Object.values(fsAllScripts).reduce((s,a)=>s+a.length,0);
+        const axes = Object.keys(fsAllScripts).join(', ');
+        document.getElementById('fsInfo').textContent = `${files.length}文件 | ${axes} | ${totalActions}动作`;
+        drawFsTimeline();
+        enableSyncBtns(true);
+      }
+    };
+    reader.readAsText(file);
+  });
+});
+
+function fmtTime(ms) {
+  const s = Math.max(0, ms/1000);
+  const m = Math.floor(s/60);
+  return `${m.toString().padStart(2,'0')}:${(s%60).toFixed(1).padStart(4,'0')}`;
+}
+
+function enableSyncBtns(on) {
+  document.getElementById('btnSyncPlay').disabled = !on;
+  document.getElementById('btnSyncPause').disabled = !on;
+  document.getElementById('btnSyncStop').disabled = !on;
+}
+
+function drawFsTimeline(playheadMs) {
+  const c = document.getElementById('fsCanvas');
+  const ctx = c.getContext('2d');
+  const W = c.width = c.offsetWidth * 2;
+  const H = c.height = 160;
+  ctx.clearRect(0,0,W,H);
+  const allAxes = Object.entries(fsAllScripts);
+  if(!allAxes.length) return;
+  const maxT = Math.max(...allAxes.map(([,a])=> a.length ? a[a.length-1].at : 0));
+  if(maxT <= 0) return;
+  fsDurationMs = maxT;
+  // Heatmap (background)
+  const seg = 60;
+  for(let i=0;i<seg;i++) {
+    const t0=(i/seg)*maxT, t1=((i+1)/seg)*maxT;
+    let totalDist=0;
+    for(const [,actions] of allAxes) {
+      const inSeg = actions.filter(a=>a.at>=t0&&a.at<t1);
+      for(let j=1;j<inSeg.length;j++) totalDist += Math.abs(inSeg[j].pos-inSeg[j-1].pos);
+    }
+    const intensity = Math.min(1, totalDist/800);
+    ctx.fillStyle = `rgba(${Math.round(intensity*200)},${Math.round((1-intensity)*60)},50,0.25)`;
+    ctx.fillRect((i/seg)*W, 0, W/seg, H);
+  }
+  // Draw each axis
+  for(const [axis, actions] of allAxes) {
+    if(!actions.length) continue;
+    ctx.strokeStyle = AXIS_COLORS[axis] || '#888';
+    ctx.lineWidth = 1.2;
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    actions.forEach((a,i) => {
+      const x = (a.at/maxT)*W, y = H - (a.pos/100)*H;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  // Axis legend
+  let lx = 4;
+  for(const [axis] of allAxes) {
+    ctx.fillStyle = AXIS_COLORS[axis] || '#888';
+    ctx.font = '18px sans-serif';
+    ctx.fillText(axis, lx, 16);
+    lx += ctx.measureText(axis).width + 8;
+  }
+  // Playhead
+  if(playheadMs !== undefined && maxT > 0) {
+    const px = (playheadMs / maxT) * W;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px, 0);
+    ctx.lineTo(px, H);
+    ctx.stroke();
+  }
+}
+
+function showFsStats(data) {
+  const el = document.getElementById('fsStats');
+  el.innerHTML = `
+    <div class="fs-stat"><div class="n">动作数</div><div class="v">${data.action_count}</div></div>
+    <div class="fs-stat"><div class="n">时长</div><div class="v">${(data.duration_ms/1000).toFixed(1)}s</div></div>
+    <div class="fs-stat"><div class="n">最小位置</div><div class="v">${data.min_pos}</div></div>
+    <div class="fs-stat"><div class="n">最大位置</div><div class="v">${data.max_pos}</div></div>
+    <div class="fs-stat"><div class="n">平均位置</div><div class="v">${data.avg_pos}</div></div>
+    <div class="fs-stat"><div class="n">行程</div><div class="v">${data.max_pos-data.min_pos}</div></div>`;
+}
+
+function onFunscriptLoaded(data) {
+  if(data.duration_ms) {
+    fsDurationMs = data.duration_ms;
+    document.getElementById('syncDur').textContent = fmtTime(fsDurationMs);
+    document.getElementById('syncSeek').max = fsDurationMs;
+  }
+  const info = document.getElementById('fsInfo');
+  const r = data.result;
+  if(typeof r === 'object' && !r.error) {
+    const axes = Object.keys(r);
+    info.textContent += ` | 已加载${axes.length}轴到设备`;
+  }
+}
+
+function updateSyncStatus(st) {
+  const statusEl = document.getElementById('syncStatus');
+  if(st.playing && !st.paused) {
+    statusEl.textContent = '播放中';
+    statusEl.style.color = 'var(--green)';
+  } else if(st.paused) {
+    statusEl.textContent = '已暂停';
+    statusEl.style.color = 'var(--orange)';
+  } else {
+    statusEl.textContent = '已停止';
+    statusEl.style.color = 'var(--fg3)';
+  }
+  document.getElementById('syncTime').textContent = fmtTime(st.current_ms);
+  if(fsDurationMs > 0) {
+    document.getElementById('syncSeek').value = st.current_ms;
+  }
+  drawFsTimeline(st.current_ms);
+  // Update stats with per-axis positions
+  if(st.axes && Object.keys(st.axes).length) {
+    const el = document.getElementById('fsStats');
+    el.innerHTML = Object.entries(st.axes).map(([axis,info]) =>
+      `<div class="fs-stat" style="border-left:3px solid ${AXIS_COLORS[axis]||'#888'}">
+        <div class="n">${axis}</div>
+        <div class="v">${info.position}</div>
+        <div style="font-size:9px;color:var(--fg3)">${info.actions} acts</div>
+      </div>`
+    ).join('') + `<div class="fs-stat"><div class="n">进度</div><div class="v">${st.progress_pct}%</div></div>
+      <div class="fs-stat"><div class="n">速度</div><div class="v">${st.speed}x</div></div>`;
+  }
+}
+
+// ── Video ↔ Funscript sync loop ──
+function startSyncLoop() {
+  if(fsSyncTimer) return;
+  const vid = document.getElementById('syncVideo');
+  fsSyncTimer = setInterval(() => {
+    if(vid.src && !vid.paused && vid.readyState >= 2) {
+      const ms = Math.round(vid.currentTime * 1000);
+      sendMsg({type:'funscript_sync', time_ms: ms});
+    }
+    // Poll status for UI update
+    sendMsg({type:'funscript_get_status'});
+  }, 200);
+}
+
+function stopSyncLoop() {
+  if(fsSyncTimer) { clearInterval(fsSyncTimer); fsSyncTimer = null; }
+}
+
+// ── Transport controls ──
+window.syncPlay = function() {
+  const vid = document.getElementById('syncVideo');
+  sendMsg({type:'funscript_play'});
+  if(vid.src) vid.play();
+  startSyncLoop();
+};
+window.syncPause = function() {
+  const vid = document.getElementById('syncVideo');
+  sendMsg({type:'funscript_pause'});
+  if(vid.src) vid.pause();
+};
+window.syncStop = function() {
+  const vid = document.getElementById('syncVideo');
+  sendMsg({type:'funscript_stop'});
+  if(vid.src) { vid.pause(); vid.currentTime = 0; }
+  stopSyncLoop();
+  document.getElementById('syncTime').textContent = '00:00.0';
+  document.getElementById('syncSeek').value = 0;
+  document.getElementById('syncStatus').textContent = '已停止';
+  document.getElementById('syncStatus').style.color = 'var(--fg3)';
+  drawFsTimeline(0);
+};
+window.syncSeekTo = function(val) {
+  const ms = parseInt(val);
+  sendMsg({type:'funscript_seek', time_ms: ms});
+  const vid = document.getElementById('syncVideo');
+  if(vid.src) vid.currentTime = ms / 1000;
+  document.getElementById('syncTime').textContent = fmtTime(ms);
+  drawFsTimeline(ms);
+};
+window.syncSetSpeed = function(val) {
+  const spd = parseFloat(val);
+  sendMsg({type:'funscript_speed', speed: spd});
+  const vid = document.getElementById('syncVideo');
+  if(vid.src) vid.playbackRate = spd;
+};
+window.scanLocalScripts = function() {
+  fetch('/api/funscript/scan').then(r=>r.json()).then(d => {
+    if(!d.scripts || !d.scripts.length) {
+      document.getElementById('fsInfo').textContent = '未找到本地.funscript文件';
+      return;
+    }
+    const el = document.getElementById('fsStats');
+    el.innerHTML = '<h4 style="grid-column:1/-1">本地脚本文件</h4>' +
+      d.scripts.map(s => `<div class="fs-stat" style="cursor:pointer;border-left:3px solid ${AXIS_COLORS[s.axis]||'#888'}"
+        onclick="loadLocalScript('${s.path.replace(/\\/g,'\\\\')}')" title="点击加载">
+        <div class="n">${s.axis}</div>
+        <div class="v" style="font-size:11px;word-break:break-all">${s.path}</div>
+        <div style="font-size:9px;color:var(--fg3)">${s.actions} acts | ${s.duration_sec}s</div>
+      </div>`).join('');
+    document.getElementById('fsInfo').textContent = `找到 ${d.scripts.length} 个本地脚本`;
+  }).catch(e => {
+    document.getElementById('fsInfo').textContent = '扫描失败: ' + e.message;
+  });
+};
+
+window.loadLocalScript = function(path) {
+  fetch('/api/funscript/load-local/' + encodeURIComponent(path))
+    .then(r => r.json())
+    .then(d => {
+      if(d.error) {
+        document.getElementById('fsInfo').textContent = '加载失败: ' + d.error;
+        return;
+      }
+      onFunscriptLoaded(d);
+      document.getElementById('fsInfo').textContent = `已加载: ${path}`;
+      // Fetch full data for timeline
+      if(d.result) {
+        for(const [axis, info] of Object.entries(d.result)) {
+          // We don't have the full actions array from the API, but we can request status
+          sendMsg({type:'funscript_get_status'});
+        }
+      }
+      enableSyncBtns(true);
+    })
+    .catch(e => {
+      document.getElementById('fsInfo').textContent = '加载失败: ' + e.message;
+    });
+};
+
+// Legacy compat
+window.playFunscript = window.syncPlay;
+window.stopFunscript = window.syncStop;
+
+// ══════════════════════════════════════════
+// Tests
+// ══════════════════════════════════════════
+window.runTests = function(scope) {
+  document.getElementById('testRes').innerHTML = '<div style="color:var(--fg3);font-size:12px">运行中...</div>';
+  if(ws && ws.readyState===1) {
+    sendMsg({type:'run_tests', scope});
+  } else {
+    // HTTP fallback
+    fetch('/api/test/'+(scope||'all')).then(r=>r.json()).then(d=>showTests(d)).catch(e=>{
+      document.getElementById('testRes').innerHTML = '<div style="color:var(--red);font-size:12px">请求失败</div>';
+    });
+  }
+};
+
+function showTests(results) {
+  const el = document.getElementById('testRes');
+  const pass = results.filter(r=>r.status==='pass').length;
+  const fail = results.filter(r=>r.status==='fail').length;
+  document.getElementById('testSum').textContent = `${pass} 通过 / ${fail} 失败 / ${results.length} 总计`;
+  document.getElementById('testSum').style.color = fail>0 ? 'var(--red)' : 'var(--green)';
+  el.innerHTML = results.map(r =>
+    `<div class="tr ${r.status}"><span class="icon">${r.status==='pass'?'✓':'✗'}</span><span class="tn">${r.name}</span>${r.error?`<span class="te">${r.error}</span>`:''}</div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════
+// Log
+// ══════════════════════════════════════════
+function updateLog(items) {
+  const el = document.getElementById('logEl');
+  let h = '';
+  for(const item of items.slice(-40).reverse()) {
+    const t = new Date(item.time*1000).toLocaleTimeString();
+    h += `<div class="l"><span class="lt">${t}</span> <span class="lc">${item.cmd}</span></div>`;
+  }
+  el.innerHTML = h;
+  logCount = items.length;
+  document.getElementById('logCount').textContent = logCount + ' 条';
+}
+
+function addLogLine(text, cls='') {
+  const el = document.getElementById('logEl');
+  const t = new Date().toLocaleTimeString();
+  el.insertAdjacentHTML('afterbegin', `<div class="l"><span class="lt">${t}</span> <span class="lc">${text}</span></div>`);
+}
+
+// ══════════════════════════════════════════
+// WebSerial
+// ══════════════════════════════════════════
+let serialPort = null, serialWriter = null, serialReader = null;
+
+window.tryWebSerial = async function() {
+  const statusEl = document.getElementById('wsSerialStatus');
+  if(!('serial' in navigator)) {
+    statusEl.textContent = '浏览器不支持';
+    return;
+  }
+  // If already connected, disconnect
+  if(serialPort) {
+    await closeSerial();
+    statusEl.textContent = '已断开';
+    statusEl.className = 'status off';
+    return;
+  }
+  try {
+    const port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    serialPort = port;
+    serialWriter = port.writable.getWriter();
+    statusEl.textContent = '已连接';
+    statusEl.className = 'status ok';
+    addLogLine('[Serial] 已连接', 'info');
+    // Start reading responses in background
+    readSerialLoop(port);
+  } catch(e) {
+    statusEl.textContent = '连接失败: ' + e.message;
+    addLogLine('[Serial] 连接失败: ' + e.message, 'err');
+  }
+};
+
+async function sendSerial(cmd) {
+  if(!serialWriter) return;
+  try {
+    const data = new TextEncoder().encode(cmd + '\n');
+    await serialWriter.write(data);
+  } catch(e) {
+    addLogLine('[Serial] 发送失败: ' + e.message, 'err');
+    await closeSerial();
+  }
+}
+
+async function readSerialLoop(port) {
+  const decoder = new TextDecoderStream();
+  const readableStreamClosed = port.readable.pipeTo(decoder.writable);
+  serialReader = decoder.readable.getReader();
+  let buf = '';
+  try {
+    while(true) {
+      const {value, done} = await serialReader.read();
+      if(done) break;
+      buf += value;
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for(const line of lines) {
+        if(line.trim()) addLogLine('[Serial] < ' + line.trim(), 'info');
+      }
+    }
+  } catch(e) {
+    if(serialPort) addLogLine('[Serial] 读取中断: ' + e.message, 'err');
+  }
+}
+
+async function closeSerial() {
+  try { if(serialReader) { await serialReader.cancel(); serialReader = null; } } catch(e) {}
+  try { if(serialWriter) { serialWriter.releaseLock(); serialWriter = null; } } catch(e) {}
+  try { if(serialPort) { await serialPort.close(); serialPort = null; } } catch(e) {}
+  const statusEl = document.getElementById('wsSerialStatus');
+  statusEl.textContent = '已断开';
+  statusEl.className = 'status off';
+}
+</script>
+</body>
+</html>

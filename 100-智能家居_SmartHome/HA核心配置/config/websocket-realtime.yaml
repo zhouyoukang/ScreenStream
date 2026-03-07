@@ -1,0 +1,246 @@
+# Real-time WebSocket Implementation - Cycle #4 Round #8
+
+# WebSocket server configuration
+websocket_server:
+  enabled: true
+  port: 8123
+  path: /api/websocket
+  
+  # Connection settings
+  connection:
+    max_connections: 100
+    idle_timeout: 300
+    ping_interval: 30
+    ping_timeout: 10
+  
+  # Compression
+  compression: true
+  compression_level: 6
+
+# Real-time updates
+realtime_updates:
+  
+  # State changes
+  state_updates:
+    enabled: true
+    throttle: 100  # ms
+    batch_updates: true
+    
+    # Filters
+    include_domains:
+      - light
+      - switch
+      - sensor
+      - binary_sensor
+      - climate
+      - fan
+    
+    exclude_entities:
+      - sensor.time
+      - sensor.date
+  
+  # Event streaming
+  event_streaming:
+    enabled: true
+    events:
+      - state_changed
+      - service_executed
+      - automation_triggered
+      - scene_activated
+      - call_service
+
+# Subscription management
+subscriptions:
+  
+  # Subscribe to specific entities
+  entity_subscriptions:
+    max_per_client: 50
+    auto_unsubscribe: true
+  
+  # Subscribe to domains
+  domain_subscriptions:
+    allowed: true
+    max_per_client: 10
+  
+  # Subscribe to events
+  event_subscriptions:
+    allowed: true
+    filters: true
+
+# Message types
+message_types:
+  
+  # Client to server
+  client_messages:
+    - type: subscribe_entities
+      payload:
+        entity_ids: [list]
+    
+    - type: subscribe_events
+      payload:
+        event_type: string
+    
+    - type: call_service
+      payload:
+        domain: string
+        service: string
+        service_data: object
+    
+    - type: get_states
+      payload: {}
+  
+  # Server to client
+  server_messages:
+    - type: state_changed
+      payload:
+        entity_id: string
+        old_state: object
+        new_state: object
+    
+    - type: event
+      payload:
+        event_type: string
+        data: object
+    
+    - type: result
+      payload:
+        success: boolean
+        result: object
+
+# Real-time features
+features:
+  
+  # Live dashboard updates
+  live_dashboard:
+    auto_refresh: false  # WebSocket handles updates
+    manual_refresh: true
+    pull_to_refresh: true
+  
+  # Live device status
+  live_device_status:
+    indicator: true
+    animation: true
+    sound: optional
+  
+  # Live notifications
+  live_notifications:
+    push_to_dashboard: true
+    sound_alerts: true
+    vibration: true
+  
+  # Live charts
+  live_charts:
+    update_method: websocket
+    animation: smooth
+    buffer_size: 100
+
+# Performance optimization
+optimization:
+  
+  # Message queuing
+  message_queue:
+    enabled: true
+    max_size: 1000
+    flush_interval: 50  # ms
+  
+  # Batching
+  batch_updates:
+    enabled: true
+    max_batch_size: 20
+    max_wait: 100  # ms
+  
+  # Delta updates
+  delta_updates:
+    enabled: true
+    send_full_state: false
+
+# Connection management
+connection_management:
+  
+  # Reconnection
+  auto_reconnect:
+    enabled: true
+    max_attempts: 5
+    backoff: exponential
+    initial_delay: 1000  # ms
+  
+  # Heartbeat
+  heartbeat:
+    enabled: true
+    interval: 30000  # ms
+    timeout: 10000  # ms
+  
+  # Connection quality
+  quality_monitoring:
+    enabled: true
+    latency_threshold: 200  # ms
+    warning_threshold: 500  # ms
+
+# Security
+security:
+  
+  # Authentication
+  authentication:
+    required: true
+    token_type: long_lived_access_token
+    timeout: 3600
+  
+  # Rate limiting
+  rate_limiting:
+    enabled: true
+    max_messages_per_minute: 120
+    burst_size: 20
+  
+  # Message validation
+  validation:
+    enabled: true
+    schema_validation: true
+
+# Mobile optimization
+mobile_optimization:
+  
+  # Network adaptation
+  adaptive_quality:
+    enabled: true
+    quality_levels:
+      - name: high
+        condition: wifi
+        update_rate: 100
+      - name: medium
+        condition: 4g
+        update_rate: 500
+      - name: low
+        condition: 3g
+        update_rate: 2000
+  
+  # Battery saving
+  battery_saving:
+    reduce_updates: true
+    disable_animations: true
+    longer_heartbeat: 60000
+
+# Example client code
+client_example: |
+  const ws = new WebSocket('ws://localhost:8123/api/websocket');
+  
+  ws.onopen = () => {
+    // Authenticate
+    ws.send(JSON.stringify({
+      type: 'auth',
+      access_token: 'YOUR_TOKEN'
+    }));
+    
+    // Subscribe to entities
+    ws.send(JSON.stringify({
+      type: 'subscribe_entities',
+      entity_ids: ['light.living_room', 'sensor.temperature']
+    }));
+  };
+  
+  ws.onmessage = (event) => {
+    const message = JSON.parse(event.data);
+    
+    if (message.type === 'state_changed') {
+      updateUI(message.payload);
+    }
+  };

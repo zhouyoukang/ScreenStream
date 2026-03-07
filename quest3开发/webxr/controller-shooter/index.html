@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 3 Controller Shooter</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; overflow: hidden; font-family: system-ui, sans-serif; color: #fff; }
+        canvas { display: block; }
+        #overlay {
+            position: fixed; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; background: rgba(0,0,0,0.85);
+            z-index: 10;
+        }
+        h1 { font-size: 2em; margin-bottom: 0.5em; }
+        p { color: #aaa; margin-bottom: 1em; max-width: 500px; text-align: center; line-height: 1.6; }
+        #enter-btn {
+            padding: 16px 48px; font-size: 1.2em; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, #ff6b35, #ff3366); color: #fff;
+            cursor: pointer; font-weight: bold;
+        }
+        #enter-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        #status { margin-top: 12px; color: #888; font-size: 0.9em; }
+        #hud {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 5; display: none; text-align: center;
+            background: rgba(0,0,0,0.5); padding: 8px 24px; border-radius: 8px;
+        }
+        #hud .score { font-size: 2em; font-weight: bold; color: #ffa276; font-family: monospace; }
+        #hud .info { font-size: 0.8em; color: #888; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <h1>🔫 Controller Shooter</h1>
+        <p>
+            控制器射击游戏——扣动扳机发射子弹击中靶标，追踪得分。
+            基于 Meta webxr-first-steps 射击游戏模式。
+        </p>
+        <p style="font-size:0.85em; color:#666;">
+            🎮 扳机=射击 | 🕹️ 摇杆=移动 | 靶标命中+10分 | 触觉反馈
+        </p>
+        <button id="enter-btn" disabled>检测中...</button>
+        <div id="status">正在检测WebXR...</div>
+    </div>
+    <div id="hud">
+        <div class="score" id="score-display">0000</div>
+        <div class="info">🎯 扳机射击 | 摇杆移动</div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
+        import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+        const overlay = document.getElementById('overlay');
+        const enterBtn = document.getElementById('enter-btn');
+        const statusEl = document.getElementById('status');
+        const hudEl = document.getElementById('hud');
+        const scoreDisplay = document.getElementById('score-display');
+
+        let renderer, scene, camera, player, xrSession = null;
+        let controllers = { left: null, right: null };
+        const bullets = new Map();
+        const targets = [];
+        let score = 0;
+        const bulletSpeed = 12;
+        const bulletTTL = 2;
+        const forwardVec = new THREE.Vector3(0, 0, -1);
+        const tmpVec = new THREE.Vector3();
+        const clock = new THREE.Clock();
+        // Pre-created shared geometries/materials (avoid per-shot allocation)
+        const bulletGeo = new THREE.SphereGeometry(0.03, 8, 8);
+        const bulletMat = new THREE.MeshBasicMaterial({ color: 0xff3366 });
+        const trailGeo = new THREE.CylinderGeometry(0.005, 0.02, 0.3, 4);
+        const trailMat = new THREE.MeshBasicMaterial({ color: 0xff6b35, transparent: true, opacity: 0.6 });
+        const hitParticleGeo = new THREE.SphereGeometry(0.03, 4, 4);
+
+        // === Init Scene (pattern from webxr-first-steps/init.js) ===
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 1.6, 3);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.xr.enabled = true;
+            renderer.shadowMap.enabled = true;
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            document.body.appendChild(renderer.domElement);
+
+            // Environment lighting (from webxr-first-steps RoomEnvironment)
+            const environment = new RoomEnvironment(renderer);
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            scene.environment = pmremGenerator.fromScene(environment).texture;
+
+            // Player group (camera + controllers parented together)
+            player = new THREE.Group();
+            scene.add(player);
+            player.add(camera);
+
+            // Ambient + directional light
+            scene.add(new THREE.AmbientLight(0x404040, 0.5));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+            dirLight.position.set(5, 10, 5);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            // Floor
+            const floor = new THREE.Mesh(
+                new THREE.PlaneGeometry(20, 20),
+                new THREE.MeshStandardMaterial({ color: 0x16213e, roughness: 0.8 })
+            );
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Grid helper
+            const grid = new THREE.GridHelper(20, 40, 0x0f3460, 0x0f3460);
+            grid.position.y = 0.01;
+            scene.add(grid);
+
+            // === Controller setup (from webxr-first-steps/init.js) ===
+            const controllerModelFactory = new XRControllerModelFactory();
+
+            for (let i = 0; i < 2; i++) {
+                const raySpace = renderer.xr.getController(i);
+                const gripSpace = renderer.xr.getControllerGrip(i);
+                const model = controllerModelFactory.createControllerModel(gripSpace);
+                gripSpace.add(model);
+                player.add(raySpace, gripSpace);
+
+                // Ray line for aiming
+                const rayGeo = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, 0, 0),
+                    new THREE.Vector3(0, 0, -3)
+                ]);
+                const rayLine = new THREE.Line(rayGeo, new THREE.LineBasicMaterial({
+                    color: 0xff3366, transparent: true, opacity: 0.6
+                }));
+                raySpace.add(rayLine);
+
+                raySpace.visible = false;
+                gripSpace.visible = false;
+
+                gripSpace.addEventListener('connected', (e) => {
+                    raySpace.visible = true;
+                    gripSpace.visible = true;
+                    const handedness = e.data.handedness;
+                    controllers[handedness] = {
+                        raySpace, gripSpace, model,
+                        gamepad: e.data.gamepad,
+                        inputSource: e.data
+                    };
+                });
+                gripSpace.addEventListener('disconnected', (e) => {
+                    raySpace.visible = false;
+                    gripSpace.visible = false;
+                    const handedness = e.data.handedness;
+                    controllers[handedness] = null;
+                });
+            }
+
+            // === Create targets (from webxr-first-steps target pattern) ===
+            createTargets();
+
+            // === Decorative pillars ===
+            for (let i = 0; i < 6; i++) {
+                const pillar = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.15, 0.15, 4, 8),
+                    new THREE.MeshStandardMaterial({ color: 0x0f3460, metalness: 0.3 })
+                );
+                const angle = (i / 6) * Math.PI * 2;
+                pillar.position.set(Math.cos(angle) * 8, 2, Math.sin(angle) * 8);
+                pillar.castShadow = true;
+                scene.add(pillar);
+            }
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            renderer.setAnimationLoop(render);
+        }
+
+        function createTargets() {
+            const targetGeo = new THREE.TorusGeometry(0.5, 0.1, 8, 24);
+            const colors = [0xff6b35, 0x53d769, 0x5ac8fa, 0xff3366, 0xffd60a];
+
+            for (let i = 0; i < 8; i++) {
+                const mat = new THREE.MeshStandardMaterial({
+                    color: colors[i % colors.length],
+                    emissive: colors[i % colors.length],
+                    emissiveIntensity: 0.3,
+                    metalness: 0.5, roughness: 0.3
+                });
+                const target = new THREE.Mesh(targetGeo, mat);
+
+                // Inner ring (bullseye)
+                const inner = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.2, 16, 16),
+                    new THREE.MeshStandardMaterial({
+                        color: 0xffffff, emissive: colors[i % colors.length],
+                        emissiveIntensity: 0.5
+                    })
+                );
+                target.add(inner);
+
+                randomizeTargetPosition(target);
+                target.userData.originalScale = 1;
+                target.userData.hit = false;
+                target.userData.respawnTimer = 0;
+                target.castShadow = true;
+                scene.add(target);
+                targets.push(target);
+            }
+        }
+
+        function randomizeTargetPosition(target) {
+            target.position.set(
+                (Math.random() - 0.5) * 12,
+                1 + Math.random() * 3,
+                -3 - Math.random() * 7
+            );
+            // Face player
+            target.lookAt(0, target.position.y, 0);
+        }
+
+        // === Shoot bullet (from webxr-first-steps bullet pattern) ===
+        function shoot(controller) {
+            const bullet = new THREE.Mesh(bulletGeo, bulletMat);
+
+            // Get world position/quaternion of controller ray
+            controller.raySpace.getWorldPosition(bullet.position);
+            controller.raySpace.getWorldQuaternion(bullet.quaternion);
+
+            // Velocity in forward direction
+            const velocity = forwardVec.clone().applyQuaternion(bullet.quaternion).multiplyScalar(bulletSpeed);
+            bullet.userData = { velocity, ttl: bulletTTL };
+
+            // Trail effect
+            const trail = new THREE.Mesh(trailGeo, trailMat);
+            trail.rotation.x = Math.PI / 2;
+            trail.position.z = 0.15;
+            bullet.add(trail);
+
+            scene.add(bullet);
+            bullets.set(bullet.uuid, bullet);
+
+            // Haptic feedback (from webxr-first-steps)
+            try {
+                const gp = controller.gamepad;
+                if (gp && gp.hapticActuators && gp.hapticActuators[0]) {
+                    gp.hapticActuators[0].pulse(0.6, 80);
+                }
+            } catch(e) {}
+        }
+
+        // === Update score display ===
+        function updateScore() {
+            scoreDisplay.textContent = Math.max(0, Math.min(9999, score)).toString().padStart(4, '0');
+        }
+
+        // === Check XR ===
+        async function checkXR() {
+            if (!navigator.xr) { statusEl.textContent = 'WebXR不可用'; return; }
+            const vrOk = await navigator.xr.isSessionSupported('immersive-vr');
+            if (vrOk) {
+                enterBtn.disabled = false;
+                enterBtn.textContent = '进入VR射击场';
+                statusEl.textContent = 'WebXR就绪 ✓';
+            } else {
+                statusEl.textContent = 'VR不可用';
+            }
+        }
+
+        // === Enter VR ===
+        enterBtn.addEventListener('click', async () => {
+            if (xrSession) return;
+            try {
+                xrSession = await navigator.xr.requestSession('immersive-vr', {
+                    optionalFeatures: ['local-floor', 'hand-tracking']
+                });
+                overlay.style.display = 'none';
+                hudEl.style.display = 'block';
+                score = 0;
+                updateScore();
+
+                renderer.xr.setReferenceSpaceType('local-floor');
+                await renderer.xr.setSession(xrSession);
+
+                xrSession.addEventListener('end', () => {
+                    xrSession = null;
+                    overlay.style.display = 'flex';
+                    hudEl.style.display = 'none';
+                    // Clean up bullets
+                    bullets.forEach(b => scene.remove(b));
+                    bullets.clear();
+                    // Reset targets
+                    targets.forEach(t => {
+                        t.visible = true;
+                        t.scale.setScalar(1);
+                        t.userData.hit = false;
+                        randomizeTargetPosition(t);
+                    });
+                });
+            } catch(e) {
+                statusEl.textContent = '启动失败: ' + e.message;
+            }
+        });
+
+        // === Track trigger state for click detection ===
+        const prevTrigger = { left: false, right: false };
+
+        // === Render loop ===
+        function render(time, frame) {
+            const delta = Math.min(clock.getDelta(), 0.05);
+
+            // Check controller trigger (from webxr-first-steps gamepad pattern)
+            ['left', 'right'].forEach(hand => {
+                const ctrl = controllers[hand];
+                if (!ctrl || !ctrl.gamepad) return;
+                const gp = ctrl.gamepad;
+                const triggerPressed = gp.buttons[0] && gp.buttons[0].pressed;
+                if (triggerPressed && !prevTrigger[hand]) {
+                    shoot(ctrl);
+                }
+                prevTrigger[hand] = triggerPressed;
+            });
+
+            // Update bullets
+            bullets.forEach((bullet, uuid) => {
+                bullet.userData.ttl -= delta;
+                if (bullet.userData.ttl <= 0) {
+                    scene.remove(bullet);
+                    bullets.delete(uuid);
+                    return;
+                }
+                tmpVec.copy(bullet.userData.velocity).multiplyScalar(delta);
+                bullet.position.add(tmpVec);
+
+                // Collision detection with targets (from webxr-first-steps)
+                for (const target of targets) {
+                    if (target.userData.hit) continue;
+                    const dist = target.position.distanceTo(bullet.position);
+                    if (dist < 0.7) {
+                        // Hit!
+                        scene.remove(bullet);
+                        bullets.delete(uuid);
+                        target.userData.hit = true;
+                        target.userData.respawnTimer = 1.5;
+
+                        // Shrink animation
+                        target.scale.setScalar(0.01);
+                        target.visible = false;
+
+                        score += 10;
+                        updateScore();
+
+                        // Hit particle effect
+                        spawnHitEffect(target.position.clone(), target.material.color);
+                        break;
+                    }
+                }
+            });
+
+            // Respawn targets
+            targets.forEach(target => {
+                if (target.userData.hit) {
+                    target.userData.respawnTimer -= delta;
+                    if (target.userData.respawnTimer <= 0) {
+                        target.userData.hit = false;
+                        target.visible = true;
+                        target.scale.setScalar(1);
+                        randomizeTargetPosition(target);
+                    }
+                } else {
+                    // Gentle floating animation
+                    target.position.y += Math.sin(time * 0.002 + targets.indexOf(target)) * 0.002;
+                    target.rotation.z = Math.sin(time * 0.001 + targets.indexOf(target) * 0.5) * 0.1;
+                }
+            });
+
+            // Update hit effects
+            updateHitEffects(delta);
+
+            renderer.render(scene, camera);
+        }
+
+        // === Hit particle effect ===
+        const hitEffects = [];
+        const hitMatCache = {};
+        function spawnHitEffect(pos, color) {
+            const count = 12;
+            const key = typeof color === 'number' ? color : color.toString();
+            if (!hitMatCache[key]) hitMatCache[key] = new THREE.MeshBasicMaterial({ color });
+            const mat = hitMatCache[key];
+            for (let i = 0; i < count; i++) {
+                const p = new THREE.Mesh(hitParticleGeo, mat);
+                p.position.copy(pos);
+                p.userData.velocity = new THREE.Vector3(
+                    (Math.random() - 0.5) * 4,
+                    Math.random() * 3,
+                    (Math.random() - 0.5) * 4
+                );
+                p.userData.ttl = 0.8;
+                scene.add(p);
+                hitEffects.push(p);
+            }
+        }
+
+        function updateHitEffects(delta) {
+            for (let i = hitEffects.length - 1; i >= 0; i--) {
+                const p = hitEffects[i];
+                p.userData.ttl -= delta;
+                if (p.userData.ttl <= 0) {
+                    scene.remove(p);
+                    hitEffects.splice(i, 1);
+                    continue;
+                }
+                p.userData.velocity.y -= 9.8 * delta; // gravity
+                tmpVec.copy(p.userData.velocity).multiplyScalar(delta);
+                p.position.add(tmpVec);
+                p.scale.setScalar(p.userData.ttl / 0.8);
+            }
+        }
+
+        // Inline preview for non-VR
+        function inlinePreview() {
+            if (xrSession) return;
+            const t = performance.now() * 0.001;
+            camera.position.x = Math.sin(t * 0.15) * 4;
+            camera.position.z = Math.cos(t * 0.15) * 4 + 2;
+            camera.position.y = 2.5;
+            camera.lookAt(0, 1.5, -3);
+            // Animate targets for preview
+            targets.forEach((target, i) => {
+                target.position.y = 1.5 + Math.sin(t + i) * 0.5;
+                target.rotation.y = t * 0.5;
+            });
+        }
+
+        // === Bootstrap ===
+        init();
+        checkXR();
+        const origRender = render;
+        renderer.setAnimationLoop((time, frame) => {
+            if (!frame) inlinePreview();
+            origRender(time || performance.now(), frame);
+        });
+    </script>
+</body>
+</html>

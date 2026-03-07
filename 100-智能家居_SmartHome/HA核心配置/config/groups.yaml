@@ -1,0 +1,160 @@
+battery_status:
+  name: 电池状态  # 电池相关信息
+  entities:
+    - sensor.delta2_1838_battery_temperature  # 电池温度
+    - sensor.delta2_1838_min_cell_temperature  # 最低电池单体温度
+    - sensor.delta2_1838_max_cell_temperature  # 最高电池单体温度
+    - sensor.delta2_1838_battery_volts  # 电池电压
+    - sensor.delta2_1838_min_cell_volts  # 最低电池单体电压
+    - sensor.delta2_1838_max_cell_volts  # 最高电池单体电压
+    - sensor.delta2_1838_cycles  # 电池充放电循环次数
+    - sensor.delta2_1838_slave_battery_level  # 从电池电量
+    - sensor.delta2_1838_slave_design_capacity  # 从电池设计容量
+    - sensor.delta2_1838_slave_full_capacity  # 从电池满电容量
+    - sensor.delta2_1838_slave_remain_capacity  # 从电池剩余容量
+    - sensor.delta2_1838_slave_state_of_health  # 从电池健康状态
+    - sensor.delta2_1838_slave_battery_temperature  # 从电池温度
+    - sensor.delta2_1838_slave_min_cell_temperature  # 从电池最小单体温度
+    - sensor.delta2_1838_slave_max_cell_temperature  # 从电池最大单体温度
+    - sensor.delta2_1838_slave_battery_volts  # 从电池电压
+    - sensor.delta2_1838_slave_min_cell_volts  # 从电池最小单体电压
+    - sensor.delta2_1838_slave_max_cell_volts  # 从电池最大单体电压
+    - sensor.delta2_1838_slave_cycles  # 从电池循环次数
+
+power_io:
+  name: 输入输出功率  # 电源输入输出功率信息
+  entities:
+    - sensor.delta2_1838_usb_2_out_power  # USB 2 端口输出功率
+    - sensor.delta2_1838_usb_qc_1_out_power  # USB QC 1 端口输出功率
+    - sensor.delta2_1838_usb_qc_2_out_power  # USB QC 2 端口输出功率
+    - sensor.delta2_1838_slave_out_power  # 从电池输出功率
+    - sensor.delta2_1838_slave_in_power  # 从电池输入功率
+
+temperature_monitoring:
+  name: 温度监控  # 电池与设备温度监控
+  entities:
+    - sensor.delta2_1838_inv_out_temperature  # 逆变器输出温度
+    - sensor.delta2_1838_battery_temperature  # 电池温度
+    - sensor.delta2_1838_min_cell_temperature  # 最低电池单体温度
+    - sensor.delta2_1838_max_cell_temperature  # 最高电池单体温度
+    - sensor.delta2_1838_slave_battery_temperature  # 从电池温度
+    - sensor.delta2_1838_slave_min_cell_temperature  # 从电池最小单体温度
+    - sensor.delta2_1838_slave_max_cell_temperature  # 从电池最大单体温度
+
+timeout_management:
+  name: 时间管理  # 充电、放电、超时设置
+  entities:
+    - sensor.delta2_1838_charge_remaining_time  # 剩余充电时间
+    - sensor.delta2_1838_discharge_remaining_time  # 剩余放电时间
+
+miscellaneous:
+  name: 设备状态  # 设备状态信息
+  entities:
+    - sensor.delta2_1838_status  # 设备状态
+
+battery_settings:
+  name: 电池设置  # 电池相关设置
+  entities:
+    - select.delta2_1838_dc_12v_charge_current  # 12V DC 充电电流
+    - select.delta2_1838_screen_timeout  # 屏幕超时时间设置
+    - select.delta2_1838_unit_timeout  # 设备超时时间设置
+    - select.delta2_1838_ac_timeout  # AC 超时时间设置
+    - select.delta2_1838_dc_12v_timeout  # 12V DC 超时时间设置
+
+control_switches:
+  name: 功能开关  # 各种功能开关
+  entities:
+    - switch.delta2_1838_beeper  # 蜂鸣器开关
+    - switch.delta2_1838_usb_enabled  # USB 功能启用开关
+    - switch.delta2_1838_ac_always_on  # AC 电源始终开启
+    - switch.delta2_1838_prio_solar_charging  # 优先太阳能充电
+    - switch.delta2_1838_ac_enabled  # 启用 AC 电源
+    - switch.delta2_1838_x_boost_enabled  # 启用 X-Boost 功能
+    - switch.delta2_1838_dc_12v_enabled  # 启用 12V DC 输出
+    - switch.delta2_1838_backup_reserve_enabled  # 启用备用电池
+
+# 电池状态
+# 电池相关信息，包括电池电量、健康状态、剩余容量、设计容量等
+battery_status:
+  name: 电池状态  # 电池相关信息
+  entities:
+    - sensor.delta2_1838_main_battery_level  # 主电池电量
+    - sensor.river_2_max_main_battery_level  # River 2 主电池电量
+    - sensor.river_2_max_state_of_health  # 电池健康状态
+    - sensor.river_2_max_main_remain_capacity  # 主电池剩余容量
+    - sensor.river_2_max_main_design_capacity  # 主电池设计容量
+    - sensor.river_2_max_main_full_capacity  # 主电池满电容量
+    - sensor.river_2_max_charge_remaining_time  # 剩余充电时间
+    - sensor.river_2_max_discharge_remaining_time  # 剩余放电时间
+    - sensor.river_2_max_remaining_time  # 剩余使用时间
+    - sensor.river_2_max_cycles  # 电池循环次数
+
+# 输入输出功率
+# 包含设备的输入与输出功率信息，如 AC 电源、太阳能、DC 输出等
+power_io:
+  name: 输入输出功率  # 电源输入输出功率信息
+  entities:
+    - sensor.river_2_max_ac_in_power  # AC 输入功率
+    - sensor.river_2_max_ac_in_volts  # AC 输入电压
+    - sensor.river_2_max_ac_out_power  # AC 输出功率
+    - sensor.river_2_max_ac_out_volts  # AC 输出电压
+    - sensor.river_2_max_solar_in_power  # 太阳能输入功率
+    - sensor.river_2_max_solar_in_current  # 太阳能输入电流
+    - sensor.river_2_max_solar_in_voltage  # 太阳能输入电压
+    - sensor.river_2_max_dc_out_power  # DC 输出功率
+    - sensor.river_2_max_type_c_in_power  # Type-C 输入功率
+    - sensor.river_2_max_type_c_out_power  # Type-C 输出功率
+    - sensor.river_2_max_usb_out_power  # USB 输出功率
+    - sensor.river_2_max_total_in_power  # 总输入功率
+    - sensor.river_2_max_total_out_power  # 总输出功率
+
+# 温度监控
+# 包含设备和电池的温度监控信息，如电池温度、逆变器温度、单体温度等
+temperature_monitoring:
+  name: 温度监控  # 温度监控信息
+  entities:
+    - sensor.river_2_max_battery_temperature  # 电池温度
+    - sensor.river_2_max_inv_out_temperature  # 逆变器输出温度
+    - sensor.river_2_max_min_cell_temperature  # 最低电池单体温度
+    - sensor.river_2_max_max_cell_temperature  # 最高电池单体温度
+
+# 功能开关
+# 控制设备的开关，如 AC 电源、X-Boost、DC 12V 输出等
+control_switches:
+  name: 功能开关  # 功能开关设置
+  entities:
+    - switch.river_2_max_ac_enabled  # 启用 AC 电源
+    - switch.river_2_max_ac_always_on  # AC 电源始终开启
+    - switch.river_2_max_x_boost_enabled  # 启用 X-Boost 功能
+    - switch.river_2_max_dc_12v_enabled  # 启用 DC 12V 输出
+    - switch.river_2_max_backup_reserve_enabled  # 启用备用电池
+
+# 时间管理
+# 设备超时设置，例如屏幕超时、设备超时等
+timeout_management:
+  name: 时间管理  # 时间管理设置
+  entities:
+    - select.river_2_max_screen_timeout  # 屏幕超时设置
+    - select.river_2_max_unit_timeout  # 设备超时设置
+    - select.river_2_max_ac_timeout  # AC 超时设置
+
+# 电池设置
+# 包含电池充电电流、充电模式等设置
+battery_settings:
+  name: 电池设置  # 电池相关设置
+  entities:
+    - number.river_2_max_max_charge_level  # 最大充电电量设置
+    - number.river_2_max_min_discharge_level  # 最小放电电量设置
+    - select.river_2_max_dc_12v_charge_current  # DC 12V 充电电流设置
+    - select.river_2_max_dc_mode  # DC 模式设置
+    - sensor.river_2_max_battery_charging_state  # 电池充电状态
+
+# 其他状态
+# 包含电池电压、单体电压等设备的其他状态信息
+miscellaneous:
+  name: 其他状态  # 其他设备状态
+  entities:
+    - sensor.river_2_max_battery_volts  # 电池电压
+    - sensor.river_2_max_min_cell_volts  # 最低单体电压
+    - sensor.river_2_max_max_cell_volts  # 最高单体电压
+

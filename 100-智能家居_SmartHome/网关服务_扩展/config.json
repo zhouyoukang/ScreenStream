@@ -1,0 +1,49 @@
+{
+  "gateway": {
+    "host": "0.0.0.0",
+    "port": 8900,
+    "mode": "direct",
+    "_comment_mode": "direct=MiCloud直连(推荐), ha=Home Assistant代理"
+  },
+  "ha": {
+    "enabled": true,
+    "url": "http://192.168.31.141:8123",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI1MjJmNzI0MzAxYmY0ZTYyYjI1YWRhZGM3NjE3YjkyMiIsImlhdCI6MTc3MjA0MDI4OSwiZXhwIjoyMDg3NDAwMjg5fQ.0JgzVRoh4xykRhItxEoSvpYXT8RQa1uQn8ddeprtkes",
+    "_comment": "设为 true 并填入 token 可启用 HA 高级功能(历史/模板/场景)"
+  },
+  "micloud": {
+    "enabled": true,
+    "user_id": "",
+    "service_token": "",
+    "ssecurity": "",
+    "username": "2919501953",
+    "password": "",
+    "server": "cn",
+    "ha_config_path": "",
+    "_comment": "三级凭据链: L1填token直用 → L2自缓存 → L3填ha_config_path回退HA"
+  },
+  "ewelink": {
+    "enabled": true,
+    "app_id": "",
+    "app_secret": "",
+    "email": "",
+    "password": "",
+    "region": "cn",
+    "country_code": "+86",
+    "_comment": "在 https://dev.ewelink.cc 注册开发者获取 app_id/app_secret, 然后填入 eWeLink 账号"
+  },
+  "tuya": {
+    "enabled": false,
+    "client_id": "",
+    "secret": "",
+    "region": "cn",
+    "_comment": "在 https://iot.tuya.com 注册获取 client_id/secret"
+  },
+  "wechat": {
+    "enabled": true,
+    "token": "smarthome2026",
+    "appid": "wx5b3f8f863e6bb71a",
+    "appsecret": "d64dfb4c49ce51971958b5c0d18bb082",
+    "_comment": "测试号已配置，auto_menu启动时自动同步菜单"
+  }
+}

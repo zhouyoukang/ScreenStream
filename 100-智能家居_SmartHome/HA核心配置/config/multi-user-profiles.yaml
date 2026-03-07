@@ -1,0 +1,192 @@
+# Multi-User Profile System - Cycle #4 Round #7
+
+# User profiles
+user_profiles:
+  
+  admin:
+    name: "管理员"
+    role: administrator
+    permissions:
+      - all
+    dashboard: mobile-dashboard-optimized
+    preferences:
+      language: zh-cn
+      theme: mobile-dark-optimized
+      notifications: all
+      voice_assistant: enabled
+  
+  family_member:
+    name: "家庭成员"
+    role: user
+    permissions:
+      - view_dashboard
+      - control_lights
+      - control_climate
+      - activate_scenes
+      - view_cameras
+    dashboard: mobile-dashboard-simplified
+    preferences:
+      language: zh-cn
+      theme: default
+      notifications: important_only
+      voice_assistant: enabled
+  
+  guest:
+    name: "访客"
+    role: guest
+    permissions:
+      - view_dashboard_limited
+      - control_lights_common_area
+    dashboard: guest-dashboard
+    preferences:
+      language: auto
+      theme: default
+      notifications: none
+      voice_assistant: disabled
+      temporary_access: true
+      expires_after: 86400  # 24 hours
+
+# Profile switching
+profile_switcher:
+  enabled: true
+  method: pin_code  # or biometric, nfc
+  
+  # PIN codes
+  pin_codes:
+    admin: "1234"
+    family_member: "5678"
+    guest: "0000"
+  
+  # Auto-lock
+  auto_lock:
+    enabled: true
+    timeout: 300  # 5 minutes
+    on_idle: true
+
+# Personalization
+personalization:
+  
+  # Dashboard customization per user
+  dashboard_config:
+    admin:
+      views:
+        - home
+        - devices
+        - ai
+        - monitoring
+        - performance
+        - settings
+      widgets:
+        - notifications
+        - shortcuts
+        - quick_actions
+    
+    family_member:
+      views:
+        - home
+        - devices
+        - ai
+        - monitoring
+      widgets:
+        - shortcuts
+        - scenes
+    
+    guest:
+      views:
+        - home
+      widgets:
+        - basic_controls
+  
+  # Scene favorites per user
+  favorite_scenes:
+    admin:
+      - home_mode
+      - away_mode
+      - work_mode
+      - sleep_mode
+    
+    family_member:
+      - home_mode
+      - entertainment_mode
+      - sleep_mode
+    
+    guest:
+      - guest_mode
+  
+  # Notification preferences
+  notifications:
+    admin:
+      - critical
+      - warnings
+      - info
+      - automation_results
+      - energy_alerts
+    
+    family_member:
+      - critical
+      - warnings
+      - automation_results
+    
+    guest:
+      - none
+
+# User activity tracking
+activity_tracking:
+  enabled: true
+  log_actions: true
+  
+  # Tracked events
+  events:
+    - profile_login
+    - profile_logout
+    - scene_activation
+    - device_control
+    - settings_change
+  
+  # Privacy
+  anonymize: false
+  retention_days: 30
+
+# Shared resources
+shared_resources:
+  
+  # Shared devices
+  devices:
+    common_area_lights:
+      - light.living_room
+      - light.hallway
+    
+    personal_devices:
+      admin:
+        - light.office
+      family_member:
+        - light.bedroom
+  
+  # Shared scenes
+  scenes:
+    - home_mode
+    - away_mode
+    - guest_mode
+
+# Profile management API
+api_endpoints:
+  - path: /api/profiles/list
+    method: GET
+    description: "List all profiles"
+  
+  - path: /api/profiles/switch
+    method: POST
+    data:
+      profile: string
+      pin: string
+    description: "Switch to different profile"
+  
+  - path: /api/profiles/create
+    method: POST
+    permissions: [admin]
+    description: "Create new profile"
+  
+  - path: /api/profiles/delete
+    method: DELETE
+    permissions: [admin]
+    description: "Delete profile"

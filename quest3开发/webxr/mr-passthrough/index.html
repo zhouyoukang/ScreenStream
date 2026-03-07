@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 3 MR Passthrough</title>
+    <style>
+        * { margin: 0; padding: 0; }
+        body { background: #000; overflow: hidden; font-family: system-ui; }
+        #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, rgba(13,27,42,0.8) 0%, rgba(27,38,59,0.7) 50%, rgba(65,90,119,0.6) 100%);
+            color: white; z-index: 10;
+        }
+        #overlay h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        #overlay .subtitle { font-size: 1rem; opacity: 0.6; margin-bottom: 2rem; }
+        #enter-ar {
+            padding: 16px 48px; font-size: 1.2rem; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+            color: white; cursor: pointer; transition: transform 0.2s;
+        }
+        #enter-ar:hover { transform: scale(1.05); }
+        #enter-ar:disabled { opacity: 0.5; cursor: not-allowed; }
+        #status { margin-top: 1rem; font-size: 0.9rem; opacity: 0.6; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <h1>Quest 3 MR Passthrough</h1>
+        <p class="subtitle">混合现实透视 — 虚拟物体叠加真实世界</p>
+        <button id="enter-ar" disabled>检测MR中...</button>
+        <div id="status"></div>
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script type="module">
+        const canvas = document.getElementById('canvas');
+        const gl = canvas.getContext('webgl2', { xrCompatible: true, alpha: true });
+        const overlay = document.getElementById('overlay');
+        const enterBtn = document.getElementById('enter-ar');
+        const statusEl = document.getElementById('status');
+
+        if (!gl) { statusEl.textContent = 'WebGL2不可用'; throw new Error('No WebGL2'); }
+
+        // === Shaders (transparent-ready) ===
+        const vsSource = `#version 300 es
+            in vec4 aPosition;
+            in vec3 aNormal;
+            uniform mat4 uMVP;
+            uniform mat4 uModel;
+            out vec3 vNormal;
+            out vec3 vWorldPos;
+            void main() {
+                gl_Position = uMVP * aPosition;
+                vNormal = mat3(uModel) * aNormal;
+                vWorldPos = (uModel * aPosition).xyz;
+            }
+        `;
+
+        const fsSource = `#version 300 es
+            precision highp float;
+            in vec3 vNormal;
+            in vec3 vWorldPos;
+            uniform vec3 uColor;
+            uniform float uAlpha;
+            uniform float uTime;
+            out vec4 fragColor;
+            void main() {
+                vec3 lightDir = normalize(vec3(1.0, 2.0, 1.5));
+                float diff = max(dot(normalize(vNormal), lightDir), 0.0);
+                vec3 col = uColor * (0.4 + diff * 0.6);
+                float glow = 0.5 + 0.5 * sin(uTime * 3.0 + vWorldPos.y * 5.0);
+                col += uColor * glow * 0.15;
+                fragColor = vec4(col, uAlpha);
+            }
+        `;
+
+        function compileShader(type, source) {
+            const s = gl.createShader(type);
+            gl.shaderSource(s, source);
+            gl.compileShader(s);
+            if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(s));
+                return null;
+            }
+            return s;
+        }
+
+        const program = gl.createProgram();
+        gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vsSource));
+        gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fsSource));
+        gl.linkProgram(program);
+
+        const aPosition = gl.getAttribLocation(program, 'aPosition');
+        const aNormal = gl.getAttribLocation(program, 'aNormal');
+        const uMVP = gl.getUniformLocation(program, 'uMVP');
+        const uModel = gl.getUniformLocation(program, 'uModel');
+        const uColor = gl.getUniformLocation(program, 'uColor');
+        const uAlpha = gl.getUniformLocation(program, 'uAlpha');
+        const uTime = gl.getUniformLocation(program, 'uTime');
+
+        // === Sphere Geometry (for floating orbs) ===
+        function createSphere(radius, segments) {
+            const verts = [], indices = [];
+            for (let lat = 0; lat <= segments; lat++) {
+                const theta = lat * Math.PI / segments;
+                const sinT = Math.sin(theta), cosT = Math.cos(theta);
+                for (let lon = 0; lon <= segments; lon++) {
+                    const phi = lon * 2 * Math.PI / segments;
+                    const x = sinT * Math.cos(phi), y = cosT, z = sinT * Math.sin(phi);
+                    verts.push(x * radius, y * radius, z * radius, x, y, z);
+                }
+            }
+            for (let lat = 0; lat < segments; lat++) {
+                for (let lon = 0; lon < segments; lon++) {
+                    const a = lat * (segments + 1) + lon;
+                    const b = a + segments + 1;
+                    indices.push(a, b, a + 1, b, b + 1, a + 1);
+                }
+            }
+            return { vertices: new Float32Array(verts), indices: new Uint16Array(indices) };
+        }
+
+        const sphere = createSphere(1.0, 16);
+        const vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
+        const vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, sphere.vertices, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(aPosition);
+        gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 24, 0);
+        gl.enableVertexAttribArray(aNormal);
+        gl.vertexAttribPointer(aNormal, 3, gl.FLOAT, false, 24, 12);
+        const ebo = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, sphere.indices, gl.STATIC_DRAW);
+        gl.bindVertexArray(null);
+        const indexCount = sphere.indices.length;
+
+        // === Matrix helpers ===
+        function mat4Multiply(a, b) {
+            const o = new Float32Array(16);
+            for (let i = 0; i < 4; i++)
+                for (let j = 0; j < 4; j++) {
+                    o[i*4+j] = 0;
+                    for (let k = 0; k < 4; k++) o[i*4+j] += a[i*4+k] * b[k*4+j];
+                }
+            return o;
+        }
+        function mat4Translate(x, y, z) {
+            return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1]);
+        }
+        function mat4Scale(s) {
+            return new Float32Array([s,0,0,0, 0,s,0,0, 0,0,s,0, 0,0,0,1]);
+        }
+
+        // === Floating orbs (appear in real world via passthrough) ===
+        const orbs = [];
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const r = 1.5 + Math.random() * 0.5;
+            orbs.push({
+                basePos: [Math.cos(angle) * r, 0.8 + Math.random() * 1.2, Math.sin(angle) * r - 2],
+                color: [Math.random() * 0.4 + 0.6, Math.random() * 0.4 + 0.6, Math.random() * 0.4 + 0.6],
+                scale: 0.15 + Math.random() * 0.2,
+                speed: 0.5 + Math.random() * 1.5,
+                phase: Math.random() * Math.PI * 2,
+                alpha: 0.7 + Math.random() * 0.3
+            });
+        }
+
+        function drawOrb(vpMatrix, orb, time) {
+            const bob = Math.sin(time * orb.speed + orb.phase) * 0.15;
+            const x = orb.basePos[0] + Math.sin(time * 0.3 + orb.phase) * 0.2;
+            const y = orb.basePos[1] + bob;
+            const z = orb.basePos[2] + Math.cos(time * 0.3 + orb.phase) * 0.2;
+            const model = mat4Multiply(mat4Translate(x, y, z), mat4Scale(orb.scale));
+            const mvp = mat4Multiply(vpMatrix, model);
+            gl.uniformMatrix4fv(uMVP, false, mvp);
+            gl.uniformMatrix4fv(uModel, false, model);
+            gl.uniform3fv(uColor, orb.color);
+            gl.uniform1f(uAlpha, orb.alpha);
+            gl.drawElements(gl.TRIANGLES, indexCount, gl.UNSIGNED_SHORT, 0);
+        }
+
+        // === WebXR (immersive-ar for passthrough) ===
+        let xrSession = null;
+        let xrRefSpace = null;
+        let xrGLLayer = null;
+
+        async function checkXR() {
+            if (!navigator.xr) {
+                enterBtn.textContent = 'WebXR不可用';
+                statusEl.textContent = '需要HTTPS + Quest浏览器';
+                return;
+            }
+            const arSupported = await navigator.xr.isSessionSupported('immersive-ar');
+            if (arSupported) {
+                enterBtn.textContent = '进入MR透视模式';
+                enterBtn.disabled = false;
+                statusEl.textContent = 'Passthrough MR就绪 ✓';
+            } else {
+                const vrSupported = await navigator.xr.isSessionSupported('immersive-vr');
+                if (vrSupported) {
+                    enterBtn.textContent = '进入VR模式(无透视)';
+                    enterBtn.disabled = false;
+                    statusEl.textContent = '设备不支持AR透视，将以VR模式运行';
+                } else {
+                    enterBtn.textContent = '设备不支持XR';
+                    statusEl.textContent = '请在Quest浏览器中访问';
+                }
+            }
+        }
+
+        enterBtn.addEventListener('click', async () => {
+            if (xrSession) return;
+            const arOk = await navigator.xr.isSessionSupported('immersive-ar');
+            const mode = arOk ? 'immersive-ar' : 'immersive-vr';
+            try {
+                xrSession = await navigator.xr.requestSession(mode, {
+                    optionalFeatures: ['local-floor', 'hand-tracking']
+                });
+                overlay.style.display = 'none';
+                xrGLLayer = new XRWebGLLayer(xrSession, gl, { alpha: true });
+                xrSession.updateRenderState({ baseLayer: xrGLLayer });
+                try {
+                    xrRefSpace = await xrSession.requestReferenceSpace('local-floor');
+                } catch {
+                    xrRefSpace = await xrSession.requestReferenceSpace('local');
+                }
+                xrSession.requestAnimationFrame(xrLoop);
+                xrSession.addEventListener('end', () => {
+                    xrSession = null;
+                    overlay.style.display = 'flex';
+                });
+            } catch (e) {
+                statusEl.textContent = `启动失败: ${e.message}`;
+            }
+        });
+
+        const t0 = performance.now() / 1000;
+
+        function xrLoop(time, frame) {
+            frame.session.requestAnimationFrame(xrLoop);
+            const pose = frame.getViewerPose(xrRefSpace);
+            if (!pose) return;
+            const t = performance.now() / 1000 - t0;
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, xrGLLayer.framebuffer);
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            // Transparent clear for passthrough
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.useProgram(program);
+            gl.uniform1f(uTime, t);
+            gl.bindVertexArray(vao);
+
+            for (const view of pose.views) {
+                const vp = xrGLLayer.getViewport(view);
+                gl.viewport(vp.x, vp.y, vp.width, vp.height);
+                const vpMat = mat4Multiply(view.projectionMatrix, view.transform.inverse.matrix);
+                for (const orb of orbs) drawOrb(vpMat, orb, t);
+
+                // Hand joint orbs
+                for (const src of frame.session.inputSources) {
+                    if (src.hand) {
+                        for (const joint of src.hand.values()) {
+                            const jp = frame.getJointPose(joint, xrRefSpace);
+                            if (jp) {
+                                const p = jp.transform.position;
+                                drawOrb(vpMat, {
+                                    basePos: [p.x, p.y, p.z],
+                                    color: src.handedness === 'left' ? [0.2, 1.0, 0.6] : [1.0, 0.6, 0.2],
+                                    scale: (jp.radius || 0.006) * 1.5,
+                                    speed: 0, phase: 0, alpha: 0.9
+                                }, 0);
+                            }
+                        }
+                    }
+                }
+            }
+            gl.bindVertexArray(null);
+            gl.disable(gl.BLEND);
+        }
+
+        // === Inline Fallback (non-XR) ===
+        function mat4Perspective(fov, aspect, near, far) {
+            const f = 1.0 / Math.tan(fov / 2), nf = 1 / (near - far);
+            return new Float32Array([f/aspect,0,0,0, 0,f,0,0, 0,0,(far+near)*nf,-1, 0,0,2*far*near*nf,0]);
+        }
+        function mat4LookAt(eye, center, up) {
+            const zx=eye[0]-center[0],zy=eye[1]-center[1],zz=eye[2]-center[2];
+            let l=Math.hypot(zx,zy,zz); const fz=[zx/l,zy/l,zz/l];
+            const xx=up[1]*fz[2]-up[2]*fz[1],xy=up[2]*fz[0]-up[0]*fz[2],xz=up[0]*fz[1]-up[1]*fz[0];
+            l=Math.hypot(xx,xy,xz); const fx=[xx/l,xy/l,xz/l];
+            const fy=[fz[1]*fx[2]-fz[2]*fx[1],fz[2]*fx[0]-fz[0]*fx[2],fz[0]*fx[1]-fz[1]*fx[0]];
+            return new Float32Array([fx[0],fy[0],fz[0],0,fx[1],fy[1],fz[1],0,fx[2],fy[2],fz[2],0,
+                -(fx[0]*eye[0]+fx[1]*eye[1]+fx[2]*eye[2]),-(fy[0]*eye[0]+fy[1]*eye[1]+fy[2]*eye[2]),
+                -(fz[0]*eye[0]+fz[1]*eye[1]+fz[2]*eye[2]),1]);
+        }
+        function inlineRender() {
+            if (xrSession) return;
+            requestAnimationFrame(inlineRender);
+            const w = window.innerWidth, h = window.innerHeight;
+            if (canvas.width !== w || canvas.height !== h) {
+                canvas.width = w; canvas.height = h;
+            }
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.enable(gl.DEPTH_TEST); gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            gl.clearColor(0.05, 0.07, 0.12, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.useProgram(program);
+            const t = performance.now() / 1000 - t0;
+            gl.uniform1f(uTime, t);
+            const proj = mat4Perspective(Math.PI/3, canvas.width/canvas.height, 0.1, 100);
+            const view = mat4LookAt([0,1.5,1],[0,1,-2],[0,1,0]);
+            const vpMat = mat4Multiply(proj, view);
+            gl.bindVertexArray(vao);
+            for (const orb of orbs) drawOrb(vpMat, orb, t);
+            gl.bindVertexArray(null);
+            gl.disable(gl.BLEND);
+        }
+        checkXR();
+        inlineRender();
+    </script>
+</body>
+</html>

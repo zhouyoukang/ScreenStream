@@ -1,0 +1,138 @@
+{
+  "timestamp": "2026-03-07T03:54:13.149670",
+  "env": {
+    "timestamp": "2026-03-07T03:54:13.149670",
+    "python": "3.12.7",
+    "platform": "win32",
+    "windsurf_js_exists": true,
+    "codeium_dir_exists": true,
+    "cfw_running": true,
+    "language_servers": [
+      {
+        "pid": 28908,
+        "api_server": "https://server.self-serve.windsurf.com",
+        "inference_api": "https://inference.codeium.com",
+        "ext_port": "49378",
+        "csrf_token": "ef8d6fd6-8ce4-42fd-8e45-3d160ffa0e00",
+        "workspace_id": "file_d_3A_E9_81_93_E9_81_93_E7_94_9F_E4_B8_80_E4_B8_80_E7_94_9F_E4_BA_8C",
+        "version": "1.9566.11"
+      }
+    ],
+    "proxy_available": true,
+    "api_keys": {
+      "SECRET_QUESTION_ANSWER": "***",
+      "FRP_TOKEN": "NKLQ...zbh0",
+      "HA_TOKEN": "eyJh...tkes",
+      "WECHAT_APPSECRET": "d64d...b082",
+      "WECHAT_TOKEN": "smar...2026",
+      "GITHUB_PERSONAL_ACCESS_TOKEN": "gith...OCAo",
+      "HF_TOKEN": "hf_n...jcig",
+      "SAKURACAT_SUB_TOKEN": "27cb...77da",
+      "REMOTE_AGENT_TOKEN": "afa2...27ef"
+    }
+  },
+  "cfw": {
+    "available": true,
+    "tests": [
+      {
+        "name": "tcp_probe",
+        "status": "pass"
+      },
+      {
+        "name": "https_get",
+        "status": "pass",
+        "detail": "200 OK"
+      },
+      {
+        "name": "grpc_heartbeat",
+        "status": "pass",
+        "detail": "200 ct=application/proto"
+      },
+      {
+        "name": "grpc_GetUser",
+        "status": "pass",
+        "detail": "status=200 body=0B grpc_status="
+      },
+      {
+        "name": "grpc_GetApiKeySummary",
+        "status": "pass",
+        "detail": "status=200 body=0B grpc_status="
+      },
+      {
+        "name": "grpc_GetChatMessage",
+        "status": "pass",
+        "detail": "status=200 body=0B grpc_status="
+      },
+      {
+        "name": "grpc_GetProcesses",
+        "status": "pass",
+        "detail": "status=200 body=0B grpc_status="
+      }
+    ]
+  },
+  "providers": [
+    {
+      "provider": "HuggingFace",
+      "model": "meta-llama/llama-3.1-8b-instruct",
+      "status": "success",
+      "latency_ms": 4099,
+      "response_preview": "```python\ndef fibonacci(n, memo={}):\n    \"\"\"\n    Calculate the nth Fibonacci number recursively with memoization.\n\n    Args:\n    n (int): The position of the Fibonacci number to calculate.\n    memo (d",
+      "tokens": 196,
+      "error": null
+    }
+  ],
+  "language_server": {
+    "servers": [
+      {
+        "pid": 28908,
+        "api_server": "https://server.self-serve.windsurf.com",
+        "inference_api": "https://inference.codeium.com",
+        "ext_port": "49378",
+        "csrf_token": "ef8d6fd6-8ce4-42fd-8e45-3d160ffa0e00",
+        "workspace_id": "file_d_3A_E9_81_93_E9_81_93_E7_94_9F_E4_B8_80_E4_B8_80_E7_94_9F_E4_BA_8C",
+        "version": "1.9566.11"
+      }
+    ],
+    "ports": [
+      61805,
+      61801,
+      57845,
+      57421,
+      49911,
+      49390,
+      49381
+    ],
+    "grpc_tests": [
+      {
+        "port": 61805,
+        "protocol": "connect",
+        "status": 502,
+        "body_len": 0
+      },
+      {
+        "port": 61801,
+        "protocol": "connect",
+        "status": 404,
+        "body_len": 22
+      },
+      {
+        "port": 57845,
+        "protocol": "connect",
+        "status": 404,
+        "body_len": 9
+      },
+      {
+        "port": 57421,
+        "protocol": "connect",
+        "status": 404,
+        "body_len": 66
+      },
+      {
+        "port": 49911,
+        "protocol": "connect",
+        "status": 404,
+        "body_len": 377
+      }
+    ]
+  }
+}

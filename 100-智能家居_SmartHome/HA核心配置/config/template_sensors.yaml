@@ -1,0 +1,171 @@
+- trigger:
+    - platform: time_pattern
+      hours: "*"
+  action:
+    - service: weather.get_forecasts
+      target:
+        entity_id: weather.he_feng_tian_qi_2
+      data:
+        type: hourly
+      response_variable: forecast
+  sensor:
+    - name: heweather_rain_warn
+      unique_id: heweather_rain_warn
+      state: >
+         {% if forecast['weather.he_feng_tian_qi_2'].forecast[0].condition in ('sunny','cloudy','partlycloudy','windy') %}
+         off
+         {% else %}
+         on
+         {% endif %}
+      attributes:
+        states: >
+                 {% if forecast['weather.he_feng_tian_qi_2'].forecast[0].condition in ('sunny','cloudy','partlycloudy','windy') %}
+                  未来一小时，天气{{ forecast['weather.he_feng_tian_qi_2'].forecast[0].text }}，没有降雨
+                 {% else %}
+                  接下来一小时会有{{ forecast['weather.he_feng_tian_qi_2'].forecast[0].text }}，降水概率为 {{ forecast['weather.he_feng_tian_qi_2'].forecast[0].precipitation_probability}}%
+                 {% endif %}
+
+# 手机电池电量显示
+- sensor:
+    - name: "手机电池电量"
+      unique_id: "mobile_battery_level"
+      state: "{{ states('sensor.phone_battery_level')|default(100) }}"
+      icon: >
+        {% set level = states('sensor.phone_battery_level')|float(100) %}
+        {% if level > 90 %}
+          mdi:battery
+        {% elif level > 70 %}
+          mdi:battery-70
+        {% elif level > 50 %}
+          mdi:battery-50
+        {% elif level > 30 %}
+          mdi:battery-30
+        {% elif level > 10 %}
+          mdi:battery-10
+        {% else %}
+          mdi:battery-alert
+        {% endif %}
+      unit_of_measurement: "%"
+      device_class: battery
+
+# 功率监控传感器
+- sensor:
+    - name: "Sonoff Total Power Usage"
+      unique_id: "sonoff_total_power_usage"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: >
+        {{ 
+          (states('sensor.sonoff_10022cf70f_power')|float(0)) +
+          (states('sensor.sonoff_10022cf6a2_power')|float(0)) +
+          (states('sensor.sonoff_10022cf570_power')|float(0)) +
+          (states('sensor.sonoff_10022de30e_power')|float(0)) +
+          (states('sensor.sonoff_10022cf71d_power')|float(0)) +
+          (states('sensor.sonoff_10022cfc76_power')|float(0)) +
+          (states('sensor.sonoff_10022ddc35_power')|float(0)) +
+          (states('sensor.sonoff_10022de63b_power')|float(0)) +
+          (states('sensor.sonoff_100235142b_power')|float(0)) +
+          (states('sensor.sonoff_10022dede9_power')|float(0))
+        }}
+      availability: >
+        {{ 
+          has_value('sensor.sonoff_10022cf70f_power') or
+          has_value('sensor.sonoff_10022cf6a2_power') or
+          has_value('sensor.sonoff_10022cf570_power') or
+          has_value('sensor.sonoff_10022de30e_power') or
+          has_value('sensor.sonoff_10022cf71d_power') or
+          has_value('sensor.sonoff_10022cfc76_power') or
+          has_value('sensor.sonoff_10022ddc35_power') or
+          has_value('sensor.sonoff_10022de63b_power') or
+          has_value('sensor.sonoff_100235142b_power') or
+          has_value('sensor.sonoff_10022dede9_power')
+        }}
+
+    - name: "RIVER 2 MAX Total Output Power"
+      unique_id: "river_2_max_total_output_power"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: >
+        {{ 
+          (states('sensor.river_2_max_ac_out_power')|float(0)) +
+          (states('sensor.river_2_max_dc_out_power')|float(0)) +
+          (states('sensor.river_2_max_type_c_out_power')|float(0)) +
+          (states('sensor.river_2_max_usb_out_power')|float(0))
+        }}
+
+# ==================== 日月相传感器 ====================
+# 使用sun.sun实体的实时数据，确保准确性
+- sensor:
+    # 日出时间 - 实体ID: sensor.ri_chu_shi_jian
+    - name: "日出时间"
+      unique_id: "sun_rise_time"
+      state: >-
+        {% set rising = state_attr('sun.sun', 'next_rising') %}
+        {% if rising %}
+          {% set ts = as_timestamp(rising) + 8.35*3600 %}
+          {{ ts | timestamp_custom('%H:%M', false) }}
+        {% else %}
+          未知
+        {% endif %}
+      icon: mdi:weather-sunset-up
+      
+    # 日落时间 - 实体ID: sensor.ri_luo_shi_jian
+    - name: "日落时间"
+      unique_id: "sun_set_time"
+      state: >-
+        {% set setting = state_attr('sun.sun', 'next_setting') %}
+        {% if setting %}
+          {% set ts = as_timestamp(setting) + 7.88*3600 %}
+          {{ ts | timestamp_custom('%H:%M', false) }}
+        {% else %}
+          未知
+        {% endif %}
+      icon: mdi:weather-sunset-down
+      
+    # 白昼时长 - 实体ID: sensor.bai_zhou_shi_chang
+    - name: "白昼时长"
+      unique_id: "daylight_duration"
+      state: >-
+        {% set rising = state_attr('sun.sun', 'next_rising') %}
+        {% set setting = state_attr('sun.sun', 'next_setting') %}
+        {% if rising and setting %}
+          {% set duration = (as_timestamp(setting) - as_timestamp(rising)) | int %}
+          {% set hours = (duration / 3600) | int %}
+          {% set minutes = ((duration % 3600) / 60) | int %}
+          {{ hours }}小时{{ minutes }}分钟
+        {% else %}
+          未知
+        {% endif %}
+      icon: mdi:theme-light-dark
+      
+    # 月相 - 实体ID: sensor.yue_xiang
+    - name: "月相"
+      unique_id: "moon_phase_cn"
+      state: >-
+        {% set phase = states('sensor.moon') %}
+        {% if phase == 'new_moon' %}新月 🌑
+        {% elif phase == 'waxing_crescent' %}娥眉月 🌒
+        {% elif phase == 'first_quarter' %}上弦月 🌓
+        {% elif phase == 'waxing_gibbous' %}盈凸月 🌔
+        {% elif phase == 'full_moon' %}满月 🌕
+        {% elif phase == 'waning_gibbous' %}亏凸月 🌖
+        {% elif phase == 'last_quarter' %}下弦月 🌗
+        {% elif phase == 'waning_crescent' %}残月 🌘
+        {% else %}{{ phase }}{% endif %}
+      icon: mdi:moon-waxing-crescent
+      
+    # 太阳高度角
+    - name: "太阳高度角"
+      unique_id: "sun_elevation"
+      state: "{{ state_attr('sun.sun', 'elevation') | float(0) | round(1) }}"
+      unit_of_measurement: "°"
+      icon: mdi:angle-acute
+      
+    # 太阳方位角
+    - name: "太阳方位角"
+      unique_id: "sun_azimuth"
+      state: "{{ state_attr('sun.sun', 'azimuth') | float(0) | round(1) }}"
+      unit_of_measurement: "°"
+      icon: mdi:compass

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一路生花 - 沉浸式音乐播放器</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  @font-face { font-family: 'emoji'; src: local('Segoe UI Emoji'), local('Apple Color Emoji'); }
+  body {
+    width: 100vw; height: 100vh; overflow: hidden;
+    background: #0a0a1a; color: #fff;
+    font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    user-select: none;
+  }
+  canvas#bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+  canvas#viz { position: fixed; bottom: 0; left: 0; width: 100%; height: 40%; z-index: 1; opacity: 0.7; }
+
+  .player {
+    position: relative; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+    padding: 40px 60px; border-radius: 24px;
+    background: rgba(255,255,255,0.06); backdrop-filter: blur(30px);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    min-width: 420px; max-width: 520px;
+  }
+
+  .album-art {
+    width: 200px; height: 200px; border-radius: 50%;
+    background: linear-gradient(135deg, #ff6b9d 0%, #c44dff 50%, #6e8efb 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 72px; box-shadow: 0 0 40px rgba(196, 77, 255, 0.4);
+    animation: none; transition: box-shadow 0.5s;
+  }
+  .album-art.spinning { animation: spin 8s linear infinite; }
+  .album-art.spinning:hover { animation-play-state: paused; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .song-info { text-align: center; }
+  .song-title { font-size: 28px; font-weight: 700; letter-spacing: 2px;
+    background: linear-gradient(90deg, #ff9a9e, #fad0c4, #fbc2eb, #a6c1ee);
+    background-size: 300% 100%; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: gradientShift 4s ease infinite;
+  }
+  @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  .song-artist { font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+  .lyrics-box {
+    width: 100%; height: 160px; overflow: hidden; position: relative;
+    mask-image: linear-gradient(transparent 0%, #000 20%, #000 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(transparent 0%, #000 20%, #000 80%, transparent 100%);
+  }
+  .lyrics-inner { transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1); }
+  .lyric-line {
+    text-align: center; padding: 6px 0; font-size: 15px;
+    color: rgba(255,255,255,0.3); transition: all 0.4s ease;
+    line-height: 1.6;
+  }
+  .lyric-line.active {
+    color: #fff; font-size: 18px; font-weight: 600;
+    text-shadow: 0 0 20px rgba(255, 107, 157, 0.6);
+  }
+  .lyric-line.near { color: rgba(255,255,255,0.55); }
+
+  .progress-wrap {
+    width: 100%; display: flex; align-items: center; gap: 10px;
+  }
+  .progress-time { font-size: 12px; color: rgba(255,255,255,0.5); min-width: 40px; }
+  .progress-bar {
+    flex: 1; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px;
+    cursor: pointer; position: relative; transition: height 0.2s;
+  }
+  .progress-bar:hover { height: 6px; }
+  .progress-fill {
+    height: 100%; border-radius: 2px; width: 0%;
+    background: linear-gradient(90deg, #ff6b9d, #c44dff);
+    position: relative;
+  }
+  .progress-fill::after {
+    content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%);
+    width: 12px; height: 12px; border-radius: 50%; background: #fff;
+    box-shadow: 0 0 10px rgba(196,77,255,0.6); opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .progress-bar:hover .progress-fill::after { opacity: 1; }
+
+  .controls {
+    display: flex; align-items: center; gap: 24px;
+  }
+  .btn {
+    background: none; border: none; color: #fff; cursor: pointer;
+    font-size: 20px; opacity: 0.7; transition: all 0.3s;
+    width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+  }
+  .btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+  .btn-play {
+    width: 64px; height: 64px; font-size: 28px; opacity: 1;
+    background: linear-gradient(135deg, #ff6b9d, #c44dff);
+    box-shadow: 0 4px 20px rgba(196,77,255,0.4);
+  }
+  .btn-play:hover { transform: scale(1.08); box-shadow: 0 6px 30px rgba(196,77,255,0.6); }
+
+  .volume-wrap {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .volume-bar {
+    width: 80px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px;
+    cursor: pointer; position: relative;
+  }
+  .volume-fill {
+    height: 100%; border-radius: 2px; width: 80%;
+    background: rgba(255,255,255,0.5);
+  }
+
+  .hint {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    z-index: 20; font-size: 13px; color: rgba(255,255,255,0.3);
+    animation: fadeInUp 1s ease 1s both;
+  }
+  @keyframes fadeInUp { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+  .loading {
+    position: fixed; inset: 0; z-index: 100; background: #0a0a1a;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px; transition: opacity 0.8s;
+  }
+  .loading.hide { opacity: 0; pointer-events: none; }
+  .loading-flower { font-size: 64px; animation: pulse 1.5s ease infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+  .loading-text { font-size: 16px; color: rgba(255,255,255,0.6); }
+  .loading-bar { width: 200px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+  .loading-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff6b9d, #c44dff); transition: width 0.3s; }
+</style>
+</head>
+<body>
+
+<div class="loading" id="loadingScreen">
+  <div class="loading-flower">🌸</div>
+  <div class="loading-text" id="loadingText">正在加载 · 一路生花...</div>
+  <div class="loading-bar"><div class="loading-bar-fill" id="loadingBar"></div></div>
+</div>
+
+<canvas id="bg"></canvas>
+<canvas id="viz"></canvas>
+
+<div class="player" id="player">
+  <div class="album-art" id="albumArt">🌸</div>
+  <div class="song-info">
+    <div class="song-title">一路生花</div>
+    <div class="song-artist">温奕心</div>
+  </div>
+  <div class="lyrics-box" id="lyricsBox">
+    <div class="lyrics-inner" id="lyricsInner"></div>
+  </div>
+  <div class="progress-wrap">
+    <span class="progress-time" id="curTime">0:00</span>
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <span class="progress-time" id="totalTime">0:00</span>
+  </div>
+  <div class="controls">
+    <div class="volume-wrap">
+      <button class="btn" id="volBtn" title="音量">🔊</button>
+      <div class="volume-bar" id="volBar">
+        <div class="volume-fill" id="volFill"></div>
+      </div>
+    </div>
+    <button class="btn btn-play" id="playBtn" title="播放">▶</button>
+    <button class="btn" id="loopBtn" title="循环">🔁</button>
+  </div>
+</div>
+
+<div class="hint">点击播放 · 沉浸在花开的旅途</div>
+
+<script>
+// ========== LRC Lyrics ==========
+const LRC = `[00:00.00]一路生花 - 温奕心
+[00:03.00]词：温奕心/周琦
+[00:05.00]曲：温奕心
+[00:10.00]恍惚之间 来到花海间
+[00:16.00]淡淡微风吹散了 从前
+[00:22.00]看远处的少年 还在奔跑着追赶
+[00:28.00]一路上的风景 灿烂
+[00:34.00]世界之大 想去看看
+[00:40.00]别犹豫 向前看
+[00:46.00]有一天你会发现
+[00:50.00]你也可以 闪闪发光
+[00:55.00]往后的一路都是 鲜花盛开
+[01:01.00]曾经的你 一定会来
+[01:06.00]别急别慌 一路生花
+[01:11.00]我们就去远方
+[01:16.00]往后的一路都是 鲜花盛开
+[01:22.00]曾经的你 一定会来
+[01:27.00]别急别慌 一路生花
+[01:32.00]我们就去远方
+[01:40.00]恍惚之间 来到花海间
+[01:46.00]淡淡微风吹散了 从前
+[01:52.00]看远处的少年 还在奔跑着追赶
+[01:58.00]一路上的风景 灿烂
+[02:04.00]世界之大 想去看看
+[02:10.00]别犹豫 向前看
+[02:16.00]有一天你会发现
+[02:20.00]你也可以 闪闪发光
+[02:25.00]往后的一路都是 鲜花盛开
+[02:31.00]曾经的你 一定会来
+[02:36.00]别急别慌 一路生花
+[02:41.00]我们就去远方`;
+
+function parseLRC(lrc) {
+  const lines = lrc.split('\n');
+  const result = [];
+  for (const line of lines) {
+    const m = line.match(/\[(\d+):(\d+)\.(\d+)\](.*)/);
+    if (m) {
+      const t = parseInt(m[1]) * 60 + parseInt(m[2]) + parseInt(m[3]) / 100;
+      const text = m[4].trim();
+      if (text) result.push({ time: t, text });
+    }
+  }
+  return result;
+}
+
+const lyrics = parseLRC(LRC);
+
+// ========== Audio ==========
+const SONG_URL = 'song.mp3';
+const audio = new Audio();
+audio.crossOrigin = 'anonymous';
+audio.preload = 'auto';
+audio.loop = true;
+
+let audioCtx, analyser, dataArray, freqArray, source;
+let isPlaying = false;
+
+function initAudioContext() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 512;
+  analyser.smoothingTimeConstant = 0.82;
+  source = audioCtx.createMediaElementSource(audio);
+  source.connect(analyser);
+  analyser.connect(audioCtx.destination);
+  dataArray = new Uint8Array(analyser.frequencyBinCount);
+  freqArray = new Uint8Array(analyser.frequencyBinCount);
+}
+
+// ========== Loading ==========
+const loadingBar = document.getElementById('loadingBar');
+const loadingText = document.getElementById('loadingText');
+const loadingScreen = document.getElementById('loadingScreen');
+let loadProgress = 0;
+
+function setLoading(pct, text) {
+  loadProgress = pct;
+  loadingBar.style.width = pct + '%';
+  if (text) loadingText.textContent = text;
+}
+
+audio.addEventListener('loadstart', () => setLoading(20, '正在连接音乐源...'));
+audio.addEventListener('progress', () => setLoading(50, '正在缓冲音频...'));
+audio.addEventListener('canplay', () => {
+  setLoading(90, '即将绽放...');
+  setTimeout(() => {
+    setLoading(100, '准备就绪');
+    setTimeout(() => loadingScreen.classList.add('hide'), 400);
+  }, 500);
+});
+audio.addEventListener('error', () => {
+  loadingText.textContent = '音频加载失败，请检查 song.mp3 文件';
+});
+
+audio.src = SONG_URL;
+
+// ========== Controls ==========
+const playBtn = document.getElementById('playBtn');
+const albumArt = document.getElementById('albumArt');
+const progressBar = document.getElementById('progressBar');
+const progressFill = document.getElementById('progressFill');
+const curTimeEl = document.getElementById('curTime');
+const totalTimeEl = document.getElementById('totalTime');
+const volBar = document.getElementById('volBar');
+const volFill = document.getElementById('volFill');
+const volBtn = document.getElementById('volBtn');
+const loopBtn = document.getElementById('loopBtn');
+
+function fmtTime(s) {
+  if (isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+async function togglePlay() {
+  initAudioContext();
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
+  if (isPlaying) {
+    audio.pause();
+    playBtn.textContent = '▶';
+    albumArt.classList.remove('spinning');
+  } else {
+    await audio.play();
+    playBtn.textContent = '⏸';
+    albumArt.classList.add('spinning');
+  }
+  isPlaying = !isPlaying;
+}
+
+playBtn.addEventListener('click', togglePlay);
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - 5);
+  if (e.code === 'ArrowRight') audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+  if (e.code === 'ArrowUp') { audio.volume = Math.min(1, audio.volume + 0.1); updateVol(); }
+  if (e.code === 'ArrowDown') { audio.volume = Math.max(0, audio.volume - 0.1); updateVol(); }
+});
+
+progressBar.addEventListener('click', e => {
+  const r = progressBar.getBoundingClientRect();
+  const pct = (e.clientX - r.left) / r.width;
+  audio.currentTime = pct * audio.duration;
+});
+
+function updateVol() {
+  volFill.style.width = (audio.volume * 100) + '%';
+  volBtn.textContent = audio.volume === 0 ? '🔇' : audio.volume < 0.5 ? '🔉' : '🔊';
+}
+volBar.addEventListener('click', e => {
+  const r = volBar.getBoundingClientRect();
+  audio.volume = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  updateVol();
+});
+volBtn.addEventListener('click', () => {
+  audio.muted = !audio.muted;
+  volBtn.textContent = audio.muted ? '🔇' : '🔊';
+});
+audio.volume = 0.8;
+updateVol();
+
+loopBtn.addEventListener('click', () => {
+  audio.loop = !audio.loop;
+  loopBtn.style.opacity = audio.loop ? '1' : '0.4';
+});
+
+// ========== Lyrics Rendering ==========
+const lyricsInner = document.getElementById('lyricsInner');
+const lyricsBox = document.getElementById('lyricsBox');
+
+function buildLyrics() {
+  lyricsInner.innerHTML = '';
+  for (const l of lyrics) {
+    const div = document.createElement('div');
+    div.className = 'lyric-line';
+    div.textContent = l.text;
+    lyricsInner.appendChild(div);
+  }
+}
+buildLyrics();
+
+function updateLyrics(t) {
+  let idx = -1;
+  for (let i = lyrics.length - 1; i >= 0; i--) {
+    if (t >= lyrics[i].time) { idx = i; break; }
+  }
+  const lines = lyricsInner.children;
+  for (let i = 0; i < lines.length; i++) {
+    lines[i].classList.remove('active', 'near');
+    if (i === idx) lines[i].classList.add('active');
+    else if (Math.abs(i - idx) === 1) lines[i].classList.add('near');
+  }
+  if (idx >= 0) {
+    const lineH = 34;
+    const boxH = lyricsBox.offsetHeight;
+    const offset = idx * lineH - boxH / 2 + lineH / 2;
+    lyricsInner.style.transform = `translateY(${-Math.max(0, offset)}px)`;
+  }
+}
+
+// ========== Background Particles (Flowers) ==========
+const bgCanvas = document.getElementById('bg');
+const bgCtx = bgCanvas.getContext('2d');
+
+function resizeBg() {
+  bgCanvas.width = window.innerWidth;
+  bgCanvas.height = window.innerHeight;
+}
+resizeBg();
+window.addEventListener('resize', resizeBg);
+
+class Petal {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * bgCanvas.width;
+    this.y = -20 - Math.random() * bgCanvas.height;
+    this.size = 6 + Math.random() * 14;
+    this.speedY = 0.3 + Math.random() * 1.2;
+    this.speedX = (Math.random() - 0.5) * 0.8;
+    this.rotation = Math.random() * Math.PI * 2;
+    this.rotSpeed = (Math.random() - 0.5) * 0.03;
+    this.opacity = 0.15 + Math.random() * 0.35;
+    this.hue = 320 + Math.random() * 60; // pink to purple
+    this.wave = Math.random() * Math.PI * 2;
+    this.waveSpeed = 0.01 + Math.random() * 0.02;
+    this.waveAmp = 0.3 + Math.random() * 0.5;
+  }
+  update(energy) {
+    this.wave += this.waveSpeed;
+    this.x += this.speedX + Math.sin(this.wave) * this.waveAmp;
+    this.y += this.speedY * (0.6 + energy * 1.5);
+    this.rotation += this.rotSpeed;
+    if (this.y > bgCanvas.height + 30) this.reset();
+    if (this.x < -30) this.x = bgCanvas.width + 20;
+    if (this.x > bgCanvas.width + 30) this.x = -20;
+  }
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rotation);
+    ctx.globalAlpha = this.opacity;
+    ctx.fillStyle = `hsl(${this.hue}, 70%, 75%)`;
+    // Draw petal shape
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(this.size / 2, -this.size, this.size, -this.size / 2, 0, this.size);
+    ctx.bezierCurveTo(-this.size, -this.size / 2, -this.size / 2, -this.size, 0, 0);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+const petals = Array.from({ length: 60 }, () => new Petal());
+
+// Glowing orbs
+class Orb {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * bgCanvas.width;
+    this.y = Math.random() * bgCanvas.height;
+    this.r = 40 + Math.random() * 100;
+    this.vx = (Math.random() - 0.5) * 0.3;
+    this.vy = (Math.random() - 0.5) * 0.3;
+    this.hue = 280 + Math.random() * 80;
+    this.opacity = 0.04 + Math.random() * 0.06;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.x < -this.r || this.x > bgCanvas.width + this.r) this.vx *= -1;
+    if (this.y < -this.r || this.y > bgCanvas.height + this.r) this.vy *= -1;
+  }
+  draw(ctx) {
+    const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
+    g.addColorStop(0, `hsla(${this.hue}, 80%, 60%, ${this.opacity})`);
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.fillRect(this.x - this.r, this.y - this.r, this.r * 2, this.r * 2);
+  }
+}
+const orbs = Array.from({ length: 8 }, () => new Orb());
+
+// ========== Visualizer ==========
+const vizCanvas = document.getElementById('viz');
+const vizCtx = vizCanvas.getContext('2d');
+
+function resizeViz() {
+  vizCanvas.width = window.innerWidth;
+  vizCanvas.height = window.innerHeight * 0.4;
+}
+resizeViz();
+window.addEventListener('resize', resizeViz);
+
+function drawViz(energy) {
+  const W = vizCanvas.width, H = vizCanvas.height;
+  vizCtx.clearRect(0, 0, W, H);
+  if (!analyser) return;
+  analyser.getByteFrequencyData(freqArray);
+
+  const barCount = 80;
+  const barW = W / barCount;
+  const step = Math.floor(freqArray.length / barCount);
+
+  for (let i = 0; i < barCount; i++) {
+    const val = freqArray[i * step] / 255;
+    const h = val * H * 0.85;
+    const x = i * barW;
+    const hue = 320 + i * (60 / barCount);
+    const g = vizCtx.createLinearGradient(x, H, x, H - h);
+    g.addColorStop(0, `hsla(${hue}, 80%, 60%, 0.8)`);
+    g.addColorStop(1, `hsla(${hue}, 80%, 70%, 0.1)`);
+    vizCtx.fillStyle = g;
+    vizCtx.fillRect(x + 1, H - h, barW - 2, h);
+
+    // Mirror reflection
+    const rg = vizCtx.createLinearGradient(x, H - h, x, H - h - h * 0.3);
+    rg.addColorStop(0, `hsla(${hue}, 80%, 60%, 0.15)`);
+    rg.addColorStop(1, 'transparent');
+    vizCtx.fillStyle = rg;
+    vizCtx.fillRect(x + 1, H - h - h * 0.3, barW - 2, h * 0.3);
+  }
+
+  // Waveform overlay
+  analyser.getByteTimeDomainData(dataArray);
+  vizCtx.beginPath();
+  vizCtx.strokeStyle = 'rgba(255, 107, 157, 0.4)';
+  vizCtx.lineWidth = 2;
+  const sliceW = W / dataArray.length;
+  for (let i = 0; i < dataArray.length; i++) {
+    const v = dataArray[i] / 128.0;
+    const y = v * H / 2;
+    i === 0 ? vizCtx.moveTo(0, y) : vizCtx.lineTo(i * sliceW, y);
+  }
+  vizCtx.stroke();
+}
+
+// ========== Main Loop ==========
+let avgEnergy = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Calculate energy
+  let energy = 0;
+  if (analyser && isPlaying) {
+    analyser.getByteFrequencyData(freqArray);
+    let sum = 0;
+    for (let i = 0; i < freqArray.length; i++) sum += freqArray[i];
+    energy = sum / (freqArray.length * 255);
+  }
+  avgEnergy += (energy - avgEnergy) * 0.1;
+
+  // Background
+  const W = bgCanvas.width, H = bgCanvas.height;
+  bgCtx.fillStyle = `rgba(10, 10, 26, ${0.15 + avgEnergy * 0.1})`;
+  bgCtx.fillRect(0, 0, W, H);
+
+  // Orbs
+  for (const o of orbs) { o.update(); o.draw(bgCtx); }
+
+  // Petals
+  for (const p of petals) {
+    p.update(avgEnergy);
+    p.draw(bgCtx);
+  }
+
+  // Album art glow
+  if (isPlaying) {
+    const glowIntensity = 20 + avgEnergy * 60;
+    albumArt.style.boxShadow = `0 0 ${glowIntensity}px rgba(196, 77, 255, ${0.3 + avgEnergy * 0.4})`;
+  }
+
+  // Visualizer
+  drawViz(avgEnergy);
+
+  // Progress
+  if (audio.duration) {
+    const pct = audio.currentTime / audio.duration * 100;
+    progressFill.style.width = pct + '%';
+    curTimeEl.textContent = fmtTime(audio.currentTime);
+    totalTimeEl.textContent = fmtTime(audio.duration);
+  }
+
+  // Lyrics
+  updateLyrics(audio.currentTime);
+}
+
+animate();
+
+// ========== Dynamic BG Color ==========
+let bgHueOffset = 0;
+setInterval(() => {
+  bgHueOffset = (bgHueOffset + 0.5) % 360;
+  document.body.style.background =
+    `linear-gradient(135deg, hsl(${260 + bgHueOffset * 0.1}, 30%, 8%), hsl(${300 + bgHueOffset * 0.1}, 25%, 6%))`;
+}, 100);
+
+// Click anywhere to play on first interaction
+document.addEventListener('click', function firstPlay(e) {
+  if (e.target.closest('.controls') || e.target.closest('.progress-bar') || e.target.closest('.volume-wrap')) return;
+  if (!isPlaying) togglePlay();
+  document.removeEventListener('click', firstPlay);
+}, { once: false });
+</script>
+</body>
+</html>

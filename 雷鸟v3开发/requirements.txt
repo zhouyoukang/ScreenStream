@@ -1,0 +1,11 @@
+pyttsx3
+websockets>=2.90
+
+# --- 以下为可选依赖 (按需安装) ---
+# rapidocr-onnxruntime    # OCR识别 (san_lian.py 场景二)
+# Pillow                  # 图像处理 (pytesseract依赖)
+# pytesseract             # OCR降级方案
+
+# --- phone_server.py (Termux环境) ---
+# flask                   # HTTP服务器 (当前用http.server替代)
+# requests                # HTTP客户端 (当前用urllib替代)

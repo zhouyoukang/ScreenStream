@@ -1,0 +1,13 @@
+{
+  "domain": "ha_openai",
+  "name": "OpenAI API Compatible",
+  "codeowners": [],
+  "after_dependencies": ["assist_pipeline", "conversation", "intent"],
+  "config_flow": true,
+  "documentation": "https://github.com/your-username/ha_openai",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/your-username/ha_openai/issues",
+  "requirements": [],
+  "version": "1.0.0"
+} 

@@ -1,0 +1,887 @@
+- actions:
+  - action: switch.turn_on
+    target:
+      entity_id: switch.sonoff_10022dedc7_1
+  alias: 打开四号时打开五号
+  description: 当四号开关打开时，自动打开五号
+  id: '1732296680337'
+  mode: single
+  triggers:
+  - entity_id: switch.sonoff_10022dede9_1
+    to: 'on'
+    trigger: state
+- actions:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.sonoff_10022cf71d_1
+  alias: 总功率保护 - 关闭中央一号插头
+  conditions: []
+  description: 当总功率超过750W时自动关闭中央一号插头
+  id: '1732640611952'
+  mode: single
+  triggers:
+  - above: 750
+    entity_id: sensor.sonoff_total_power_usage
+    trigger: numeric_state
+- actions:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.sonoff_10022dedc7_1
+  alias: 关闭4号时自动关闭5号
+  conditions: []
+  description: ''
+  id: '1732640679771'
+  mode: single
+  triggers:
+  - entity_id:
+    - switch.sonoff_10022dede9_1
+    from: 'on'
+    to: 'off'
+    trigger: state
+- actions:
+  - action: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.sonoff_100235142b_1
+  alias: 智能开启户外电源插头
+  conditions:
+  - condition: and
+    conditions:
+    - below: 500
+      condition: numeric_state
+      entity_id: sensor.sonoff_total_power_usage
+    - below: 200
+      condition: numeric_state
+      entity_id: sensor.de_2dian_yuan_total_in_power
+    - below: 30
+      condition: numeric_state
+      entity_id: sensor.de_2dian_yuan_battery_level
+  description: 当总功率低于500W且RIVER 2 MAX总输出功率低于200W持续30秒时，且电池电量低于30%，开启户外电源插头
+  enabled: false
+  id: '1732715640582'
+  mode: single
+  triggers:
+  - below: 500
+    entity_id: sensor.sonoff_total_power_usage
+    for:
+      seconds: 30
+    trigger: numeric_state
+  - below: 200
+    entity_id: sensor.de_2dian_yuan_total_in_power
+    for:
+      seconds: 30
+    trigger: numeric_state
+- actions:
+  - action: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.sonoff_100235142b_1
+  alias: 功率超600关闭户外电源插头
+  conditions: []
+  description: 当总功率超过600W时立即关闭户外电源插头
+  id: '1732714684914'
+  mode: single
+  triggers:
+  - trigger: template
+    value_template: '{{ states(''sensor.sonoff_total_power_usage'')|float > 600 }}'
+- actions:
+  - action: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.sonoff_100235142b_1
+  alias: 电池充满关闭户外电源插头
+  conditions: []
+  description: 当电池电量高于80%时，关闭户外电源插头
+  id: '1732716104497'
+  mode: single
+  triggers:
+  - above: 80
+    entity_id: sensor.de_2dian_yuan_battery_level
+    trigger: numeric_state
+- actions:
+  - action: switch.turn_off
+    target:
+      entity_id:
+        - switch.sonoff_100235142b_1
+        - switch.sonoff_10022ddc35_1
+        - switch.sonoff_10022de63b_1
+        - switch.sonoff_10022dedc7_1
+        - switch.sonoff_10022dede9_1
+  alias: 功率保护 - 关闭非必要插头（保护有康床插头）
+  conditions:
+  - above: 700
+    condition: numeric_state
+    entity_id: sensor.sonoff_total_power_usage
+  description: 总功率超700W持续30秒时关闭户外电源/顶灯/4号5号，保护有康床插头不被关闭
+  id: '1732896538035'
+  mode: single
+  triggers:
+  - above: 700
+    entity_id: sensor.sonoff_total_power_usage
+    for:
+      seconds: 30
+    trigger: numeric_state
+- action:
+  - data_template:
+      text: '{{ trigger.json.prompt }}'
+    service: assist.process
+  - data_template:
+      entity_id: media_player.living_room_speaker
+      message: '{{ states(''sensor.assistant_response'') }}'
+    service: tts.google_translate_say
+  alias: API 语音助手
+  trigger:
+    platform: webhook
+    webhook_id: chat_completions
+- action:
+  - data:
+      entity_id:
+      - media_player.xiaomi_lx06_6dfd_play_control
+      - media_player.xiaomi_lx04_12e4_play_control_2
+      - media_player.xiaomi_l16a_0be7_play_control
+      - media_player.xiaomi_x08e_8219_play_control
+      - media_player.xiaomi_lx06_72f9_play_control
+      volume_level: '{{ states(''input_number.all_speakers_volume'') | float / 100
+        }}'
+    service: media_player.volume_set
+  alias: 同步所有音箱音量
+  condition:
+  - condition: template
+    value_template: '{{ trigger.to_state.state != trigger.from_state.state }}'
+  description: 当音量滑块变化时，同步调节所有5个音箱音量
+  id: sync_all_speakers_volume_1764165208
+  mode: restart
+  trigger:
+  - entity_id: input_number.all_speakers_volume
+    platform: state
+- action:
+  - data:
+      entity_id:
+      - text.xiaomi_lx06_6dfd_execute_text_directive
+      - text.xiaomi_lx04_12e4_execute_text_directive_2
+      - text.xiaomi_l16a_0be7_execute_text_directive
+      - text.xiaomi_x08e_8219_execute_text_directive
+      value: '{{ states(''input_text.unified_speaker_command'') }}'
+    service: text.set_value
+  - delay:
+      milliseconds: 100
+  - data:
+      entity_id: input_text.unified_speaker_command
+      value: ''
+    service: input_text.set_value
+  alias: 统一指令一传四
+  condition:
+  - condition: template
+    value_template: '{{ trigger.to_state.state != "" and trigger.to_state.state !=
+      trigger.from_state.state }}'
+  description: 当统一指令输入框有内容时，自动同时发送到4个音箱并清空输入框
+  id: unified_command_to_4_speakers_auto
+  mode: queued
+  max: 5
+  trigger:
+  - entity_id: input_text.unified_speaker_command
+    platform: state
+
+# OpenRGB与人体传感器联动自动化
+- alias: OpenRGB 白天有人
+  description: 白天检测到人体时开启白色RGB灯光
+  id: 'openrgb_motion_day_1732896800001'
+  mode: single
+  triggers:
+    - entity_id: binary_sensor.f22078f9c82516c9e8d4e563176a1ca7_smart_motion_human
+      to: 'on'
+      trigger: state
+  conditions:
+    - condition: time
+      after: '08:00:00'
+      before: '18:00:00'
+  actions:
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        brightness: 255
+        rgb_color: [255, 255, 255]
+
+- alias: OpenRGB 晚上有人
+  description: 晚上检测到人体时开启暖色RGB灯光
+  id: 'openrgb_motion_evening_1732896800002'
+  mode: single
+  triggers:
+    - entity_id: binary_sensor.f22078f9c82516c9e8d4e563176a1ca7_smart_motion_human
+      to: 'on'
+      trigger: state
+  conditions:
+    - condition: time
+      after: '18:00:00'
+      before: '23:00:00'
+  actions:
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        brightness: 200
+        rgb_color: [255, 150, 50]
+
+- alias: OpenRGB 深夜有人
+  description: 深夜检测到人体时开启低亮度蓝色灯光
+  id: 'openrgb_motion_night_1732896800003'
+  mode: single
+  triggers:
+    - entity_id: binary_sensor.f22078f9c82516c9e8d4e563176a1ca7_smart_motion_human
+      to: 'on'
+      trigger: state
+  conditions:
+    - condition: time
+      after: '23:00:00'
+      before: '08:00:00'
+  actions:
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        brightness: 80
+        rgb_color: [0, 100, 255]
+
+- alias: OpenRGB 无人关闭
+  description: 5分钟无人后自动关闭RGB灯光
+  id: 'openrgb_motion_off_1732896800004'
+  mode: single
+  triggers:
+    - entity_id: binary_sensor.f22078f9c82516c9e8d4e563176a1ca7_smart_motion_human
+      to: 'off'
+      for:
+        minutes: 5
+      trigger: state
+  actions:
+    - action: light.turn_off
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+
+# ==================== 主板LED灯效自动化 ====================
+
+# LED跟随氛围灯带颜色（实时同步）
+- alias: LED跟随氛围灯带
+  description: 氛围灯带颜色变化时，主板LED自动跟随
+  id: 'led_follow_strip_1732897500001'
+  mode: restart
+  triggers:
+    - entity_id: light.philips_strip3_12ad_light
+      trigger: state
+      attribute: rgb_color
+  conditions:
+    - condition: state
+      entity_id: light.philips_strip3_12ad_light
+      state: 'on'
+  actions:
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        rgb_color: "{{ state_attr('light.philips_strip3_12ad_light', 'rgb_color') }}"
+        brightness: "{{ state_attr('light.philips_strip3_12ad_light', 'brightness') }}"
+
+# 早晨自动开启温暖灯光（6:00-9:00）
+- alias: LED早晨模式
+  description: 早晨6点自动开启温暖的日出色调
+  id: 'led_morning_mode_1732897500002'
+  mode: single
+  triggers:
+    - trigger: time
+      at: '06:00:00'
+  actions:
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        brightness: 150
+        rgb_color: [255, 200, 100]  # 温暖日出色
+    # 渐变到白天模式
+    - delay:
+        hours: 2
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        brightness: 255
+        rgb_color: [255, 255, 255]  # 白天模式
+
+# 下午自动调整（12:00-18:00）
+- alias: LED下午模式
+  description: 下午保持明亮的工作灯光
+  id: 'led_afternoon_mode_1732897500003'
+  mode: single
+  triggers:
+    - trigger: time
+      at: '12:00:00'
+  actions:
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        brightness: 255
+        rgb_color: [255, 255, 255]
+
+# 傍晚自动调整（18:00-22:00）
+- alias: LED傍晚模式
+  description: 傍晚6点自动切换到温暖色调
+  id: 'led_evening_mode_1732897500004'
+  mode: single
+  triggers:
+    - trigger: time
+      at: '18:00:00'
+  actions:
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        brightness: 200
+        rgb_color: [255, 180, 100]  # 温暖傍晚色
+
+# 夜晚自动调暗（22:00-次日6:00）
+- alias: LED夜晚模式
+  description: 晚上10点自动调暗为柔和蓝光
+  id: 'led_night_mode_1732897500005'
+  mode: single
+  triggers:
+    - trigger: time
+      at: '22:00:00'
+  actions:
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        brightness: 80
+        rgb_color: [0, 100, 255]  # 柔和蓝光
+
+# 深夜自动关闭（凌晨1:00）
+- alias: LED深夜关闭
+  description: 凌晨1点自动关闭LED节省电力
+  id: 'led_midnight_off_1732897500006'
+  mode: single
+  triggers:
+    - trigger: time
+      at: '01:00:00'
+  actions:
+    - action: light.turn_off
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+
+# 彩虹循环效果（每30秒变换一次颜色）
+- alias: LED彩虹循环
+  description: 每30秒自动变换彩虹色，创造动态效果
+  id: 'led_rainbow_cycle_1732897500007'
+  mode: restart
+  triggers:
+    - trigger: time_pattern
+      seconds: '/30'
+  conditions:
+    # 仅在19:00-21:00之间运行彩虹模式
+    - condition: time
+      after: '19:00:00'
+      before: '21:00:00'
+  actions:
+    # 红色
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+      data:
+        rgb_color: [255, 0, 0]
+        brightness: 200
+    # 橙色
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+      data:
+        rgb_color: [255, 127, 0]
+        brightness: 200
+    # 蓝色
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        rgb_color: [0, 0, 255]
+        brightness: 200
+
+# 周末游戏模式自动开启
+- alias: LED周末游戏模式
+  description: 周五和周六晚上自动启用炫彩游戏模式
+  id: 'led_weekend_gaming_1732897500008'
+  mode: single
+  triggers:
+    - trigger: time
+      at: '20:00:00'
+  conditions:
+    - condition: time
+      weekday:
+        - fri
+        - sat
+  actions:
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        brightness: 255
+        rgb_color: [255, 0, 255]  # 游戏紫
+
+# 工作日白天保持专注模式
+- alias: LED工作日专注模式
+  description: 工作日白天保持纯白光提高专注度
+  id: 'led_weekday_focus_1732897500009'
+  mode: single
+  triggers:
+    - trigger: time
+      at: '09:00:00'
+  conditions:
+    - condition: time
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+  actions:
+    - action: light.turn_on
+      target:
+        entity_id:
+          - light.b650m_aorus_elite_ax_0_led_2
+          - light.b650m_aorus_elite_ax_0_led_3
+          - light.b650m_aorus_elite_ax_0_led_4
+          - light.b650m_aorus_elite_ax_0_led_5
+          - light.b650m_aorus_elite_ax_0_led_6
+          - light.b650m_aorus_elite_ax_0_led_7
+      data:
+        brightness: 255
+        rgb_color: [255, 255, 255]
+
+# ==================== 音箱统一播放控制自动化（强化版 - 多次重试确保同步） ====================
+- alias: 统一播放所有音箱（强化版）
+  description: 多次暂停统一状态，多次播放确保完美同步
+  id: 'unified_speaker_play_sync_1732897000001'
+  mode: single
+  triggers:
+    - entity_id: input_boolean.unified_speaker_play
+      to: 'on'
+      trigger: state
+  actions:
+    # 步骤1: 第一次暂停所有音箱
+    - action: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤2: 等待0.5秒
+    - delay:
+        milliseconds: 500
+    # 步骤3: 第二次暂停（确保慢音箱也停止）
+    - action: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤4: 等待2秒，确保所有音箱完全停止
+    - delay:
+        seconds: 2
+    # 步骤5: 第一次播放命令
+    - action: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤6: 等待0.5秒
+    - delay:
+        milliseconds: 500
+    # 步骤7: 第二次播放（重试慢音箱）
+    - action: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤8: 等待0.8秒
+    - delay:
+        milliseconds: 800
+    # 步骤9: 第三次播放（最后确认）
+    - action: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤10: 复位开关
+    - delay:
+        milliseconds: 200
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.unified_speaker_play
+
+- alias: 统一暂停所有音箱（改进）
+  description: 多次暂停确保所有音箱停止
+  id: 'unified_speaker_pause_sync_1732897000002'
+  mode: single
+  triggers:
+    - entity_id: input_boolean.unified_speaker_pause
+      to: 'on'
+      trigger: state
+  actions:
+    # 步骤1: 第一次暂停
+    - action: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤2: 等待响应
+    - delay:
+        milliseconds: 300
+    # 步骤3: 第二次暂停（确保响应慢的音箱也停止）
+    - action: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤4: 复位开关
+    - delay:
+        milliseconds: 200
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.unified_speaker_pause
+
+- alias: 统一下一首所有音箱（强化版）
+  description: 多次暂停，延长等待，多次播放确保同步
+  id: 'unified_speaker_next_sync_1732897000003'
+  mode: single
+  triggers:
+    - entity_id: input_boolean.unified_speaker_next
+      to: 'on'
+      trigger: state
+  actions:
+    # 步骤1: 第一次暂停所有音箱
+    - action: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤2: 等待0.5秒
+    - delay:
+        milliseconds: 500
+    # 步骤3: 第二次暂停（确保都停止）
+    - action: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤4: 等待1秒统一停止
+    - delay:
+        seconds: 1
+    # 步骤5: 切换到下一首
+    - action: media_player.media_next_track
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤6: 等待2秒切歌完成
+    - delay:
+        seconds: 2
+    # 步骤7: 第一次播放
+    - action: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤8: 等待0.5秒
+    - delay:
+        milliseconds: 500
+    # 步骤9: 第二次播放（重试）
+    - action: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤10: 等待0.8秒
+    - delay:
+        milliseconds: 800
+    # 步骤11: 第三次播放（最后确认）
+    - action: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤12: 复位开关
+    - delay:
+        milliseconds: 200
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.unified_speaker_next
+
+- alias: 统一上一首所有音箱（强化版）
+  description: 多次暂停，延长等待，多次播放确保同步
+  id: 'unified_speaker_previous_sync_1732897000004'
+  mode: single
+  triggers:
+    - entity_id: input_boolean.unified_speaker_previous
+      to: 'on'
+      trigger: state
+  actions:
+    # 步骤1: 第一次暂停所有音箱
+    - action: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤2: 等待0.5秒
+    - delay:
+        milliseconds: 500
+    # 步骤3: 第二次暂停（确保都停止）
+    - action: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤4: 等待1秒统一停止
+    - delay:
+        seconds: 1
+    # 步骤5: 切换到上一首
+    - action: media_player.media_previous_track
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤6: 等待2秒切歌完成
+    - delay:
+        seconds: 2
+    # 步骤7: 第一次播放
+    - action: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤8: 等待0.5秒
+    - delay:
+        milliseconds: 500
+    # 步骤9: 第二次播放（重试）
+    - action: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤10: 等待0.8秒
+    - delay:
+        milliseconds: 800
+    # 步骤11: 第三次播放（最后确认）
+    - action: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 步骤12: 复位开关
+    - delay:
+        milliseconds: 200
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.unified_speaker_previous
+
+# ==================== 双音响联动自动化 ====================
+
+# 统一指令一传二（参考一传四实现）
+- action:
+  - data:
+      entity_id:
+      - text.xiaomi_lx06_6dfd_execute_text_directive
+      - text.xiaomi_l16a_0be7_execute_text_directive
+      value: '{{ states(''input_text.dual_speakers_command'') }}'
+    service: text.set_value
+  - delay:
+      milliseconds: 100
+  - data:
+      entity_id: input_text.dual_speakers_command
+      value: ''
+    service: input_text.set_value
+  alias: 统一指令一传二
+  condition:
+  - condition: template
+    value_template: '{{ trigger.to_state.state != "" and trigger.to_state.state !=
+      trigger.from_state.state }}'
+  description: 当统一指令输入框有内容时，自动同时发送到小米音响Pro和Sound音响并清空输入框
+  id: unified_command_to_2_speakers_auto
+  mode: queued
+  max: 5
+  trigger:
+  - entity_id: input_text.dual_speakers_command
+    platform: state
+
+# ==================== 必应每日壁纸自动下载 ====================
+
+# 每天早上8点下载必应壁纸
+- action:
+  - data: {}
+    service: shell_command.download_bing_wallpaper
+  alias: 每日下载必应壁纸
+  description: 每天早上8点自动下载必应每日壁纸作为UI背景
+  id: download_bing_wallpaper_daily
+  mode: single
+  trigger:
+  - at: '08:00:00'
+    platform: time
+  - event: start
+    platform: homeassistant
+
+# ==================== 文字输入语音输出自动化 ====================
+# 当语音助手对话框收到文字回复时，自动调用 TTS 朗读到 ESPHome 设备
+- alias: 语音助手文字回复朗读
+  description: 监听 assist_pipeline 的响应事件，把文字回复通过 TTS 朗读出来
+  id: 'assist_text_to_speech_1766427902989'
+  mode: queued
+  max: 5
+  triggers:
+    - trigger: event
+      event_type: assist_pipeline_run_end
+  conditions: []
+  actions:
+    # 先记录日志确认触发
+    - action: system_log.write
+      data:
+        message: "Assist pipeline event received: {{ trigger.event.data | tojson }}"
+        level: info
+    # 调用 TTS
+    - action: tts.edge_tts_say
+      data:
+        entity_id: media_player.sm_n9860_6a5c_voice_assistant_mei_ti_bo_fang_qi
+        message: "{{ trigger.event.data.intent_output.response.speech.plain.speech | default('测试语音') }}"
+      continue_on_error: true
+
+
+
+

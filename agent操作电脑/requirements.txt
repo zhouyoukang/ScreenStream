@@ -1,0 +1,2 @@
+# agent操作电脑 hub — 纯Python标准库，无外部依赖
+# 依赖: http.server, subprocess, socket, platform, base64

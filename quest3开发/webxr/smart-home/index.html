@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 3 Smart Home MR</title>
+    <script src="/quest/libs/aframe.min.js"></script>
+    <script>
+    // look-at component (not in A-Frame core)
+    AFRAME.registerComponent('look-at', {
+        schema: { type: 'selector' },
+        tick() {
+            if (this.data) this.el.object3D.lookAt(this.data.object3D.getWorldPosition(new THREE.Vector3()));
+        }
+    });
+    </script>
+    <style>
+        .a-enter-vr-button {
+            background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
+            border-radius: 12px !important;
+            font-size: 16px !important;
+        }
+        #config-panel {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a; color: #e2e8f0; font-family: system-ui, sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        #config-panel.hidden { display: none; }
+        #config-panel h1 { font-size: 28px; margin-bottom: 8px; }
+        #config-panel p { color: #94a3b8; margin-bottom: 24px; font-size: 14px; }
+        #config-panel .form-group { margin-bottom: 16px; width: 360px; }
+        #config-panel label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 4px; }
+        #config-panel input {
+            width: 100%; padding: 10px 14px; border-radius: 8px;
+            border: 1px solid #334155; background: #1e293b; color: #fff;
+            font-size: 14px; outline: none; box-sizing: border-box;
+        }
+        #config-panel input:focus { border-color: #f59e0b; }
+        #config-panel button {
+            padding: 12px 32px; border-radius: 10px; border: none;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: #fff; font-size: 16px; font-weight: bold; cursor: pointer;
+            margin-top: 8px;
+        }
+        #config-panel button:hover { opacity: 0.9; }
+        #config-panel .status { margin-top: 12px; font-size: 13px; min-height: 20px; }
+        .status-ok { color: #4ade80; }
+        .status-err { color: #f87171; }
+        #hud {
+            position: fixed; top: 12px; left: 12px; z-index: 999;
+            font-family: system-ui, sans-serif; color: #fff; pointer-events: none;
+        }
+        #hud .badge {
+            display: inline-block; padding: 4px 10px; border-radius: 16px;
+            font-size: 12px; margin-right: 6px;
+        }
+        .badge-ha { background: rgba(245,158,11,0.3); color: #fbbf24; }
+        .badge-count { background: rgba(124,58,237,0.3); color: #c4b5fd; }
+        .badge-off { background: rgba(239,68,68,0.3); color: #fca5a5; }
+        #entity-list {
+            position: fixed; right: 12px; top: 12px; z-index: 999;
+            font-family: system-ui, sans-serif; width: 280px; max-height: 60vh;
+            overflow-y: auto; background: rgba(0,0,0,0.7); border-radius: 12px;
+            padding: 12px; backdrop-filter: blur(8px);
+        }
+        #entity-list h3 { color: #fbbf24; font-size: 14px; margin: 0 0 8px; }
+        .entity-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 12px; color: #e2e8f0;
+        }
+        .entity-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .entity-state { padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 8px; }
+        .state-on { background: rgba(74,222,128,0.2); color: #4ade80; }
+        .state-off { background: rgba(148,163,184,0.2); color: #94a3b8; }
+        .entity-toggle {
+            width: 28px; height: 28px; border-radius: 50%; border: none;
+            cursor: pointer; margin-left: 6px; font-size: 14px;
+            pointer-events: auto;
+        }
+        .toggle-on { background: #f59e0b; color: #000; }
+        .toggle-off { background: #334155; color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <div id="config-panel">
+        <h1>🏠 Smart Home MR</h1>
+        <p>连接 Home Assistant · 在 VR/MR 中控制智能家居</p>
+        <p style="font-size:12px; color:#64748b;">灵感来源: <a href="https://github.com/Nitwel/Immersive-Home" style="color:#f59e0b;">Immersive-Home</a> (550⭐)</p>
+        <div class="form-group">
+            <label>Home Assistant URL (WebSocket)</label>
+            <input id="ha-url" type="text" placeholder="ws://192.168.31.x:8123/api/websocket" value="">
+        </div>
+        <div class="form-group">
+            <label>Long-Lived Access Token</label>
+            <input id="ha-token" type="password" placeholder="输入 HA 长期访问令牌">
+        </div>
+        <button onclick="connectHA()">连接</button>
+        <div class="status" id="config-status"></div>
+        <p style="font-size:11px; color:#475569; margin-top:32px;">
+            HA设置 → 用户 → 长期访问令牌 → 创建令牌<br>
+            URL格式: ws://IP:8123/api/websocket 或 wss://域名/api/websocket
+        </p>
+    </div>
+
+    <div id="hud" style="display:none;">
+        <span class="badge badge-ha" id="ha-status">HA 已连接</span>
+        <span class="badge badge-count" id="entity-count">0 设备</span>
+    </div>
+
+    <div id="entity-list" style="display:none;">
+        <h3>🏠 智能设备</h3>
+        <div id="entities-container"></div>
+    </div>
+
+    <a-scene
+        webxr="optionalFeatures: local-floor, hand-tracking;"
+        renderer="colorManagement: true; physicallyCorrectLights: true;"
+        background="color: #1a1a2e"
+        style="display:none;"
+        id="xr-scene"
+    >
+        <!-- Floor -->
+        <a-circle position="0 0.01 0" rotation="-90 0 0" radius="6"
+            material="color: #1e293b; metalness: 0.1; roughness: 0.8; side: double">
+        </a-circle>
+
+        <!-- Room walls (outline) -->
+        <a-box position="0 1.5 -4" width="8" height="3" depth="0.05"
+            material="color: #334155; opacity: 0.15; transparent: true; side: double">
+        </a-box>
+        <a-box position="-4 1.5 0" width="0.05" height="3" depth="8"
+            material="color: #334155; opacity: 0.15; transparent: true; side: double">
+        </a-box>
+        <a-box position="4 1.5 0" width="0.05" height="3" depth="8"
+            material="color: #334155; opacity: 0.15; transparent: true; side: double">
+        </a-box>
+
+        <!-- Center Hub -->
+        <a-cylinder id="hub" position="0 0.4 0" radius="0.15" height="0.8"
+            material="color: #f59e0b; emissive: #f59e0b; emissiveIntensity: 0.3; metalness: 0.8; roughness: 0.2"
+            animation="property: rotation; to: 0 360 0; dur: 20000; loop: true; easing: linear">
+        </a-cylinder>
+        <a-torus position="0 0.9 0" radius="0.25" radius-tubular="0.012"
+            material="color: #f59e0b; emissive: #f59e0b; emissiveIntensity: 0.2; opacity: 0.6; transparent: true"
+            animation="property: rotation; to: 0 360 0; dur: 8000; loop: true; easing: linear">
+        </a-torus>
+
+        <!-- Title -->
+        <a-text value="Smart Home MR" position="0 2.8 -3.5" align="center"
+            color="#f59e0b" width="5"
+            font="/quest/fonts/mozillavr.fnt">
+        </a-text>
+        <a-text value="Home Assistant · WebSocket · 实时控制"
+            position="0 2.5 -3.5" align="center" color="#94a3b8" width="3"
+            font="/quest/fonts/mozillavr.fnt">
+        </a-text>
+
+        <!-- 3D Entity Panels Container -->
+        <a-entity id="entity-panels"></a-entity>
+
+        <!-- Lighting -->
+        <a-light type="ambient" color="#404060" intensity="0.4"></a-light>
+        <a-light type="directional" color="#ffffff" intensity="0.5" position="2 4 3"></a-light>
+        <a-light id="room-light" type="point" color="#f59e0b" intensity="0.6" position="0 2.5 0" distance="10"></a-light>
+
+        <a-sky color="#0f172a"></a-sky>
+
+        <!-- Camera Rig -->
+        <a-entity id="rig" position="0 0 2">
+            <a-camera position="0 1.6 0" look-controls="pointerLockEnabled: false">
+                <a-cursor color="#f59e0b" opacity="0.5" fuse="false"
+                    raycaster="objects: .clickable"></a-cursor>
+            </a-camera>
+        </a-entity>
+
+        <!-- Hand Tracking -->
+        <a-entity hand-tracking-controls="hand: left;"></a-entity>
+        <a-entity hand-tracking-controls="hand: right;"></a-entity>
+    </a-scene>
+
+    <script>
+    (function() {
+        'use strict';
+
+        let ws = null;
+        let msgId = 1;
+        let entities = {};
+        let pendingCallbacks = {};
+        let connected = false;
+
+        const DOMAIN_ICONS = {
+            light: '💡', switch: '🔌', sensor: '📊', binary_sensor: '🔔',
+            climate: '🌡️', media_player: '🎵', camera: '📷', fan: '🌀',
+            cover: '🪟', lock: '🔒', button: '⏺', number: '🔢',
+            input_boolean: '⬜', automation: '⚙️', scene: '🎬', timer: '⏱️'
+        };
+        const TOGGLEABLE = ['light','switch','fan','input_boolean','automation','cover','lock'];
+
+        function getIcon(entityId) {
+            const domain = entityId.split('.')[0];
+            return DOMAIN_ICONS[domain] || '📦';
+        }
+
+        function esc(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+        }
+
+        window.connectHA = function() {
+            const url = document.getElementById('ha-url').value.trim();
+            const token = document.getElementById('ha-token').value.trim();
+            const status = document.getElementById('config-status');
+
+            if (!url || !token) {
+                status.textContent = '请填写URL和Token';
+                status.className = 'status status-err';
+                return;
+            }
+
+            if (url.startsWith('ws://') && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                status.textContent = '⚠️ 使用ws://传输Token不安全，建议使用wss://';
+                status.className = 'status status-err';
+            } else {
+                status.textContent = '连接中...';
+                status.className = 'status';
+            }
+
+            try {
+                ws = new WebSocket(url);
+            } catch(e) {
+                status.textContent = '无法连接: ' + e.message;
+                status.className = 'status status-err';
+                return;
+            }
+
+            ws.onopen = function() {
+                status.textContent = 'WebSocket已连接，等待认证...';
+            };
+
+            ws.onmessage = function(evt) {
+                let msg;
+                try { msg = JSON.parse(evt.data); } catch(e) { return; }
+
+                if (msg.type === 'auth_required') {
+                    ws.send(JSON.stringify({ type: 'auth', access_token: token }));
+                } else if (msg.type === 'auth_ok') {
+                    connected = true;
+                    status.textContent = '✅ 认证成功! 加载设备...';
+                    status.className = 'status status-ok';
+                    localStorage.setItem('ha_url', url);
+                    subscribeEntities();
+                } else if (msg.type === 'auth_invalid') {
+                    status.textContent = '❌ Token无效: ' + msg.message;
+                    status.className = 'status status-err';
+                } else if (msg.type === 'event' || msg.type === 'result') {
+                    handleMessage(msg);
+                }
+            };
+
+            ws.onclose = function() {
+                if (connected) {
+                    document.getElementById('ha-status').textContent = 'HA 断开';
+                    document.getElementById('ha-status').className = 'badge badge-off';
+                }
+            };
+
+            ws.onerror = function() {
+                status.textContent = '❌ 连接失败，检查URL和网络';
+                status.className = 'status status-err';
+            };
+        };
+
+        function sendMsg(payload, cb) {
+            payload.id = msgId;
+            if (cb) pendingCallbacks[msgId] = cb;
+            msgId++;
+            ws.send(JSON.stringify(payload));
+        }
+
+        function subscribeEntities() {
+            sendMsg({ type: 'subscribe_entities' }, function(msg) {
+                if (msg.type === 'event') {
+                    processEntityEvent(msg.event);
+                }
+            });
+        }
+
+        function processEntityEvent(event) {
+            // Initial state (a = add)
+            if (event.a) {
+                for (const [id, data] of Object.entries(event.a)) {
+                    entities[id] = {
+                        state: data.s,
+                        attributes: data.a || {},
+                        last_changed: data.lc
+                    };
+                }
+                showScene();
+                renderEntities();
+                render3DEntities();
+            }
+            // Changed state (c = change)
+            if (event.c) {
+                for (const [id, data] of Object.entries(event.c)) {
+                    if (!entities[id]) continue;
+                    if (data['+']) {
+                        if (data['+'].s !== undefined) entities[id].state = data['+'].s;
+                        if (data['+'].a) Object.assign(entities[id].attributes, data['+'].a);
+                    }
+                }
+                renderEntities();
+                render3DEntities();
+            }
+        }
+
+        function handleMessage(msg) {
+            if (msg.id && pendingCallbacks[msg.id]) {
+                pendingCallbacks[msg.id](msg);
+                if (msg.type === 'result') delete pendingCallbacks[msg.id];
+            }
+        }
+
+        function showScene() {
+            document.getElementById('config-panel').classList.add('hidden');
+            document.getElementById('xr-scene').style.display = '';
+            document.getElementById('hud').style.display = '';
+            document.getElementById('entity-list').style.display = '';
+            document.getElementById('ha-status').textContent = 'HA 已连接';
+        }
+
+        function renderEntities() {
+            const container = document.getElementById('entities-container');
+            const relevant = Object.entries(entities).filter(([id]) => {
+                const d = id.split('.')[0];
+                return ['light','switch','sensor','binary_sensor','climate','media_player',
+                        'fan','cover','lock','button','input_boolean','number','timer'].includes(d);
+            });
+
+            document.getElementById('entity-count').textContent = relevant.length + ' 设备';
+
+            container.innerHTML = relevant.map(([id, data]) => {
+                const name = data.attributes.friendly_name || id;
+                const domain = id.split('.')[0];
+                const isOn = data.state === 'on';
+                const icon = getIcon(id);
+                const stateClass = isOn ? 'state-on' : 'state-off';
+                const canToggle = TOGGLEABLE.includes(domain);
+
+                return '<div class="entity-row">' +
+                    '<span class="entity-name">' + icon + ' ' + esc(name) + '</span>' +
+                    '<span class="entity-state ' + stateClass + '">' + esc(data.state) + '</span>' +
+                    (canToggle ? '<button class="entity-toggle ' + (isOn ? 'toggle-on' : 'toggle-off') +
+                        '" onclick="toggleEntity(\'' + esc(id) + '\')">' + (isOn ? '●' : '○') + '</button>' : '') +
+                    '</div>';
+            }).join('');
+        }
+
+        window.toggleEntity = function(entityId) {
+            const domain = entityId.split('.')[0];
+            const currentState = entities[entityId]?.state;
+            let service;
+
+            if (domain === 'lock') {
+                service = currentState === 'locked' ? 'unlock' : 'lock';
+            } else if (domain === 'cover') {
+                service = currentState === 'open' ? 'close_cover' : 'open_cover';
+            } else {
+                service = currentState === 'on' ? 'turn_off' : 'turn_on';
+            }
+
+            sendMsg({
+                type: 'call_service',
+                domain: domain,
+                service: service,
+                target: { entity_id: entityId }
+            });
+        };
+
+        function render3DEntities() {
+            const container = document.getElementById('entity-panels');
+            if (!container) return;
+
+            // Only render lights and switches in 3D
+            const controllable = Object.entries(entities).filter(([id]) => {
+                const d = id.split('.')[0];
+                return ['light','switch','input_boolean'].includes(d);
+            });
+
+            // Clear existing
+            while (container.firstChild) container.removeChild(container.firstChild);
+
+            const radius = 2.5;
+            const count = Math.min(controllable.length, 12);
+
+            controllable.slice(0, 12).forEach(([id, data], i) => {
+                const angle = (i / count) * Math.PI * 2 - Math.PI / 2;
+                const x = Math.cos(angle) * radius;
+                const z = Math.sin(angle) * radius - 1;
+                const isOn = data.state === 'on';
+                const name = data.attributes.friendly_name || id.split('.')[1];
+                const domain = id.split('.')[0];
+                const color = isOn ? '#4ade80' : '#475569';
+                const emissive = isOn ? (domain === 'light' ? '#fbbf24' : '#4ade80') : '#000000';
+
+                const panel = document.createElement('a-entity');
+                panel.setAttribute('position', x + ' 1.2 ' + z);
+                panel.setAttribute('look-at', '[camera]');
+
+                panel.innerHTML =
+                    '<a-box class="clickable" width="0.4" height="0.4" depth="0.05" ' +
+                    'material="color: ' + color + '; emissive: ' + emissive + '; emissiveIntensity: ' + (isOn ? '0.4' : '0') + '; ' +
+                    'metalness: 0.5; roughness: 0.3" ' +
+                    'data-entity="' + esc(id) + '" ' +
+                    'animation="property: scale; to: 1.1 1.1 1.1; dur: 300; startEvents: mouseenter; dir: normal" ' +
+                    'animation__leave="property: scale; to: 1 1 1; dur: 300; startEvents: mouseleave">' +
+                    '</a-box>' +
+                    '<a-text value="' + getIcon(id) + '" position="0 0.05 0.03" align="center" width="2"></a-text>' +
+                    '<a-text value="' + esc(name).substring(0, 12) + '" position="0 -0.28 0.03" align="center" color="#e2e8f0" width="1.5"></a-text>' +
+                    '<a-text value="' + esc(data.state) + '" position="0 -0.38 0.03" align="center" color="' + color + '" width="1"></a-text>';
+
+                // Add point light for "on" lights
+                if (domain === 'light' && isOn) {
+                    const lightEl = document.createElement('a-light');
+                    lightEl.setAttribute('type', 'point');
+                    lightEl.setAttribute('color', '#fbbf24');
+                    lightEl.setAttribute('intensity', '0.3');
+                    lightEl.setAttribute('distance', '3');
+                    lightEl.setAttribute('position', '0 0 0.5');
+                    panel.appendChild(lightEl);
+                }
+
+                container.appendChild(panel);
+            });
+
+            // Update room light based on any light being on
+            const anyLightOn = controllable.some(([id, d]) => id.startsWith('light.') && d.state === 'on');
+            const roomLight = document.getElementById('room-light');
+            if (roomLight) {
+                roomLight.setAttribute('intensity', anyLightOn ? 0.8 : 0.2);
+            }
+        }
+
+        // Click handler for 3D panels
+        document.addEventListener('DOMContentLoaded', function() {
+            const scene = document.querySelector('a-scene');
+            if (scene) {
+                scene.addEventListener('loaded', function() {
+                    scene.addEventListener('click', function(evt) {
+                        const target = evt.detail?.intersection?.object?.el;
+                        if (target) {
+                            const entityId = target.getAttribute('data-entity');
+                            if (entityId) toggleEntity(entityId);
+                        }
+                    });
+                });
+            }
+
+            // Restore URL
+            const savedUrl = localStorage.getItem('ha_url');
+            if (savedUrl) document.getElementById('ha-url').value = savedUrl;
+        });
+    })();
+    </script>
+</body>
+</html>

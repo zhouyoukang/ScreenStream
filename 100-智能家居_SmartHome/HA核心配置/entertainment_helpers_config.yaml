@@ -1,0 +1,21 @@
+# 娱乐页面所需的Helper配置
+# 将此内容添加到 configuration.yaml 中
+
+input_number:
+  # 统一音量控制
+  all_speakers_volume:
+    name: 所有音箱音量
+    min: 0
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    icon: mdi:volume-high
+    initial: 50
+
+input_text:
+  # 统一命令输入
+  unified_speaker_command:
+    name: 统一音箱命令
+    max: 200
+    icon: mdi:microphone
+    initial: ""

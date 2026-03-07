@@ -1,0 +1,19 @@
+# ── 核心 (TCode设备通信) ──
+pyserial>=3.5
+
+# ── 可选: BLE/Buttplug连接 ──
+bleak>=0.21.0
+websockets>=12.0
+
+# ── 可选: 节拍同步 + 视频下载 (抖音同步必需) ──
+librosa>=0.10.0
+soundfile>=0.12.0
+numpy>=1.24.0
+yt-dlp>=2024.0
+
+# ── 可选: Playwright浏览器自动化 (抖音Agent必需) ──
+playwright>=1.40.0
+
+# ── 可选: 视频动作追踪 ──
+# mediapipe>=0.10.0
+# opencv-python>=4.8.0

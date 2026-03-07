@@ -1,0 +1,6 @@
+mss>=9.0.0
+Pillow>=10.0.0
+websocket-client>=1.7.0
+websockets>=12.0
+pyautogui>=0.9.54
+pyperclip>=1.8.0

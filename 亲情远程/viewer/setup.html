@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>手机配置中心 — 亲情远程</title>
+<meta name="description" content="零配置公网直连手机，一键投屏+反向控制">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--card2:#253347;--accent:#22c55e;--accent2:#16a34a;--text:#f1f5f9;--dim:#94a3b8;--danger:#ef4444;--warn:#f59e0b;--info:#3b82f6;--purple:#a78bfa;--r:14px;--r2:10px}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.6;min-height:100vh;padding-bottom:env(safe-area-inset-bottom,0)}
+
+/* ─── Top Bar ─── */
+.top{position:sticky;top:0;z-index:50;background:rgba(15,23,42,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06);padding:12px 16px;display:flex;align-items:center;gap:10px}
+.top h1{font-size:17px;font-weight:700;background:linear-gradient(135deg,var(--accent),#6ee7b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.top .badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:auto}
+.top .badge.on{background:rgba(34,197,94,.15);color:#4ade80}
+.top .badge.off{background:rgba(239,68,68,.15);color:#f87171}
+.top .badge.wait{background:rgba(245,158,11,.15);color:#fbbf24}
+.top-link{font-size:11px;color:var(--dim);text-decoration:none;padding:4px 10px;border:1px solid rgba(255,255,255,.1);border-radius:6px;white-space:nowrap}
+
+/* ─── Container ─── */
+.wrap{max-width:640px;margin:0 auto;padding:0 12px 32px}
+
+/* ─── Phase: Connecting ─── */
+#phaseConnect{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px 20px}
+.pulse-ring{width:100px;height:100px;border-radius:50%;border:3px solid var(--accent);animation:pulseRing 1.5s ease-out infinite;margin-bottom:24px;display:flex;align-items:center;justify-content:center;font-size:48px}
+@keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}70%{box-shadow:0 0 0 20px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.connect-title{font-size:20px;font-weight:700;margin-bottom:8px}
+.connect-sub{font-size:13px;color:var(--dim);max-width:320px}
+.connect-dots{display:flex;gap:6px;margin-top:20px}
+.connect-dots span{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:dotBounce 1.2s ease-in-out infinite}
+.connect-dots span:nth-child(2){animation-delay:.2s}
+.connect-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotBounce{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1.2)}}
+
+/* ─── Phase: Offline ─── */
+#phaseOffline{display:none;text-align:center;padding:40px 20px}
+.offline-icon{font-size:64px;margin-bottom:16px;opacity:.7}
+.offline-title{font-size:20px;font-weight:700;margin-bottom:8px}
+.offline-hint{font-size:13px;color:var(--dim);margin-bottom:24px;max-width:360px;margin-left:auto;margin-right:auto}
+.steps-card{background:var(--card);border-radius:var(--r);padding:20px;text-align:left;max-width:400px;margin:0 auto 20px}
+.steps-card h3{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--accent)}
+.step-item{display:flex;gap:10px;padding:8px 0;font-size:13px;color:var(--dim);align-items:flex-start}
+.step-item .num{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text);flex-shrink:0}
+.step-item b{color:var(--text)}
+
+/* ─── Phase: Dashboard ─── */
+#phaseDash{display:none}
+
+/* Device Card */
+.dev-card{background:linear-gradient(135deg,#1a2e3a,#1e293b);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:16px;margin:16px 0;position:relative;overflow:hidden}
+.dev-card::before{content:'';position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle,rgba(34,197,94,.06),transparent);pointer-events:none}
+.dev-card .model{font-size:18px;font-weight:700;margin-bottom:4px}
+.dev-card .meta{font-size:12px;color:var(--dim);display:flex;flex-wrap:wrap;gap:8px}
+.dev-card .meta .tag{padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.tag-ok{background:rgba(34,197,94,.12);color:#4ade80}
+.tag-warn{background:rgba(245,158,11,.12);color:#fbbf24}
+.tag-err{background:rgba(239,68,68,.12);color:#f87171}
+.tag-info{background:rgba(59,130,246,.12);color:#60a5fa}
+
+/* Quick Actions */
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.act-btn{padding:12px 4px;background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--r2);color:var(--text);font-size:11px;cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent}
+.act-btn:hover{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.2)}
+.act-btn:active{transform:scale(.95)}
+.act-btn .icon{font-size:22px}
+.act-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff;font-weight:600}
+
+/* MJPEG Live */
+.live-box{margin:12px 0;border-radius:var(--r);overflow:hidden;position:relative;background:#000;display:none}
+.live-box img{width:100%;display:block;cursor:crosshair}
+.live-badge{position:absolute;top:8px;right:8px;background:rgba(239,68,68,.85);color:#fff;font-size:10px;padding:3px 10px;border-radius:10px;font-weight:700;letter-spacing:1px}
+.live-close{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.tap-ring{position:absolute;width:30px;height:30px;border:2px solid #4ade80;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;animation:tapPop .5s ease-out forwards}
+@keyframes tapPop{0%{opacity:1;transform:translate(-50%,-50%) scale(.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
+
+/* Section */
+.section{background:var(--card);border-radius:var(--r);padding:14px;margin:12px 0;border:1px solid rgba(255,255,255,.04)}
+.section-title{font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+/* Nav Grid */
+.nav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.nav-btn{padding:10px 4px;background:var(--card2);border:1px solid rgba(255,255,255,.06);border-radius:var(--r2);color:var(--text);font-size:11px;cursor:pointer;text-align:center;transition:all .12s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav-btn:hover{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.25)}
+.nav-btn:active{transform:scale(.93)}
+.nav-btn .ni{font-size:18px}
+
+/* Touch Pad */
+.touch-pad{width:100%;height:180px;background:rgba(0,0,0,.3);border:1px dashed rgba(255,255,255,.12);border-radius:var(--r2);position:relative;touch-action:none;cursor:crosshair}
+.touch-pad .hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--dim);font-size:12px;pointer-events:none;text-align:center;opacity:.6}
+
+/* Text Input */
+.text-row{display:flex;gap:8px}
+.text-row input{flex:1;padding:10px 14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r2);color:#fff;font-size:14px;outline:none}
+.text-row input:focus{border-color:var(--accent)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border:none;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-ghost{background:var(--card2);color:var(--text);border:1px solid rgba(255,255,255,.08)}
+.btn-danger{background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.15)}
+.btn-block{width:100%}
+
+/* Health Bar */
+.health-bar{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(0,0,0,.2);border-radius:var(--r2);margin:10px 0}
+.health-num{font-size:28px;font-weight:700;font-family:'Cascadia Code',monospace;min-width:50px;text-align:center}
+.health-num.ok{color:#4ade80}.health-num.warn{color:#fbbf24}.health-num.err{color:#f87171}
+.health-meter{flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.health-fill{height:100%;border-radius:3px;transition:width .5s,background .3s}
+.health-fill.ok{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.health-fill.warn{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.health-fill.err{background:linear-gradient(90deg,#ef4444,#f87171)}
+
+/* Sense Grid */
+.sense-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin:10px 0}
+.sense-card{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.04);border-radius:var(--r2);padding:10px;text-align:center}
+.sense-card .si{font-size:24px;margin-bottom:2px}
+.sense-card .sl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.sense-card .sv{font-size:13px;font-weight:600;margin-top:2px}
+.sv-ok{color:#4ade80}.sv-warn{color:#fbbf24}.sv-err{color:#f87171}.sv-dim{color:var(--dim)}
+
+/* Diag */
+.diag-list{max-height:250px;overflow-y:auto;margin:8px 0}
+.diag-row{display:flex;align-items:center;padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.03);font-size:12px}
+.diag-row .dn{flex:1;color:var(--dim)}
+.diag-row .ds{padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;min-width:28px;text-align:center}
+.ds-ok{background:rgba(34,197,94,.12);color:#4ade80}
+.ds-fail{background:rgba(239,68,68,.12);color:#f87171}
+.diag-row .dd{font-size:10px;color:#556;margin-left:6px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.issues-box{padding:12px;border-radius:var(--r2);margin:8px 0;font-size:12px}
+.issues-box.ok{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.12);color:#4ade80}
+.issues-box.bad{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.12);color:#f87171}
+.issues-box b{color:var(--text)}
+.fix-list{margin:4px 0 0;padding:0;list-style:none;color:var(--dim)}
+.fix-list li{padding:2px 0}.fix-list li::before{content:'→ ';color:var(--info)}
+
+/* Collapse */
+.coll-trigger{cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 0;font-size:12px;color:var(--info);font-weight:500}
+.coll-trigger::before{content:'▶';font-size:9px;transition:transform .2s}
+.coll-trigger.open::before{transform:rotate(90deg)}
+.coll-content{display:none}.coll-trigger.open+.coll-content{display:block}
+
+/* Screenshot */
+.ss-box{margin:10px 0;text-align:center;display:none}
+.ss-box img{max-width:260px;max-height:460px;border-radius:var(--r2);border:1px solid rgba(255,255,255,.08);cursor:pointer}
+
+/* App List */
+.app-list{max-height:180px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:4px;margin:8px 0;display:none}
+.app-chip{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:var(--r2);padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.app-chip:hover{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.2)}
+
+/* Log */
+.log-box{max-height:160px;overflow-y:auto;background:rgba(0,0,0,.2);border-radius:var(--r2);padding:8px 10px;font-family:monospace;font-size:11px;line-height:1.5;margin:8px 0;display:none;white-space:pre-wrap;word-break:break-all}
+
+/* Footer */
+.footer{text-align:center;padding:20px 16px;color:#334155;font-size:11px}
+
+/* Custom URL */
+.url-bar{display:flex;gap:8px;margin:16px 0;display:none}
+.url-bar input{flex:1;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r2);color:#fff;font-size:12px;font-family:monospace;outline:none}
+.url-bar input:focus{border-color:var(--purple)}
+
+@media(max-width:380px){
+  .actions{grid-template-columns:repeat(3,1fr)}
+  .nav-grid{grid-template-columns:repeat(4,1fr)}
+  .sense-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ Top Bar ═══ -->
+<div class="top">
+  <span style="font-size:22px">📱</span>
+  <h1>手机配置中心</h1>
+  <a href="./" class="top-link">📺 观看页</a>
+  <span class="badge wait" id="topBadge">连接中</span>
+</div>
+
+<div class="wrap">
+
+<!-- ═══ Phase 1: Connecting ═══ -->
+<div id="phaseConnect">
+  <div class="pulse-ring">📱</div>
+  <div class="connect-title">正在连接手机...</div>
+  <div class="connect-sub">自动探测公网手机API，无需任何操作</div>
+  <div class="connect-dots"><span></span><span></span><span></span></div>
+</div>
+
+<!-- ═══ Phase 2: Offline ═══ -->
+<div id="phaseOffline">
+  <div class="offline-icon">📵</div>
+  <div class="offline-title">手机未在线</div>
+  <div class="offline-hint">未探测到手机API，请确认以下步骤后重试</div>
+
+  <div class="steps-card">
+    <h3>📋 让手机上线只需3步</h3>
+    <div class="step-item"><div class="num">1</div><div>手机安装并打开 <b>ScreenStream</b>，点击<b>开始投屏</b></div></div>
+    <div class="step-item"><div class="num">2</div><div>开启 <b>设置 → 无障碍 → ScreenStream</b>（反向控制必需）</div></div>
+    <div class="step-item"><div class="num">3</div><div>确保手机 <b>FRP穿透</b> 正在运行（公网访问必需）</div></div>
+  </div>
+
+  <div class="url-bar" id="urlBar">
+    <input type="text" id="customUrl" placeholder="手机公网地址 (默认当前域名)">
+    <button class="btn btn-primary" onclick="connectPhone(document.getElementById('customUrl').value.trim()||null)" style="white-space:nowrap">连接</button>
+  </div>
+
+  <button class="btn btn-primary btn-block" onclick="retryConnect()" id="retryBtn" style="margin-bottom:8px">🔄 重新连接</button>
+  <button class="btn btn-ghost btn-block" onclick="toggleUrlBar()" style="font-size:12px">⚙ 自定义地址</button>
+</div>
+
+<!-- ═══ Phase 3: Dashboard ═══ -->
+<div id="phaseDash">
+
+  <!-- Device Card -->
+  <div class="dev-card">
+    <div class="model" id="devModel">—</div>
+    <div class="meta">
+      <span id="devAndroid">—</span>
+      <span class="tag tag-ok" id="devStream">投屏</span>
+      <span class="tag tag-ok" id="devInput">控制</span>
+      <span id="devBattery"></span>
+      <span id="devWifi"></span>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="actions">
+    <button class="act-btn primary" onclick="openViewer()"><span class="icon">📺</span>观看页</button>
+    <button class="act-btn" onclick="toggleLive()" id="liveBtn"><span class="icon">🎬</span>实时画面</button>
+    <button class="act-btn" onclick="takeScreenshot()"><span class="icon">📸</span>截屏</button>
+    <button class="act-btn" onclick="runDiag()"><span class="icon">🔍</span>全面诊断</button>
+  </div>
+
+  <!-- MJPEG Live Preview -->
+  <div class="live-box" id="liveBox">
+    <img id="liveImg" alt="实时画面">
+    <div class="live-badge">● LIVE</div>
+    <button class="live-close" onclick="toggleLive()">✕</button>
+  </div>
+
+  <!-- Screenshot -->
+  <div class="ss-box" id="ssBox">
+    <img id="ssImg" alt="截屏" onclick="this.style.maxWidth=this.style.maxWidth==='100%'?'260px':'100%'">
+    <div style="font-size:10px;color:var(--dim);margin-top:4px" id="ssInfo"></div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="section">
+    <div class="section-title">🧭 导航控制</div>
+    <div class="nav-grid">
+      <button class="nav-btn" onclick="nav('home')"><span class="ni">🏠</span>主页</button>
+      <button class="nav-btn" onclick="nav('back')"><span class="ni">◀</span>返回</button>
+      <button class="nav-btn" onclick="nav('recents')"><span class="ni">📋</span>最近</button>
+      <button class="nav-btn" onclick="nav('wake')"><span class="ni">☀️</span>亮屏</button>
+      <button class="nav-btn" onclick="nav('lock')"><span class="ni">🔒</span>锁屏</button>
+      <button class="nav-btn" onclick="nav('notifications')"><span class="ni">🔔</span>通知</button>
+      <button class="nav-btn" onclick="vol('up')"><span class="ni">🔊</span>音量+</button>
+      <button class="nav-btn" onclick="vol('down')"><span class="ni">🔉</span>音量-</button>
+    </div>
+  </div>
+
+  <!-- Text Input -->
+  <div class="section">
+    <div class="section-title">⌨️ 文本输入</div>
+    <div class="text-row">
+      <input type="text" id="textInput" placeholder="输入文本后按回车发送..." onkeydown="if(event.key==='Enter')sendText()">
+      <button class="btn btn-primary" onclick="sendText()">发送</button>
+    </div>
+  </div>
+
+  <!-- Touch Pad -->
+  <div class="section">
+    <div class="section-title">👆 触摸板 <span style="font-size:10px;color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">点击=点击 · 拖动=滑动 · 长按=长按</span></div>
+    <div class="touch-pad" id="touchPad">
+      <div class="hint">在此区域操作控制手机<br>坐标自动映射到手机分辨率</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
+      <input type="number" id="coordX" placeholder="X" style="width:60px;padding:6px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:#fff;font-size:12px;text-align:center">
+      <input type="number" id="coordY" placeholder="Y" style="width:60px;padding:6px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:#fff;font-size:12px;text-align:center">
+      <button class="btn btn-ghost" onclick="tapXY()" style="font-size:11px;padding:6px 10px">点击</button>
+      <button class="btn btn-ghost" onclick="longPressXY()" style="font-size:11px;padding:6px 10px">长按</button>
+    </div>
+  </div>
+
+  <!-- Apps -->
+  <div class="section">
+    <div class="section-title">📱 应用管理</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="listApps()" style="font-size:11px;padding:6px 10px">📋 应用列表</button>
+      <button class="btn btn-ghost" onclick="getForeground()" style="font-size:11px;padding:6px 10px">🔍 前台应用</button>
+    </div>
+    <div class="app-list" id="appList"></div>
+    <div class="text-row" style="margin-top:6px">
+      <input type="text" id="appPkg" placeholder="包名 (如 com.tencent.mm)" style="font-size:12px">
+      <button class="btn btn-primary" onclick="openApp()" style="font-size:11px;padding:6px 10px">▶ 打开</button>
+    </div>
+  </div>
+
+  <!-- Health & Diagnostics -->
+  <div class="section" id="diagSection">
+    <div class="section-title">📊 健康评估</div>
+    <div class="health-bar">
+      <div class="health-num sv-dim" id="healthNum">—</div>
+      <div style="flex:1">
+        <div class="health-meter"><div class="health-fill" id="healthFill" style="width:0%"></div></div>
+        <div style="font-size:11px;color:var(--dim);margin-top:3px" id="healthText">点击"全面诊断"开始</div>
+      </div>
+    </div>
+
+    <div class="sense-grid" id="senseGrid">
+      <div class="sense-card"><div class="si">👁</div><div class="sl">型号</div><div class="sv sv-dim" id="s_model">—</div></div>
+      <div class="sense-card"><div class="si">📱</div><div class="sl">系统</div><div class="sv sv-dim" id="s_android">—</div></div>
+      <div class="sense-card"><div class="si">🔋</div><div class="sl">电量</div><div class="sv sv-dim" id="s_battery">—</div></div>
+      <div class="sense-card"><div class="si">💾</div><div class="sl">存储</div><div class="sv sv-dim" id="s_storage">—</div></div>
+      <div class="sense-card"><div class="si">📶</div><div class="sl">网络</div><div class="sv sv-dim" id="s_network">—</div></div>
+      <div class="sense-card"><div class="si">📺</div><div class="sl">投屏</div><div class="sv sv-dim" id="s_stream">—</div></div>
+      <div class="sense-card"><div class="si">🎮</div><div class="sl">控制</div><div class="sv sv-dim" id="s_input">—</div></div>
+      <div class="sense-card"><div class="si">♿</div><div class="sl">无障碍</div><div class="sv sv-dim" id="s_a11y">—</div></div>
+    </div>
+
+    <div id="diagAnalysis" style="display:none"></div>
+
+    <div class="coll-trigger" onclick="this.classList.toggle('open')">📋 诊断详情</div>
+    <div class="coll-content">
+      <div class="diag-list" id="diagList"><div style="color:var(--dim);text-align:center;padding:16px">运行诊断后显示</div></div>
+    </div>
+  </div>
+
+  <!-- Advanced -->
+  <div class="section">
+    <div class="coll-trigger" onclick="this.classList.toggle('open')">🛠 高级API调用</div>
+    <div class="coll-content">
+      <div style="display:flex;gap:6px;align-items:center;margin:6px 0">
+        <select id="apiMethod" style="padding:8px;background:var(--card2);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:#fff;font-size:12px"><option>GET</option><option>POST</option></select>
+        <input type="number" id="apiPort" value="8084" placeholder="端口" style="width:55px;padding:8px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:#fff;font-size:12px;text-align:center">
+        <input type="text" id="apiPath" placeholder="/status" style="flex:1;padding:8px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:#fff;font-size:12px">
+        <button class="btn btn-primary" onclick="apiCall()" style="font-size:11px;padding:6px 10px">调用</button>
+      </div>
+      <div class="log-box" id="apiResult"></div>
+    </div>
+    <div class="coll-trigger" onclick="this.classList.toggle('open')">📜 操作日志</div>
+    <div class="coll-content">
+      <div class="log-box" id="opLog" style="display:block"></div>
+    </div>
+  </div>
+
+  <!-- Disconnect -->
+  <div style="text-align:center;margin:16px 0">
+    <button class="btn btn-danger" onclick="disconnect()">✕ 断开连接</button>
+  </div>
+
+</div><!-- /phaseDash -->
+
+</div><!-- /wrap -->
+
+<div class="footer">亲情远程 · 手机配置中心 · 直连+中继双模式 · 零配置<br>
+<a href="/" style="color:inherit">亲情远程</a></div>
+
+<script>
+// ═══════════════════════════════════════════
+// 配置
+// ═══════════════════════════════════════════
+let inputBase = '/input';   // InputService API (直连模式)
+let screenBase = '/screen'; // MJPEG streaming API (直连模式)
+let screenW = 1080, screenH = 2400;
+let connected = false;
+let devData = null;
+let hbTimer = null;
+
+// ─── 双模式：直连 vs 中继 ───
+let connMode = 'direct'; // 'direct' | 'relay'
+let relayBase = ''; // relay server URL (auto-detected)
+let relayToken = 'screenstream_2026';
+let relayRoomId = null; // relay room ID when in relay mode
+
+const RELAY_URL = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  ? `http://${location.hostname}:9800`
+  : `https://${location.host}/relay`;
+
+// ═══════════════════════════════════════════
+// Phase 切换
+// ═══════════════════════════════════════════
+function showPhase(name) {
+  document.getElementById('phaseConnect').style.display = name === 'connect' ? 'flex' : 'none';
+  document.getElementById('phaseOffline').style.display = name === 'offline' ? 'block' : 'none';
+  document.getElementById('phaseDash').style.display = name === 'dash' ? 'block' : 'none';
+  const badge = document.getElementById('topBadge');
+  if (name === 'connect') { badge.className = 'badge wait'; badge.textContent = '连接中'; }
+  else if (name === 'offline') { badge.className = 'badge off'; badge.textContent = '离线'; }
+  else { badge.className = 'badge on'; badge.textContent = connMode === 'relay' ? '中继' : '在线'; }
+}
+
+// ═══════════════════════════════════════════
+// 连接手机（双模式：直连优先 → 中继降级）
+// ═══════════════════════════════════════════
+async function connectPhone(base) {
+  if (base) {
+    base = base.replace(/\/+$/, '');
+    if (!base.startsWith('http')) base = 'http://' + base;
+    inputBase = base + '/input';
+    screenBase = base + '/screen';
+  }
+
+  // ── 尝试1: 直连模式（FRP穿透）──
+  try {
+    const r = await fetch(inputBase + '/status', { signal: AbortSignal.timeout(5000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const status = await r.json();
+    let devInfo = {};
+    try {
+      const dr = await fetch(inputBase + '/deviceinfo', { signal: AbortSignal.timeout(5000) });
+      if (dr.ok) devInfo = await dr.json();
+    } catch(e) {
+      try {
+        const dr2 = await fetch(screenBase + '/deviceinfo', { signal: AbortSignal.timeout(5000) });
+        if (dr2.ok) devInfo = await dr2.json();
+      } catch(e2) {}
+    }
+    connMode = 'direct';
+    connected = true;
+    devData = { status, info: devInfo };
+    log('✓ 直连模式: FRP通道可用');
+    setupDashboard(status, devInfo);
+    return;
+  } catch(e) {
+    log('⚠ 直连失败: ' + e.message + ' → 尝试中继模式...');
+  }
+
+  // ── 尝试2: 中继模式（Relay Server Agent API）──
+  try {
+    const tokenParam = new URLSearchParams(location.search).get('token') || relayToken;
+    const rr = await fetch(RELAY_URL + '/api/rooms?token=' + encodeURIComponent(tokenParam), { signal: AbortSignal.timeout(5000) });
+    if (!rr.ok) throw new Error('Relay HTTP ' + rr.status);
+    const { rooms } = await rr.json();
+    if (!rooms || rooms.length === 0) throw new Error('无在线设备');
+
+    // Pick the first room with a phone provider
+    const room = rooms.find(r => r.type === 'phone') || rooms[0];
+    relayRoomId = room.id;
+    relayBase = RELAY_URL;
+    relayToken = tokenParam;
+    connMode = 'relay';
+    connected = true;
+
+    const status = { connected: true, inputEnabled: true };
+    const devInfo = room.device || {};
+    devData = { status, info: devInfo };
+    log('✓ 中继模式: 通过Relay服务器控制 · 房间=' + relayRoomId);
+    setupDashboard(status, devInfo);
+    return;
+  } catch(e) {
+    log('✗ 中继也失败: ' + e.message);
+  }
+
+  connected = false;
+  showPhase('offline');
+  log('✗ 所有连接方式均失败');
+}
+
+function setupDashboard(status, devInfo) {
+
+    const model = devInfo.model || devInfo.device || '未知设备';
+    const android = devInfo.androidVersion || devInfo.android || '?';
+    const isConn = status.connected !== undefined ? status.connected : true;
+    const isInput = status.inputEnabled !== undefined ? status.inputEnabled : true;
+    const wifi = devInfo.wifiSSID || devInfo.wifi || '';
+    const bat = devInfo.batteryLevel;
+
+    document.getElementById('devModel').textContent = '📱 ' + model;
+    document.getElementById('devAndroid').textContent = 'Android ' + android;
+
+    const streamTag = document.getElementById('devStream');
+    streamTag.textContent = isConn ? '✓ 投屏中' : '✗ 未投屏';
+    streamTag.className = 'tag ' + (isConn ? 'tag-ok' : 'tag-warn');
+
+    const inputTag = document.getElementById('devInput');
+    inputTag.textContent = isInput ? '✓ 可控制' : '✗ 不可控';
+    inputTag.className = 'tag ' + (isInput ? 'tag-ok' : 'tag-err');
+
+    const batEl = document.getElementById('devBattery');
+    if (bat !== undefined) {
+      batEl.textContent = '🔋 ' + bat + '%';
+      batEl.style.color = bat > 30 ? '#4ade80' : bat > 10 ? '#fbbf24' : '#f87171';
+    }
+
+    const wifiEl = document.getElementById('devWifi');
+    if (wifi) wifiEl.textContent = '📶 ' + wifi;
+
+    if (devInfo.screenWidth && devInfo.screenHeight) {
+      screenW = devInfo.screenWidth;
+      screenH = devInfo.screenHeight;
+    }
+
+    setText('s_model', model);
+    setText('s_android', 'Android ' + android);
+    if (bat !== undefined) {
+      const bEl = document.getElementById('s_battery');
+      bEl.textContent = bat + '%';
+      bEl.className = 'sv ' + (bat > 30 ? 'sv-ok' : bat > 10 ? 'sv-warn' : 'sv-err');
+    }
+    setS('s_network', connMode === 'relay' ? '中继模式' : '直连', 'ok');
+    setS('s_stream', isConn ? '运行中' : '未投屏', isConn ? 'ok' : 'warn');
+    setS('s_input', isInput ? '可用' : '不可用', isInput ? 'ok' : 'err');
+
+    showPhase('dash');
+    initTouchPad();
+    startHeartbeat();
+    log('✓ 已连接: ' + model + ' · Android ' + android + ' · 模式=' + connMode);
+}
+
+function retryConnect() {
+  const btn = document.getElementById('retryBtn');
+  btn.textContent = '⏳ 连接中...';
+  btn.disabled = true;
+  showPhase('connect');
+  setTimeout(async () => {
+    const url = document.getElementById('customUrl').value.trim();
+    await connectPhone(url || null);
+    btn.textContent = '🔄 重新连接';
+    btn.disabled = false;
+  }, 300);
+}
+
+function disconnect() {
+  connected = false;
+  stopHeartbeat();
+  closeLive();
+  showPhase('offline');
+  log('⏏ 已断开');
+}
+
+function toggleUrlBar() {
+  const bar = document.getElementById('urlBar');
+  bar.style.display = bar.style.display === 'flex' ? 'none' : 'flex';
+}
+
+// ═══════════════════════════════════════════
+// Heartbeat
+// ═══════════════════════════════════════════
+function startHeartbeat() {
+  stopHeartbeat();
+  hbTimer = setInterval(async () => {
+    if (!connected) { stopHeartbeat(); return; }
+    try {
+      let isConn = true, isInput = true;
+      if (connMode === 'relay' && relayRoomId) {
+        // Relay mode: check room status via relay API
+        const tokenParam = new URLSearchParams(location.search).get('token') || relayToken;
+        const rr = await fetch(relayBase + '/api/room/' + relayRoomId + '?token=' + encodeURIComponent(tokenParam), { signal: AbortSignal.timeout(5000) });
+        if (!rr.ok) throw new Error('Relay HTTP ' + rr.status);
+        const rd = await rr.json();
+        isConn = rd.providerConnected !== false;
+        isInput = isConn;
+      } else {
+        // Direct mode: check via InputService HTTP
+        const r = await fetch(inputBase + '/status', { signal: AbortSignal.timeout(5000) });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        isConn = d.connected !== undefined ? d.connected : true;
+        isInput = d.inputEnabled !== undefined ? d.inputEnabled : false;
+      }
+      setS('s_stream', isConn ? '运行中' : '未投屏', isConn ? 'ok' : 'warn');
+      setS('s_input', isInput ? '可用' : '不可用', isInput ? 'ok' : 'err');
+      const st = document.getElementById('devStream');
+      st.textContent = isConn ? '✓ 投屏中' : '✗ 未投屏';
+      st.className = 'tag ' + (isConn ? 'tag-ok' : 'tag-warn');
+      const it = document.getElementById('devInput');
+      it.textContent = isInput ? '✓ 可控制' : '✗ 不可控';
+      it.className = 'tag ' + (isInput ? 'tag-ok' : 'tag-err');
+    } catch(e) {
+      log('⚠ 心跳失败: ' + e.message);
+      if (connMode === 'relay') return; // Relay mode: single failure doesn't mean offline
+      try {
+        await fetch(inputBase + '/status', { signal: AbortSignal.timeout(8000) });
+      } catch(e2) {
+        connected = false;
+        stopHeartbeat();
+        document.getElementById('topBadge').className = 'badge off';
+        document.getElementById('topBadge').textContent = '断线';
+        log('✗ 手机离线');
+      }
+    }
+  }, 30000);
+}
+
+function stopHeartbeat() { if (hbTimer) { clearInterval(hbTimer); hbTimer = null; } }
+
+// ═══════════════════════════════════════════
+// MJPEG Live
+// ═══════════════════════════════════════════
+function toggleLive() {
+  const box = document.getElementById('liveBox');
+  const img = document.getElementById('liveImg');
+  const btn = document.getElementById('liveBtn');
+  if (box.style.display === 'block') {
+    closeLive();
+  } else {
+    box.style.display = 'block';
+    img.src = screenBase + '/stream/mjpeg';
+    btn.querySelector('.icon').textContent = '⏹';
+    // Tap on stream = tap on phone
+    img.onclick = function(e) {
+      if (!img.naturalWidth) return;
+      const rect = img.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width;
+      const py = (e.clientY - rect.top) / rect.height;
+      const tx = Math.round(px * screenW);
+      const ty = Math.round(py * screenH);
+      // Visual feedback
+      const ring = document.createElement('div');
+      ring.className = 'tap-ring';
+      ring.style.left = (px * 100) + '%';
+      ring.style.top = (py * 100) + '%';
+      box.appendChild(ring);
+      setTimeout(() => ring.remove(), 600);
+      callAPI('GET', '/tap?x=' + tx + '&y=' + ty, 8084);
+      log('👆 画面点击 (' + tx + ', ' + ty + ')');
+    };
+  }
+}
+
+function closeLive() {
+  const box = document.getElementById('liveBox');
+  const img = document.getElementById('liveImg');
+  const btn = document.getElementById('liveBtn');
+  box.style.display = 'none';
+  img.src = '';
+  img.onclick = null;
+  if (btn) btn.querySelector('.icon').textContent = '🎬';
+}
+
+// ═══════════════════════════════════════════
+// Navigation & Controls
+// ═══════════════════════════════════════════
+async function nav(action) {
+  try { await callAPI('GET', '/' + action, 8084); } catch(e) {}
+}
+
+async function vol(dir) {
+  const code = dir === 'up' ? 24 : 25;
+  try { await callAPI('GET', '/key?code=' + code, 8084); } catch(e) {}
+}
+
+async function sendText() {
+  const input = document.getElementById('textInput');
+  const text = input.value;
+  if (!text) return;
+  try {
+    await callAPI('POST', '/text', 8084, { text });
+    input.value = '';
+  } catch(e) {}
+}
+
+async function tapXY() {
+  const x = parseInt(document.getElementById('coordX').value) || 0;
+  const y = parseInt(document.getElementById('coordY').value) || 0;
+  try { await callAPI('GET', '/tap?x=' + x + '&y=' + y, 8084); } catch(e) {}
+}
+
+async function longPressXY() {
+  const x = parseInt(document.getElementById('coordX').value) || 0;
+  const y = parseInt(document.getElementById('coordY').value) || 0;
+  try { await callAPI('GET', '/longpress?x=' + x + '&y=' + y, 8084); } catch(e) {}
+}
+
+async function listApps() {
+  const el = document.getElementById('appList');
+  el.style.display = 'flex';
+  el.innerHTML = '<span style="color:var(--dim);font-size:11px">加载中...</span>';
+  try {
+    const r = await callAPI('GET', '/apps', 8084);
+    const apps = r.body || r;
+    if (Array.isArray(apps)) {
+      const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      el.innerHTML = apps.map(a => {
+        const name = esc(a.label || a.name || a.packageName || a);
+        const pkg = esc(a.packageName || a.package || a);
+        return '<div class="app-chip" onclick="document.getElementById(\'appPkg\').value=\'' + pkg + '\'" title="' + pkg + '">' + name + '</div>';
+      }).join('');
+    } else {
+      el.innerHTML = '<span style="color:var(--dim);font-size:11px">' + JSON.stringify(apps).substring(0, 200) + '</span>';
+    }
+  } catch(e) { el.innerHTML = '<span style="color:#f87171;font-size:11px">获取失败</span>'; }
+}
+
+async function openApp() {
+  const pkg = document.getElementById('appPkg').value.trim();
+  if (!pkg) return;
+  try { await callAPI('GET', '/openapp?package=' + encodeURIComponent(pkg), 8084); } catch(e) {}
+}
+
+async function getForeground() {
+  try {
+    const r = await callAPI('GET', '/foreground', 8084);
+    const d = r.body || r;
+    const pkg = d.packageName || d.package || JSON.stringify(d);
+    document.getElementById('appPkg').value = pkg;
+    log('前台: ' + pkg);
+  } catch(e) {}
+}
+
+function openViewer() {
+  window.open('./', '_blank');
+}
+
+// ═══════════════════════════════════════════
+// Screenshot
+// ═══════════════════════════════════════════
+async function takeScreenshot() {
+  const box = document.getElementById('ssBox');
+  const img = document.getElementById('ssImg');
+  const info = document.getElementById('ssInfo');
+  box.style.display = 'block';
+  info.textContent = '截屏中...';
+  img.style.opacity = '0.3';
+
+  try {
+    // Try POST /screenshot first
+    const r = await fetch(inputBase + '/screenshot', { method: 'POST', signal: AbortSignal.timeout(10000) });
+    if (r.ok) {
+      const ct = r.headers.get('content-type') || '';
+      if (ct.includes('image')) {
+        const blob = await r.blob();
+        img.src = URL.createObjectURL(blob);
+        img.style.opacity = '1';
+        info.textContent = new Date().toLocaleTimeString() + ' · ' + Math.round(blob.size / 1024) + 'KB';
+        return;
+      }
+      const data = await r.clone().json().catch(() => null);
+      if (data && data.image) {
+        img.src = 'data:image/' + (data.format || 'png') + ';base64,' + data.image;
+        img.style.opacity = '1';
+        info.textContent = new Date().toLocaleTimeString() + ' · ' + Math.round((data.size || data.image.length * 0.75) / 1024) + 'KB';
+        return;
+      }
+    }
+    throw new Error('截屏API不可用');
+  } catch(e) {
+    // Fallback: capture from MJPEG
+    const mjpeg = document.getElementById('liveImg');
+    if (mjpeg && mjpeg.src && mjpeg.naturalWidth > 0) {
+      const c = document.createElement('canvas');
+      c.width = mjpeg.naturalWidth; c.height = mjpeg.naturalHeight;
+      c.getContext('2d').drawImage(mjpeg, 0, 0);
+      img.src = c.toDataURL('image/jpeg', 0.9);
+      img.style.opacity = '1';
+      info.textContent = new Date().toLocaleTimeString() + ' · MJPEG帧 · ' + c.width + 'x' + c.height;
+    } else {
+      info.textContent = '截屏失败: ' + e.message + ' (开启实时画面后可用)';
+      img.style.opacity = '0';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+// Diagnostics
+// ═══════════════════════════════════════════
+async function runDiag() {
+  const results = [];
+  const issues = [];
+  const fixes = [];
+  let score = 10;
+
+  async function probe(name, url, extract) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (!r.ok) { results.push({name, ok: false, output: 'HTTP ' + r.status}); score -= 0.5; return; }
+      const data = await r.json();
+      extract(data);
+    } catch(e) {
+      results.push({name, ok: false, output: e.message});
+      score -= 0.5;
+    }
+  }
+
+  document.getElementById('healthNum').textContent = '...';
+  document.getElementById('healthText').textContent = '正在运行20+项诊断...';
+  document.getElementById('healthFill').style.width = '0%';
+  document.getElementById('diagAnalysis').style.display = 'none';
+
+  // 1. deviceinfo
+  await probe('deviceinfo', inputBase + '/deviceinfo', (d) => {
+    results.push({name: 'model', ok: true, output: d.model || d.device || '?'});
+    results.push({name: 'manufacturer', ok: true, output: d.manufacturer || d.brand || '?'});
+    results.push({name: 'android_version', ok: true, output: d.androidVersion || d.android || '?'});
+    results.push({name: 'sdk_version', ok: true, output: d.sdkVersion || d.sdk || '?'});
+    if (d.wifiSSID || d.wifi) results.push({name: 'wifi_ssid', ok: true, output: d.wifiSSID || d.wifi});
+    if (d.ipAddress || d.ip) results.push({name: 'ip_address', ok: true, output: d.ipAddress || d.ip});
+    if (d.batteryLevel !== undefined) {
+      const lv = d.batteryLevel;
+      results.push({name: 'battery', ok: lv > 10, output: 'level: ' + lv + (d.batteryCharging ? ' (charging)' : '')});
+      if (lv <= 15) { issues.push('电量低 (' + lv + '%)'); fixes.push('请给手机充电'); score -= 1; }
+      const bEl = document.getElementById('s_battery');
+      bEl.textContent = lv + '%';
+      bEl.className = 'sv ' + (lv > 30 ? 'sv-ok' : lv > 10 ? 'sv-warn' : 'sv-err');
+    }
+    if (d.screenWidth && d.screenHeight) {
+      results.push({name: 'screen_size', ok: true, output: d.screenWidth + 'x' + d.screenHeight});
+      screenW = d.screenWidth; screenH = d.screenHeight;
+    }
+    setText('s_model', d.model || d.device || '—');
+    setText('s_android', 'Android ' + (d.androidVersion || d.android || '?'));
+  });
+
+  // 2. status
+  await probe('status', inputBase + '/status', (d) => {
+    const conn = d.connected !== undefined ? d.connected : true;
+    const inp = d.inputEnabled !== undefined ? d.inputEnabled : false;
+    results.push({name: 'ss_running', ok: true, output: 'ScreenStream运行中'});
+    results.push({name: 'mjpeg_api', ok: conn, output: conn ? '投屏已连接' : '投屏未连接'});
+    results.push({name: 'input_api', ok: inp, output: inp ? '控制已启用' : '控制未启用'});
+    results.push({name: 'connectivity', ok: true, output: '公网可达'});
+    if (!conn) { issues.push('投屏未启动'); fixes.push('在手机上启动ScreenStream投屏'); score -= 1; }
+    if (!inp) { issues.push('反向控制未启用'); fixes.push('在ScreenStream设置中开启反向控制'); score -= 1; }
+    setS('s_stream', conn ? '运行中' : '未投屏', conn ? 'ok' : 'warn');
+    setS('s_input', inp ? '可用' : '不可用', inp ? 'ok' : 'err');
+    setS('s_network', '已连接', 'ok');
+  });
+
+  // 3. a11y
+  await probe('a11y', inputBase + '/a11y/status', (d) => {
+    const enabled = d.enabled || d.running || d.active;
+    results.push({name: 'accessibility', ok: !!enabled, output: enabled ? '无障碍已启用' : '无障碍未启用'});
+    if (!enabled) { issues.push('无障碍服务未开启'); fixes.push('设置 → 无障碍 → ScreenStream → 开启'); score -= 1.5; }
+    setS('s_a11y', enabled ? '已启用' : '未启用', enabled ? 'ok' : 'err');
+  });
+
+  // 4. storage
+  await probe('storage', inputBase + '/files/storage', (d) => {
+    const total = d.totalSpace || d.total || 0;
+    const free = d.freeSpace || d.free || d.available || 0;
+    const totalGB = (total / 1073741824).toFixed(1);
+    const freeGB = (free / 1073741824).toFixed(1);
+    const pct = total > 0 ? Math.round((1 - free / total) * 100) : 0;
+    results.push({name: 'storage', ok: pct < 90, output: freeGB + 'GB / ' + totalGB + 'GB (' + pct + '%已用)'});
+    if (pct >= 90) { issues.push('存储不足 (' + pct + '%)'); fixes.push('清理手机存储'); score -= 1; }
+    setText('s_storage', freeGB + 'GB余');
+  });
+
+  // 5. foreground
+  await probe('foreground', inputBase + '/foreground', (d) => {
+    results.push({name: 'foreground_app', ok: true, output: d.packageName || d.package || '?'});
+  });
+
+  score = Math.max(0, Math.min(10, score));
+  const level = score >= 8 ? 'ok' : score >= 5 ? 'warn' : 'err';
+  const passed = results.filter(r => r.ok).length;
+
+  // Health display
+  const numEl = document.getElementById('healthNum');
+  numEl.textContent = score.toFixed(1);
+  numEl.className = 'health-num ' + (level === 'ok' ? 'sv-ok' : level === 'warn' ? 'sv-warn' : 'sv-err');
+  document.getElementById('healthFill').style.width = (score * 10) + '%';
+  document.getElementById('healthFill').className = 'health-fill ' + level;
+  document.getElementById('healthText').textContent = passed + '/' + results.length + ' 项通过 · 公网直连模式';
+
+  // Analysis
+  const aDiv = document.getElementById('diagAnalysis');
+  if (issues.length > 0) {
+    let h = '<div class="issues-box bad"><b>发现 ' + issues.length + ' 个问题:</b><ul style="margin:4px 0 0;padding-left:16px;font-size:12px">';
+    issues.forEach(i => h += '<li>' + i + '</li>');
+    h += '</ul>';
+    if (fixes.length) {
+      h += '<div style="margin-top:6px"><b>建议:</b><ul class="fix-list">';
+      fixes.forEach(f => h += '<li>' + f + '</li>');
+      h += '</ul></div>';
+    }
+    h += '</div>';
+    aDiv.innerHTML = h;
+  } else {
+    aDiv.innerHTML = '<div class="issues-box ok"><b>一切正常</b> — 全部 ' + results.length + ' 项检查通过</div>';
+  }
+  aDiv.style.display = 'block';
+
+  // Detail list
+  const listEl = document.getElementById('diagList');
+  listEl.innerHTML = results.map(r => {
+    const detail = (r.output || '').substring(0, 60).replace(/</g, '&lt;');
+    return '<div class="diag-row"><span class="dn">' + r.name + '</span><span class="ds ' + (r.ok ? 'ds-ok' : 'ds-fail') + '">' + (r.ok ? '✓' : '✗') + '</span><span class="dd" title="' + detail + '">' + detail + '</span></div>';
+  }).join('');
+
+  log('诊断完成: ' + score.toFixed(1) + '/10 · ' + passed + '/' + results.length + ' 通过');
+}
+
+// ═══════════════════════════════════════════
+// HTTP路径 → WebSocket命令 翻译器（中继模式核心）
+// ═══════════════════════════════════════════
+function pathToWsCmd(method, path, body) {
+  const url = new URL(path, 'http://x');
+  const p = url.pathname;
+  const q = Object.fromEntries(url.searchParams);
+
+  // Helper: pixel → normalized (0-1) for relay
+  // CloudRelayClient expects normalized coords: data.x→nx, data.y→ny
+  const nx = (px) => Math.max(0, Math.min(1, (+px) / screenW));
+  const ny = (py) => Math.max(0, Math.min(1, (+py) / screenH));
+
+  // Touch commands (coords normalized to 0-1 for CloudRelayClient)
+  if (p === '/tap')       return { type:'touch', data:{ action:'tap', x:nx(q.x), y:ny(q.y) }};
+  if (p === '/longpress') return { type:'touch', data:{ action:'longpress', x:nx(q.x), y:ny(q.y), duration:800 }};
+  if (p === '/swipe')     return { type:'touch', data:{ action:'swipe', fromX:nx(q.x1), fromY:ny(q.y1), toX:nx(q.x2), toY:ny(q.y2), duration:+(q.duration||300) }};
+  if (p === '/scroll')    return { type:'scroll', data:{ deltaY: (q.direction==='up' ? -1 : 1) }};
+  if (p === '/doubletap') return { type:'touch', data:{ action:'doubletap', x:nx(q.x), y:ny(q.y) }};
+
+  // Navigation / control commands
+  const navActions = ['home','back','recents','lock','wake','power','notifications','quicksettings','screenshot'];
+  if (navActions.includes(p.slice(1))) return { type:'control', data:{ action: p.slice(1) }};
+
+  // Volume
+  if (p === '/volume/up')   return { type:'control', data:{ action:'volume/up' }};
+  if (p === '/volume/down') return { type:'control', data:{ action:'volume/down' }};
+
+  // Key code
+  if (p === '/key') return { type:'key', data:{ keyCode: +q.code }};
+
+  // Text input
+  if (p === '/text') return { type:'text', data:{ text: (body && body.text) || q.text || '' }};
+
+  // App control
+  if (p === '/openapp') return { type:'control', data:{ action:'openapp', package: q.package }};
+  if (p === '/findphone') return { type:'control', data:{ action: 'findphone/' + (q.state || 'true') }};
+
+  // Fallback: send as api_call for queries the phone may handle
+  return { type:'api_call', data:{ action: p.slice(1), method, path, ...q, ...(body||{}) }};
+}
+
+// ═══════════════════════════════════════════
+// API Call (统一：直连 or 中继)
+// ═══════════════════════════════════════════
+async function callAPI(method, path, port, body) {
+  log('→ [' + connMode + '] ' + method + ' :' + port + path);
+
+  // ── 中继模式：通过Relay Server Agent API ──
+  // 将InputService HTTP路径翻译为手机能理解的WebSocket命令格式
+  if (connMode === 'relay' && relayRoomId) {
+    try {
+      const cmdBody = pathToWsCmd(method, path, body);
+      cmdBody.room = relayRoomId;
+      cmdBody.nowait = true; // 手机暂不支持_reqId回复，使用fire-and-forget
+      const r = await fetch(relayBase + '/api/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Token': relayToken },
+        body: JSON.stringify(cmdBody),
+        signal: AbortSignal.timeout(5000)
+      });
+      const result = await r.json();
+      log('← [relay] ' + (result.ok ? '✓ sent' : '✗') + ' ' + JSON.stringify(result.data || result.error || '').substring(0, 100));
+      return { ok: result.ok, status: r.status, body: result.data || result };
+    } catch(e) {
+      log('✗ [relay] ' + e.message);
+      throw e;
+    }
+  }
+
+  // ── 直连模式：直接HTTP ──
+  const base = (port === 8084) ? inputBase : screenBase;
+  try {
+    const opts = { method, signal: AbortSignal.timeout(10000) };
+    if (body) { opts.headers = {'Content-Type': 'application/json'}; opts.body = JSON.stringify(body); }
+    const r = await fetch(base + path, opts);
+    const text = await r.text();
+    let result;
+    try { result = { ok: r.ok, status: r.status, body: JSON.parse(text) }; }
+    catch(e) { result = { ok: r.ok, status: r.status, body: text }; }
+    log('← [direct] ' + (result.ok ? '✓' : '✗') + ' ' + JSON.stringify(result.body || '').substring(0, 150));
+    return result;
+  } catch(e) {
+    log('✗ [direct] ' + e.message);
+    throw e;
+  }
+}
+
+async function apiCall() {
+  const method = document.getElementById('apiMethod').value;
+  const port = parseInt(document.getElementById('apiPort').value) || 8084;
+  const path = document.getElementById('apiPath').value || '/status';
+  const el = document.getElementById('apiResult');
+  el.style.display = 'block';
+  el.textContent = '调用中...';
+  try {
+    const r = await callAPI(method, path, port);
+    el.textContent = JSON.stringify(r.body || r, null, 2);
+  } catch(e) { el.textContent = '错误: ' + e.message; }
+}
+
+// ═══════════════════════════════════════════
+// Touch Pad
+// ═══════════════════════════════════════════
+function initTouchPad() {
+  const pad = document.getElementById('touchPad');
+  if (!pad || pad.dataset.init) return;
+  pad.dataset.init = '1';
+  let sx, sy, st;
+
+  function coords(e) {
+    const rect = pad.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: Math.round((cx - rect.left) / rect.width * screenW), y: Math.round((cy - rect.top) / rect.height * screenH) };
+  }
+
+  function onStart(e) {
+    e.preventDefault();
+    const c = coords(e);
+    sx = c.x; sy = c.y; st = Date.now();
+    pad.querySelector('.hint').textContent = '(' + c.x + ', ' + c.y + ')';
+  }
+
+  function onEnd(e) {
+    e.preventDefault();
+    const rect = pad.getBoundingClientRect();
+    const cx = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+    const cy = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+    const ex = Math.round((cx - rect.left) / rect.width * screenW);
+    const ey = Math.round((cy - rect.top) / rect.height * screenH);
+    const dist = Math.sqrt((ex-sx)**2 + (ey-sy)**2);
+    const dur = Date.now() - st;
+
+    if (dist < 20) {
+      if (dur > 500) {
+        callAPI('GET', '/longpress?x='+sx+'&y='+sy, 8084);
+        pad.querySelector('.hint').textContent = '长按 ('+sx+', '+sy+')';
+      } else {
+        callAPI('GET', '/tap?x='+sx+'&y='+sy, 8084);
+        pad.querySelector('.hint').textContent = '点击 ('+sx+', '+sy+')';
+      }
+    } else {
+      callAPI('GET', '/swipe?x1='+sx+'&y1='+sy+'&x2='+ex+'&y2='+ey+'&duration='+Math.max(dur,100), 8084);
+      pad.querySelector('.hint').textContent = '滑动 ('+sx+','+sy+')→('+ex+','+ey+')';
+    }
+    document.getElementById('coordX').value = ex;
+    document.getElementById('coordY').value = ey;
+  }
+
+  pad.addEventListener('mousedown', onStart);
+  pad.addEventListener('mouseup', onEnd);
+  pad.addEventListener('touchstart', onStart, {passive: false});
+  pad.addEventListener('touchend', onEnd, {passive: false});
+}
+
+// ═══════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function setS(id, text, level) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = text; el.className = 'sv sv-' + level; }
+}
+
+function log(msg) {
+  const el = document.getElementById('opLog');
+  if (!el) return;
+  el.textContent += new Date().toLocaleTimeString() + ' ' + msg + '\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+// ═══════════════════════════════════════════
+// Boot
+// ═══════════════════════════════════════════
+window.addEventListener('load', () => {
+  const p = new URLSearchParams(location.search);
+
+  // URL param: ?url=https://xxx
+  const urlParam = p.get('url') || p.get('direct');
+  if (urlParam) {
+    document.getElementById('customUrl').value = urlParam;
+  }
+
+  // Auto-connect
+  showPhase('connect');
+  setTimeout(() => connectPhone(urlParam || null), 500);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+# 自定义实体配置
+# 用于utility_meter传感器的友好名称和图标
+
+sensor.sonoff_cf70f_daily:
+  friendly_name: 俊伟床插头今日用电
+  icon: mdi:bed
+
+sensor.sonoff_cf6a2_daily:
+  friendly_name: 友康床插头今日用电
+  icon: mdi:desktop-tower
+
+sensor.sonoff_cfc76_daily:
+  friendly_name: 中央1号今日用电
+  icon: mdi:fridge
+
+sensor.sonoff_cf570_daily:
+  friendly_name: 中央2号今日用电
+  icon: mdi:television
+
+sensor.sonoff_de30e_daily:
+  friendly_name: 中央3号今日用电
+  icon: mdi:gamepad-variant
+
+sensor.sonoff_cf71d_daily:
+  friendly_name: 中央5号今日用电
+  icon: mdi:air-humidifier
+
+sensor.sonoff_ddc35_daily:
+  friendly_name: 顶灯1号今日用电
+  icon: mdi:ceiling-light
+
+sensor.sonoff_de63b_daily:
+  friendly_name: 顶灯2号今日用电
+  icon: mdi:ceiling-light
+
+sensor.sonoff_5142b_daily:
+  friendly_name: 户外电源今日用电
+  icon: mdi:battery-charging

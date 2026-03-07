@@ -1,0 +1,269 @@
+# Plugin Marketplace Infrastructure - Cycle #4 Round #9
+
+# Marketplace configuration
+marketplace:
+  enabled: true
+  url: https://marketplace.homeassistant.local
+  
+  # Repository
+  repository:
+    official: https://plugins.homeassistant.io
+    community: https://community-plugins.homeassistant.io
+    custom: []
+  
+  # Update check
+  update_check:
+    enabled: true
+    interval: 86400  # 24 hours
+    auto_notify: true
+
+# Plugin categories
+categories:
+  
+  dashboards:
+    name: "Dashboard Cards"
+    description: "Custom dashboard cards and layouts"
+    icon: mdi:view-dashboard
+  
+  integrations:
+    name: "Device Integrations"
+    description: "Connect new devices and services"
+    icon: mdi:connection
+  
+  automations:
+    name: "Automation Templates"
+    description: "Pre-built automation blueprints"
+    icon: mdi:robot
+  
+  themes:
+    name: "Themes"
+    description: "Visual themes and styles"
+    icon: mdi:palette
+  
+  utilities:
+    name: "Utilities"
+    description: "Helper scripts and tools"
+    icon: mdi:toolbox
+
+# Plugin structure
+plugin_structure:
+  manifest:
+    required_fields:
+      - name
+      - version
+      - author
+      - description
+      - category
+      - compatibility
+    
+    optional_fields:
+      - icon
+      - screenshots
+      - documentation_url
+      - support_url
+      - license
+      - dependencies
+      - price
+  
+  package:
+    format: zip
+    max_size: 10  # MB
+    structure:
+      - manifest.json
+      - README.md
+      - src/
+      - assets/
+      - tests/
+
+# Installation system
+installation:
+  
+  # Install methods
+  methods:
+    - marketplace_ui
+    - url_install
+    - manual_upload
+  
+  # Installation process
+  process:
+    steps:
+      - download
+      - verify_signature
+      - check_compatibility
+      - backup_current
+      - extract_files
+      - install_dependencies
+      - configure
+      - activate
+      - restart_required
+  
+  # Rollback
+  rollback:
+    enabled: true
+    keep_backup: true
+    backup_retention: 7  # days
+
+# Plugin management
+management:
+  
+  # Installed plugins
+  list_installed:
+    show_version: true
+    show_updates: true
+    show_dependencies: true
+  
+  # Actions
+  actions:
+    - enable
+    - disable
+    - update
+    - uninstall
+    - configure
+    - view_logs
+  
+  # Auto-update
+  auto_update:
+    enabled: false
+    notify_before: true
+    create_backup: true
+
+# Security
+security:
+  
+  # Code signing
+  code_signing:
+    required: true
+    trusted_publishers: []
+    verify_signature: true
+  
+  # Sandboxing
+  sandbox:
+    enabled: true
+    restricted_api: true
+    file_system_access: limited
+  
+  # Permissions
+  permissions:
+    required_declaration: true
+    user_approval: true
+    
+    available_permissions:
+      - read_states
+      - write_states
+      - call_services
+      - access_files
+      - network_access
+      - camera_access
+
+# Discovery
+discovery:
+  
+  # Search
+  search:
+    enabled: true
+    full_text: true
+    filters:
+      - category
+      - rating
+      - compatibility
+      - price
+  
+  # Featured
+  featured:
+    enabled: true
+    rotation: weekly
+    criteria:
+      - high_rating
+      - popular
+      - recently_updated
+  
+  # Recommendations
+  recommendations:
+    enabled: true
+    based_on:
+      - installed_plugins
+      - user_behavior
+      - similar_users
+
+# Rating & Review
+rating_system:
+  
+  # Ratings
+  ratings:
+    scale: 1-5
+    require_install: true
+    allow_update: true
+  
+  # Reviews
+  reviews:
+    enabled: true
+    moderation: true
+    helpful_votes: true
+    reply_allowed: true
+
+# Analytics
+analytics:
+  
+  # Usage stats
+  usage_stats:
+    track_installs: true
+    track_active_users: true
+    track_errors: true
+  
+  # Privacy
+  privacy:
+    anonymize: true
+    opt_out: true
+
+# Developer tools
+developer_tools:
+  
+  # Plugin SDK
+  sdk:
+    documentation: https://dev.homeassistant.io/plugin-sdk
+    cli_tools: ha-plugin-cli
+    testing_framework: pytest
+  
+  # Submission
+  submission:
+    review_process: true
+    approval_time: 3-5_days
+    guidelines: https://dev.homeassistant.io/guidelines
+  
+  # Monetization
+  monetization:
+    free: true
+    paid: true
+    freemium: true
+    donation: true
+
+# Example plugin manifest
+example_manifest: |
+  {
+    "name": "Advanced Energy Dashboard",
+    "version": "1.2.0",
+    "author": "Developer Name",
+    "description": "Beautiful energy monitoring dashboard",
+    "category": "dashboards",
+    "compatibility": {
+      "min_ha_version": "2024.1.0",
+      "max_ha_version": "*"
+    },
+    "icon": "mdi:lightning-bolt",
+    "screenshots": [
+      "screenshot1.png",
+      "screenshot2.png"
+    ],
+    "documentation_url": "https://github.com/...",
+    "license": "MIT",
+    "dependencies": [
+      "apexcharts-card >= 2.0.0"
+    ],
+    "permissions": [
+      "read_states",
+      "call_services"
+    ],
+    "price": {
+      "type": "free"
+    }
+  }

@@ -1,0 +1,158 @@
+# Backup and Restore System - Cycle #5 Round #6
+
+# Backup configuration
+backup:
+  enabled: true
+  
+  # Schedule
+  schedule:
+    daily: "02:00"  # 2 AM
+    weekly: "sun 03:00"
+    monthly: "1 04:00"
+  
+  # Backup types
+  types:
+    - full  # Complete system backup
+    - incremental  # Changed files only
+    - differential  # Changes since last full
+  
+  # What to backup
+  include:
+    - configuration.yaml
+    - /config/
+    - /custom_components/
+    - /lovelace/
+    - /scripts/
+    - /automations/
+    - /scenes/
+    - database.db
+  
+  # Exclusions
+  exclude:
+    - "**/__pycache__/**"
+    - "**/node_modules/**"
+    - "**/.git/**"
+    - "**/tmp/**"
+    - "*.log"
+  
+  # Storage
+  storage:
+    local:
+      enabled: true
+      path: /backup
+      retention:
+        daily: 7
+        weekly: 4
+        monthly: 12
+    
+    cloud:
+      enabled: false
+      provider: s3  # or google_drive, dropbox
+      bucket: ha-backups
+      encryption: true
+  
+  # Compression
+  compression:
+    enabled: true
+    algorithm: gzip
+    level: 6
+  
+  # Notifications
+  notifications:
+    on_success: false
+    on_failure: true
+    channels:
+      - mobile_app
+      - email
+
+# Restore configuration
+restore:
+  
+  # Restore points
+  restore_points:
+    list_available: true
+    sort_by: date
+    filter_by: type
+  
+  # Restore process
+  process:
+    steps:
+      - verify_backup_integrity
+      - stop_services
+      - restore_files
+      - restore_database
+      - verify_restore
+      - restart_services
+    
+    # Safety
+    create_snapshot_before: true
+    validate_config: true
+    rollback_on_error: true
+  
+  # Selective restore
+  selective:
+    enabled: true
+    options:
+      - configuration_only
+      - automations_only
+      - scripts_only
+      - full_restore
+
+# Disaster recovery
+disaster_recovery:
+  
+  # Emergency backup
+  emergency_backup:
+    enabled: true
+    trigger_on:
+      - critical_error
+      - system_crash
+      - corruption_detected
+  
+  # Recovery plan
+  recovery_plan:
+    steps:
+      - assess_damage
+      - identify_last_good_backup
+      - restore_from_backup
+      - verify_functionality
+      - monitor_stability
+  
+  # Documentation
+  recovery_docs: /docs/disaster-recovery.md
+
+# Backup validation
+validation:
+  enabled: true
+  
+  # Validation checks
+  checks:
+    - file_integrity
+    - database_consistency
+    - configuration_syntax
+    - restore_test
+  
+  # Schedule
+  validation_schedule:
+    weekly: "sat 05:00"
+  
+  # Test restore
+  test_restore:
+    enabled: true
+    frequency: monthly
+    environment: test
+
+# Monitoring
+monitoring:
+  track_metrics:
+    - backup_size
+    - backup_duration
+    - success_rate
+    - storage_usage
+  
+  # Alerts
+  alerts:
+    - condition: backup_failed
+      action: notify_admin
+    - condition: storage_low
+      action: cleanup_old_backups

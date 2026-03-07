@@ -1,0 +1,53 @@
+{
+  "version": "v2",
+  "timestamp": "2026-03-01T12:45:55.741081",
+  "spec": "16:9",
+  "duration_seconds": 133.1,
+  "duration_display": "2:13",
+  "size_mb": 289.3,
+  "total_clips": 21,
+  "sources_scanned": 59,
+  "subtitles": 4,
+  "elapsed_seconds": 661.0,
+  "narrative": [
+    {
+      "act": "hook",
+      "duration": 5.1,
+      "clips": 1,
+      "has_narration": false
+    },
+    {
+      "act": "departure",
+      "duration": 23.3,
+      "clips": 4,
+      "has_narration": true
+    },
+    {
+      "act": "journey",
+      "duration": 31.4,
+      "clips": 7,
+      "has_narration": true
+    },
+    {
+      "act": "peak",
+      "duration": 47.1,
+      "clips": 6,
+      "has_narration": true
+    },
+    {
+      "act": "epilogue",
+      "duration": 23.8,
+      "clips": 3,
+      "has_narration": true
+    }
+  ],
+  "improvements_over_ultimate": [
+    "运动分析选片替代盲目截取",
+    "crossfade转场替代黑屏硬切",
+    "多段式BGM情绪曲线替代单一sine合成",
+    "scenes-aware调色替代固定eq参数",
+    "loudnorm音频标准化",
+    "叙事文案与具体旅行场景关联",
+    "精确字幕时间轴"
+  ]
+}

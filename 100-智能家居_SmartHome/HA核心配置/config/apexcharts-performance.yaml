@@ -1,0 +1,101 @@
+# ApexCharts性能优化配置 - 循环#6
+
+# 通用性能优化模板
+performance_template:
+  # 数据优化
+  data_optimization:
+    - group_by:
+        func: avg  # 使用平均值聚合
+        duration: 1min  # 1分钟聚合
+    - span:
+        end: minute  # 按分钟对齐
+    - max_points: 50  # 限制最大点数
+  
+  # 图表配置优化
+  chart_optimization:
+    height: 180px  # 固定高度
+    toolbar:
+      show: false  # 隐藏工具栏
+    animations:
+      enabled: true
+      easing: easeinout
+      speed: 400  # 快速动画
+      animateGradually:
+        enabled: false  # 禁用渐进动画
+    
+  # 渲染优化
+  rendering:
+    dataLabels:
+      enabled: false  # 禁用数据标签
+    stroke:
+      width: 2  # 减少线条宽度
+      curve: smooth  # 平滑曲线
+    fill:
+      type: gradient
+      gradient:
+        shadeIntensity: 0.8
+        opacityFrom: 0.6
+        opacityTo: 0.1
+        stops: [0, 100]
+
+# 功率监控优化配置
+power_monitoring:
+  update_interval: 10sec  # 10秒更新
+  graph_span: 30min  # 30分钟窗口
+  cache_max_age: 60  # 缓存60秒
+  
+  series:
+    - entity: sensor.sonoff_total_power_usage
+      name: 总功率
+      group_by:
+        func: avg
+        duration: 1min
+      stroke_width: 2
+      opacity: 0.8
+
+# 温度监控优化配置
+temperature_monitoring:
+  update_interval: 30sec  # 30秒更新
+  graph_span: 1hour  # 1小时窗口
+  
+  series:
+    - entity: sensor.miaomiaoc_temperature
+      name: 温度
+      group_by:
+        func: avg
+        duration: 2min  # 2分钟聚合
+      color: '#FF6B6B'
+
+# 电池监控优化配置
+battery_monitoring:
+  update_interval: 5min  # 5分钟更新
+  graph_span: 24hour  # 24小时窗口
+  
+  series:
+    - entity: sensor.river_2_max_battery_level
+      name: 电量
+      group_by:
+        func: last  # 使用最后值
+        duration: 10min
+      color: '#4ECDC4'
+
+# 性能监控指标
+performance_metrics:
+  target_fps: 60
+  max_render_time: 16ms  # 60fps = 16ms per frame
+  debounce_delay: 300ms
+  throttle_rate: 100ms
+  
+# GPU加速配置
+gpu_acceleration:
+  enable_hardware_acceleration: true
+  use_will_change: true
+  properties:
+    - transform
+    - opacity
+  
+# 内存优化
+memory_optimization:
+  max_data_points: 100
+  cleanup_interval: 300  # 5分钟清理一次
+  enable_data_decimation: true

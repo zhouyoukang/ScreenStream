@@ -1,0 +1,6 @@
+# 极简主题配置
+
+default: 
+  primary-color: "#03A9F4"
+  primary-background-color: "#f7f7f7"
+  card-background-color: "#FFFFFF" 

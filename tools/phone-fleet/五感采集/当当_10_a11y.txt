@@ -1,0 +1,110 @@
+ACCESSIBILITY MANAGER (dumpsys accessibility)
+
+currentUserId=0
+hasMagnificationConnection=false
+Magnifier on display#0
+    MagnificationConfig[mode: 1, activated: false, scale: 1.0, centerX: 540.0, centerY: 1206.0] 
+    Magnification region=SkRegion((0,0,1080,2412))
+    IdOfLastServiceToMagnify=-1
+    SupportWindowMagnification=true
+    WindowMagnificationConnectionState=DISCONNECTED
+User state[
+     attributes:{id=0, touchExplorationEnabled=false, serviceHandlesDoubleTap=false, requestMultiFingerGestures=false, requestTwoFingerPassthrough=false, sendMotionEventsEnabledfalse, displayMagnificationEnabled=false, autoclickEnabled=false, nonInteractiveUiTimeout=0, interactiveUiTimeout=0, installedServiceCount=50, magnificationModes={0=1, 13=1}, magnificationCapabilities=3, audioDescriptionByDefaultEnabled=false, magnificationFollowTypingEnabled=true, alwaysOnMagnificationEnabled=true}
+     shortcut key:{com.microsoft.launcher/com.microsoft.launcher.accessibility.LauncherAccessibilityService}
+     button:{}
+     button target:{null}
+     qs shortcut targets:{}
+     a11y tiles in QS panel:{}
+     Bound services:{Service[label=语音识别文字, feedbackType[FEEDBACK_GENERIC], capabilities=1, eventTypes=, notificationTimeout=0, requestA11yBtn=true], 
+                     Service[label=MacroDroid UI 交互, feedbackType[FEEDBACK_GENERIC], capabilities=171, eventTypes=[TYPE_VIEW_CLICKED, TYPE_VIEW_LONG_CLICKED, TYPE_VIEW_FOCUSED, TYPE_WINDOW_STATE_CHANGED], notificationTimeout=0, requestA11yBtn=false], 
+                     Service[label=❤️️李跳跳·new, feedbackType[FEEDBACK_SPOKEN], capabilities=33, eventTypes=[TYPE_VIEW_CLICKED, TYPE_WINDOW_STATE_CHANGED, TYPE_WINDOWS_CHANGED], notificationTimeout=88, requestA11yBtn=false], 
+                     Service[label=Edge Gestures, feedbackType[FEEDBACK_GENERIC], capabilities=1, eventTypes=[TYPE_WINDOW_STATE_CHANGED, TYPE_VIEW_SCROLLED], notificationTimeout=0, requestA11yBtn=false], 
+                     Service[label=连接至 Windows, feedbackType[FEEDBACK_GENERIC], capabilities=1, eventTypes=[TYPE_VIEW_CLICKED, TYPE_VIEW_FOCUSED, TYPE_VIEW_ACCESSIBILITY_FOCUSED], notificationTimeout=100, requestA11yBtn=false], 
+                     Service[label=ScreenStream, feedbackType[FEEDBACK_GENERIC], capabilities=33, eventTypes=TYPES_ALL_MASK, notificationTimeout=50, requestA11yBtn=false], 
+                     Service[label=Tasker, feedbackType[FEEDBACK_GENERIC], capabilities=64, eventTypes=, notificationTimeout=0, requestA11yBtn=false], 
+                     Service[label=MacroDroid, feedbackType[FEEDBACK_GENERIC], capabilities=201, eventTypes=[TYPE_WINDOW_STATE_CHANGED, TYPE_NOTIFICATION_STATE_CHANGED], notificationTimeout=200, requestA11yBtn=false], 
+                     Service[label=AutoJsPro9, feedbackType[FEEDBACK_SPOKEN, FEEDBACK_HAPTIC, FEEDBACK_AUDIBLE, FEEDBACK_VISUAL, FEEDBACK_GENERIC, FEEDBACK_BRAILLE], capabilities=169, eventTypes=TYPES_ALL_MASK, notificationTimeout=0, requestA11yBtn=false]}
+     Enabled services:{{com.arlosoft.macrodroid/com.arlosoft.macrodroid.triggers.services.MacroDroidAccessibilityServiceJellyBean}, {net.dinglisch.android.taskerm/net.dinglisch.android.taskerm.MyAccessibilityService}, {com.ss.edgegestures/com.ss.edgegestures.EdgeService}, {cn.litiaotiao.app/com.litiaotiao.app.LttService}, {com.microsoft.appmanager/com.microsoft.mmx.screenmirroringsrc.accessibility.ScreenMirroringAccessibilityService}, {info.dvkr.screenstream.dev/info.dvkr.screenstream.input.InputService}, {com.arlosoft.macrodroid/com.arlosoft.macrodroid.action.services.UIInteractionAccessibilityService}, {com.coloros.accessibilityassistant/com.coloros.accessibilityassistant.ColorAccessibilityService}, {org.autojs.autojspro/com.stardust.autojs.core.accessibility.AccessibilityService}}
+     Binding services:{}
+     Crashed services:{}
+     Client list info:{
+          Client list callbacks: 42
+          Client list killed: false
+          Client list broadcasts count: -1
+          Registered clients:{
+[cn.litiaotiao.app][com.oplus.account][com.eg.android.AlipayGphone][com.coloros.codebook][com.ss.edgegestures][com.coloros.smartsidebar][com.dangdang.buy2][me.ele][me.ele][com.eg.android.AlipayGphone][com.sankuai.meituan][com.taobao.idlefish][com.sankuai.meituan][com.tencent.mobileqq][com.tencent.mm][com.sohu.inputmethod.sogouoem][com.coloros.accessibilityassistant][com.xunmeng.pinduoduo][com.taobao.idlefish][com.tencent.mobileqq][com.coloros.smartsidebar][com.xunmeng.pinduoduo][com.taobao.idlefish][com.xunmeng.pinduoduo][com.jingdong.app.mall][com.eg.android.AlipayGphone][com.netease.cloudmusic][com.finshell.wallet][com.android.mms][com.tencent.mm][com.tencent.mm][net.dinglisch.android.taskerm][com.tencent.mm][com.jingdong.app.mall][com.microsoft.launcher][com.microsoft.appmanager][com.arlosoft.macrodroid][org.autojs.autojspro][com.finshell.wallet][com.sankuai.meituan][com.jingdong.app.mall][info.dvkr.screenstream.dev]}]
+User state[
+     attributes:{id=10, touchExplorationEnabled=false, serviceHandlesDoubleTap=false, requestMultiFingerGestures=false, requestTwoFingerPassthrough=false, sendMotionEventsEnabledfalse, displayMagnificationEnabled=false, autoclickEnabled=false, nonInteractiveUiTimeout=0, interactiveUiTimeout=0, installedServiceCount=0, magnificationModes={}, magnificationCapabilities=1, audioDescriptionByDefaultEnabled=false, magnificationFollowTypingEnabled=true, alwaysOnMagnificationEnabled=false}
+     shortcut key:{}
+     button:{}
+     button target:{null}
+     qs shortcut targets:{}
+     a11y tiles in QS panel:{}
+     Bound services:{}
+     Enabled services:{}
+     Binding services:{}
+     Crashed services:{}
+     Client list info:{
+          Client list callbacks: 0
+          Client list killed: false
+          Client list broadcasts count: -1
+          Registered clients:{
+}]
+User state[
+     attributes:{id=999, touchExplorationEnabled=false, serviceHandlesDoubleTap=false, requestMultiFingerGestures=false, requestTwoFingerPassthrough=false, sendMotionEventsEnabledfalse, displayMagnificationEnabled=false, autoclickEnabled=false, nonInteractiveUiTimeout=0, interactiveUiTimeout=0, installedServiceCount=0, magnificationModes={}, magnificationCapabilities=1, audioDescriptionByDefaultEnabled=false, magnificationFollowTypingEnabled=true, alwaysOnMagnificationEnabled=false}
+     shortcut key:{}
+     button:{}
+     button target:{null}
+     qs shortcut targets:{}
+     a11y tiles in QS panel:{}
+     Bound services:{}
+     Enabled services:{}
+     Binding services:{}
+     Crashed services:{}
+     Client list info:{
+          Client list callbacks: 0
+          Client list killed: false
+          Client list broadcasts count: -1
+          Registered clients:{
+}]
+Global Info [ Top focused display Id = 0
+     Active Window Id = 19186
+     Top Focused Window Id = 19186
+     Accessibility Focused Window Id = 5926 ]
+
+Display[0] : 
+A11yWindow[AccessibilityWindowInfo[title=导航栏, displayId=0, id=8, taskId=-1, type=TYPE_SYSTEM, layer=5, region=SkRegion((0,2280,1080,2412)), bounds=Rect(0, 2280 - 1080, 2412), focused=false, active=false, pictureInPicture=false, transitionTime=1238838530, hasParent=false, isAnchored=false, hasChildren=false]]
+WindowInfo[WindowInfo[title=导航栏, displayId=0, taskId=-1, type=2019, layer=0, token=android.os.BinderProxy@24c8868, region=SkRegion((0,2280,1080,2412)), bounds=Rect(0, 2280 - 1080, 2412), parent=null, focused=false, children=null, accessibility anchor=9223372034707292159, pictureInPicture=false, watchOutsideTouch=false, mTransformMatrix=Matrix{[1.0, 0.0, 0.0][0.0, 1.0, 2280.0][0.0, 0.0, 1.0]}, mMagnificationSpec=<scale:1.0,offsetX:0.0,offsetY:0.0>, locales=[zh_CN]]]
+,
+A11yWindow[AccessibilityWindowInfo[title=null, displayId=0, id=7, taskId=-1, type=TYPE_SYSTEM, layer=4, region=SkRegion((0,0,1080,96)), bounds=Rect(0, 0 - 1080, 96), focused=false, active=false, pictureInPicture=false, transitionTime=1238838530, hasParent=false, isAnchored=false, hasChildren=false]]
+WindowInfo[WindowInfo[title=null, displayId=0, taskId=-1, type=2000, layer=1, token=android.os.BinderProxy@1874cb3, region=SkRegion((0,0,1080,96)), bounds=Rect(0, 0 - 1080, 96), parent=null, focused=false, children=null, accessibility anchor=9223372034707292159, pictureInPicture=false, watchOutsideTouch=false, mTransformMatrix=Matrix{[1.0, 0.0, 0.0][0.0, 1.0, 0.0][0.0, 0.0, 1.0]}, mMagnificationSpec=<scale:1.0,offsetX:0.0,offsetY:0.0>, locales=[zh_CN]]]
+,
+A11yWindow[AccessibilityWindowInfo[title=null, displayId=0, id=19555, taskId=-1, type=TYPE_SYSTEM, layer=3, region=SkRegion((378,2235,702,2280)), bounds=Rect(378, 2235 - 702, 2280), focused=false, active=false, pictureInPicture=false, transitionTime=1238839057, hasParent=false, isAnchored=false, hasChildren=false]]
+WindowInfo[WindowInfo[title=null, displayId=0, taskId=-1, type=2038, layer=2, token=android.os.BinderProxy@fe5e41b, region=SkRegion((378,2235,702,2280)), bounds=Rect(378, 2235 - 702, 2280), parent=null, focused=false, children=null, accessibility anchor=9223372034707292159, pictureInPicture=false, watchOutsideTouch=false, mTransformMatrix=Matrix{[1.0, 0.0, 378.0][0.0, 1.0, 2235.0][0.0, 0.0, 1.0]}, mMagnificationSpec=<scale:1.0,offsetX:0.0,offsetY:0.0>, locales=[zh_CN]]]
+,
+A11yWindow[AccessibilityWindowInfo[title=null, displayId=0, id=19553, taskId=-1, type=TYPE_SYSTEM, layer=2, region=SkRegion((1020,695,1080,2316)), bounds=Rect(1020, 695 - 1080, 2316), focused=false, active=false, pictureInPicture=false, transitionTime=1238839024, hasParent=false, isAnchored=false, hasChildren=false]]
+WindowInfo[WindowInfo[title=null, displayId=0, taskId=-1, type=2038, layer=3, token=android.os.BinderProxy@aaed6d2, region=SkRegion((1020,695,1080,2316)), bounds=Rect(1020, 695 - 1080, 2316), parent=null, focused=false, children=null, accessibility anchor=9223372034707292159, pictureInPicture=false, watchOutsideTouch=false, mTransformMatrix=Matrix{[1.0, 0.0, 1020.0][0.0, 1.0, 695.0][0.0, 0.0, 1.0]}, mMagnificationSpec=<scale:1.0,offsetX:0.0,offsetY:0.0>, locales=[zh_CN]]]
+,
+A11yWindow[AccessibilityWindowInfo[title=null, displayId=0, id=19551, taskId=-1, type=TYPE_SYSTEM, layer=1, region=SkRegion((0,695,75,2316)), bounds=Rect(0, 695 - 75, 2316), focused=false, active=false, pictureInPicture=false, transitionTime=1238839005, hasParent=false, isAnchored=false, hasChildren=false]]
+WindowInfo[WindowInfo[title=null, displayId=0, taskId=-1, type=2038, layer=4, token=android.os.BinderProxy@3ccea5, region=SkRegion((0,695,75,2316)), bounds=Rect(0, 695 - 75, 2316), parent=null, focused=false, children=null, accessibility anchor=9223372034707292159, pictureInPicture=false, watchOutsideTouch=false, mTransformMatrix=Matrix{[1.0, 0.0, 0.0][0.0, 1.0, 695.0][0.0, 0.0, 1.0]}, mMagnificationSpec=<scale:1.0,offsetX:0.0,offsetY:0.0>, locales=[zh_CN]]]
+,
+A11yWindow[AccessibilityWindowInfo[title=当当, displayId=0, id=19186, taskId=15608, type=TYPE_APPLICATION, layer=0, region=SkRegion((0,0,1080,2412)), bounds=Rect(0, 0 - 1080, 2412), focused=true, active=true, pictureInPicture=false, transitionTime=1238838530, hasParent=false, isAnchored=false, hasChildren=false]]
+WindowInfo[WindowInfo[title=当当, displayId=0, taskId=15608, type=1, layer=5, token=android.os.BinderProxy@bbcd8b8, region=SkRegion((0,0,1080,2412)), bounds=Rect(0, 0 - 1080, 2412), parent=null, focused=true, children=null, accessibility anchor=9223372034707292159, pictureInPicture=false, watchOutsideTouch=false, mTransformMatrix=Matrix{[1.0, 0.0, 0.0][0.0, 1.0, 0.0][0.0, 0.0, 1.0]}, mMagnificationSpec=<scale:1.0,offsetX:0.0,offsetY:0.0>, locales=[zh_CN]]]
+
+
+Window attributes:[{0=AccessibilityWindowAttributes{mAccessibilityWindowTitle=微软桌面mLocales=[zh_CN]}, 2=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 3=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 5=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 7=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 8=AccessibilityWindowAttributes{mAccessibilityWindowTitle=导航栏mLocales=[zh_CN]}, 9=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 10=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 13=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 20=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 21=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 22=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 12283=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 17590=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 18562=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 18572=AccessibilityWindowAttributes{mAccessibilityWindowTitle=系统桌面mLocales=[zh_CN]}, 18574=AccessibilityWindowAttributes{mAccessibilityWindowTitle=网易云音乐mLocales=[zh_CN]}, 18583=AccessibilityWindowAttributes{mAccessibilityWindowTitle=不将就 (电影《何以笙箫默》片尾主题曲)mLocales=[zh_CN]}, 18585=AccessibilityWindowAttributes{mAccessibilityWindowTitle=京东mLocales=[zh_CN]}, 18684=AccessibilityWindowAttributes{mAccessibilityWindowTitle=拼多多mLocales=[zh_CN]}, 18701=AccessibilityWindowAttributes{mAccessibilityWindowTitle=拼多多mLocales=[zh_CN]}, 18792=AccessibilityWindowAttributes{mAccessibilityWindowTitle=美团mLocales=[zh_CN]}, 19070=AccessibilityWindowAttributes{mAccessibilityWindowTitle=美团mLocales=[zh_CN]}, 19071=AccessibilityWindowAttributes{mAccessibilityWindowTitle=弹出式窗口mLocales=[zh_CN]}, 19141=AccessibilityWindowAttributes{mAccessibilityWindowTitle=闲鱼mLocales=[zh_CN]}, 19158=AccessibilityWindowAttributes{mAccessibilityWindowTitle=闲鱼mLocales=[zh_CN]}, 19186=AccessibilityWindowAttributes{mAccessibilityWindowTitle=当当mLocales=[zh_CN]}, 19300=AccessibilityWindowAttributes{mAccessibilityWindowTitle=美团mLocales=[zh_CN]}, 19301=AccessibilityWindowAttributes{mAccessibilityWindowTitle=弹出式窗口mLocales=[zh_CN]}, 19415=AccessibilityWindowAttributes{mAccessibilityWindowTitle=信息mLocales=[zh_CN]}, 19417=AccessibilityWindowAttributes{mAccessibilityWindowTitle=淘宝闪购mLocales=[zh_CN]}, 19418=AccessibilityWindowAttributes{mAccessibilityWindowTitle=淘宝闪购mLocales=[zh_CN]}, 19548=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 19549=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 19550=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 19551=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 19552=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 19553=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 19554=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}, 19555=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[zh_CN]}}]
+A11yInputFilter Info : 
+Enabled features of Display [0] = [KeyboardInterceptor,MotionEventInjector]
+Global client list info:{
+    Client list callbacks: 5
+    Client list killed: false
+    Client list broadcasts count: -1
+    Registered clients:{
+[com.android.launcher][com.oplus.safecenter, com.android.DeviceAsWebcam, com.qualcomm.qti.xrvd.service, com.oplus.crashbox, com.oplus.audio.effectcenter, com.android.providers.settings, com.oplus.customize.coreapp, oplus, com.oplus.healthservice, com.wapi.wapicertmanage, com.oplus.battery, com.oplus.logkit, com.android.inputdevices, com.oplus.nas, android, com.oplus.sauhelper, com.android.settings, com.oplus.athena, com.oplus.bttestmode, com.oplus.appplatform, com.oplus.securitypermission, com.oplus.sau, com.oplus.olc, com.heytap.mcs, com.oplus.lfeh, com.android.server.telecom, com.oplus.engineermode, com.android.location.fused, com.oplus.obrain, com.oplus.wirelesssettings, com.oplus.appbooster, com.oplus.owkservice, com.oplus.powermonitor, com.oplus.wifibackuprestore, com.oplus.subsys, com.oplus.atlas, com.oplus.trafficmonitor, com.oplus.mediaturbo, com.oplus.exsystemservice, com.android.keychain, com.oplus.qualityprotect, com.android.localtransport, com.oplus.onetrace, com.oplus.notificationmanager, com.android.dynsystem, com.oplus.postmanservice, com.oplus.engineernetwork][com.android.systemui][com.qualcomm.qti.xrvd.service, com.oplus.nas, com.oplus.bttestmode, com.oplus.engineermode, com.oplus.atlas, com.oplus.wirelesssettings, com.oplus.customize.coreapp, com.oplus.crashbox, com.oplus.obrain, com.android.inputdevices, com.oplus.owkservice, com.oplus.notificationmanager, com.oplus.subsys, com.oplus.exsystemservice, com.oplus.logkit, com.oplus.appplatform, com.android.localtransport, com.wapi.wapicertmanage, com.oplus.appbooster, oplus, com.android.dynsystem, com.oplus.audio.effectcenter, com.oplus.wifibackuprestore, com.oplus.trafficmonitor, android, com.android.settings, com.android.server.telecom, com.oplus.qualityprotect, com.android.providers.settings, com.oplus.lfeh, com.oplus.olc, com.oplus.powermonitor, com.oplus.postmanservice, com.oplus.securitypermission, com.oplus.healthservice, com.oplus.mediaturbo, com.heytap.mcs, com.oplus.engineernetwork, com.oplus.sau, com.android.DeviceAsWebcam, com.oplus.athena, com.oplus.sauhelper, com.android.location.fused, com.android.keychain, com.oplus.battery, com.oplus.onetrace, com.oplus.safecenter][com.oplus.deepthinker]
+
+Proxy manager state:
+    Number of proxy connections: 0
+    Registered proxy connections:
+Accessibility Display Listener:
+    SystemUI uid: 10216
+    1 valid display: 0

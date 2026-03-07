@@ -1,0 +1,518 @@
+  ACTIVITY me.ele/.orderlist.OrderListActivity a5505a0 pid=12159 userId=0 uid=10385 displayId=0(type=INTERNAL)
+    Local Activity 60777a5 State:
+      mResumed=true mStopped=false mFinished=false
+      mIsInMultiWindowMode=false mIsInPictureInPictureMode=false
+      mChangingConfigurations=false
+      mCurrentConfig={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      mLoadersStarted=true
+      Active Fragments in 15c3b40:
+        #0: ReportFragment{1d2ea79 #0 androidx.lifecycle.LifecycleDispatcher.report_fragment_tag}
+          mFragmentId=#0 mContainerId=#0 mTag=androidx.lifecycle.LifecycleDispatcher.report_fragment_tag
+          mState=5 mIndex=0 mWho=android:fragment:0 mBackStackNesting=0
+          mAdded=true mRemoving=false mFromLayout=false mInLayout=false
+          mHidden=false mDetached=false mMenuVisible=true mHasMenu=false
+          mRetainInstance=false mRetaining=false mUserVisibleHint=true
+          mFragmentManager=FragmentManager{15c3b40 in HostCallbacks{cd4e3be}}
+          mHost=android.app.Activity$HostCallbacks@cd4e3be
+          Child FragmentManager{6fd0c1f in ReportFragment{1d2ea79}}:
+            FragmentManager misc state:
+              mHost=android.app.Activity$HostCallbacks@cd4e3be
+              mContainer=android.app.Fragment$1@269cb6c
+              mParent=ReportFragment{1d2ea79 #0 androidx.lifecycle.LifecycleDispatcher.report_fragment_tag}
+              mCurState=5 mStateSaved=false mDestroyed=false
+      Added Fragments:
+        #0: ReportFragment{1d2ea79 #0 androidx.lifecycle.LifecycleDispatcher.report_fragment_tag}
+      FragmentManager misc state:
+        mHost=android.app.Activity$HostCallbacks@cd4e3be
+        mContainer=android.app.Activity$HostCallbacks@cd4e3be
+        mCurState=5 mStateSaved=false mDestroyed=false
+    ViewRoot:
+      mAdded=true
+      mRemoved=false
+      mStopped=false
+      mPausedForTransition=false
+      mConsumeBatchedInputScheduled=false
+      mConsumeBatchedInputImmediatelyScheduled=false
+      mPendingInputEventCount=0
+      mProcessInputEventsScheduled=false
+      mTraversalScheduled=false
+      mReportNextDraw=false
+      mLastDisplaySource=From Constructor 0 state 2 caller android.view.ViewRootImpl.<init>:1288 android.view.WindowManagerGlobal.addView:444 android.view.WindowManagerImpl.addView:158 android.app.ActivityThread.handleResumeActivity:5817 android.app.servertransaction.ResumeActivityItem.execute:64 android.app.servertransaction.ActivityTransactionItem.execute:60 android.app.servertransaction.TransactionExecutor.executeLifecycleItem:230 android.app.servertransaction.TransactionExecutor.executeTransactionItems:112 android.app.servertransaction.TransactionExecutor.execute:86 android.app.ActivityThread$H.handleMessage:2902 android.os.Handler.dispatchMessage:107 android.os.Looper.loopOnce:282 android.os.Looper.loop:387 android.app.ActivityThread.main:9500 java.lang.reflect.Method.invoke:-2 com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run:600 com.android.internal.os.ZygoteInit.main:1005 <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> 
+      mLastDisplayStateSource=State 2 caller android.view.WindowManagerGlobal.addView:463 android.view.WindowManagerImpl.addView:158 android.app.ActivityThread.handleResumeActivity:5817 android.app.servertransaction.ResumeActivityItem.execute:64 android.app.servertransaction.ActivityTransactionItem.execute:60 android.app.servertransaction.TransactionExecutor.executeLifecycleItem:230 android.app.servertransaction.TransactionExecutor.executeTransactionItems:112 android.app.servertransaction.TransactionExecutor.execute:86 android.app.ActivityThread$H.handleMessage:2902 android.os.Handler.dispatchMessage:107 android.os.Looper.loopOnce:282 android.os.Looper.loop:387 android.app.ActivityThread.main:9500 java.lang.reflect.Method.invoke:-2 com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run:600 com.android.internal.os.ZygoteInit.main:1005 <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> 
+      mLastDisplayListenerState=registerListeners , time 1771831489129 caller android.view.ViewRootImpl.setView:1826 android.view.WindowManagerGlobal.addView:463 android.view.WindowManagerImpl.addView:158 android.app.ActivityThread.handleResumeActivity:5817 android.app.servertransaction.ResumeActivityItem.execute:64 android.app.servertransaction.ActivityTransactionItem.execute:60 android.app.servertransaction.TransactionExecutor.executeLifecycleItem:230 android.app.servertransaction.TransactionExecutor.executeTransactionItems:112 android.app.servertransaction.TransactionExecutor.execute:86 android.app.ActivityThread$H.handleMessage:2902 android.os.Handler.dispatchMessage:107 android.os.Looper.loopOnce:282 android.os.Looper.loop:387 android.app.ActivityThread.main:9500 java.lang.reflect.Method.invoke:-2 com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run:600 com.android.internal.os.ZygoteInit.main:1005 <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> 
+      mLastScheduleTraversalsInfo=mLastScheduleTraversalTime=0,CurrentTime=1488725087
+      mLastReportedMergedConfiguration={mGlobalConfig={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52017 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1} mOverrideConfig={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}}
+      mLastConfigurationFromResources={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      ViewRootImplExtImpl
+        mCancelDrawCount:0
+        mWaitingLastSyncDraw:false
+      mLastReportedActivityWindowInfo=ActivityWindowInfo{isEmbedded=false, taskBounds=Rect(0, 0 - 1080, 2412), taskFragmentBounds=Rect(0, 0 - 1080, 2412)}
+      mIsAmbientMode=false
+      mUnbufferedInputSource=0
+      mAttachInfo=       AttachInfo:
+        mHasWindowFocus=true
+        mWindowVisibility=0
+        mInTouchMode=true
+        mUnbufferedDispatchRequested=false
+      android.view.ViewRootImpl$NativePreImeInputStage: mQueueLength=0
+      android.view.ViewRootImpl$ImeInputStage: mQueueLength=0
+      android.view.ViewRootImpl$NativePostImeInputStage: mQueueLength=0
+      android.view.ViewRootImpl$WindowInputEventReceiver
+       mInputChannel: 16c86fb me.ele/me.ele.orderlist.OrderListActivity (client)
+       mSeqMap: {}
+       mReceiverPtr:
+        mInputConsumer:
+          mResampleTouch = true
+          mChannel = 16c86fb me.ele/me.ele.orderlist.OrderListActivity (client)
+          mMsgDeferred: false
+          Batches:
+              <empty>
+          mSeqChains:
+              <empty>
+          mConsumeTimes:
+              <empty>
+          
+        mBatchedInputEventPending: false
+        mOutboundQueue:
+          <empty>
+        
+    Choreographer:
+      mFrameScheduled=true
+      mLastFrameTime=1238888913 (6 ms ago)
+    InsetsController:
+        InsetsState
+          mDisplayFrame=Rect(0, 0 - 1080, 2412)
+          mDisplayCutout=DisplayCutout{insets=Rect(0, 96 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(0, 0 - 165, 96), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2412 physicalDisplayWidth=1440 physicalDisplayHeight=3216 density={3.0} cutoutSpec={M -720,0 L -720,128 L -500,128 L -500,0 Z} rotation={0} scale={1.0} physicalPixelDisplaySizeRatio={0.75}}} sideOverrides={}}
+          mRoundedCorners=RoundedCorners{[RoundedCorner{position=TopLeft, radius=45, center=Point(45, 45)}, RoundedCorner{position=TopRight, radius=45, center=Point(1035, 45)}, RoundedCorner{position=BottomRight, radius=45, center=Point(1035, 2367)}, RoundedCorner{position=BottomLeft, radius=45, center=Point(45, 2367)}]}
+          mRoundedCornerFrame=Rect(0, 0 - 1080, 2412)
+          mPrivacyIndicatorBounds=PrivacyIndicatorBounds {static bounds=Rect(852, 0 - 1092, 96) rotation=0}
+          mDisplayShape=DisplayShape{ spec=-1063678173 displayWidth=1080 displayHeight=2412 physicalPixelDisplaySizeRatio=1.0 rotation=0 offsetX=0 offsetY=0 scale=1.0}
+            InsetsSource id=3 type=ime frame=[0,0][0,0] visible=false flags= sideHint=NONE boundingRects=null
+            InsetsSource id=27 type=displayCutout frame=[0,0][1080,96] visible=true flags= sideHint=TOP boundingRects=null
+            InsetsSource id=342b0001 type=navigationBars frame=[0,2280][1080,2412] visible=true flags= sideHint=BOTTOM boundingRects=null
+            InsetsSource id=342b0004 type=systemGestures frame=[0,0][0,0] visible=true flags= sideHint=NONE boundingRects=null
+            InsetsSource id=342b0005 type=mandatorySystemGestures frame=[0,2280][1080,2412] visible=true flags= sideHint=BOTTOM boundingRects=null
+            InsetsSource id=342b0006 type=tappableElement frame=[0,2280][1080,2412] visible=true flags= sideHint=BOTTOM boundingRects=null
+            InsetsSource id=342b0024 type=systemGestures frame=[0,0][0,0] visible=true flags= sideHint=NONE boundingRects=null
+            InsetsSource id=56560000 type=statusBars frame=[0,0][1080,96] visible=true flags= sideHint=TOP boundingRects=null
+            InsetsSource id=56560005 type=mandatorySystemGestures frame=[0,0][1080,132] visible=true flags= sideHint=TOP boundingRects=null
+            InsetsSource id=56560006 type=tappableElement frame=[0,0][1080,96] visible=true flags= sideHint=TOP boundingRects=null
+        mIsPredictiveBackImeHideAnimInProgress=false
+    WindowOnBackDispatcher:
+        Top Callback: android.view.ViewRootImpl$$ExternalSyntheticLambda11@96b28be
+        Callbacks: 
+          Callback: android.view.ViewRootImpl$$ExternalSyntheticLambda11@96b28be Priority=0
+    ImeBackAnimationController:
+        mLastProgress=0.0
+        mTriggerBack=false
+        mIsPreCommitAnimationInProgress=false
+        mStartRootScrollY=0
+        isBackAnimationAllowed=true
+        isAdjustPan=false
+        isHideAnimationInProgress=false
+    View Hierarchy:
+      com.android.internal.policy.DecorView{85b3190 V.E...... R....... 0,0-1080,2412 aid=2 alpha=1.0 viewInfo = }[OrderListActivity]
+        android.widget.LinearLayout{e176c42 V.E...... ........ 0,0-1080,2280 alpha=1.0 viewInfo = }
+          android.view.ViewStub{48eb535 G.E...... ......I. 0,0-0,0 #10201cb android:id/action_mode_bar_stub alpha=1.0 viewInfo = }
+          android.widget.FrameLayout{3c7f28d V.E...... ........ 0,0-1080,2280 alpha=1.0 viewInfo = }
+            androidx.appcompat.widget.FitWindowsLinearLayout{3e6c724 V.E...... ........ 0,0-1080,2280 #7f09004e app:id/action_bar_root alpha=1.0 viewInfo = }
+              androidx.appcompat.widget.ViewStubCompat{7f77dca G.E...... ......I. 0,0-0,0 #7f09005e app:id/action_mode_bar_stub alpha=1.0 viewInfo = }
+              androidx.appcompat.widget.ContentFrameLayout{5643b7 V.E...... ........ 0,0-1080,2280 #1020002 android:id/content alpha=1.0 viewInfo = }
+                com.ut.mini.exposure.AutoExpoFrameLayout{4c74c0a V.E...... ........ 0,0-1080,2280 alpha=1.0 viewInfo = }
+                  androidx.coordinatorlayout.widget.CoordinatorLayout{fe85ab6 V.E...... ........ 0,0-1080,2280 alpha=1.0 viewInfo = }
+                    android.widget.FrameLayout{fee8251 V.E...... ........ 0,0-1080,2280 #7f090a45 app:id/main_fragment alpha=1.0 viewInfo = }
+                      me.ele.components.refresh.EMSwipeRefreshLayout{1ba6b78 V.E...... ........ 0,0-1080,2280 #7f090d17 app:id/refresh_layout alpha=1.0 viewInfo = }
+                        android.widget.FrameLayout{c6b7632 I.E...... ......ID 0,0-1080,2280 alpha=1.0 viewInfo = }
+                          android.widget.FrameLayout{e7f2e3d V.E...... ......ID 0,-822-1080,0 #7f090917 app:id/layout_root alpha=1.0 viewInfo = }
+                            android.view.View{42be394 V.ED..... ......ID 0,0-1080,822 #7f091313 app:id/v_background alpha=1.0 viewInfo = }
+                            android.widget.LinearLayout{ada500 V.E...... ......ID 0,780-1080,822 #7f0908d6 app:id/layout_content alpha=1.0 viewInfo = }
+                              androidx.appcompat.widget.AppCompatTextView{470bf83 V.ED..... ......ID 468,0-612,42 #7f0912c3 app:id/tv_title alpha=1.0 viewInfo = }
+                              me.ele.design.loading.AlscBeansView{f04b3b G.ED..... ......I. 0,0-0,0 #7f091324 app:id/v_loading alpha=1.0 viewInfo = }
+                        android.widget.FrameLayout{56334db V.E...... ........ 0,0-1080,2280 alpha=1.0 viewInfo = }
+                          android.widget.LinearLayout{a6389ea V.E...... ........ 0,0-1080,2280 alpha=1.0 viewInfo = }
+                            me.ele.orderlist.ui.view.OrderStatusBarView{597c27a V.ED..... ........ 0,0-1080,96 #7f090bb3 app:id/order_status_bar alpha=1.0 viewInfo = }
+                            android.widget.LinearLayout{b70ddd5 V.E...... ........ 0,96-1080,228 #7f090b68 app:id/ol_page_titlebar_searchbox alpha=1.0 viewInfo = }
+                              android.widget.LinearLayout{8eb28c VFE...C.. ........ 0,0-120,132 #7f09020a app:id/back_container alpha=1.0 viewInfo = }
+                                android.widget.ImageView{33b2a2b V.ED..... ........ 24,30-96,102 alpha=1.0 viewInfo = }
+                              android.widget.LinearLayout{f4c3e88 VFE...C.. ........ 132,18-1044,114 #7f090eba app:id/search_container alpha=1.0 viewInfo = }
+                                android.widget.ImageView{3b44021 V.ED..... ........ 24,27-66,69 alpha=1.0 viewInfo = }
+                                android.widget.TextView{9cf8c46 V.ED..... ........ 90,19-258,76 alpha=1.0 viewInfo = }
+                            androidx.coordinatorlayout.widget.CoordinatorLayout{146b49b V.E...... ........ 0,228-1080,2280 alpha=1.0 viewInfo = }
+                              com.google.android.material.appbar.AppBarLayout{32a30aa V.E...... ........ 0,0-1080,151 #7f0901ce app:id/app_bar_layout alpha=1.0 viewInfo = }
+                                android.widget.LinearLayout{da2e795 V.E...... ........ 0,0-1080,150 #7f09100e app:id/tab_container alpha=1.0 viewInfo = }
+                                  me.ele.orderlist.ui.view.OrderTabLayout{8ffcb4c V.E...... ........ 18,9-1080,138 #7f091004 app:id/tab alpha=1.0 viewInfo = }
+                                    me.ele.orderlist.ui.view.TabLayout26{eac4a21 VFED..... ........ 0,0-1062,129 #7f091005 app:id/tabLayout alpha=1.0 viewInfo = }
+                                      me.ele.orderlist.ui.view.TabLayout26$SlidingTabStrip{477ce46 V.ED..... ........ 0,0-1062,129 alpha=1.0 viewInfo = }
+                                        me.ele.orderlist.ui.view.TabLayout26$TabView{8005807 VFE...C.. ..S..... 105,0-161,73 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatImageView{7de3258 G.ED..... ..S...I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{5026fb1 G.ED..... ..S...ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                          android.view.View{3f7ac96 G.ED..... ..S...I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                        me.ele.orderlist.ui.view.TabLayout26$TabView{f61cd34 VFE...C.. ........ 371,0-427,73 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatImageView{90e6017 G.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{5301c04 G.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                          android.view.View{d1d55ed G.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                        me.ele.orderlist.ui.view.TabLayout26$TabView{362675d VFE...C.. ........ 637,0-692,73 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatImageView{7f9fc22 G.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{48ee6b3 G.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                          android.view.View{c94f470 G.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                        me.ele.orderlist.ui.view.TabLayout26$TabView{b5288d2 VFE...C.. ........ 902,0-957,73 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatImageView{c8663e9 G.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{6dfb86e G.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                          android.view.View{a873b0f G.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                    android.widget.LinearLayout{16826d2 V.E...... ........ 0,0-1062,111 #7f091006 app:id/tabLayout_mask alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{ff3bd5d V.E...... ........ 0,0-270,111 alpha=1.0 viewInfo = }
+                                        android.widget.RelativeLayout{4aabb34 V.E...... ........ 0,0-270,111 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{e403e07 V.ED..... ........ 75,30-195,111 #7f091064 app:id/text alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{c2ce79c G.ED..... ......I. 0,0-0,0 #7f0911c8 app:id/tv_count_tip alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{6b3d259 V.E...... ........ 270,0-540,111 alpha=1.0 viewInfo = }
+                                        android.widget.RelativeLayout{3d256a0 V.E...... ........ 0,0-270,111 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{d98b3a3 V.ED..... ........ 54,38-216,111 #7f091064 app:id/text alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{c5855a5 G.ED..... ......I. 0,0-0,0 #7f0911c8 app:id/tv_count_tip alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{8163ccc V.E...... ........ 540,0-810,111 alpha=1.0 viewInfo = }
+                                        android.widget.RelativeLayout{e78e6ff V.E...... ........ 0,0-270,111 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{e7dde1e V.ED..... ........ 54,38-216,111 #7f091064 app:id/text alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{e52ed7a G.ED..... ......I. 0,0-0,0 #7f0911c8 app:id/tv_count_tip alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{2fef41b V.E...... ........ 810,0-1062,111 alpha=1.0 viewInfo = }
+                                        android.widget.RelativeLayout{6a5be2a V.E...... ........ 0,0-270,111 alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{9c63b15 V.ED..... ........ 81,38-189,111 #7f091064 app:id/text alpha=1.0 viewInfo = }
+                                          androidx.appcompat.widget.AppCompatTextView{406792b G.ED..... ......I. 0,0-0,0 #7f0911c8 app:id/tv_count_tip alpha=1.0 viewInfo = }
+                                    android.widget.LinearLayout{c5c7391 V.E...... ........ 0,0-1062,129 #7f09036c app:id/clickLayout alpha=1.0 viewInfo = }
+                                      android.view.View{cd059b8 VFED..C.. ........ 0,0-270,129 alpha=1.0 viewInfo = }
+                                      android.view.View{1b992f6 VFED..C.. ........ 270,0-540,129 alpha=1.0 viewInfo = }
+                                      android.view.View{70eb6f7 VFED..C.. ........ 540,0-810,129 alpha=1.0 viewInfo = }
+                                      android.view.View{70d5964 VFED..C.. ........ 810,0-1080,129 alpha=1.0 viewInfo = }
+                                  androidx.legacy.widget.Space{943b7cd I.ED..... ......I. 1080,0-1080,138 alpha=1.0 viewInfo = }
+                                  android.widget.ImageView{cd14862 VFED..C.. ........ 1080,36-1152,108 #7f090857 app:id/iv_new_search alpha=1.0 viewInfo = }
+                                android.view.View{963e882 V.ED..... ........ 0,150-1080,151 #7f0910f7 app:id/toolbar_line alpha=0.0 viewInfo = }
+                              me.ele.orderlist.ui.view.NoScrollViewPager{9fe6d1f VFED..... ........ 0,151-1080,2052 #7f090bd1 app:id/pager alpha=1.0 viewInfo = }
+                                android.widget.FrameLayout{e103c9 V.E...... ........ 0,0-1080,1901 alpha=1.0 viewInfo = }
+                                  androidx.recyclerview.widget.RecyclerView{df8a7d0 VFED..... ........ 0,0-1080,1901 #7f090981 app:id/list_view alpha=1.0 viewInfo = }
+                                    me.ele.android.agent.core.layout.ItemContainer{b73aac7 V.E...... ........ 0,-78-1080,536 alpha=1.0 viewInfo = }
+                                      me.ele.orderlist.magex.SimpleMistView{5e04c6a V.E...... ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                        com.koubei.android.mist.flex.node.container.MistContainerView{b3288f4 V.ED..... ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                          com.koubei.android.mist.flex.node.container.MistContainerView{e37e7ff VFED..CL. ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                            com.koubei.android.mist.flex.node.container.MistContainerView{4610a92 V.ED..... ........ 36,0-1044,590 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{af6d81d VFED..C.. ........ 36,36-797,108 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{4694060 V.ED..... ........ 0,0-72,72 alpha=1.0 viewInfo = }
+                                                  com.koubei.android.mist.flex.node.image.MistImageView{d762c63 V.ED..... ........ 0,0-72,72 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{d547ed V.ED..... ........ 36,120-277,168 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{cadd919 V.ED..... ........ 0,0-241,48 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.scroll.MistHorizonScroll{813dde VFED..... ........ 36,204-972,408 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{a92028c V.ED..... ........ 0,0-936,204 alpha=1.0 viewInfo = }
+                                                  com.koubei.android.mist.flex.node.container.MistContainerView{f952bbf V.ED..CL. ........ 0,0-708,204 alpha=1.0 viewInfo = }
+                                                    com.koubei.android.mist.flex.node.container.MistContainerView{3df59ea V.ED..... ........ 0,0-204,204 alpha=1.0 viewInfo = }
+                                                      com.koubei.android.mist.flex.node.image.MistImageView{139edd5 V.ED..... ........ 0,0-204,204 alpha=1.0 viewInfo = }
+                                                    com.koubei.android.mist.flex.node.container.MistContainerView{a2bb78 V.ED..... ........ 216,0-420,204 alpha=1.0 viewInfo = }
+                                                      com.koubei.android.mist.flex.node.image.MistImageView{87ac4db V.ED..... ........ 0,0-204,204 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{1389251 V.ED..CL. ........ 777,204-972,408 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{c3aa19c VFED..C.. ........ 433,442-972,542 alpha=1.0 viewInfo = }
+                                    me.ele.android.agent.core.layout.ItemContainer{2f99843 V.E...... ........ 0,536-1080,1150 alpha=1.0 viewInfo = }
+                                      me.ele.orderlist.magex.SimpleMistView{62d051b V.E...... ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                        com.koubei.android.mist.flex.node.container.MistContainerView{77c6ec0 V.ED..... ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                          com.koubei.android.mist.flex.node.container.MistContainerView{88d4aeb VFED..CL. ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                            com.koubei.android.mist.flex.node.container.MistContainerView{605033e V.ED..... ........ 36,0-1044,590 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{239d7f9 VFED..C.. ........ 36,36-652,108 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{919b6ec V.ED..... ........ 0,0-72,72 alpha=1.0 viewInfo = }
+                                                  com.koubei.android.mist.flex.node.image.MistImageView{713759f V.ED..... ........ 0,0-72,72 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{f7c4073 V.ED..... ........ 36,120-277,168 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{c36fab5 V.ED..... ........ 0,0-241,48 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.scroll.MistHorizonScroll{ca154a VFED..... ........ 36,204-972,408 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{46155d8 V.ED..... ........ 0,0-936,204 alpha=1.0 viewInfo = }
+                                                  com.koubei.android.mist.flex.node.container.MistContainerView{9c3ccbb V.ED..CL. ........ 0,0-708,204 alpha=1.0 viewInfo = }
+                                                    com.koubei.android.mist.flex.node.container.MistContainerView{1c3c16 V.ED..... ........ 0,0-204,204 alpha=1.0 viewInfo = }
+                                                      com.koubei.android.mist.flex.node.image.MistImageView{2a98d31 V.ED..... ........ 0,0-204,204 alpha=1.0 viewInfo = }
+                                                    com.koubei.android.mist.flex.node.container.MistContainerView{d81f784 V.ED..... ........ 216,0-420,204 alpha=1.0 viewInfo = }
+                                                      com.koubei.android.mist.flex.node.image.MistImageView{5587997 V.ED..... ........ 0,0-204,204 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{dd8cb6d V.ED..CL. ........ 777,204-972,408 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{9b94a5c VFED..C.. ........ 699,442-972,542 alpha=1.0 viewInfo = }
+                                    me.ele.android.agent.core.layout.ItemContainer{18f1dfe V.E...... ........ 0,1150-1080,1764 alpha=1.0 viewInfo = }
+                                      me.ele.orderlist.magex.SimpleMistView{69803a2 V.E...... ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                        com.koubei.android.mist.flex.node.container.MistContainerView{6562fac V.ED..... ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                          com.koubei.android.mist.flex.node.container.MistContainerView{a2c1abd VFED..CL. ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                            com.koubei.android.mist.flex.node.container.MistContainerView{8bb1c0a V.ED..... ........ 36,0-1044,590 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{40e475 VFED..C.. ........ 36,36-301,108 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{9cc9a98 V.ED..... ........ 0,0-72,72 alpha=1.0 viewInfo = }
+                                                  com.koubei.android.mist.flex.node.image.MistImageView{3f22c7b V.ED..... ........ 0,0-72,72 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{ae4844d V.ED..... ........ 36,120-277,168 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{cc852f1 V.ED..... ........ 0,0-241,48 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.scroll.MistHorizonScroll{1f6eed6 VFED..... ........ 36,204-972,408 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{d3cc844 V.ED..... ........ 0,0-936,204 alpha=1.0 viewInfo = }
+                                                  com.koubei.android.mist.flex.node.container.MistContainerView{26d1557 V.ED..CL. ........ 0,0-708,204 alpha=1.0 viewInfo = }
+                                                    com.koubei.android.mist.flex.node.container.MistContainerView{54b2262 V.ED..... ........ 0,0-204,204 alpha=1.0 viewInfo = }
+                                                      com.koubei.android.mist.flex.node.image.MistImageView{7e2d2d V.ED..... ........ 0,0-204,204 alpha=1.0 viewInfo = }
+                                                    com.koubei.android.mist.flex.node.container.MistContainerView{86024b0 V.ED..... ........ 216,0-420,204 alpha=1.0 viewInfo = }
+                                                      com.koubei.android.mist.flex.node.image.MistImageView{f43aff3 V.ED..... ........ 0,0-204,204 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{c3d6f29 V.ED..CL. ........ 777,204-972,408 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{7b48768 VFED..C.. ........ 699,442-972,542 alpha=1.0 viewInfo = }
+                                    me.ele.android.agent.core.layout.ItemContainer{4dfb338 V.E...... ........ 0,1764-1080,2378 alpha=1.0 viewInfo = }
+                                      me.ele.orderlist.magex.SimpleMistView{e23612c V.E...... ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                        com.koubei.android.mist.flex.node.container.MistContainerView{12a8f11 V.ED..... ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                          com.koubei.android.mist.flex.node.container.MistContainerView{8e4f490 VFED..CL. ........ 0,0-1080,614 alpha=1.0 viewInfo = }
+                                            com.koubei.android.mist.flex.node.container.MistContainerView{322fe77 V.ED..... ........ 36,0-1044,590 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{edc4876 VFED..C.. ........ 36,36-256,108 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{f980b4d V.ED..... ........ 0,0-72,72 alpha=1.0 viewInfo = }
+                                                  com.koubei.android.mist.flex.node.image.MistImageView{678cae4 V.ED..... ........ 0,0-72,72 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{edef5b6 V.ED..... ........ 36,120-277,168 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{1bc7602 V.ED..... ........ 0,0-241,48 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{6e70f49 V.ED..... ........ 36,204-803,408 alpha=1.0 viewInfo = }
+                                                com.koubei.android.mist.flex.node.container.MistContainerView{a69b150 V.ED..... ........ 0,0-204,204 alpha=1.0 viewInfo = }
+                                                  com.koubei.android.mist.flex.node.image.MistImageView{bf0b13 V.ED..... ........ 0,0-204,204 alpha=1.0 viewInfo = }
+                                              com.koubei.android.mist.flex.node.container.MistContainerView{f7898d VFED..C.. ........ 699,442-972,542 alpha=1.0 viewInfo = }
+                                  me.ele.design.skeleton.AlscSkeletonView{56c0ace V.E...... ........ 0,0-1080,1901 #7f090198 app:id/alsc_skeleton_view alpha=1.0 viewInfo = }
+                                android.widget.FrameLayout{e0870fc V.E...... ........ 1080,0-2160,1901 alpha=1.0 viewInfo = }
+                                  androidx.recyclerview.widget.RecyclerView{39f8def VFED..... ........ 0,0-1080,1901 #7f090981 app:id/list_view alpha=1.0 viewInfo = }
+                                  me.ele.design.skeleton.AlscSkeletonView{aed1385 V.E...... ........ 0,0-1080,1901 #7f090198 app:id/alsc_skeleton_view alpha=1.0 viewInfo = }
+                                android.widget.FrameLayout{1011a0b V.E...... ........ 2160,0-3240,1901 alpha=1.0 viewInfo = }
+                                  androidx.recyclerview.widget.RecyclerView{c205da VFED..... ........ 0,0-1080,1901 #7f090981 app:id/list_view alpha=1.0 viewInfo = }
+                                  me.ele.design.skeleton.AlscSkeletonView{2e9a0e8 V.E...... ........ 0,0-1080,1901 #7f090198 app:id/alsc_skeleton_view alpha=1.0 viewInfo = }
+                                android.widget.FrameLayout{34aa5a6 V.E...... ........ 3240,0-4320,1901 alpha=1.0 viewInfo = }
+                                  androidx.recyclerview.widget.RecyclerView{7f06301 VFED..... ........ 0,0-1080,1901 #7f090981 app:id/list_view alpha=1.0 viewInfo = }
+                                  me.ele.design.skeleton.AlscSkeletonView{9a54be7 V.E...... ........ 0,0-1080,1901 #7f090198 app:id/alsc_skeleton_view alpha=1.0 viewInfo = }
+                          me.ele.component.widget.ContentLoadingLayout{e563088 V.E...... ........ 0,0-1080,2280 #7f090225 app:id/base_home_fragment_loading_layout alpha=1.0 viewInfo = }
+                            android.widget.FrameLayout{1eee188 G.E...... ......ID 0,0-0,0 #7f09053b app:id/error_container alpha=1.0 viewInfo = }
+                              me.ele.component.errorview.EleErrorView{29da721 V.E...... ......I. 0,0-0,0 #7f09054e app:id/error_view alpha=1.0 viewInfo = }
+                                android.widget.LinearLayout{a926746 V.E...... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                  com.taobao.uikit.extend.feature.view.TUrlImageView{7117781 V.ED..... ......I. 0,0-0,0 #7f09050a app:id/ele_error_image_view alpha=1.0 viewInfo = }
+                                  androidx.appcompat.widget.AppCompatTextView{1f17d07 V.ED..... ......ID 0,0-0,0 #7f09050f app:id/ele_error_title_text_view alpha=1.0 viewInfo = }
+                                  androidx.appcompat.widget.AppCompatTextView{2548e34 G.ED..... ......ID 0,0-0,0 #7f09050e app:id/ele_error_subtitle_text_view alpha=0.6 viewInfo = }
+                                  android.widget.LinearLayout{18c945d V.E...... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                    androidx.appcompat.widget.AppCompatTextView{afdb1d2 GFED..C.. ......I. 0,0-0,0 #7f09050c app:id/ele_error_negative_button alpha=1.0 viewInfo = }
+                                    androidx.appcompat.widget.AppCompatTextView{49ee2a3 VFED..C.. ......I. 0,0-0,0 #7f09050d app:id/ele_error_positive_button alpha=1.0 viewInfo = }
+                            android.widget.FrameLayout{dc659a0 GFE...C.. ......ID 0,0-0,0 #7f0903d8 app:id/content_loading_container alpha=1.0 viewInfo = }
+                              me.ele.components.refresh.EleLoadingView{e831959 V.E...... ......I. 0,0-0,0 #7f090514 app:id/ele_loading_view alpha=1.0 viewInfo = }
+                                com.taobao.uikit.extend.feature.view.TUrlImageView{f44a2e6 V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                              me.ele.components.refresh.ClockLoadingView{361191e V.ED..... ......I. 0,0-0,0 #7f0903da app:id/content_loading_view alpha=1.0 viewInfo = }
+        android.widget.LinearLayout{357139 V.E...... ........ 0,0-1080,2184 #7f0913a3 app:id/water_mark_view alpha=1.0 viewInfo = }
+        android.view.View{dbfa027 V.ED..... ........ 0,2280-1080,2412 #1020030 android:id/navigationBarBackground alpha=1.0 viewInfo = }
+        android.view.View{28d42d4 V.ED..... ........ 0,0-1080,96 #102002f android:id/statusBarBackground alpha=1.0 viewInfo = }
+    ViewRoot:
+      mAdded=true
+      mRemoved=false
+      mStopped=true
+      mPausedForTransition=false
+      mConsumeBatchedInputScheduled=false
+      mConsumeBatchedInputImmediatelyScheduled=false
+      mPendingInputEventCount=0
+      mProcessInputEventsScheduled=false
+      mTraversalScheduled=false
+      mReportNextDraw=false
+      mLastPerformTraversalsFailedReason=view_not_visible
+      mLastDisplaySource=From Constructor 0 state 2 caller android.view.ViewRootImpl.<init>:1288 android.view.WindowManagerGlobal.addView:444 android.view.WindowManagerImpl.addView:158 android.app.ActivityThread.handleResumeActivity:5817 android.app.servertransaction.ResumeActivityItem.execute:64 android.app.servertransaction.ActivityTransactionItem.execute:60 android.app.servertransaction.TransactionExecutor.executeLifecycleItem:230 android.app.servertransaction.TransactionExecutor.executeTransactionItems:112 android.app.servertransaction.TransactionExecutor.execute:86 android.app.ActivityThread$H.handleMessage:2902 android.os.Handler.dispatchMessage:107 android.os.Looper.loopOnce:282 android.os.Looper.loop:387 android.app.ActivityThread.main:9500 java.lang.reflect.Method.invoke:-2 com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run:600 com.android.internal.os.ZygoteInit.main:1005 <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> 
+      mLastDisplayStateSource=State 2 caller android.view.WindowManagerGlobal.addView:463 android.view.WindowManagerImpl.addView:158 android.app.ActivityThread.handleResumeActivity:5817 android.app.servertransaction.ResumeActivityItem.execute:64 android.app.servertransaction.ActivityTransactionItem.execute:60 android.app.servertransaction.TransactionExecutor.executeLifecycleItem:230 android.app.servertransaction.TransactionExecutor.executeTransactionItems:112 android.app.servertransaction.TransactionExecutor.execute:86 android.app.ActivityThread$H.handleMessage:2902 android.os.Handler.dispatchMessage:107 android.os.Looper.loopOnce:282 android.os.Looper.loop:387 android.app.ActivityThread.main:9500 java.lang.reflect.Method.invoke:-2 com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run:600 com.android.internal.os.ZygoteInit.main:1005 <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> 
+      mLastDisplayListenerState=registerListeners , time 1771831488840 caller android.view.ViewRootImpl.setView:1826 android.view.WindowManagerGlobal.addView:463 android.view.WindowManagerImpl.addView:158 android.app.ActivityThread.handleResumeActivity:5817 android.app.servertransaction.ResumeActivityItem.execute:64 android.app.servertransaction.ActivityTransactionItem.execute:60 android.app.servertransaction.TransactionExecutor.executeLifecycleItem:230 android.app.servertransaction.TransactionExecutor.executeTransactionItems:112 android.app.servertransaction.TransactionExecutor.execute:86 android.app.ActivityThread$H.handleMessage:2902 android.os.Handler.dispatchMessage:107 android.os.Looper.loopOnce:282 android.os.Looper.loop:387 android.app.ActivityThread.main:9500 java.lang.reflect.Method.invoke:-2 com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run:600 com.android.internal.os.ZygoteInit.main:1005 <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> 
+      mLastScheduleTraversalsInfo=mLastScheduleTraversalTime=0,CurrentTime=1488725090
+      mLastReportedMergedConfiguration={mGlobalConfig={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52017 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1} mOverrideConfig={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}}
+      mLastConfigurationFromResources={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      ViewRootImplExtImpl
+        mCancelDrawCount:0
+        mWaitingLastSyncDraw:false
+      mLastReportedActivityWindowInfo=ActivityWindowInfo{isEmbedded=false, taskBounds=Rect(0, 0 - 1080, 2412), taskFragmentBounds=Rect(0, 0 - 1080, 2412)}
+      mIsAmbientMode=false
+      mUnbufferedInputSource=0
+      mAttachInfo=       AttachInfo:
+        mHasWindowFocus=false
+        mWindowVisibility=8
+        mInTouchMode=true
+        mUnbufferedDispatchRequested=false
+      android.view.ViewRootImpl$NativePreImeInputStage: mQueueLength=0
+      android.view.ViewRootImpl$ImeInputStage: mQueueLength=0
+      android.view.ViewRootImpl$NativePostImeInputStage: mQueueLength=0
+      android.view.ViewRootImpl$WindowInputEventReceiver
+       mInputChannel: f1d1ed me.ele/me.ele.application.ui.Launcher.LauncherActivity (client)
+       mSeqMap: {}
+       mReceiverPtr:
+        mInputConsumer:
+          mResampleTouch = true
+          mChannel = f1d1ed me.ele/me.ele.application.ui.Launcher.LauncherActivity (client)
+          mMsgDeferred: false
+          Batches:
+              <empty>
+          mSeqChains:
+              <empty>
+          mConsumeTimes:
+              <empty>
+          
+        mBatchedInputEventPending: false
+        mOutboundQueue:
+          <empty>
+        
+    Choreographer:
+      mFrameScheduled=true
+      mLastFrameTime=1238888913 (8 ms ago)
+    InsetsController:
+        InsetsState
+          mDisplayFrame=Rect(0, 0 - 1080, 2412)
+          mDisplayCutout=DisplayCutout{insets=Rect(0, 96 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(0, 0 - 165, 96), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2412 physicalDisplayWidth=1440 physicalDisplayHeight=3216 density={3.0} cutoutSpec={M -720,0 L -720,128 L -500,128 L -500,0 Z} rotation={0} scale={1.0} physicalPixelDisplaySizeRatio={0.75}}} sideOverrides={}}
+          mRoundedCorners=RoundedCorners{[RoundedCorner{position=TopLeft, radius=45, center=Point(45, 45)}, RoundedCorner{position=TopRight, radius=45, center=Point(1035, 45)}, RoundedCorner{position=BottomRight, radius=45, center=Point(1035, 2367)}, RoundedCorner{position=BottomLeft, radius=45, center=Point(45, 2367)}]}
+          mRoundedCornerFrame=Rect(0, 0 - 1080, 2412)
+          mPrivacyIndicatorBounds=PrivacyIndicatorBounds {static bounds=Rect(852, 0 - 1092, 96) rotation=0}
+          mDisplayShape=DisplayShape{ spec=-1063678173 displayWidth=1080 displayHeight=2412 physicalPixelDisplaySizeRatio=1.0 rotation=0 offsetX=0 offsetY=0 scale=1.0}
+            InsetsSource id=3 type=ime frame=[0,0][0,0] visible=false flags= sideHint=NONE boundingRects=null
+            InsetsSource id=27 type=displayCutout frame=[0,0][1080,96] visible=true flags= sideHint=TOP boundingRects=null
+            InsetsSource id=342b0001 type=navigationBars frame=[0,2280][1080,2412] visible=true flags= sideHint=BOTTOM boundingRects=null
+            InsetsSource id=342b0004 type=systemGestures frame=[0,0][0,0] visible=true flags= sideHint=NONE boundingRects=null
+            InsetsSource id=342b0005 type=mandatorySystemGestures frame=[0,2280][1080,2412] visible=true flags= sideHint=BOTTOM boundingRects=null
+            InsetsSource id=342b0006 type=tappableElement frame=[0,2280][1080,2412] visible=true flags= sideHint=BOTTOM boundingRects=null
+            InsetsSource id=342b0024 type=systemGestures frame=[0,0][0,0] visible=true flags= sideHint=NONE boundingRects=null
+            InsetsSource id=56560000 type=statusBars frame=[0,0][1080,96] visible=true flags= sideHint=TOP boundingRects=null
+            InsetsSource id=56560005 type=mandatorySystemGestures frame=[0,0][1080,132] visible=true flags= sideHint=TOP boundingRects=null
+            InsetsSource id=56560006 type=tappableElement frame=[0,0][1080,96] visible=true flags= sideHint=TOP boundingRects=null
+        mIsPredictiveBackImeHideAnimInProgress=false
+    WindowOnBackDispatcher:
+        Top Callback: android.view.ViewRootImpl$$ExternalSyntheticLambda11@104162d
+        Callbacks: 
+          Callback: android.view.ViewRootImpl$$ExternalSyntheticLambda11@104162d Priority=0
+    ImeBackAnimationController:
+        mLastProgress=0.0
+        mTriggerBack=false
+        mIsPreCommitAnimationInProgress=false
+        mStartRootScrollY=0
+        isBackAnimationAllowed=true
+        isAdjustPan=false
+        isHideAnimationInProgress=false
+    View Hierarchy:
+      com.android.internal.policy.DecorView{ed139fa I.E...... R.....ID 0,0-1080,2412 alpha=1.0 viewInfo = }[LauncherActivity]
+        android.widget.LinearLayout{2154ce3 V.E...... ........ 0,0-1080,2280 alpha=1.0 viewInfo = }
+          android.view.ViewStub{13305ff G.E...... ......I. 0,0-0,0 #10201cb android:id/action_mode_bar_stub alpha=1.0 viewInfo = }
+          android.widget.FrameLayout{67e5d12 V.E...... ........ 0,0-1080,2280 alpha=1.0 viewInfo = }
+            androidx.appcompat.widget.FitWindowsLinearLayout{9c3e49d V.E...... ........ 0,0-1080,2280 #7f09004e app:id/action_bar_root alpha=1.0 viewInfo = }
+              androidx.appcompat.widget.ViewStubCompat{c76fcc G.E...... ......I. 0,0-0,0 #7f09005e app:id/action_mode_bar_stub alpha=1.0 viewInfo = }
+              androidx.appcompat.widget.ContentFrameLayout{511f774 V.E...... ........ 0,0-1080,2280 #1020002 android:id/content alpha=1.0 viewInfo = }
+                com.ut.mini.exposure.AutoExpoFrameLayout{ce43dbb V.E...... ........ 0,0-1080,2280 alpha=1.0 viewInfo = }
+                  android.widget.FrameLayout{589c347 V.E...... ........ 0,0-1080,2280 #7f0906a1 app:id/home_fragment alpha=1.0 viewInfo = }
+        android.widget.LinearLayout{c7f2d99 V.E...... ......ID 0,0-1080,2184 #7f0913a3 app:id/water_mark_view alpha=1.0 viewInfo = }
+        android.view.View{ff4b544 V.ED..... ......ID 0,2280-1080,2412 #1020030 android:id/navigationBarBackground alpha=1.0 viewInfo = }
+    Looper (main, tid 2) {cc2f215}
+      Message 0: { when=+823ms what=131 obj=android.app.ActivityThread$ProviderRefCount@601a92a target=android.app.ActivityThread$H }
+      Message 1: { when=+2s188ms what=1 target=com.alibaba.security.common.track.impl.RPTrackManager$TimeHandler }
+      Message 2: { when=+2m42s372ms what=1 target=com.alibaba.wireless.aliprivacyext.track.core.e$b }
+      (Total messages: 3, polling=false, quitting=false)
+    ResourcesManager:
+      total apks: 19
+      resources: 8
+      resource impls: 5
+      
+      1 token android.window.WindowTokenClient@9b48bdf
+      overrideDisplayId 0
+      overrideConfig mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h804dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35
+      1.1 
+      overrideDisplayId null
+      overrideConfig v35
+      android.content.res.Resources@1f7b02c
+      android.content.res.ResourcesImpl@bc031b
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h804dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 0 - 1080, 2412) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52017 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      2 token android.os.BinderProxy@2765e9
+      me.ele/.orderlist.OrderListActivity
+      overrideDisplayId 0
+      overrideConfig mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35
+      2.1 
+      overrideDisplayId null
+      overrideConfig v35
+      android.content.res.Resources@6c50d0f
+      android.content.res.ResourcesImpl@ae1bcb8
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      3 token android.os.BinderProxy@fa6be3b
+      me.ele/.application.ui.Launcher.LauncherActivity
+      overrideDisplayId 0
+      overrideConfig mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35
+      3.1 
+      overrideDisplayId null
+      overrideConfig v35
+      android.content.res.Resources@4972958
+      android.content.res.ResourcesImpl@ae1bcb8
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      4 token android.os.BinderProxy@74e3bd5
+      overrideDisplayId 0
+      overrideConfig mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35
+      4.1 
+      overrideDisplayId null
+      overrideConfig v35
+      android.content.res.Resources@e1f6790
+      android.content.res.ResourcesImpl@7ed9a91
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      
+      mResourceReferences:
+      
+      android.content.res.Resources@8cab9cd --> android.content.res.ResourcesImpl@2692df6
+      android.content.res.Resources@1f5edf0 --> android.content.res.ResourcesImpl@2692df6
+      android.content.res.Resources@1a830ed --> android.content.res.ResourcesImpl@50db5f7
+      android.content.res.Resources@68459cc --> android.content.res.ResourcesImpl@50db5f7
+      mResourceImpls:
+      
+      ResourcesKey{ mHash=b2640eb6 mResDir=/data/app/~~HtCxNxqmWfuKnZzW1YifJA==/me.ele-iddfuIzrAeeLaKt2wg0KYQ==/base.apk mSplitDirs=[/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/behavix_sdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/aliyunplayer.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/trace_plugin.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/rpsdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/ebatchorder.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/taopai_sdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/scan.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/lshoot.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/checkSDK.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/opencv.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/taopai_lab.apk] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar,/system_ext/framework/androidx.window.extensions.jar,/system_ext/framework/androidx.window.sidecar.jar] mDisplayId=0 mOverrideConfig=mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@7ed9a91
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2184, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+      
+      ResourcesKey{ mHash=d72f16ab mResDir=/data/app/~~HtCxNxqmWfuKnZzW1YifJA==/me.ele-iddfuIzrAeeLaKt2wg0KYQ==/base.apk mSplitDirs=[/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/behavix_sdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/aliyunplayer.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/trace_plugin.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/rpsdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/ebatchorder.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/taopai_sdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/scan.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/lshoot.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/checkSDK.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/opencv.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/taopai_lab.apk] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar,/system_ext/framework/androidx.window.extensions.jar,/system_ext/framework/androidx.window.sidecar.jar] mDisplayId=0 mOverrideConfig=mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h804dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@bc031b
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h804dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 0 - 1080, 2412) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52017 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2412, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+      
+      ResourcesKey{ mHash=93404c1 mResDir=/data/app/~~HtCxNxqmWfuKnZzW1YifJA==/me.ele-iddfuIzrAeeLaKt2wg0KYQ==/base.apk mSplitDirs=[/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/trace_plugin.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/lshoot.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/rpsdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/checkSDK.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/scan.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/taopai_lab.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/ebatchorder.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/taopai_sdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/behavix_sdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/aliyunplayer.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/opencv.apk] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar,/system_ext/framework/androidx.window.extensions.jar,/system_ext/framework/androidx.window.sidecar.jar] mDisplayId=0 mOverrideConfig=mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@ae1bcb8
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2184, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+      
+      ResourcesKey{ mHash=16a9cb6e mResDir=/data/app/~~HtCxNxqmWfuKnZzW1YifJA==/me.ele-iddfuIzrAeeLaKt2wg0KYQ==/base.apk mSplitDirs=[/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/behavix_sdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/aliyunplayer.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/trace_plugin.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/rpsdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/ebatchorder.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/taopai_sdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/scan.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/lshoot.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/checkSDK.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/opencv.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/taopai_lab.apk] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar,/system_ext/framework/androidx.window.extensions.jar,/system_ext/framework/androidx.window.sidecar.jar] mDisplayId=-1 mOverrideConfig=v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@2692df6
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52176 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2184, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+      
+      ResourcesKey{ mHash=6d79c179 mResDir=/data/app/~~HtCxNxqmWfuKnZzW1YifJA==/me.ele-iddfuIzrAeeLaKt2wg0KYQ==/base.apk mSplitDirs=[/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/trace_plugin.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/lshoot.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/rpsdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/checkSDK.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/scan.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/taopai_lab.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/ebatchorder.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/taopai_sdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/behavix_sdk.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/aliyunplayer.apk,/data/user/0/me.ele/files/splitcompat/12.2.38/verified-splits/opencv.apk] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar,/system_ext/framework/androidx.window.extensions.jar,/system_ext/framework/androidx.window.sidecar.jar] mDisplayId=-1 mOverrideConfig=v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@50db5f7
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52176 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2184, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+    1 dumpables:
+    #0: AutofillManager
+        AutofillManager:
+          sessionId: 2147483647
+          state: UNKNOWN
+          context: me.ele.orderlist.OrderListActivity@60777a5
+          service client: null
+          client: android.view.autofill.AutofillClientController@851ec64 (android.os.BinderProxy@2765e9)
+          enabled: false
+          enabledAugmentedOnly: false
+          hasService: true
+          hasCallback: false
+          onInvisibleCalled false
+          last autofilled data: null
+          id of last fill UI shown: null
+          tracked views: null
+          fillable ids: null
+          entered ids: null
+          save trigger id: null
+          save on finish(): false
+          options: logLvl=6, compatMode=false, augmented=false, appDisabledExpiration=0
+          fill dialog enabled: false
+          fill dialog enabled hints: [password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+          compat mode enabled: false
+          debug: true verbose: true
+        Autofill Compat Mode: false
+    ViewExtraInfo:
+    Local FragmentActivity 60777a5 State:
+      mCreated=true mResumed=true mStopped=false    Active Fragments in f5dba93:
+      #0: OrderListFragment{ff0a083 #0 id=0x7f090a45}
+        mFragmentId=#7f090a45 mContainerId=#ffffffff mTag=null
+        mState=4 mIndex=0 mWho=android:fragment:0 mBackStackNesting=0
+        mAdded=true mRemoving=false mFromLayout=true mInLayout=true
+        mHidden=false mDetached=false mMenuVisible=true mHasMenu=false
+        mRetainInstance=false mRetaining=false mUserVisibleHint=true
+        mFragmentManager=FragmentManager{f5dba93 in HostCallbacks{a736ad0}}
+        mHost=androidx.fragment.app.FragmentActivity$HostCallbacks@a736ad0
+        mView=android.widget.FrameLayout{fee8251 V.E...... ........ 0,0-1080,2280 #7f090a45 app:id/main_fragment alpha=1.0 viewInfo = }
+        mInnerView=android.widget.FrameLayout{fee8251 V.E...... ........ 0,0-1080,2280 #7f090a45 app:id/main_fragment alpha=1.0 viewInfo = }
+        Child FragmentManager{a900ac9 in OrderListFragment{ff0a083}}:
+          FragmentManager misc state:
+            mHost=androidx.fragment.app.FragmentActivity$HostCallbacks@a736ad0
+            mContainer=androidx.fragment.app.Fragment$2@31405ce
+            mParent=OrderListFragment{ff0a083 #0 id=0x7f090a45}
+            mCurState=4 mStateSaved=false mStopped=false mDestroyed=false
+    Added Fragments:
+      #0: OrderListFragment{ff0a083 #0 id=0x7f090a45}
+    FragmentManager misc state:
+      mHost=androidx.fragment.app.FragmentActivity$HostCallbacks@a736ad0
+      mContainer=androidx.fragment.app.FragmentActivity$HostCallbacks@a736ad0
+      mCurState=4 mStateSaved=false mStopped=false mDestroyed=false
+    r =ActivityClientRecord{paused=false, stopped=false, hideForNow=false, startsNotResumed=false, isForward=true, pendingConfigChanges=0, preserveWindow=false, Activity{resumed=true, stopped=false, finished=false, destroyed=false, startedActivity=false, changingConfigurations=false}}
+    r.overrideConfig={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}

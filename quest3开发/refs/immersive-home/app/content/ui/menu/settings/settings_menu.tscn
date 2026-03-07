@@ -1,0 +1,138 @@
+[gd_scene load_steps=14 format=3 uid="uid://c6r4higceibif"]
+
+[ext_resource type="Script" path="res://content/ui/menu/settings/settings_menu.gd" id="1_0lte6"]
+[ext_resource type="PackedScene" uid="uid://bsjqdvkt0u87c" path="res://content/ui/components/button/button.tscn" id="1_faxng"]
+[ext_resource type="Script" path="res://content/functions/clickable.gd" id="3_qmg6q"]
+[ext_resource type="FontVariation" uid="uid://sshfnckriqxn" path="res://assets/icons/icons.tres" id="5_eiwd4"]
+[ext_resource type="Shader" path="res://content/ui/components/panel/glass.gdshader" id="6_mubnp"]
+[ext_resource type="Script" path="res://content/ui/components/tabs/tabs.gd" id="7_oydon"]
+[ext_resource type="Script" path="res://content/ui/components/tabs/tabs_content.gd" id="8_ctbdo"]
+[ext_resource type="PackedScene" uid="uid://cdto8shis71nu" path="res://content/ui/menu/settings/menus/api_menu.tscn" id="8_jicvf"]
+[ext_resource type="PackedScene" uid="uid://4hai6lp64m2o" path="res://content/ui/menu/settings/menus/features_menu.tscn" id="9_k7004"]
+[ext_resource type="PackedScene" uid="uid://cxom4iapa02bb" path="res://content/ui/menu/settings/menus/save_menu.tscn" id="10_5aa3y"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3qdps"]
+size = Vector3(0.07, 0.02, 0.01)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3iv64"]
+render_priority = -3
+shader = ExtResource("6_mubnp")
+shader_parameter/color = Color(1, 1, 1, 0.3)
+shader_parameter/border_color = Color(1, 1, 1, 1)
+shader_parameter/edge_color = Color(0, 0, 0, 1)
+shader_parameter/size = Vector2(0.42, 0.32)
+shader_parameter/border_size = 0.001
+shader_parameter/border_fade_in = 0.005
+shader_parameter/border_fade_out = 0.0
+shader_parameter/corner_radius = 0.02
+shader_parameter/roughness = 0.3
+shader_parameter/grain_amount = 0.02
+
+[sub_resource type="QuadMesh" id="QuadMesh_d0l0p"]
+size = Vector2(0.42, 0.32)
+
+[node name="SettingsMenu" type="Node3D"]
+script = ExtResource("1_0lte6")
+
+[node name="Content" type="Node3D" parent="."]
+
+[node name="Credits" type="StaticBody3D" parent="Content"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37, -0.300229, 0)
+visible = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Content/Credits"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.005, 0, 0)
+shape = SubResource("BoxShape3D_3qdps")
+disabled = true
+
+[node name="Label" type="Label3D" parent="Content/Credits"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.98023e-08, 0, 0)
+pixel_size = 0.001
+render_priority = 15
+outline_render_priority = 14
+text = "credits"
+font_size = 12
+outline_size = 0
+
+[node name="Hearth" type="Label3D" parent="Content/Credits"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03, 0, 0)
+pixel_size = 0.001
+render_priority = 15
+outline_render_priority = 14
+modulate = Color(0.584314, 0, 0, 1)
+text = "favorite"
+font = ExtResource("5_eiwd4")
+font_size = 14
+outline_size = 0
+
+[node name="Clickable" type="Node" parent="Content/Credits"]
+script = ExtResource("3_qmg6q")
+
+[node name="LabelVersion" type="Label3D" parent="Content"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.41, -0.31, 0)
+pixel_size = 0.001
+render_priority = 15
+outline_render_priority = 14
+text = "v0.0.0"
+font_size = 10
+outline_size = 0
+horizontal_alignment = 2
+
+[node name="ReportBugLabel" type="Label3D" parent="Content"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.31, -0.285, 0)
+pixel_size = 0.001
+render_priority = 15
+outline_render_priority = 14
+text = "Report a Bug"
+font_size = 10
+outline_size = 0
+horizontal_alignment = 0
+
+[node name="ReportBugButton" parent="Content" instance=ExtResource("1_faxng")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.395, -0.285, 0)
+font_size = 18
+label = "bug_report"
+icon = true
+size = Vector3(0.03, 0.03, 0.01)
+
+[node name="Background" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 1.06581e-14, 0, -1.06581e-14, 1, 0.21, -0.16, 0)
+material_override = SubResource("ShaderMaterial_3iv64")
+mesh = SubResource("QuadMesh_d0l0p")
+skeleton = NodePath("../..")
+
+[node name="Tabs" type="Node3D" parent="." node_paths=PackedStringArray("initial_selected")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.01, -0.03, 0)
+script = ExtResource("7_oydon")
+initial_selected = NodePath("Api")
+gap = 0.01
+
+[node name="Api" parent="Tabs" instance=ExtResource("1_faxng")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, 0, 0)
+font_size = 18
+label = "Api"
+
+[node name="Features" parent="Tabs" instance=ExtResource("1_faxng")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.095, 0, 0)
+font_size = 18
+label = "Features"
+size = Vector3(0.09, 0.04, 0.01)
+
+[node name="Save" parent="Tabs" instance=ExtResource("1_faxng")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0, 0)
+font_size = 18
+label = "Other"
+size = Vector3(0.06, 0.04, 0.01)
+
+[node name="TabsContent3D" type="Node3D" parent="." node_paths=PackedStringArray("tabs")]
+script = ExtResource("8_ctbdo")
+tabs = NodePath("../Tabs")
+
+[node name="ApiMenu" parent="TabsContent3D" instance=ExtResource("8_jicvf")]
+visible = false
+
+[node name="FeaturesMenu" parent="TabsContent3D" instance=ExtResource("9_k7004")]
+visible = false
+
+[node name="SaveMenu" parent="TabsContent3D" instance=ExtResource("10_5aa3y")]
+visible = false

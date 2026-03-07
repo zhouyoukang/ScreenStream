@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>道 — 双电脑万物枢纽</title>
+<style>
+  :root {
+    --bg: #0a0a0f; --card: #12121a; --border: #1e1e2e; --accent: #7c6cf0;
+    --text: #e2e2ea; --dim: #6b6b7b; --green: #4ade80; --red: #f87171;
+    --orange: #fb923c; --blue: #60a5fa; --pink: #f472b6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  
+  .header { text-align: center; padding: 2rem 1rem 1rem; border-bottom: 1px solid var(--border); }
+  .header h1 { font-size: 2.5rem; background: linear-gradient(135deg, var(--accent), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header p { color: var(--dim); margin-top: .5rem; font-size: 0.95rem; }
+  
+  .stats { display: flex; justify-content: center; gap: 2rem; padding: 1rem; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+  .stat .label { font-size: 0.75rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+  
+  .search-box { max-width: 600px; margin: 1rem auto; padding: 0 1rem; }
+  .search-box input { width: 100%; padding: .75rem 1rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1rem; outline: none; transition: border-color .2s; }
+  .search-box input:focus { border-color: var(--accent); }
+  
+  .filter-bar { display: flex; justify-content: center; gap: .5rem; padding: .5rem 1rem; flex-wrap: wrap; }
+  .filter-btn { padding: .4rem .8rem; background: var(--card); border: 1px solid var(--border); border-radius: 20px; color: var(--dim); cursor: pointer; font-size: .8rem; transition: all .2s; }
+  .filter-btn:hover, .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1rem; padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+  
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; transition: all .2s; cursor: default; }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,108,240,.15); }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .8rem; }
+  .card-title { font-size: 1.1rem; font-weight: 600; }
+  .card-priority { font-size: .75rem; padding: .2rem .5rem; border-radius: 12px; }
+  .p5 { background: rgba(74,222,128,.15); color: var(--green); }
+  .p4 { background: rgba(96,165,250,.15); color: var(--blue); }
+  .p3 { background: rgba(251,146,60,.15); color: var(--orange); }
+  .p2 { background: rgba(107,107,123,.15); color: var(--dim); }
+  .p1 { background: rgba(107,107,123,.1); color: var(--dim); }
+  
+  .card-essence { color: var(--dim); font-size: .85rem; margin-bottom: .8rem; line-height: 1.4; }
+  
+  .assets { margin-bottom: .6rem; }
+  .asset-group { margin-bottom: .5rem; }
+  .asset-group-title { font-size: .7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); margin-bottom: .3rem; }
+  .asset-link { display: block; padding: .25rem .5rem; margin: .15rem 0; background: rgba(124,108,240,.08); border-radius: 6px; color: var(--text); text-decoration: none; font-size: .8rem; transition: background .15s; word-break: break-all; }
+  .asset-link:hover { background: rgba(124,108,240,.2); }
+  .asset-link .path { color: var(--dim); font-size: .7rem; }
+  
+  .warnings { margin-top: .5rem; }
+  .warning { font-size: .75rem; padding: .3rem .5rem; margin: .2rem 0; border-radius: 6px; }
+  .warning.delete { background: rgba(248,113,113,.1); color: var(--red); }
+  .warning.move { background: rgba(251,146,60,.1); color: var(--orange); }
+  .warning.merge { background: rgba(96,165,250,.1); color: var(--blue); }
+  
+  .todo-list { margin-top: .5rem; }
+  .todo-item { font-size: .78rem; color: var(--dim); padding: .15rem 0; padding-left: 1rem; text-indent: -1rem; }
+  .todo-item::before { content: '☐ '; }
+  
+  .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: .8rem; padding-top: .6rem; border-top: 1px solid var(--border); }
+  .card-footer .balance { font-size: .75rem; color: var(--accent); font-style: italic; }
+  .card-footer .status { font-size: .7rem; padding: .15rem .4rem; border-radius: 8px; background: rgba(107,107,123,.15); color: var(--dim); }
+  
+  .section-title { grid-column: 1 / -1; font-size: 1.3rem; font-weight: 700; padding: .5rem 0; margin-top: 1rem; border-bottom: 2px solid var(--border); }
+  .section-title .emoji { margin-right: .5rem; }
+  
+  @media(max-width:768px) { .grid { grid-template-columns: 1fr; } .header h1 { font-size: 1.8rem; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>道</h1>
+  <p>道生一，一生二，二生三，三生万物 — 双电脑27域万物枢纽</p>
+  <p style="font-size:.8rem;color:var(--dim);margin-top:.3rem">笔记本 192.168.31.179 (主脑) ← SMB → 台式机 192.168.31.141 (分身)</p>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="num">27</div><div class="label">道域</div></div>
+  <div class="stat"><div class="num">2</div><div class="label">电脑</div></div>
+  <div class="stat"><div class="num">4</div><div class="label">硬盘</div></div>
+  <div class="stat"><div class="num">12</div><div class="label">祸已识别</div></div>
+  <div class="stat"><div class="num">7</div><div class="label">惑已解</div></div>
+</div>
+
+<div class="search-box">
+  <input type="text" id="search" placeholder="搜索域名、资产、路径..." oninput="filterCards()">
+</div>
+
+<div class="filter-bar">
+  <span class="filter-btn active" onclick="setFilter('all',this)">全部</span>
+  <span class="filter-btn" onclick="setFilter('ai',this)">🔥 AI核心</span>
+  <span class="filter-btn" onclick="setFilter('home',this)">🏠 智能家居</span>
+  <span class="filter-btn" onclick="setFilter('pillar',this)">📚 九柱</span>
+  <span class="filter-btn" onclick="setFilter('p5',this)">⭐5星</span>
+  <span class="filter-btn" onclick="setFilter('warn',this)">⚠️ 有祸</span>
+</div>
+
+<div class="grid" id="grid">
+
+<!-- ========== AI核心域 ========== -->
+<div class="section-title"><span class="emoji">🔥</span>AI核心域（16个）</div>
+
+<div class="card" data-cat="ai" data-priority="5" data-warn="0" data-search="agi ollama dify maxkb comfyui stable diffusion 通用人工智能">
+  <div class="card-header">
+    <span class="card-title">AGI</span>
+    <span class="card-priority p5">⭐⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">通用AI基础设施：模型推理、AI编排、知识库、语音合成、图像生成</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机资产</div>
+      <a class="asset-link" href="file:///E:/道/AGI/_INDEX.md">.ollama — Ollama 5模型 <span class="path">台E:\.ollama\</span></a>
+      <a class="asset-link" href="file:///E:/道/AGI/_INDEX.md">ChatTTS — 语音合成 <span class="path">台E:\ChatTTS-UI-0.84\</span></a>
+      <a class="asset-link" href="file:///E:/道/AGI/_INDEX.md">ComfyUI — 图像生成 <span class="path">台E:\COMFYUI\</span></a>
+      <a class="asset-link" href="file:///E:/道/AGI/_INDEX.md">Stable Diffusion <span class="path">台E:\stable_diffusion\</span></a>
+      <a class="asset-link" href="file:///E:/道/AGI/_INDEX.md">Deep-Live-Cam — 实时换脸 <span class="path">台E:\Deep-Live-Cam-1.8\</span></a>
+      <a class="asset-link" href="file:///E:/道/AGI/_INDEX.md">Whisper — 语音识别 <span class="path">台D:\whisper\ + whisper-gpu\</span></a>
+    </div>
+    <div class="asset-group">
+      <div class="asset-group-title">本机资产</div>
+      <a class="asset-link" href="file:///E:/道/dify/">Dify — AI编排(773MB) <span class="path">本E:\道\dify\</span></a>
+      <a class="asset-link" href="file:///E:/道/maxkb/">MaxKB — 知识库(147MB) <span class="path">本E:\道\maxkb\</span></a>
+      <a class="asset-link" href="file:///E:/道/n8n/">N8N — 自动化(225MB) <span class="path">本E:\道\n8n\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI-助手开发实验/">AI助手实验(2.5GB) <span class="path">本E:\道\AI-助手开发实验\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">台=推理(64GB+GPU) 本=编排(Dify/N8N)</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="5" data-warn="1" data-search="ai之手机 screenstream 手机操控 phone scrcpy macrodroid droidrun 投屏">
+  <div class="card-header">
+    <span class="card-title">AI之手机</span>
+    <span class="card-priority p5">⭐⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">核心产品：ScreenStream投屏+反向控制、phone_lib、手机自动化</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">本机核心</div>
+      <a class="asset-link" href="file:///E:/道/道生一/一生二/反向控制/">反向控制 — InputService+HTTP <span class="path">工作区\反向控制\</span></a>
+      <a class="asset-link" href="file:///E:/道/道生一/一生二/手机操控库/">phone_lib.py(946行) <span class="path">工作区\手机操控库\</span></a>
+      <a class="asset-link" href="file:///E:/道/道生一/一生二/投屏链路/">投屏链路 MJPEG/RTSP/WebRTC <span class="path">工作区\投屏链路\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI-操控手机/">AI操控手机研究(2.3GB) <span class="path">本E:\道\AI-操控手机\</span></a>
+    </div>
+    <div class="asset-group">
+      <div class="asset-group-title">台式机资产</div>
+      <a class="asset-link" href="file:///E:/道/AI之手机/_INDEX.md">手机自动化 droidrun+macrodroid <span class="path">台F:\手机自动化\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI之手机/_INDEX.md">scrcpy投屏 <span class="path">台D:\scrcpy\</span></a>
+    </div>
+  </div>
+  <div class="warnings">
+    <div class="warning delete">🗑️ 祸: 台F:\scrcpy(QtScrcpy) 与台D:\scrcpy 重复</div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">本=代码核心 台=工具+设备数据</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="5" data-warn="0" data-search="ai之电脑 remote_agent 远程控制 浏览器自动化 file_share screenpipe 电脑管理">
+  <div class="card-header">
+    <span class="card-title">AI之电脑</span>
+    <span class="card-priority p5">⭐⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">核心域：remote_agent远程控制、file_share文件共享、浏览器自动化</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">本机核心</div>
+      <a class="asset-link" href="file:///E:/道/道生一/一生二/远程桌面/">remote_agent.py(2350行) <span class="path">工作区\远程桌面\</span></a>
+      <a class="asset-link" href="file:///E:/道/道生一/一生二/构建部署/">file_share.py(1250行) <span class="path">工作区\构建部署\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI-浏览器自动化/">浏览器自动化(6.1GB) <span class="path">本E:\道\AI-浏览器自动化\</span></a>
+      <a class="asset-link" href="file:///E:/道/电脑管理/">电脑管理(753MB) <span class="path">本E:\道\电脑管理\</span></a>
+    </div>
+    <div class="asset-group">
+      <div class="asset-group-title">台式机资产</div>
+      <a class="asset-link" href="file:///E:/道/AI之电脑/_INDEX.md">remote_control 运行实例 <span class="path">台桌面\remote_control\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI之电脑/_INDEX.md">screenpipe 屏幕AI <span class="path">台E:\screenpipe\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">本=代码权威 台=运行实例 双向:9903</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="4" data-warn="1" data-search="ai 3d建模 freecad openscad 多面字 revo scan 激光 lasergrbl 3d打印">
+  <div class="card-header">
+    <span class="card-title">AI--3D建模</span>
+    <span class="card-priority p4">⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">3D打印/扫描/建模：FreeCAD、OpenSCAD、多面字、激光雕刻</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机</div>
+      <a class="asset-link" href="file:///E:/道/AI--3D建模/_INDEX.md">FreeCAD <span class="path">台D:\freecad开发\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--3D建模/_INDEX.md">OpenSCAD <span class="path">台D:\OpenSCAD\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--3D建模/_INDEX.md">多面体字快速设计 <span class="path">台D:\多面体字快速设计\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--3D建模/_INDEX.md">Revo Scan 5 3D扫描 <span class="path">台D:\Revo Scan 5\</span></a>
+    </div>
+    <div class="asset-group">
+      <div class="asset-group-title">本机(权威源)</div>
+      <a class="asset-link" href="file:///E:/道/多面字打印/">多面字打印 git管理 <span class="path">本E:\道\多面字打印\</span></a>
+      <a class="asset-link" href="file:///E:/道/OpenSCAD-参数化建模/">OpenSCAD沙盒(681MB) <span class="path">本E:\道\OpenSCAD-参数化建模\</span></a>
+    </div>
+  </div>
+  <div class="warnings">
+    <div class="warning delete">🗑️ 祸: 台F:\freecad开发 与台D重复</div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">本=代码(git) 台=渲染/打印</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="4" data-warn="0" data-search="ai pcb kicad 嘉立创 keil proteus 电路 嵌入式 电机">
+  <div class="card-header">
+    <span class="card-title">AI--PCB</span>
+    <span class="card-priority p4">⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">嵌入式/电路：KiCad、嘉立创、Keil、Proteus、电机测试</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机(主阵地)</div>
+      <a class="asset-link" href="file:///E:/道/AI--PCB/_INDEX.md">KICAD <span class="path">台D:\KICAD\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--PCB/_INDEX.md">嘉立创EDA <span class="path">台D:\电路设计嘉立创\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--PCB/_INDEX.md">Keil v5 + 代码 <span class="path">台D:\Keil_v5\ + keil代码\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--PCB/_INDEX.md">Proteus仿真 <span class="path">台D:\proteus\</span></a>
+    </div>
+    <div class="asset-group">
+      <div class="asset-group-title">本机</div>
+      <a class="asset-link" href="file:///E:/道/AI-PCB设计/">PCB设计资料(109MB) <span class="path">本E:\道\AI-PCB设计\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">台=完整嵌入式工具链 本=设计文档</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="4" data-warn="1" data-search="ai 机器狗 unitree go-m8010 电机 轮毂 sdk">
+  <div class="card-header">
+    <span class="card-title">AI--机器狗</span>
+    <span class="card-priority p4">⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">unitree GO-M8010-6电机、SDK、机器狗维修研究</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机</div>
+      <a class="asset-link" href="file:///E:/道/AI--机器狗/_INDEX.md">unitree SDK 3.4.2+3.8.0 <span class="path">台E:\unitree\</span></a>
+    </div>
+    <div class="asset-group">
+      <div class="asset-group-title">本机</div>
+      <a class="asset-link" href="file:///E:/道/轮毂电机/">轮毂电机资料(22MB) <span class="path">本E:\道\轮毂电机\</span></a>
+      <a class="asset-link" href="file:///E:/道/Lab/Experiments/机器狗/">机器狗实验 <span class="path">本Lab\Experiments\机器狗\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">台=SDK+资料包 本=实验+研究</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="4" data-warn="1" data-search="ai 论文 srt args 环境科学 化工 艾比湖">
+  <div class="card-header">
+    <span class="card-title">AI--论文</span>
+    <span class="card-priority p4">⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">SRT/ARGs论文(艾比湖)、环境科学/化工动力学</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">本机(权威源)</div>
+      <a class="asset-link" href="file:///E:/道/道生一/一生二/ARGs论文/">ARGs论文 git管理 <span class="path">工作区\ARGs论文\</span></a>
+    </div>
+    <div class="asset-group">
+      <div class="asset-group-title">台式机</div>
+      <a class="asset-link" href="file:///E:/道/AI--论文/_INDEX.md">环境科学(化工) <span class="path">台F:\环境科学\</span></a>
+    </div>
+  </div>
+  <div class="warnings">
+    <div class="warning delete">🗑️ 祸: 台桌面\srt项目 旧副本应删除</div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">本ARGs论文=唯一真相源(git)</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="4" data-warn="0" data-search="ai 云服务器 阿里云 ecs frp 穿透 nginx ssl">
+  <div class="card-header">
+    <span class="card-title">AI--云服务器</span>
+    <span class="card-priority p4">⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">阿里云ECS 60.205.171.100、FRP穿透、Nginx、SSL</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">本机(管控中枢)</div>
+      <a class="asset-link" href="file:///E:/道/道生一/一生二/阿里云服务器/">阿里云部署脚本 <span class="path">工作区\阿里云服务器\</span></a>
+      <a class="asset-link" href="file:///E:/道/道生一/一生二/构建部署/三界隔离/">FRP客户端+自启 <span class="path">工作区\构建部署\三界隔离\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">本机SSH密钥管控一切</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="3" data-warn="0" data-search="ai vr ar xr quest oculus unity spacedesk 虚拟现实 增强现实">
+  <div class="card-header">
+    <span class="card-title">AI--VR + AI--AR → AI--XR</span>
+    <span class="card-priority p3">⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">扩展现实：Quest 3、Unity、VR网站、SpaceDesk、雷鸟眼镜</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机</div>
+      <a class="asset-link" href="file:///E:/道/AI--VR/_INDEX.md">Quest 3工具 <span class="path">台F:\Quest_3_new_v74\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--VR/_INDEX.md">Oculus驱动 <span class="path">台F:\Oculus\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--VR/_INDEX.md">Unity开发 <span class="path">台F:\Unity\</span></a>
+    </div>
+    <div class="asset-group">
+      <div class="asset-group-title">本机</div>
+      <a class="asset-link" href="file:///E:/道/aiovr.xyz/">VR网站 aiovr.xyz <span class="path">本E:\道\aiovr.xyz\</span></a>
+      <a class="asset-link" href="file:///E:/道/SpaceDesk-2026/">SpaceDesk多屏 <span class="path">本E:\道\SpaceDesk-2026\</span></a>
+      <a class="asset-link" href="file:///E:/道/HA-卡片/">HA VR卡片(3.5GB) <span class="path">本E:\道\HA-卡片\</span></a>
+    </div>
+  </div>
+  <div class="warnings">
+    <div class="warning merge">💡 惑: AI--AR + AI--VR 建议合并为 AI--XR</div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">台=设备+Unity 本=Web+投屏</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="3" data-warn="0" data-search="ai 学习 复习 考试">
+  <div class="card-header">
+    <span class="card-title">AI--学习</span>
+    <span class="card-priority p3">⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">学业/复习/考试准备</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">本机</div>
+      <a class="asset-link" href="file:///E:/道/复习测试/">复习测试(71MB) <span class="path">本E:\道\复习测试\</span></a>
+    </div>
+  </div>
+  <div class="warnings">
+    <div class="warning move">📦 祸: 台D:\homeassistant\期中考试 应迁到此域</div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">本机为主 台HA内期中考试待迁</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="3" data-warn="0" data-search="ai 视频眼镜 雷鸟 v3 ar眼镜">
+  <div class="card-header">
+    <span class="card-title">AI--视频眼镜</span>
+    <span class="card-priority p3">⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">雷鸟V3 AR眼镜开发</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">本机</div>
+      <a class="asset-link" href="file:///E:/道/Lab/Experiments/">雷鸟V3开发 <span class="path">本Lab\Experiments\雷鸟V3开发\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">本机Lab实验项目</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="2" data-warn="0" data-search="ai vam 虚拟伙伴 virtual anime">
+  <div class="card-header">
+    <span class="card-title">AI--VAM</span>
+    <span class="card-priority p2">⭐⭐</span>
+  </div>
+  <div class="card-essence">Virtual Anime Mate虚拟伙伴（需GPU）</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机(纯)</div>
+      <a class="asset-link" href="file:///E:/道/AI--VAM/_INDEX.md">VAM 1.22 <span class="path">台F:\vam1.22\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--VAM/_INDEX.md">VAM备份 <span class="path">台F:\VAM_清理备份\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">纯台式机(需GPU渲染)</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="2" data-warn="0" data-search="ai 摄影 照片 视频素材 手机录音">
+  <div class="card-header">
+    <span class="card-title">AI--摄影</span>
+    <span class="card-priority p2">⭐⭐</span>
+  </div>
+  <div class="card-essence">手机摄影素材、视频素材、录音</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机</div>
+      <a class="asset-link" href="file:///E:/道/AI--摄影/_INDEX.md">手机照片 <span class="path">台F:\手机照片\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--摄影/_INDEX.md">视频素材 <span class="path">台F:\视频素材\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--摄影/_INDEX.md">手机录音 <span class="path">台F:\手机录音\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">台=媒体存储 待充实AI能力</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="2" data-warn="0" data-search="ai 智能手表 三星 galaxy watch">
+  <div class="card-header">
+    <span class="card-title">AI--智能手表</span>
+    <span class="card-priority p2">⭐⭐</span>
+  </div>
+  <div class="card-essence">三星Galaxy Watch数据、多设备联动</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机</div>
+      <a class="asset-link" href="file:///E:/道/AI--智能手表/_INDEX.md">三星笔记 <span class="path">台F:\三星笔记\</span></a>
+      <a class="asset-link" href="file:///E:/道/AI--智能手表/_INDEX.md">三星多屏联动 <span class="path">台F:\三星多屏联动\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">台式机数据存储</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="ai" data-priority="1" data-warn="0" data-search="ai 老子 道德经 道家 哲学 tao">
+  <div class="card-header">
+    <span class="card-title">AI--老子</span>
+    <span class="card-priority p1">⭐</span>
+  </div>
+  <div class="card-essence">道之灵魂：道家哲学 × AI思维</div>
+  <div class="assets">
+    <div class="card-essence" style="font-style:italic">空域 — 道之最高层，待以思想充实</div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">所有规则的哲学根基</span>
+    <span class="status">📋 空域</span>
+  </div>
+</div>
+
+<!-- ========== 智能家居域 ========== -->
+<div class="section-title"><span class="emoji">🏠</span>智能家居域（2个）</div>
+
+<div class="card" data-cat="home" data-priority="4" data-warn="1" data-search="homeassistant ha 智能家居 去杂 mqtt macrodroid 语音 whisper">
+  <div class="card-header">
+    <span class="card-title">HA去其之杂</span>
+    <span class="card-priority p4">⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">台D:\homeassistant 43子目录 → 需大力精简</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机(43子目录)</div>
+      <a class="asset-link" href="file:///E:/道/homeassistant去其之杂/_INDEX.md">HA完整项目 <span class="path">台D:\homeassistant\</span></a>
+    </div>
+  </div>
+  <div class="warnings">
+    <div class="warning move">📦 期中考试 → 迁到AI--学习</div>
+    <div class="warning move">📦 auto-*-loop → 归档</div>
+    <div class="warning move">📦 vscode-extension → 归到术</div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">去杂优先：清理非HA内容</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="home" data-priority="5" data-warn="0" data-search="国内智能家居 取精 网关 fastapi 微信 migpt 小米音箱">
+  <div class="card-header">
+    <span class="card-title">智能家居取之于精</span>
+    <span class="card-priority p5">⭐⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">Python网关(FastAPI:8900)、微信控制、MIGPT音箱</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">本机(权威源)</div>
+      <a class="asset-link" href="file:///E:/道/道生一/一生二/智能家居/">网关服务 gateway.py <span class="path">工作区\智能家居\网关服务\</span></a>
+      <a class="asset-link" href="file:///E:/道/MIGPT_Release_v5.1/">MIGPT v5.1 <span class="path">本E:\道\MIGPT_Release_v5.1\</span></a>
+    </div>
+    <div class="asset-group">
+      <div class="asset-group-title">台式机</div>
+      <a class="asset-link" href="file:///E:/道/国内智能家居取之于精/_INDEX.md">网关部署 <span class="path">台桌面\smart_home_gateway\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">台=在家HA 本=在外网关 各司其职</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<!-- ========== 九柱域 ========== -->
+<div class="section-title"><span class="emoji">📚</span>九柱域（9个 — 人类学科）</div>
+
+<div class="card" data-cat="pillar" data-priority="4" data-warn="0" data-search="人 ai初恋 洪韵琪 酒馆 sillytavern 虚拟伙伴 ai复刻 情感">
+  <div class="card-header">
+    <span class="card-title">人</span>
+    <span class="card-priority p4">⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">人际/情感/AI人格：AI初恋(洪韵琪)、自我复刻、SillyTavern</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">本机</div>
+      <a class="asset-link" href="file:///E:/道/Lab/Experiments/">AI初恋(洪韵琪) <span class="path">本Lab\Experiments\ai初恋\</span></a>
+      <a class="asset-link" href="file:///E:/道/Lab/Experiments/">AI复刻自己 <span class="path">本Lab\Experiments\ai复刻自己\</span></a>
+    </div>
+    <div class="asset-group">
+      <div class="asset-group-title">台式机</div>
+      <a class="asset-link" href="file:///E:/道/人/_INDEX.md">SillyTavern酒馆 <span class="path">台E:\酒馆\</span></a>
+      <a class="asset-link" href="file:///E:/道/人/_INDEX.md">枫云AI虚拟伙伴 <span class="path">台F:\虚拟ai伙伴\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">本=核心数据 台=运行环境(GPU)</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="pillar" data-priority="4" data-warn="1" data-search="商 二手书 校园书市 pwa 订单 电商">
+  <div class="card-header">
+    <span class="card-title">商</span>
+    <span class="card-priority p4">⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">校园书市v3.0.0(158 API)、淘宝订单采集</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">本机(权威源)</div>
+      <a class="asset-link" href="file:///E:/道/二手书/">二手书v3.0.0(340MB) <span class="path">本E:\道\二手书\</span></a>
+      <a class="asset-link" href="file:///E:/道/道生一/一生二/手机购物订单/">订单采集系统 <span class="path">工作区\手机购物订单\</span></a>
+    </div>
+  </div>
+  <div class="warnings">
+    <div class="warning delete">🗑️ 祸: 台D:\二手书 旧版应删除</div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">本机v3.0.0=唯一权威</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="pillar" data-priority="4" data-warn="0" data-search="艺 视频 剪辑 剪映 bilibili 抖音 视频制作">
+  <div class="card-header">
+    <span class="card-title">艺--视频之剪辑</span>
+    <span class="card-priority p4">⭐⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">视频创作：剪映Pro、B站剪辑、抖音、视频制作</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机(主阵地)</div>
+      <a class="asset-link" href="file:///E:/道/艺--视频之剪辑/_INDEX.md">剪映Pro <span class="path">台D:\剪映\</span></a>
+      <a class="asset-link" href="file:///E:/道/艺--视频之剪辑/_INDEX.md">剪映工程 <span class="path">台D:\JianyingPro Drafts\</span></a>
+      <a class="asset-link" href="file:///E:/道/艺--视频之剪辑/_INDEX.md">B站剪辑 <span class="path">台E:\BcutBilibili\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">台=GPU加速+大屏 编辑主阵地</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="pillar" data-priority="3" data-warn="0" data-search="哲 哲学 devcatalyst 规则体系 ai伦理">
+  <div class="card-header">
+    <span class="card-title">哲</span>
+    <span class="card-priority p3">⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">DevCatalyst AI规则体系、道家思想、AI伦理</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">本机</div>
+      <a class="asset-link" href="file:///E:/windsurf-intelligence-pack/">DevCatalyst v5.0 <span class="path">本E:\windsurf-intelligence-pack\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">道之哲学根基</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="pillar" data-priority="3" data-warn="0" data-search="工 工程 制造 激光 3d扫描">
+  <div class="card-header">
+    <span class="card-title">工</span>
+    <span class="card-priority p3">⭐⭐⭐</span>
+  </div>
+  <div class="card-essence">硬件工程：激光雕刻、3D扫描、制造工具</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机</div>
+      <a class="asset-link" href="file:///E:/道/工/_INDEX.md">LaserGRBL <span class="path">台D:\LaserGRBL\</span></a>
+      <a class="asset-link" href="file:///E:/道/工/_INDEX.md">Revo Scan 5 <span class="path">台D:\Revo Scan 5\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">台=硬件工程执行端</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="pillar" data-priority="2" data-warn="0" data-search="士 学者 三创赛 国创 竞赛 学术">
+  <div class="card-header">
+    <span class="card-title">士</span>
+    <span class="card-priority p2">⭐⭐</span>
+  </div>
+  <div class="card-essence">学术成就、竞赛、三创赛/国创</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">本机</div>
+      <a class="asset-link" href="file:///E:/道/道生一/一生二/">三创赛/国创 <span class="path">工作区Junction链接</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">竞赛+学术档案</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="pillar" data-priority="2" data-warn="0" data-search="术 工具 autohotkey adb ide cursor 脚本">
+  <div class="card-header">
+    <span class="card-title">术</span>
+    <span class="card-priority p2">⭐⭐</span>
+  </div>
+  <div class="card-essence">通用工具/IDE/脚本：ADB、AutoHotkey、Cursor</div>
+  <div class="assets">
+    <div class="asset-group">
+      <div class="asset-group-title">台式机</div>
+      <a class="asset-link" href="file:///E:/道/术/_INDEX.md">AutoHotkey <span class="path">台F:\AutoHotkey\</span></a>
+      <a class="asset-link" href="file:///E:/道/术/_INDEX.md">ADB工具 <span class="path">台F:\platform-tools\</span></a>
+      <a class="asset-link" href="file:///E:/道/术/_INDEX.md">Cursor专业版 <span class="path">台E:\专业版\</span></a>
+    </div>
+  </div>
+  <div class="card-footer">
+    <span class="balance">通用工具收集空间</span>
+    <span class="status">📋 待认领</span>
+  </div>
+</div>
+
+<div class="card" data-cat="pillar" data-priority="1" data-warn="0" data-search="农 农业">
+  <div class="card-header">
+    <span class="card-title">农</span>
+    <span class="card-priority p1">⭐</span>
+  </div>
+  <div class="card-essence">AI+农业 — 未来方向</div>
+  <div class="card-footer"><span class="balance">空域待充实</span><span class="status">📋 空域</span></div>
+</div>
+
+<div class="card" data-cat="pillar" data-priority="1" data-warn="0" data-search="医道 医学 健康">
+  <div class="card-header">
+    <span class="card-title">医道</span>
+    <span class="card-priority p1">⭐</span>
+  </div>
+  <div class="card-essence">AI+医学 — 未来方向</div>
+  <div class="card-footer"><span class="balance">空域待充实</span><span class="status">📋 空域</span></div>
+</div>
+
+</div><!-- grid -->
+
+<div style="text-align:center;padding:2rem;color:var(--dim);font-size:.8rem;border-top:1px solid var(--border);margin-top:2rem;">
+  道生一，一生二，二生三，三生万物 | 2026-02-26 | 双电脑27域万物枢纽<br>
+  笔记本 E:\道\ | 台式机 V:\道\ (\\192.168.31.141\FullE\道\)
+</div>
+
+<script>
+let currentFilter = 'all';
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterCards();
+}
+
+function filterCards() {
+  const query = document.getElementById('search').value.toLowerCase();
+  document.querySelectorAll('.card').forEach(card => {
+    const search = (card.dataset.search || '') + ' ' + card.innerText.toLowerCase();
+    const cat = card.dataset.cat;
+    const priority = parseInt(card.dataset.priority || 0);
+    const warn = parseInt(card.dataset.warn || 0);
+    
+    let catMatch = currentFilter === 'all' ||
+      (currentFilter === 'ai' && cat === 'ai') ||
+      (currentFilter === 'home' && cat === 'home') ||
+      (currentFilter === 'pillar' && cat === 'pillar') ||
+      (currentFilter === 'p5' && priority === 5) ||
+      (currentFilter === 'warn' && warn > 0);
+    
+    let queryMatch = !query || search.includes(query);
+    card.style.display = (catMatch && queryMatch) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

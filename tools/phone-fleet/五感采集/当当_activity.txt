@@ -1,0 +1,932 @@
+  ACTIVITY com.dangdang.buy2/.activity.ActivityMainTab e864637 pid=32183 userId=0 uid=10376 displayId=0(type=INTERNAL)
+    Local Activity c499bba State:
+      mResumed=true mStopped=false mFinished=false
+      mIsInMultiWindowMode=false mIsInPictureInPictureMode=false
+      mChangingConfigurations=false
+      mCurrentConfig={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.4 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      mLoadersStarted=true
+      Active Fragments in 8701afa:
+        #0: ReportFragment{9723f05 #0 androidx.lifecycle.LifecycleDispatcher.report_fragment_tag}
+          mFragmentId=#0 mContainerId=#0 mTag=androidx.lifecycle.LifecycleDispatcher.report_fragment_tag
+          mState=5 mIndex=0 mWho=android:fragment:0 mBackStackNesting=0
+          mAdded=true mRemoving=false mFromLayout=false mInLayout=false
+          mHidden=false mDetached=false mMenuVisible=true mHasMenu=false
+          mRetainInstance=false mRetaining=false mUserVisibleHint=true
+          mFragmentManager=FragmentManager{8701afa in HostCallbacks{7b68b5a}}
+          mHost=android.app.Activity$HostCallbacks@7b68b5a
+          Child FragmentManager{8caf18b in ReportFragment{9723f05}}:
+            FragmentManager misc state:
+              mHost=android.app.Activity$HostCallbacks@7b68b5a
+              mContainer=android.app.Fragment$1@836268
+              mParent=ReportFragment{9723f05 #0 androidx.lifecycle.LifecycleDispatcher.report_fragment_tag}
+              mCurState=5 mStateSaved=false mDestroyed=false
+        #1: RequestManagerFragment{45cc681 #1 com.bumptech.glide.manager}{parent=null}
+          mFragmentId=#0 mContainerId=#0 mTag=com.bumptech.glide.manager
+          mState=5 mIndex=1 mWho=android:fragment:1 mBackStackNesting=0
+          mAdded=true mRemoving=false mFromLayout=false mInLayout=false
+          mHidden=false mDetached=false mMenuVisible=true mHasMenu=false
+          mRetainInstance=false mRetaining=false mUserVisibleHint=true
+          mFragmentManager=FragmentManager{8701afa in HostCallbacks{7b68b5a}}
+          mHost=android.app.Activity$HostCallbacks@7b68b5a
+          Child FragmentManager{8c20326 in RequestManagerFragment{45cc681}}:
+            FragmentManager misc state:
+              mHost=android.app.Activity$HostCallbacks@7b68b5a
+              mContainer=android.app.Fragment$1@cf51b67
+              mParent=RequestManagerFragment{45cc681 #1 com.bumptech.glide.manager}{parent=null}
+              mCurState=5 mStateSaved=false mDestroyed=false
+      Added Fragments:
+        #0: ReportFragment{9723f05 #0 androidx.lifecycle.LifecycleDispatcher.report_fragment_tag}
+        #1: RequestManagerFragment{45cc681 #1 com.bumptech.glide.manager}{parent=null}
+      FragmentManager misc state:
+        mHost=android.app.Activity$HostCallbacks@7b68b5a
+        mContainer=android.app.Activity$HostCallbacks@7b68b5a
+        mCurState=5 mStateSaved=false mDestroyed=false
+    ViewRoot:
+      mAdded=true
+      mRemoved=false
+      mStopped=false
+      mPausedForTransition=false
+      mConsumeBatchedInputScheduled=false
+      mConsumeBatchedInputImmediatelyScheduled=false
+      mPendingInputEventCount=0
+      mProcessInputEventsScheduled=false
+      mTraversalScheduled=false
+      mReportNextDraw=false
+      mLastDisplaySource=From updateInternalDisplay 0 state 2 caller android.view.ViewRootImpl.updateConfiguration:7299 android.app.ActivityThread.handleActivityConfigurationChangedInner:7482 android.app.ActivityThread.handleActivityConfigurationChanged:7364 android.app.ActivityThread.handleActivityConfigurationChanged:7336 android.app.servertransaction.ActivityConfigurationChangeItem.execute:57 android.app.servertransaction.ActivityTransactionItem.execute:60 android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem:179 android.app.servertransaction.TransactionExecutor.executeTransactionItems:114 android.app.servertransaction.TransactionExecutor.execute:86 android.app.ActivityThread$H.handleMessage:2902 android.os.Handler.dispatchMessage:107 android.os.Looper.loopOnce:282 android.os.Looper.loop:387 android.app.ActivityThread.main:9500 java.lang.reflect.Method.invoke:-2 com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run:600 com.android.internal.os.ZygoteInit.main:1005 <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> 
+      mLastDisplayStateSource=State 2 caller android.view.WindowManagerGlobal.addView:463 android.view.WindowManagerImpl.addView:158 android.app.ActivityThread.handleResumeActivity:5817 android.app.servertransaction.ResumeActivityItem.execute:64 android.app.servertransaction.ActivityTransactionItem.execute:60 android.app.servertransaction.TransactionExecutor.executeLifecycleItem:230 android.app.servertransaction.TransactionExecutor.executeTransactionItems:112 android.app.servertransaction.TransactionExecutor.execute:86 android.app.ActivityThread$H.handleMessage:2902 android.os.Handler.dispatchMessage:107 android.os.Looper.loopOnce:282 android.os.Looper.loop:387 android.app.ActivityThread.main:9500 java.lang.reflect.Method.invoke:-2 com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run:600 com.android.internal.os.ZygoteInit.main:1005 <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> 
+      mLastDisplayListenerState=registerListeners , time 1771829591052 caller android.view.ViewRootImpl.setView:1826 android.view.WindowManagerGlobal.addView:463 android.view.WindowManagerImpl.addView:158 android.app.ActivityThread.handleResumeActivity:5817 android.app.servertransaction.ResumeActivityItem.execute:64 android.app.servertransaction.ActivityTransactionItem.execute:60 android.app.servertransaction.TransactionExecutor.executeLifecycleItem:230 android.app.servertransaction.TransactionExecutor.executeTransactionItems:112 android.app.servertransaction.TransactionExecutor.execute:86 android.app.ActivityThread$H.handleMessage:2902 android.os.Handler.dispatchMessage:107 android.os.Looper.loopOnce:282 android.os.Looper.loop:387 android.app.ActivityThread.main:9500 java.lang.reflect.Method.invoke:-2 com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run:600 com.android.internal.os.ZygoteInit.main:1005 <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> 
+      mLastScheduleTraversalsInfo=mLastScheduleTraversalTime=0,CurrentTime=1488676736
+      mLastReportedMergedConfiguration={mGlobalConfig={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1} mOverrideConfig={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.4 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}}
+      mLastConfigurationFromResources={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      ViewRootImplExtImpl
+        mCancelDrawCount:0
+        mWaitingLastSyncDraw:false
+      mLastReportedActivityWindowInfo=ActivityWindowInfo{isEmbedded=false, taskBounds=Rect(0, 0 - 1080, 2412), taskFragmentBounds=Rect(0, 0 - 1080, 2412)}
+      mIsAmbientMode=false
+      mUnbufferedInputSource=0
+      mAttachInfo=       AttachInfo:
+        mHasWindowFocus=true
+        mWindowVisibility=0
+        mInTouchMode=true
+        mUnbufferedDispatchRequested=false
+      android.view.ViewRootImpl$NativePreImeInputStage: mQueueLength=0
+      android.view.ViewRootImpl$ImeInputStage: mQueueLength=0
+      android.view.ViewRootImpl$NativePostImeInputStage: mQueueLength=0
+      android.view.ViewRootImpl$WindowInputEventReceiver
+       mInputChannel: fc08691 com.dangdang.buy2/com.dangdang.buy2.activity.ActivityMainTab (client)
+       mSeqMap: {}
+       mReceiverPtr:
+        mInputConsumer:
+          mResampleTouch = true
+          mChannel = fc08691 com.dangdang.buy2/com.dangdang.buy2.activity.ActivityMainTab (client)
+          mMsgDeferred: false
+          Batches:
+              <empty>
+          mSeqChains:
+              <empty>
+          mConsumeTimes:
+              <empty>
+          
+        mBatchedInputEventPending: false
+        mOutboundQueue:
+          <empty>
+        
+    Choreographer:
+      mFrameScheduled=false
+      mLastFrameTime=1238838683 (1885 ms ago)
+    InsetsController:
+        InsetsState
+          mDisplayFrame=Rect(0, 0 - 1080, 2412)
+          mDisplayCutout=DisplayCutout{insets=Rect(0, 96 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(0, 0 - 165, 96), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2412 physicalDisplayWidth=1440 physicalDisplayHeight=3216 density={3.0} cutoutSpec={M -720,0 L -720,128 L -500,128 L -500,0 Z} rotation={0} scale={1.0} physicalPixelDisplaySizeRatio={0.75}}} sideOverrides={}}
+          mRoundedCorners=RoundedCorners{[RoundedCorner{position=TopLeft, radius=45, center=Point(45, 45)}, RoundedCorner{position=TopRight, radius=45, center=Point(1035, 45)}, RoundedCorner{position=BottomRight, radius=45, center=Point(1035, 2367)}, RoundedCorner{position=BottomLeft, radius=45, center=Point(45, 2367)}]}
+          mRoundedCornerFrame=Rect(0, 0 - 1080, 2412)
+          mPrivacyIndicatorBounds=PrivacyIndicatorBounds {static bounds=Rect(852, 0 - 1092, 96) rotation=0}
+          mDisplayShape=DisplayShape{ spec=-1063678173 displayWidth=1080 displayHeight=2412 physicalPixelDisplaySizeRatio=1.0 rotation=0 offsetX=0 offsetY=0 scale=1.0}
+            InsetsSource id=3 type=ime frame=[0,0][0,0] visible=false flags= sideHint=NONE boundingRects=null
+            InsetsSource id=27 type=displayCutout frame=[0,0][1080,96] visible=true flags= sideHint=TOP boundingRects=null
+            InsetsSource id=342b0001 type=navigationBars frame=[0,2280][1080,2412] visible=true flags= sideHint=BOTTOM boundingRects=null
+            InsetsSource id=342b0004 type=systemGestures frame=[0,0][0,0] visible=true flags= sideHint=NONE boundingRects=null
+            InsetsSource id=342b0005 type=mandatorySystemGestures frame=[0,2280][1080,2412] visible=true flags= sideHint=BOTTOM boundingRects=null
+            InsetsSource id=342b0006 type=tappableElement frame=[0,2280][1080,2412] visible=true flags= sideHint=BOTTOM boundingRects=null
+            InsetsSource id=342b0024 type=systemGestures frame=[0,0][0,0] visible=true flags= sideHint=NONE boundingRects=null
+            InsetsSource id=56560000 type=statusBars frame=[0,0][1080,96] visible=true flags= sideHint=TOP boundingRects=null
+            InsetsSource id=56560005 type=mandatorySystemGestures frame=[0,0][1080,132] visible=true flags= sideHint=TOP boundingRects=null
+            InsetsSource id=56560006 type=tappableElement frame=[0,0][1080,96] visible=true flags= sideHint=TOP boundingRects=null
+        mIsPredictiveBackImeHideAnimInProgress=false
+    WindowOnBackDispatcher:
+        Top Callback: android.view.ViewRootImpl$$ExternalSyntheticLambda11@da20b13
+        Callbacks: 
+          Callback: android.view.ViewRootImpl$$ExternalSyntheticLambda11@da20b13 Priority=0
+    ImeBackAnimationController:
+        mLastProgress=0.0
+        mTriggerBack=false
+        mIsPreCommitAnimationInProgress=false
+        mStartRootScrollY=0
+        isBackAnimationAllowed=true
+        isAdjustPan=true
+        isHideAnimationInProgress=false
+    View Hierarchy:
+      com.android.internal.policy.DecorView{9a6b338 V.E...... R....... 0,0-1080,2412 alpha=1.0 viewInfo = }[ActivityMainTab]
+        android.widget.LinearLayout{48d7367 V.E...... ........ 0,0-1080,2280 alpha=1.0 viewInfo = }
+          android.view.ViewStub{b603d14 G.E...... ......I. 0,0-0,0 #10201cb android:id/action_mode_bar_stub alpha=1.0 viewInfo = }
+          android.widget.FrameLayout{8a4bb26 V.E...... ........ 0,0-1080,2280 #1020002 android:id/content alpha=1.0 viewInfo = }
+            android.widget.FrameLayout{fb75e81 V.E...... ........ 0,0-1080,2280 #7f0a1513 app:id/main_container alpha=1.0 viewInfo = }
+              com.dangdang.buy2.widget.MainTabHost{cc95a68 VFE...... ........ 0,0-1080,2280 #1020012 android:id/tabhost alpha=1.0 viewInfo = }
+                android.widget.RelativeLayout{91163b2 V.E...... ........ 0,0-1080,2280 alpha=1.0 viewInfo = }
+                  android.widget.TabWidget{e7a61bd V.E...... ........ 0,2133-1080,2280 #1020013 android:id/tabs alpha=1.0 viewInfo = }
+                    com.dangdang.buy2.widget.grayscale.GrayscaleFrameLayout{20db514 VFE...C.. ........ 0,0-216,147 alpha=1.0 viewInfo = }
+                      android.widget.ImageView{b1d6a2f V.ED..... ........ 0,0-216,147 #7f0a201f app:id/tab_index_iv alpha=1.0 viewInfo = }
+                      android.widget.FrameLayout{c9b0e80 G.E...... ......ID 0,0-216,147 #7f0a0d65 app:id/index_anim_layout alpha=1.0 viewInfo = }
+                        android.widget.ImageView{673df03 V.ED..... ......ID 0,0-216,147 #7f0a201d app:id/tab_index_anim_bg_iv alpha=1.0 viewInfo = }
+                        android.widget.ImageView{3705cb9 V.ED..... ......ID 0,87-216,147 #7f0a2021 app:id/tab_index_top_iv alpha=0.0 viewInfo = }
+                        android.widget.ImageView{32e08fe V.ED..... ......ID 0,87-216,147 #7f0a2020 app:id/tab_index_recommend_iv alpha=1.0 viewInfo = }
+                        com.dangdang.buy2.widget.round.RoundFrameLayout{fe292ac V.E...... ......ID 75,21-141,87 alpha=1.0 viewInfo = }
+                          android.widget.ImageView{13ab83c G.ED..... ......I. 0,0-0,0 #7f0a2022 app:id/tab_index_up_iv alpha=1.0 viewInfo = }
+                          android.widget.ImageView{3cb685f V.ED..... ......ID 0,0-66,66 #7f0a201e app:id/tab_index_down_iv alpha=1.0 viewInfo = }
+                    com.dangdang.buy2.widget.grayscale.GrayscaleFrameLayout{9310b75 VFE...C.. ........ 216,0-432,147 alpha=1.0 viewInfo = }
+                      android.widget.ImageView{cddb70a V.ED..... ........ 0,0-216,147 #7f0a202b app:id/tab_search_iv alpha=1.0 viewInfo = }
+                    com.dangdang.buy2.widget.grayscale.GrayscaleFrameLayout{3e82b7b VFE...C.. ........ 432,0-648,147 alpha=1.0 viewInfo = }
+                      android.widget.ImageView{33c2d98 V.ED..... ........ 0,0-216,147 #7f0a201c app:id/tab_category_iv alpha=1.0 viewInfo = }
+                    com.dangdang.buy2.widget.grayscale.GrayscaleFrameLayout{213e9f1 VFE...C.. ........ 648,0-864,147 alpha=1.0 viewInfo = }
+                      android.widget.ImageView{52839d6 V.ED..... ........ 0,0-216,147 #7f0a201b app:id/tab_cart_iv alpha=1.0 viewInfo = }
+                      android.widget.TextView{76607c0 V.ED..... ........ 133,6-186,59 #7f0a0369 app:id/cart_num_tv alpha=1.0 viewInfo = }
+                    com.dangdang.buy2.widget.grayscale.GrayscaleFrameLayout{5440457 VFE...C.. ..S..... 864,0-1080,147 alpha=1.0 viewInfo = }
+                      android.widget.ImageView{9928b44 V.ED..... ..S..... 0,0-216,147 #7f0a2025 app:id/tab_personal_iv alpha=1.0 viewInfo = }
+                  android.widget.FrameLayout{1c61d62 V.E...... ........ 0,0-1080,2132 #1020011 android:id/tabcontent alpha=1.0 viewInfo = }
+                    com.android.internal.policy.DecorView{46c342d GFE...... R.....ID 0,0-1080,2132 alpha=1.0 viewInfo = }[]
+                      android.widget.LinearLayout{96cadae V.E...... ......ID 0,0-1080,2132 alpha=1.0 viewInfo = }
+                        android.view.ViewStub{c0e49bd G.E...... ......I. 0,0-0,0 #10201cb android:id/action_mode_bar_stub alpha=1.0 viewInfo = }
+                        android.widget.FrameLayout{e84e629 V.E...... ......ID 0,0-1080,2132 #1020002 android:id/content alpha=1.0 viewInfo = }
+                          com.dangdang.buy2.widget.grayscale.GrayscaleFrameLayout{7cf17b0 V.E...... ......ID 0,0-1080,2132 #7f0a0c12 app:id/hello_home_container alpha=1.0 viewInfo = }
+                            android.widget.FrameLayout{bf246f7 V.E...... ......ID 0,0-1080,2132 #7f0a0a73 app:id/fragment_container alpha=1.0 viewInfo = }
+                              android.widget.FrameLayout{a1a8ef3 VFE...... ......ID 0,0-1080,2132 aid=1073741824 alpha=1.0 viewInfo = }
+                                com.dangdang.buy2.widget.lottie.LottieErrorView{1bb2bb2 G.E...... ......ID 0,0-0,0 #7f0a144a app:id/loading_error_layout alpha=1.0 viewInfo = }
+                                  android.widget.FrameLayout{1ae0703 VFE...C.. ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                    android.widget.LinearLayout{c8e1680 V.E...... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                      com.airbnb.lottie.LottieAnimationView{a5ac4b9 V.ED..... ......ID 0,0-0,0 #7f0a0705 app:id/error_lottie_animation_view alpha=1.0 viewInfo = }
+                                      android.widget.TextView{ac50fe V.ED..... ......ID 0,0-0,0 #7f0a0707 app:id/error_text_tv alpha=1.0 viewInfo = }
+                                      android.widget.LinearLayout{c80105f V.E...... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                        android.widget.TextView{ffe1aac GFED..C.. ......I. 0,0-0,0 #7f0a0706 app:id/error_refresh_tv alpha=1.0 viewInfo = }
+                                        android.widget.TextView{859f375 GFED..C.. ......I. 0,0-0,0 #7f0a0703 app:id/error_action_tv alpha=1.0 viewInfo = }
+                                    android.widget.TextView{7f87f0a VFED..C.. ......I. 0,0-0,0 #7f0a29c5 app:id/upload_log_text alpha=1.0 viewInfo = }
+                                android.view.View{2c5274f V.ED..... ......ID 0,0-1080,30 #7f0a0c3e app:id/home_white_bg_view alpha=1.0 viewInfo = }
+                                android.widget.ImageView{605fedc V.ED..... ......ID 0,0-1080,676 #7f0a0c27 app:id/home_gradient_bg_view alpha=1.0 viewInfo = }
+                                com.dangdang.buy2.home.view.HomePtrFrameLayout{7622cc8 V.E...... ......ID 0,234-1080,2132 #7f0a1956 app:id/ptr_frame_layout alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.home.view.HomeNestedParentLayout{5f8b147 V.E...... ......ID 0,0-1080,1898 #7f0a0c2d app:id/home_nested_parent_layout alpha=1.0 viewInfo = }
+                                    androidx.recyclerview.widget.RecyclerView{a0c486 VFED..... ......ID 0,0-1080,1898 #7f0a0c13 app:id/hello_home_rv alpha=1.0 viewInfo = }
+                                      com.dangdang.buy2.widget.round.RoundConstraintLayout{96e6dc0 V.E...... ......ID 36,-525-1044,155 alpha=1.0 viewInfo = }
+                                        com.dangdang.buy2.widget.round.RoundConstraintLayout{3883343 V.E...... ......ID 0,0-1008,656 #7f0a1e08 app:id/seckill_new_root alpha=1.0 viewInfo = }
+                                          android.view.View{27f8799 V.ED..... ......ID 0,0-1008,102 #7f0a2b40 app:id/view_top_bg alpha=1.0 viewInfo = }
+                                          androidx.constraintlayout.widget.ConstraintLayout{4f38a5e VFE...C.. ......ID 0,0-213,218 #7f0a2186 app:id/title_view alpha=1.0 viewInfo = }
+                                            android.widget.TextView{28ebe3f V.ED..... ......ID 32,24-212,111 #7f0a2814 app:id/tv_seckill_title alpha=1.0 viewInfo = }
+                                            android.widget.ImageView{878630c I.ED..... ......ID 122,24-122,111 #7f0a10d0 app:id/iv_seckill_title alpha=1.0 viewInfo = }
+                                            android.widget.TextView{b80455 V.ED..... ......ID 48,111-198,152 #7f0a2813 app:id/tv_seckill_hint alpha=1.0 viewInfo = }
+                                            com.dangdang.buy2.widget.CountDownTimerView{9cea3f8 V.E...... ......ID 33,164-213,218 #7f0a256b app:id/tv_kill_timer alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{9baff5b V.E...... ......ID 21,0-158,54 alpha=1.0 viewInfo = }
+                                                android.widget.TextView{e69ee6a V.ED..... ......ID 0,9-39,44 #7f0a0c55 app:id/hour_tv alpha=1.0 viewInfo = }
+                                                android.widget.TextView{cc190d1 V.ED..... ......ID 39,6-54,47 #7f0a0c53 app:id/hour_mark_tv alpha=1.0 viewInfo = }
+                                                android.widget.TextView{b308736 V.ED..... ......ID 54,9-86,44 #7f0a157b app:id/min_tv alpha=1.0 viewInfo = }
+                                                android.widget.TextView{6a03637 V.ED..... ......ID 86,6-101,47 #7f0a1578 app:id/min_mark_tv alpha=1.0 viewInfo = }
+                                                android.widget.TextView{84607a4 V.ED..... ......ID 101,9-137,44 #7f0a1e1e app:id/second_tv alpha=1.0 viewInfo = }
+                                          com.dangdang.core.ui.autoscrollview.Banner{dad60f2 V.E...... ......ID 282,36-978,234 #7f0a2b77 app:id/vp_seckill_product alpha=1.0 viewInfo = }
+                                            android.widget.RelativeLayout{4bf0bfd V.E...... ......ID 0,0-696,198 alpha=1.0 viewInfo = }
+                                              com.dangdang.core.ui.autoscrollview.AutoScrollViewPager{bada054 VFED..... ......ID 0,0-696,198 #7f0a2b20 app:id/view_pager alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundConstraintLayout{11e52ab VFE...C.. ......ID 43152,0-43848,198 #7f0a1e08 app:id/seckill_new_root alpha=1.0 viewInfo = }
+                                                  com.dangdang.buy2.widget.round.RoundImageView{25b7d08 V.ED..... ......ID 3,3-195,195 #7f0a10cf app:id/iv_seckill_pic alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{d3cdca1 V.ED..... ......ID 213,9-672,69 #7f0a297e app:id/tv_vp_goods_name alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{3a92ec6 V.ED..... ......ID 213,77-405,124 #7f0a297b app:id/tv_vp_buy_count alpha=1.0 viewInfo = }
+                                                  android.widget.RelativeLayout{faf61b4 V.E...... ......ID 213,129-399,183 #7f0a1c46 app:id/rl_price alpha=1.0 viewInfo = }
+                                                    android.widget.TextView{e6d6e87 V.ED..... ......ID 0,0-186,54 #7f0a2980 app:id/tv_vp_price alpha=1.0 viewInfo = }
+                                                  android.widget.Space{2a9a1dd I.ED..... ......I. 393,129-393,183 #7f0a1f69 app:id/space alpha=1.0 viewInfo = }
+                                                  android.widget.ImageView{f797152 V.ED..... ......ID 393,129-477,183 #7f0a2981 app:id/tv_vp_price_icon alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{ea86c23 V.ED..... ......ID 489,139-543,174 #7f0a297f app:id/tv_vp_line_price alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundConstraintLayout{7270f84 VFE...C.. ......ID 41760,0-42456,198 #7f0a1e08 app:id/seckill_new_root alpha=1.0 viewInfo = }
+                                                  com.dangdang.buy2.widget.round.RoundImageView{674036d V.ED..... ......ID 3,3-195,195 #7f0a10cf app:id/iv_seckill_pic alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{bbedba2 V.ED..... ......ID 213,9-672,69 #7f0a297e app:id/tv_vp_goods_name alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{87b1033 V.ED..... ......ID 213,77-406,124 #7f0a297b app:id/tv_vp_buy_count alpha=1.0 viewInfo = }
+                                                  android.widget.RelativeLayout{c5a6969 V.E...... ......ID 213,129-399,183 #7f0a1c46 app:id/rl_price alpha=1.0 viewInfo = }
+                                                    android.widget.TextView{5c79ff0 V.ED..... ......ID 0,0-186,54 #7f0a2980 app:id/tv_vp_price alpha=1.0 viewInfo = }
+                                                  android.widget.Space{ed30fee I.ED..... ......I. 393,129-393,183 #7f0a1f69 app:id/space alpha=1.0 viewInfo = }
+                                                  android.widget.ImageView{ecc7c8f V.ED..... ......ID 393,129-477,183 #7f0a2981 app:id/tv_vp_price_icon alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{9ecb1c V.ED..... ......ID 489,139-568,174 #7f0a297f app:id/tv_vp_line_price alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundConstraintLayout{c237ed9 VFE...C.. ......ID 42456,0-43152,198 #7f0a1e08 app:id/seckill_new_root alpha=1.0 viewInfo = }
+                                                  com.dangdang.buy2.widget.round.RoundImageView{99509e V.ED..... ......ID 3,3-195,195 #7f0a10cf app:id/iv_seckill_pic alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{ba77f V.ED..... ......ID 213,9-672,69 #7f0a297e app:id/tv_vp_goods_name alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{d39334c V.ED..... ......ID 213,77-400,124 #7f0a297b app:id/tv_vp_buy_count alpha=1.0 viewInfo = }
+                                                  android.widget.RelativeLayout{745d8aa V.E...... ......ID 213,129-399,183 #7f0a1c46 app:id/rl_price alpha=1.0 viewInfo = }
+                                                    android.widget.TextView{7c42f95 V.ED..... ......ID 0,0-186,54 #7f0a2980 app:id/tv_vp_price alpha=1.0 viewInfo = }
+                                                  android.widget.Space{e3d3c9b I.ED..... ......I. 393,129-393,183 #7f0a1f69 app:id/space alpha=1.0 viewInfo = }
+                                                  android.widget.ImageView{36c3838 V.ED..... ......ID 393,129-477,183 #7f0a2981 app:id/tv_vp_price_icon alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{1853011 V.ED..... ......ID 489,139-544,174 #7f0a297f app:id/tv_vp_line_price alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.WidgetPilotLamp{73f537b G.E...... ......I. 0,0-0,0 #7f0a11a3 app:id/lamp alpha=1.0 viewInfo = }
+                                              android.view.View{d883598 G.ED..... ......ID 0,0-0,0 #7f0a0232 app:id/bottom_divider alpha=1.0 viewInfo = }
+                                          android.widget.ImageView{4e42c3 V.ED..... ......ID 276,24-324,84 #7f0a0ff4 app:id/iv_hot_tag alpha=1.0 viewInfo = }
+                                          android.widget.TextView{f7c0740 V.ED..... ......ID 935,188-960,216 #7f0a297c app:id/tv_vp_count alpha=1.0 viewInfo = }
+                                          android.widget.TextView{d84c679 V.ED..... ......ID 915,177-935,219 #7f0a297d app:id/tv_vp_current_count alpha=1.0 viewInfo = }
+                                          android.widget.LinearLayout{948481f V.E...... ......ID 933,254-969,263 #7f0a1925 app:id/progress_view alpha=1.0 viewInfo = }
+                                            android.view.View{978fbe V.ED..... ......ID 0,0-15,9 #7f0a1916 app:id/progress_bar alpha=1.0 viewInfo = }
+                                          androidx.recyclerview.widget.RecyclerView{ba576c VFED..... ......ID 0,275-1008,656 #7f0a19fd app:id/rcy_seckill_product alpha=1.0 viewInfo = }
+                                            android.widget.RelativeLayout{4dd3ddb VFE...C.. ......ID 30,0-246,381 alpha=1.0 viewInfo = }
+                                              androidx.constraintlayout.widget.ConstraintLayout{4663351 V.E...... ......ID 0,0-216,381 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundImageView{d6e4078 V.ED..... ......ID 0,0-216,216 #7f0a10a5 app:id/iv_rcy_product alpha=1.0 viewInfo = }
+                                                android.widget.TextView{4ccb7b6 V.ED..... ......ID 0,222-216,271 #7f0a275e app:id/tv_rcy_product_name alpha=1.0 viewInfo = }
+                                                androidx.constraintlayout.widget.ConstraintLayout{f82ec24 V.E...... ......ID 6,283-210,331 #7f0a181b app:id/price_root alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{7e7dcb7 V.ED..... ......ID 0,0-144,48 #7f0a2980 app:id/tv_vp_price alpha=1.0 viewInfo = }
+                                                  android.widget.Space{689b38d I.ED..... ......I. 138,0-138,48 #7f0a1f69 app:id/space alpha=1.0 viewInfo = }
+                                                  android.widget.ImageView{9649942 V.ED..... ......ID 138,0-204,48 #7f0a2981 app:id/tv_vp_price_icon alpha=1.0 viewInfo = }
+                                                android.widget.TextView{1938d53 V.ED..... ......ID 0,340-216,381 #7f0a267f app:id/tv_origin_price alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{ee351f1 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                                android.widget.TextView{b2781d6 V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.EasyTextView{ae5ac57 V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                            android.widget.RelativeLayout{b92e1fa VFE...C.. ......ID 264,0-480,381 alpha=1.0 viewInfo = }
+                                              androidx.constraintlayout.widget.ConstraintLayout{33f2a08 V.E...... ......ID 0,0-216,381 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundImageView{fc093ab V.ED..... ......ID 0,0-216,216 #7f0a10a5 app:id/iv_rcy_product alpha=1.0 viewInfo = }
+                                                android.widget.TextView{ae385a1 V.ED..... ......ID 0,222-216,271 #7f0a275e app:id/tv_rcy_product_name alpha=1.0 viewInfo = }
+                                                androidx.constraintlayout.widget.ConstraintLayout{b72bf87 V.E...... ......ID 6,283-210,331 #7f0a181b app:id/price_root alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{11d23c6 V.ED..... ......ID 0,0-144,48 #7f0a2980 app:id/tv_vp_price alpha=1.0 viewInfo = }
+                                                  android.widget.Space{fa0deb4 I.ED..... ......I. 138,0-138,48 #7f0a1f69 app:id/space alpha=1.0 viewInfo = }
+                                                  android.widget.ImageView{e91dadd V.ED..... ......ID 138,0-204,48 #7f0a2981 app:id/tv_vp_price_icon alpha=1.0 viewInfo = }
+                                                android.widget.TextView{8b7b652 V.ED..... ......ID 0,340-216,381 #7f0a267f app:id/tv_origin_price alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{971344 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                                android.widget.TextView{2ca1c2d V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.EasyTextView{c71e562 V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                            android.widget.RelativeLayout{5e98afe VFE...C.. ......ID 498,0-714,381 alpha=1.0 viewInfo = }
+                                              androidx.constraintlayout.widget.ConstraintLayout{efee4ac V.E...... ......ID 0,0-216,381 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundImageView{b3dc25f V.ED..... ......ID 0,0-216,216 #7f0a10a5 app:id/iv_rcy_product alpha=1.0 viewInfo = }
+                                                android.widget.TextView{53bf575 V.ED..... ......ID 0,222-216,271 #7f0a275e app:id/tv_rcy_product_name alpha=1.0 viewInfo = }
+                                                androidx.constraintlayout.widget.ConstraintLayout{926257b V.E...... ......ID 6,283-210,331 #7f0a181b app:id/price_root alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{ccf590a V.ED..... ......ID 0,0-144,48 #7f0a2980 app:id/tv_vp_price alpha=1.0 viewInfo = }
+                                                  android.widget.Space{ccb9f98 I.ED..... ......I. 138,0-138,48 #7f0a1f69 app:id/space alpha=1.0 viewInfo = }
+                                                  android.widget.ImageView{4e373f1 V.ED..... ......ID 138,0-204,48 #7f0a2981 app:id/tv_vp_price_icon alpha=1.0 viewInfo = }
+                                                android.widget.TextView{f91fbd6 V.ED..... ......ID 0,340-216,381 #7f0a267f app:id/tv_origin_price alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{c2eb6f3 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                                android.widget.TextView{e941fb0 V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.EasyTextView{8d94e29 V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                            android.widget.RelativeLayout{28aa034 VFE...C.. ......ID 732,0-948,381 alpha=1.0 viewInfo = }
+                                              androidx.constraintlayout.widget.ConstraintLayout{bff13d2 V.E...... ......ID 0,0-216,381 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundImageView{e0e3e5d V.ED..... ......ID 0,0-216,216 #7f0a10a5 app:id/iv_rcy_product alpha=1.0 viewInfo = }
+                                                android.widget.TextView{a119ca3 V.ED..... ......ID 0,222-216,271 #7f0a275e app:id/tv_rcy_product_name alpha=1.0 viewInfo = }
+                                                androidx.constraintlayout.widget.ConstraintLayout{2756359 V.E...... ......ID 6,283-210,331 #7f0a181b app:id/price_root alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{4b8ba0 V.ED..... ......ID 0,0-144,48 #7f0a2980 app:id/tv_vp_price alpha=1.0 viewInfo = }
+                                                  android.widget.Space{169b1e I.ED..... ......I. 138,0-138,48 #7f0a1f69 app:id/space alpha=1.0 viewInfo = }
+                                                  android.widget.ImageView{4175fff V.ED..... ......ID 138,0-204,48 #7f0a2981 app:id/tv_vp_price_icon alpha=1.0 viewInfo = }
+                                                android.widget.TextView{b6dc1cc V.ED..... ......ID 0,340-216,381 #7f0a267f app:id/tv_origin_price alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{70cf5ae G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                                android.widget.TextView{5f3cf4f V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.EasyTextView{81386dc V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                            android.widget.RelativeLayout{a463f71 VFE...C.. ......ID 966,0-1182,381 alpha=1.0 viewInfo = }
+                                              androidx.constraintlayout.widget.ConstraintLayout{45815d7 V.E...... ......ID 0,0-216,381 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundImageView{9a3a156 V.ED..... ......ID 0,0-216,216 #7f0a10a5 app:id/iv_rcy_product alpha=1.0 viewInfo = }
+                                                android.widget.TextView{b72fec4 V.ED..... ......ID 0,222-216,271 #7f0a275e app:id/tv_rcy_product_name alpha=1.0 viewInfo = }
+                                                androidx.constraintlayout.widget.ConstraintLayout{3507ce2 V.E...... ......ID 6,283-210,331 #7f0a181b app:id/price_root alpha=1.0 viewInfo = }
+                                                  android.widget.TextView{92e61ad V.ED..... ......ID 0,0-144,48 #7f0a2980 app:id/tv_vp_price alpha=1.0 viewInfo = }
+                                                  android.widget.Space{81e3873 I.ED..... ......I. 138,0-138,48 #7f0a1f69 app:id/space alpha=1.0 viewInfo = }
+                                                  android.widget.ImageView{6034330 V.ED..... ......ID 138,0-204,48 #7f0a2981 app:id/tv_vp_price_icon alpha=1.0 viewInfo = }
+                                                android.widget.TextView{4fc6ba9 V.ED..... ......ID 0,340-216,381 #7f0a267f app:id/tv_origin_price alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{d8fa3e5 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                                android.widget.TextView{236beba V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.EasyTextView{d48116b V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                      com.dangdang.buy2.widget.round.RoundConstraintLayout{6a5646e V.E...... ......ID 36,155-1044,573 alpha=1.0 viewInfo = }
+                                        android.view.View{1b48e15 V.ED..... ......ID 0,0-1008,96 #7f0a2ad6 app:id/view_bg alpha=1.0 viewInfo = }
+                                        android.widget.RelativeLayout{669152a VFE...C.. ......ID 0,0-1008,96 #7f0a1cc6 app:id/rl_title alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{44508b8 V.E...... ......ID 0,27-906,80 alpha=1.0 viewInfo = }
+                                            android.widget.TextView{7acff1b V.ED..... ......ID 36,0-216,53 #7f0a2180 app:id/title_tv alpha=1.0 viewInfo = }
+                                            android.widget.ImageView{c034c8 G.ED..... ......I. 0,0-0,0 #7f0a0ff6 app:id/iv_icon alpha=1.0 viewInfo = }
+                                          android.widget.LinearLayout{fdb59f6 V.E...... ......ID 936,48-972,57 #7f0a1925 app:id/progress_view alpha=1.0 viewInfo = }
+                                            android.view.View{5cf691 V.ED..... ......ID 0,0-15,9 #7f0a1916 app:id/progress_bar alpha=1.0 viewInfo = }
+                                        com.dangdang.buy2.widget.TouchOptimizeRecyclerView{6673fe9 VFE...... ......ID 36,96-1008,409 #7f0a1a68 app:id/recycler_view alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{985ca14 VFE...C.. ......ID 0,0-234,313 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{ff400b2 V.E...... ......ID 0,0-234,304 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.round.RoundImageView{10152bd V.ED..... ......ID 8,0-225,217 #7f0a0cd8 app:id/image_view alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{ec6b803 V.ED..... ......ID 83,223-150,260 #7f0a20ea app:id/text_view alpha=1.0 viewInfo = }
+                                              android.widget.TextView{bff7380 V.ED..... ......ID 0,263-234,304 #7f0a20ec app:id/text_view_num alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{c9b9961 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                              android.widget.TextView{9020c86 V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{b545947 V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{f96bcb0 VFE...C.. ......ID 234,0-468,313 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{d915aae V.E...... ......ID 0,0-234,304 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.round.RoundImageView{cc2729 V.ED..... ......ID 8,0-225,217 #7f0a0cd8 app:id/image_view alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{118d04f V.ED..... ......ID 60,223-173,260 #7f0a20ea app:id/text_view alpha=1.0 viewInfo = }
+                                              android.widget.TextView{322f3dc V.ED..... ......ID 0,263-234,304 #7f0a20ec app:id/text_view_num alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{a07d574 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                              android.widget.TextView{4176a9d V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{2e26b12 V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{4790c0c VFE...C.. ......ID 468,0-702,313 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{2593f6a V.E...... ......ID 0,0-234,304 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.round.RoundImageView{67df955 V.ED..... ......ID 8,0-225,217 #7f0a0cd8 app:id/image_view alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{74e7c5b V.ED..... ......ID 68,223-166,260 #7f0a20ea app:id/text_view alpha=1.0 viewInfo = }
+                                              android.widget.TextView{fb0dcf8 V.ED..... ......ID 0,263-234,304 #7f0a20ec app:id/text_view_num alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{8f342e3 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                              android.widget.TextView{c86d4e0 V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{f851399 V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{9917428 VFE...C.. ......ID 702,0-936,313 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{1b4cae6 V.E...... ......ID 0,0-234,304 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.round.RoundImageView{342d541 V.ED..... ......ID 8,0-225,217 #7f0a0cd8 app:id/image_view alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{3b0a827 V.ED..... ......ID 59,223-174,260 #7f0a20ea app:id/text_view alpha=1.0 viewInfo = }
+                                              android.widget.TextView{a9daad4 V.ED..... ......ID 0,263-234,304 #7f0a20ec app:id/text_view_num alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{8f8265e G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                              android.widget.TextView{80d2a3f V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{c345f0c V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{beb7104 VFE...C.. ......ID 936,0-1170,313 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{5f1d922 V.E...... ......ID 0,0-234,304 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.round.RoundImageView{cc686ed V.ED..... ......ID 8,0-225,217 #7f0a0cd8 app:id/image_view alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{a6dffb3 V.ED..... ......ID 72,223-162,260 #7f0a20ea app:id/text_view alpha=1.0 viewInfo = }
+                                              android.widget.TextView{c309970 V.ED..... ......ID 0,263-234,304 #7f0a20ec app:id/text_view_num alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{68a5055 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                              android.widget.TextView{41c4a6a V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{6b42b5b V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{496acd V.E...... ......I. 0,573-1080,603 alpha=1.0 viewInfo = }
+                                        android.view.View{55b1f82 V.ED..... ......I. 0,0-1080,30 alpha=1.0 viewInfo = }
+                                      com.dangdang.buy2.widget.round.RoundConstraintLayout{c1e6d32 V.E...... ......ID 36,603-1044,1003 alpha=1.0 viewInfo = }
+                                        android.view.View{ed37da9 V.ED..... ......ID 0,0-1008,114 #7f0a2ad6 app:id/view_bg alpha=1.0 viewInfo = }
+                                        android.widget.RelativeLayout{a0c2f2e VFE...C.. ......ID 0,0-1008,114 #7f0a1cc6 app:id/rl_title alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{e591c5c V.E...... ......ID 0,30-906,83 alpha=1.0 viewInfo = }
+                                            android.widget.TextView{9244acf V.ED..... ......ID 36,0-216,53 #7f0a2180 app:id/title_tv alpha=1.0 viewInfo = }
+                                            android.widget.ImageView{30f18a V.ED..... ......ID 231,2-444,50 #7f0a0ff6 app:id/iv_icon alpha=1.0 viewInfo = }
+                                          android.widget.LinearLayout{bb0103a V.E...... ......ID 936,52-972,61 #7f0a1925 app:id/progress_view alpha=1.0 viewInfo = }
+                                            android.view.View{dbd4b65 V.ED..... ......ID 0,0-15,9 #7f0a1916 app:id/progress_bar alpha=1.0 viewInfo = }
+                                        com.dangdang.buy2.widget.TouchOptimizeRecyclerView{7d7a13d VFE...... ......ID 36,114-1008,391 #7f0a1a68 app:id/recycler_view alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{7aaf400 VFE...C.. ......ID 0,0-234,277 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{7c93635 V.E...... ......ID 0,0-234,247 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.round.RoundImageView{5e9b06c V.ED..... ......ID 8,0-225,217 #7f0a0cd8 app:id/image_view alpha=1.0 viewInfo = }
+                                              android.widget.RelativeLayout{789343b V.E...... ......ID 30,187-204,247 #7f0a1b62 app:id/rl_brand alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundImageView{12e6aca V.ED..... ......ID 13,0-160,60 #7f0a1f49 app:id/small_image_view alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{7c22a7e G.E...... ......ID 0,0-138,213 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                              android.widget.TextView{2221439 V.ED..... ......ID 61,0-100,161 alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{212abdf V.ED..... ......ID 60,170-102,213 alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{5f00c9c VFE...C.. ......ID 234,0-468,277 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{d9f1a7a V.E...... ......ID 0,0-234,247 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.round.RoundImageView{7b516a5 V.ED..... ......ID 8,0-225,217 #7f0a0cd8 app:id/image_view alpha=1.0 viewInfo = }
+                                              android.widget.RelativeLayout{53f5688 V.E...... ......ID 30,187-204,247 #7f0a1b62 app:id/rl_brand alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundImageView{b2ba22b V.ED..... ......ID 13,0-160,60 #7f0a1f49 app:id/small_image_view alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{34e5ff8 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                              android.widget.TextView{b6c9cd1 V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{faca336 V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{1ffdeff VFE...C.. ......ID 468,0-702,277 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{d51f315 V.E...... ......ID 0,0-234,247 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.round.RoundImageView{81dd4cc V.ED..... ......ID 8,0-225,217 #7f0a0cd8 app:id/image_view alpha=1.0 viewInfo = }
+                                              android.widget.RelativeLayout{3fd6c1b V.E...... ......ID 30,187-204,247 #7f0a1b62 app:id/rl_brand alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundImageView{b33162a V.ED..... ......ID 13,0-160,60 #7f0a1f49 app:id/small_image_view alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{8002237 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                              android.widget.TextView{583a4 V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{54d350d V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{cf9e2ce VFE...C.. ......ID 702,0-936,277 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{b2608fc V.E...... ......ID 0,0-234,247 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.round.RoundImageView{2d485ef V.ED..... ......ID 8,0-225,217 #7f0a0cd8 app:id/image_view alpha=1.0 viewInfo = }
+                                              android.widget.RelativeLayout{f555dda V.E...... ......ID 30,187-204,247 #7f0a1b62 app:id/rl_brand alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundImageView{4d6cb85 V.ED..... ......ID 13,0-160,60 #7f0a1f49 app:id/small_image_view alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{d17bcc2 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                              android.widget.TextView{eaaaad3 V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{e93610 V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{71a939 VFE...C.. ......ID 936,0-1170,277 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{a58c8df V.E...... ......ID 0,0-234,247 #7f0a13f1 app:id/ll_show_info alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.round.RoundImageView{d0a9b7e V.ED..... ......ID 8,0-225,217 #7f0a0cd8 app:id/image_view alpha=1.0 viewInfo = }
+                                              android.widget.RelativeLayout{63a9ff5 V.E...... ......ID 30,187-204,247 #7f0a1b62 app:id/rl_brand alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.round.RoundImageView{7ba92c V.ED..... ......ID 48,0-126,60 #7f0a1f49 app:id/small_image_view alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{2251509 G.E...... ......I. 0,0-0,0 #7f0a13f2 app:id/ll_show_more alpha=1.0 viewInfo = }
+                                              android.widget.TextView{428e30e V.ED..... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.EasyTextView{56b212f V.ED..... ......ID 0,0-0,0 alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{2bc38e1 V.E...... ......I. 0,1003-1080,1033 alpha=1.0 viewInfo = }
+                                        android.view.View{27ef606 V.ED..... ......I. 0,0-1080,30 alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{5ba9af4 V.E...... ......I. 0,1033-1080,1063 alpha=1.0 viewInfo = }
+                                        android.view.View{862821d V.ED..... ......I. 0,0-1080,30 alpha=1.0 viewInfo = }
+                                      com.dangdang.buy2.widget.round.RoundLinearLayout{62a2319 V.E...... ......ID 36,1063-1044,1478 alpha=1.0 viewInfo = }
+                                        android.widget.FrameLayout{4f8bfde V.E...... ......ID 0,0-490,415 #7f0a09d3 app:id/fl_item1 alpha=1.0 viewInfo = }
+                                          com.dangdang.buy2.widget.round.RoundLinearLayout{767e65e V.E...... ......ID 0,0-490,415 #7f0a1337 app:id/ll_item1 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{6dbd399 VFE...C.. ......ID 36,0-490,108 #7f0a1416 app:id/ll_title1 alpha=1.0 viewInfo = }
+                                              android.widget.TextView{a21ea3f V.ED..... ......ID 0,27-180,88 #7f0a290a app:id/tv_title1 alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{18a1f0c V.ED..... ......ID 195,33-408,81 #7f0a1015 app:id/iv_label1 alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{9c80a6a V.E...... ......ID 24,108-466,324 #7f0a12ab app:id/ll_book alpha=1.0 viewInfo = }
+                                              android.widget.FrameLayout{c8d1055 VFE...C.. ......ID 0,0-216,216 #7f0a09db app:id/fl_left1 alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.CustomRoundAngleImageView{554eb5b V.ED..... ......ID 0,0-216,216 #7f0a0f1d app:id/iv_book1 alpha=1.0 viewInfo = }
+                                                com.dangdang.buy2.widget.CustomRoundAngleImageView{8401ff8 V.ED..... ......ID 0,0-216,216 #7f0a1132 app:id/iv_top1 alpha=0.0 viewInfo = }
+                                                android.widget.TextView{edb5cd1 V.ED..... ......ID 0,0-162,48 #7f0a2761 app:id/tv_read_num alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{4546336 VFE...C.. ......ID 226,0-442,216 #7f0a1342 app:id/ll_left2 alpha=1.0 viewInfo = }
+                                                android.widget.LinearLayout{e7f50d V.E...... ......ID 0,0-216,105 alpha=1.0 viewInfo = }
+                                                  android.widget.FrameLayout{25343a4 V.E...... ......ID 0,0-105,105 alpha=1.0 viewInfo = }
+                                                    com.dangdang.buy2.widget.CustomRoundAngleImageView{fece237 V.ED..... ......ID 0,0-105,105 #7f0a0f1e app:id/iv_book2 alpha=1.0 viewInfo = }
+                                                    com.dangdang.buy2.widget.CustomRoundAngleImageView{47b7cc2 V.ED..... ......ID 0,0-105,105 #7f0a1133 app:id/iv_top2 alpha=0.0 viewInfo = }
+                                                  android.widget.FrameLayout{a52f610 V.E...... ......ID 111,0-216,105 alpha=1.0 viewInfo = }
+                                                    com.dangdang.buy2.widget.CustomRoundAngleImageView{8a36ad3 V.ED..... ......ID 0,0-105,105 #7f0a0f1f app:id/iv_book3 alpha=1.0 viewInfo = }
+                                                    com.dangdang.buy2.widget.CustomRoundAngleImageView{cabd509 V.ED..... ......ID 0,0-105,105 #7f0a1134 app:id/iv_top3 alpha=0.0 viewInfo = }
+                                                android.widget.LinearLayout{259633c V.E...... ......ID 0,111-216,216 alpha=1.0 viewInfo = }
+                                                  android.widget.FrameLayout{62fe12f V.E...... ......ID 0,0-105,105 alpha=1.0 viewInfo = }
+                                                    com.dangdang.buy2.widget.CustomRoundAngleImageView{e08a30e V.ED..... ......ID 0,0-105,105 #7f0a0f20 app:id/iv_book4 alpha=1.0 viewInfo = }
+                                                    com.dangdang.buy2.widget.CustomRoundAngleImageView{8b3b8c5 V.ED..... ......ID 0,0-105,105 #7f0a1135 app:id/iv_top4 alpha=0.0 viewInfo = }
+                                                  android.widget.FrameLayout{963614b V.E...... ......ID 111,0-216,105 alpha=1.0 viewInfo = }
+                                                    com.dangdang.buy2.widget.CustomRoundAngleImageView{42fe21a V.ED..... ......ID 0,0-105,105 #7f0a0f21 app:id/iv_book5 alpha=1.0 viewInfo = }
+                                                    com.dangdang.buy2.widget.CustomRoundAngleImageView{1f77728 V.ED..... ......ID 0,0-105,105 #7f0a1136 app:id/iv_top5 alpha=0.0 viewInfo = }
+                                            android.widget.TextView{d9c1c41 V.ED..... ......ID 36,339-337,388 #7f0a2618 app:id/tv_name alpha=1.0 viewInfo = }
+                                        android.widget.FrameLayout{c1385bf V.E...... ......ID 518,0-1008,415 #7f0a09d4 app:id/fl_item2 alpha=1.0 viewInfo = }
+                                          com.dangdang.buy2.widget.round.RoundLinearLayout{1c1f4c8 V.E...... ......ID 0,0-490,415 #7f0a1338 app:id/ll_item2 alpha=1.0 viewInfo = }
+                                            android.widget.RelativeLayout{e38d16b V.E...... ......ID 0,0-490,415 alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{75a05e6 VFE...C.. ......ID 36,0-490,108 #7f0a1417 app:id/ll_title2 alpha=1.0 viewInfo = }
+                                                android.widget.TextView{504c727 V.ED..... ......ID 0,27-180,88 #7f0a290b app:id/tv_title2 alpha=1.0 viewInfo = }
+                                                android.widget.ImageView{c13a33c G.ED..... ......I. 0,0-0,0 #7f0a1016 app:id/iv_label2 alpha=1.0 viewInfo = }
+                                              com.dangdang.core.ui.autoscrollview.Banner{1727eba V.E...... ......ID 30,120-460,373 #7f0a016d app:id/banner_view alpha=1.0 viewInfo = }
+                                                android.widget.RelativeLayout{96263e5 V.E...... ......ID 0,0-430,253 alpha=1.0 viewInfo = }
+                                                  com.dangdang.core.ui.autoscrollview.AutoScrollViewPager{87946dc VFED..... ......ID 0,0-430,235 #7f0a2b20 app:id/view_pager alpha=1.0 viewInfo = }
+                                                    android.widget.LinearLayout{6e0ddd4 VFE...C.. ......ID 0,0-430,235 alpha=1.0 viewInfo = }
+                                                      com.dangdang.buy2.widget.RoundedImageView{74d3b7d V.ED..... ......ID 0,0-430,235 #7f0a0cb5 app:id/image alpha=1.0 viewInfo = }
+                                                    android.widget.LinearLayout{3b09a72 VFE...C.. ......ID -430,0-0,235 alpha=1.0 viewInfo = }
+                                                      com.dangdang.buy2.widget.RoundedImageView{76caec3 V.ED..... ......ID 0,0-430,235 #7f0a0cb5 app:id/image alpha=1.0 viewInfo = }
+                                                    android.widget.LinearLayout{4580340 VFE...C.. ......ID 430,0-860,235 alpha=1.0 viewInfo = }
+                                                      com.dangdang.buy2.widget.RoundedImageView{df71279 V.ED..... ......ID 0,0-430,235 #7f0a0cb5 app:id/image alpha=1.0 viewInfo = }
+                                                  com.dangdang.buy2.widget.WidgetPilotLamp{c80f8c5 G.E...... ......I. 0,0-0,0 #7f0a11a3 app:id/lamp alpha=1.0 viewInfo = }
+                                                  android.view.View{c14221a G.ED..... ......ID 0,0-0,0 #7f0a0232 app:id/bottom_divider alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{1e1741f V.E...... ......ID 227,382-263,391 #7f0a1925 app:id/progress_view alpha=1.0 viewInfo = }
+                                                android.view.View{c69ebbe V.ED..... ......ID 0,0-12,9 #7f0a1916 app:id/progress_bar alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{7a0caa3 V.E...... ......I. 0,1478-1080,1508 alpha=1.0 viewInfo = }
+                                        android.view.View{a4621a0 V.ED..... ......I. 0,0-1080,30 alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{f759a15 V.E...... ......I. 0,1508-1080,1538 alpha=1.0 viewInfo = }
+                                        android.view.View{b43312a V.ED..... ......I. 0,0-1080,30 alpha=1.0 viewInfo = }
+                                      android.widget.RelativeLayout{722c291 V.E...... ......ID 0,1538-1080,1656 #7f0a217b app:id/title_root_view alpha=1.0 viewInfo = }
+                                        android.widget.ImageView{e3b35f6 VFED..C.. ......ID 0,0-1080,118 #7f0a216e app:id/title_img_iv alpha=1.0 viewInfo = }
+                                        android.widget.LinearLayout{b9ff6cd V.E...... ......ID 423,25-657,93 #7f0a20e7 app:id/text_title_ll alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{a473464 V.E...... ......ID 0,0-234,68 #7f0a1525 app:id/main_title_rl alpha=1.0 viewInfo = }
+                                            android.view.View{beb1df7 V.ED..... ......ID 0,53-234,68 alpha=1.0 viewInfo = }
+                                            android.widget.TextView{fdcbb82 VFED..C.. ......ID 0,0-234,68 #7f0a1526 app:id/main_title_tv alpha=1.0 viewInfo = }
+                                          android.widget.TextView{112a14b G.ED..... ......I. 0,0-0,0 #7f0a0693 app:id/divider alpha=1.0 viewInfo = }
+                                          android.widget.RelativeLayout{a7532d0 G.E...... ......ID 0,0-0,68 #7f0a1fe3 app:id/sub_title_rl alpha=1.0 viewInfo = }
+                                            android.view.View{aa9a293 V.ED..... ......ID 0,53-0,68 alpha=1.0 viewInfo = }
+                                            android.widget.TextView{64232c9 V.ED..... ......ID 0,0-0,68 #7f0a1fe4 app:id/sub_title_tv alpha=1.0 viewInfo = }
+                                      androidx.constraintlayout.widget.ConstraintLayout{bc3e673 V.E...... ......ID 36,1656-1044,2129 alpha=1.0 viewInfo = }
+                                        com.dangdang.buy2.magicproduct.widget.RoundedFrameLayout{2925930 V.E...... ......ID 0,0-491,473 #7f0a09aa app:id/fl_container_left alpha=1.0 viewInfo = }
+                                          com.dangdang.core.ui.autoscrollview.Banner{fde6af7 V.E...... ......ID 0,0-491,473 alpha=1.0 viewInfo = }
+                                            android.widget.RelativeLayout{9e796f6 V.E...... ......ID 0,0-491,473 alpha=1.0 viewInfo = }
+                                              com.dangdang.core.ui.autoscrollview.AutoScrollViewPager{8300791 VFED..... ......ID 0,0-491,473 #7f0a2b20 app:id/view_pager alpha=1.0 viewInfo = }
+                                                android.widget.FrameLayout{8a48794 V.E...... ......ID 27496,0-27987,473 alpha=1.0 viewInfo = }
+                                                  android.widget.ImageView{fc9ffe7 VFED..C.. ......ID 0,0-491,473 #7f0a0cbb app:id/imageView alpha=1.0 viewInfo = }
+                                                android.widget.FrameLayout{501a9a6 V.E...... ......ID 26514,0-27005,473 alpha=1.0 viewInfo = }
+                                                  android.widget.ImageView{9d0f701 VFED..C.. ......ID 0,0-491,473 #7f0a0cbb app:id/imageView alpha=1.0 viewInfo = }
+                                                android.widget.FrameLayout{c8eba32 V.E...... ......ID 27005,0-27496,473 alpha=1.0 viewInfo = }
+                                                  android.widget.ImageView{fd5023d VFED..C.. ......ID 0,0-491,473 #7f0a0cbb app:id/imageView alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.WidgetPilotLamp{e0c8900 V.E...... ......ID 413,443-467,449 #7f0a11a3 app:id/lamp alpha=1.0 viewInfo = }
+                                                android.widget.ImageView{a2cb383 V.ED..... ......ID 6,0-18,6 alpha=1.0 viewInfo = }
+                                                android.widget.ImageView{3148539 V.ED..... ......ID 30,0-48,6 alpha=1.0 viewInfo = }
+                                              android.view.View{d15b728 G.ED..... ......ID 0,0-0,0 #7f0a0232 app:id/bottom_divider alpha=1.0 viewInfo = }
+                                        com.dangdang.buy2.magicproduct.widget.RoundedFrameLayout{a9cc9a9 V.E...... ......ID 518,0-1008,473 #7f0a09ab app:id/fl_container_right alpha=1.0 viewInfo = }
+                                          com.dangdang.buy2.home.view.HomeTwoRowsView{331352c V.E...... ......ID 0,0-490,473 alpha=1.0 viewInfo = }
+                                            androidx.constraintlayout.widget.ConstraintLayout{f7d04df V.E...... ......ID 0,0-490,473 alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.CustomRoundAngleImageView{36a477e VFED..C.. ......ID 0,0-490,223 #7f0a1131 app:id/iv_top alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.CustomRoundAngleImageView{62f3bf5 VFED..C.. ......ID 0,250-490,473 #7f0a0f32 app:id/iv_bottom alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.home.view.lottie.LottieHomeHeaderView{1d6e96b V.E...... ......ID 0,-295-1080,0 alpha=1.0 viewInfo = }
+                                    android.widget.FrameLayout{6d9f6ba V.E...... ......ID 0,0-1080,295 alpha=1.0 viewInfo = }
+                                      com.airbnb.lottie.LottieAnimationView{e5cbbe5 V.ED..... ......ID 405,24-675,228 #7f0a1482 app:id/lottie_refresh_view alpha=1.0 viewInfo = }
+                                      com.airbnb.lottie.LottieAnimationView{fd5c41 G.ED..... ......I. 0,0-0,0 #7f0a1483 app:id/lottie_search_view alpha=1.0 viewInfo = }
+                                      android.widget.TextView{9223161 V.ED..... ......ID 468,228-612,283 #7f0a0c0f app:id/header_title_tv alpha=1.0 viewInfo = }
+                                com.dangdang.buy2.widget.EasyTextView{ca2757a VFED..C.. ......ID 915,1967-1050,2102 #7f0a0c3c app:id/home_top_iv alpha=1.0 viewInfo = }
+                                android.widget.LinearLayout{9deb86e V.E...... ......ID 0,234-1080,458 #7f0a0c37 app:id/home_sticky_layout alpha=1.0 viewInfo = }
+                                  androidx.recyclerview.widget.RecyclerView{47ffcea VFE...... ......ID 0,0-1080,120 #7f0a1615 app:id/navigation_rv alpha=1.0 viewInfo = }
+                                    android.widget.RelativeLayout{7cebc90 VFE...C.. ......ID 15,0-177,120 alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{7da5989 V.ED..... ......ID 30,76-132,88 #7f0a0e00 app:id/indicator alpha=1.0 viewInfo = }
+                                      android.widget.TextView{8360d8e V.ED..... ......ID 30,19-132,100 #7f0a2180 app:id/title_tv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{94245e6 G.ED..... ......ID 0,0-0,0 #7f0a0c47 app:id/hot_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{f939af V.ED..... ......I. 30,0-102,120 #7f0a0187 app:id/bg_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{8680727 G.ED..... ......I. 0,0-0,0 #7f0a0cc8 app:id/image_model_hot_iv alpha=1.0 viewInfo = }
+                                    android.widget.RelativeLayout{d558da8 VFE...C.. ......ID 177,0-315,120 alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{5a31dd4 G.ED..... ......I. 0,0-0,0 #7f0a0e00 app:id/indicator alpha=1.0 viewInfo = }
+                                      android.widget.TextView{686b0c1 V.ED..... ......ID 30,19-108,100 #7f0a2180 app:id/title_tv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{f827b7d G.ED..... ......ID 0,0-0,0 #7f0a0c47 app:id/hot_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{77a4066 V.ED..... ......I. 30,0-102,120 #7f0a0187 app:id/bg_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{bdcda72 G.ED..... ......I. 0,0-0,0 #7f0a0cc8 app:id/image_model_hot_iv alpha=1.0 viewInfo = }
+                                    android.widget.RelativeLayout{a0e9f43 VFE...C.. ......ID 315,0-453,120 alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{dc3eec3 G.ED..... ......I. 0,0-0,0 #7f0a0e00 app:id/indicator alpha=1.0 viewInfo = }
+                                      android.widget.TextView{d9269c0 V.ED..... ......ID 30,19-108,100 #7f0a2180 app:id/title_tv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{cfe4340 G.ED..... ......ID 0,0-0,0 #7f0a0c47 app:id/hot_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{e0fb6f9 V.ED..... ......I. 30,0-102,120 #7f0a0187 app:id/bg_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{4405279 G.ED..... ......I. 0,0-0,0 #7f0a0cc8 app:id/image_model_hot_iv alpha=1.0 viewInfo = }
+                                    android.widget.RelativeLayout{878384a VFE...C.. ......ID 453,0-630,120 alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{b1a2bbe G.ED..... ......I. 0,0-0,0 #7f0a0e00 app:id/indicator alpha=1.0 viewInfo = }
+                                      android.widget.TextView{f92b3bb V.ED..... ......ID 30,19-147,100 #7f0a2180 app:id/title_tv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{66cb41f G.ED..... ......ID 0,0-0,0 #7f0a0c47 app:id/hot_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{1dbb0d8 V.ED..... ......I. 30,0-102,120 #7f0a0187 app:id/bg_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{a24536c G.ED..... ......I. 0,0-0,0 #7f0a0cc8 app:id/image_model_hot_iv alpha=1.0 viewInfo = }
+                                    android.widget.RelativeLayout{8987a6d VFE...C.. ......ID 630,0-807,120 alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{46a9d35 G.ED..... ......I. 0,0-0,0 #7f0a0e00 app:id/indicator alpha=1.0 viewInfo = }
+                                      android.widget.TextView{b8786a2 V.ED..... ......ID 30,19-147,100 #7f0a2180 app:id/title_tv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{94945ca G.ED..... ......ID 0,0-0,0 #7f0a0c47 app:id/hot_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{705df33 V.ED..... ......I. 30,0-102,120 #7f0a0187 app:id/bg_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{bb2733b G.ED..... ......I. 0,0-0,0 #7f0a0cc8 app:id/image_model_hot_iv alpha=1.0 viewInfo = }
+                                    android.widget.RelativeLayout{ea1e1c VFE...C.. ......ID 807,0-945,120 alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{4b93a58 G.ED..... ......I. 0,0-0,0 #7f0a0e00 app:id/indicator alpha=1.0 viewInfo = }
+                                      android.widget.TextView{e838a25 V.ED..... ......ID 30,19-108,100 #7f0a2180 app:id/title_tv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{ab4d7b1 G.ED..... ......ID 0,0-0,0 #7f0a0c47 app:id/hot_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{fb747fa V.ED..... ......I. 30,0-102,120 #7f0a0187 app:id/bg_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{c9df496 G.ED..... ......I. 0,0-0,0 #7f0a0cc8 app:id/image_model_hot_iv alpha=1.0 viewInfo = }
+                                    android.widget.RelativeLayout{acf0d87 VFE...C.. ......ID 945,0-1122,120 alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{1cb0817 G.ED..... ......I. 0,0-0,0 #7f0a0e00 app:id/indicator alpha=1.0 viewInfo = }
+                                      android.widget.TextView{db214b4 V.ED..... ......ID 30,19-147,100 #7f0a2180 app:id/title_tv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{8b3a404 G.ED..... ......ID 0,0-0,0 #7f0a0c47 app:id/hot_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{e59d8dd V.ED..... ......I. 30,0-102,120 #7f0a0187 app:id/bg_iv alpha=1.0 viewInfo = }
+                                      android.widget.ImageView{f8e3ded G.ED..... ......I. 0,0-0,0 #7f0a0cc8 app:id/image_model_hot_iv alpha=1.0 viewInfo = }
+                                com.dangdang.buy2.home.view.HomeBottomPopView{8bcc422 G.E...... ......I. 0,0-0,0 #7f0a0244 app:id/bottom_pop_view alpha=1.0 viewInfo = }
+                                  androidx.cardview.widget.CardView{6e0eb3 VFE...C.. ......I. 0,0-0,0 #7f0a04ea app:id/container alpha=1.0 viewInfo = }
+                                    android.view.View{8c8fc70 V.ED..... ......I. 0,0-0,0 #7f0a17c6 app:id/pop_red_view alpha=1.0 viewInfo = }
+                                    com.dangdang.buy2.widget.CircleImageView{91dcbe9 V.ED..... ......I. 0,0-0,0 #7f0a17c7 app:id/pop_round_img_iv alpha=1.0 viewInfo = }
+                                    com.dangdang.buy2.widget.RoundedImageView{507006e V.ED..... ......I. 0,0-0,0 #7f0a17bf app:id/pop_img_iv alpha=1.0 viewInfo = }
+                                    android.widget.TextView{930e30f V.ED..... ......I. 0,0-0,0 #7f0a17c8 app:id/pop_title_tv alpha=1.0 viewInfo = }
+                                    android.widget.TextView{b996f9c V.ED..... ......I. 0,0-0,0 #7f0a17c1 app:id/pop_open_tv alpha=1.0 viewInfo = }
+                                    android.widget.RelativeLayout{efe3da5 G.E...... ......I. 0,0-0,0 #7f0a1813 app:id/price_off_layout alpha=1.0 viewInfo = }
+                                      android.widget.TextView{ba6b57a V.ED..... ......I. 0,0-0,0 #7f0a17c3 app:id/pop_price_off_title_tv alpha=1.0 viewInfo = }
+                                      com.dangdang.buy2.widget.EasyTextView{7a2a12b V.ED..... ......ID 0,0-0,0 #7f0a17c5 app:id/pop_price_tv alpha=1.0 viewInfo = }
+                                      android.widget.TextView{f9be988 V.ED..... ......I. 0,0-0,0 #7f0a17c4 app:id/pop_price_off_tv alpha=1.0 viewInfo = }
+                                      com.dangdang.buy2.widget.EasyTextView{dba0f21 VFED..C.. ......ID 0,0-0,0 #7f0a17c2 app:id/pop_price_close alpha=1.0 viewInfo = }
+                                com.dangdang.buy2.home.view.HomeBottomFloatCouponView{d5aaf46 G.E...... ......I. 0,0-0,0 #7f0a0230 app:id/bottom_coupon_view alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.widget.gradient.GradientFrameLayout{7282507 V.E...... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                    com.dangdang.buy2.widget.gradient.GradientFrameLayout{1ca1634 V.E...... ......I. 0,0-0,0 #7f0a04d3 app:id/con_root alpha=1.0 viewInfo = }
+                                      android.widget.RelativeLayout{6077c5d V.E...... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                        android.widget.ImageView{60279d2 V.ED..... ......I. 0,0-0,0 #7f0a0d0f app:id/img_label alpha=1.0 viewInfo = }
+                                        android.widget.TextView{a980aa3 V.ED..... ......I. 0,0-0,0 #7f0a23a4 app:id/tv_coupon_des alpha=1.0 viewInfo = }
+                                        com.dangdang.buy2.widget.gradient.GradientTextView{30c61a0 VFED..C.. ......ID 0,0-0,0 #7f0a2570 app:id/tv_label_use alpha=1.0 viewInfo = }
+                                    com.dangdang.buy2.widget.EasyTextView{3c48159 VFED..C.. ......ID 0,0-0,0 #7f0a0c23 app:id/home_coupon_float_icon_close alpha=1.0 viewInfo = }
+                            com.dangdang.buy2.widget.grayscale.GrayscaleImageView{3a5113f VFED..C.. ......ID 909,1790-1059,1940 #7f0a0c26 app:id/home_float_icon_iv alpha=1.0 viewInfo = }
+                            com.dangdang.buy2.widget.EasyTextView{e43ba0c VFED..C.. ......ID 1017,1769-1059,1811 #7f0a0c25 app:id/home_float_icon_close alpha=1.0 viewInfo = }
+                            android.widget.FrameLayout{e6f829d V.E...... ......ID 0,0-1080,234 #7f0a0c3b app:id/home_title_layout alpha=1.0 viewInfo = }
+                              android.widget.ImageView{4d14d74 V.ED..... ......ID 0,0-1080,234 #7f0a215d app:id/title_background_iv alpha=1.0 viewInfo = }
+                              android.widget.LinearLayout{5851ae3 V.E...... ......ID 0,96-1080,234 alpha=1.0 viewInfo = }
+                                com.dangdang.buy2.widget.gradient.GradientFrameLayout{1b4a312 VFE...C.. ......ID 36,15-816,123 #7f0a0c32 app:id/home_search_bar_layout alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.widget.EasyTextView{66fcce0 V.ED..... ......ID 0,0-108,108 alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.widget.EasyTextView{346ab99 VFED..C.. ......ID 639,0-780,108 #7f0a0c31 app:id/home_scan_tv alpha=1.0 viewInfo = }
+                                  android.widget.ViewFlipper{eb5de5e V.E...... ......ID 0,0-780,108 #7f0a0c3d app:id/home_view_flipper alpha=1.0 viewInfo = }
+                                    android.widget.TextView{12a60a1 G.ED..... ......I. 108,0-621,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                    android.widget.TextView{f89c3ee G.ED..... ......I. 108,0-621,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                    android.widget.TextView{f6f208f V.ED..... ......ID 108,0-621,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                    android.widget.TextView{bd69f1c G.ED..... ......I. 108,0-621,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                    android.widget.TextView{a847725 G.ED..... ......I. 108,0-621,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                    android.widget.TextView{25230fa G.ED..... ......I. 108,0-621,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                android.widget.ImageView{bc28861 VFED..C.. ......ID 864,15-931,123 #7f0a0c2e app:id/home_promotion_iv alpha=1.0 viewInfo = }
+                                android.widget.FrameLayout{7b4d70c V.E...... ......ID 955,0-1080,138 #7f0a0c2b app:id/home_msg_layout alpha=1.0 viewInfo = }
+                                  android.widget.ImageView{7e4823f VFED..C.. ......ID 24,15-89,123 #7f0a0c2a app:id/home_msg_iv alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.widget.gradient.GradientTextView{dea611e G.ED..... ......I. 0,0-0,0 #7f0a0c2c app:id/home_msg_num_tv alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.widget.gradient.GradientView{196adff G.ED..... ......I. 0,0-0,0 #7f0a0c29 app:id/home_msg_dot_view alpha=1.0 viewInfo = }
+                    com.android.internal.policy.DecorView{f66f150 VFE...... R....... 0,0-1080,2132 alpha=1.0 viewInfo = }[]
+                      android.widget.LinearLayout{5d1d27c V.E...... ........ 0,0-1080,2132 alpha=1.0 viewInfo = }
+                        android.view.ViewStub{865f7cc G.E...... ......I. 0,0-0,0 #10201cb android:id/action_mode_bar_stub alpha=1.0 viewInfo = }
+                        android.widget.FrameLayout{813856f V.E...... ........ 0,0-1080,2132 #1020002 android:id/content alpha=1.0 viewInfo = }
+                          android.widget.RelativeLayout{6df304e V.E...... ........ 0,0-1080,2132 #7f0a05e8 app:id/dd_content alpha=1.0 viewInfo = }
+                            android.widget.FrameLayout{4c69353 V.E...... ........ 0,0-1080,2132 #7f0a09ed app:id/fl_myddfragment_container alpha=1.0 viewInfo = }
+                              android.widget.RelativeLayout{3b4f49 VFE...... .F...... 0,0-1080,2132 aid=1073741824 alpha=1.0 viewInfo = }
+                                com.dangdang.buy2.widget.StatusBarHeightView{337fe7f V.ED..... ........ 0,0-1080,96 #7f0a15e8 app:id/my_dd_view_status alpha=1.0 viewInfo = }
+                                android.widget.ImageView{39c3e4c V.ED..... ........ 0,0-1080,673 #7f0a2b3f app:id/view_top_area_bg alpha=1.0 viewInfo = }
+                                android.view.View{f49de95 V.ED..... ........ 0,541-1080,673 #7f0a0b05 app:id/gradient_view alpha=1.0 viewInfo = }
+                                com.dangdang.core.ui.pulltorefresh.MPtrClassicFrameLayout{835baa V.E...... ........ 0,96-1080,2132 #7f0a00b9 app:id/agile_refresh_frame alpha=1.0 viewInfo = }
+                                  androidx.recyclerview.widget.RecyclerView{d58039b VFE...... ........ 0,0-1080,2036 #7f0a1d20 app:id/rv_agile_mydd alpha=1.0 viewInfo = }
+                                    androidx.recyclerview.widget.RecyclerView{467d21c VFE...C.. ........ 0,-245-1080,576 #7f0a1d29 app:id/rv_agile_mydd_recommend alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{f536d6 VFE...C.. ........ 0,0-540,821 alpha=1.0 viewInfo = }
+                                        androidx.cardview.widget.CardView{9e5ea62 V.E...... ........ 34,0-525,794 alpha=1.0 viewInfo = }
+                                          android.view.View{8b2da15 G.ED..... ......I. 0,0-0,0 #7f0a1a38 app:id/recommend_beautify_view alpha=1.0 viewInfo = }
+                                          android.widget.LinearLayout{f27152d V.E...... ........ 0,0-491,794 alpha=1.0 viewInfo = }
+                                            android.widget.FrameLayout{ad85044 V.E...... ........ 0,0-491,490 alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{ea1bd57 V.ED..... ........ 0,0-491,490 #7f0a0d0e app:id/img_iv alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{3d7712a G.ED..... ......I. 0,0-0,0 #7f0a2050 app:id/tag_iv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{82c2cb0 V.E...... ........ 0,490-491,794 #7f0a1855 app:id/product_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.TextView{e1ad7f3 V.ED..... ........ 27,30-464,122 #7f0a18f0 app:id/product_title_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{83c4aae V.E...... ........ 27,140-464,181 #7f0a18ec app:id/product_tag_layout alpha=1.0 viewInfo = }
+                                                android.widget.TextView{8cd729 V.ED..... ........ 0,0-72,41 alpha=1.0 viewInfo = }
+                                                android.widget.TextView{101004f V.ED..... ........ 84,0-186,41 alpha=1.0 viewInfo = }
+                                              android.widget.RelativeLayout{772bce5 V.E...... ........ 27,205-464,262 alpha=1.0 viewInfo = }
+                                                android.widget.TextView{7b22b1b G.ED..... ......I. 0,0-0,0 #7f0a2208 app:id/tv_ad alpha=1.0 viewInfo = }
+                                                android.widget.TextView{79f63dc V.ED..... ........ 0,0-425,57 #7f0a18c3 app:id/product_price_tv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{1e0c4b8 G.E...... ......I. 0,0-0,0 #7f0a1a3a app:id/recommend_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{6f40291 V.E...... ......I. 0,0-0,0 #7f0a1197 app:id/label_layout alpha=1.0 viewInfo = }
+                                                android.widget.ImageView{bd375f6 V.ED..... ......I. 0,0-0,0 #7f0a1a43 app:id/recommend_label_iv alpha=1.0 viewInfo = }
+                                                android.widget.TextView{93e5df7 V.ED..... ......ID 0,0-0,0 #7f0a1a44 app:id/recommend_label_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{4397464 V.ED..... ......I. 0,0-0,0 #7f0a1a58 app:id/recommend_title_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{74536cd V.ED..... ......ID 0,0-0,0 #7f0a1a3c app:id/recommend_desc_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{eb8fb82 V.E...... ......I. 0,0-0,0 #7f0a1a55 app:id/recommend_tag_layout alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{f8663ba VFE...C.. ........ 540,0-1080,821 alpha=1.0 viewInfo = }
+                                        androidx.cardview.widget.CardView{c270186 V.E...... ........ 15,0-506,794 alpha=1.0 viewInfo = }
+                                          android.view.View{9f0e293 G.ED..... ......I. 0,0-0,0 #7f0a1a38 app:id/recommend_beautify_view alpha=1.0 viewInfo = }
+                                          android.widget.LinearLayout{4174261 V.E...... ........ 0,0-491,794 alpha=1.0 viewInfo = }
+                                            android.widget.FrameLayout{9ace1c8 V.E...... ........ 0,0-491,490 alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{a77526b V.ED..... ........ 0,0-491,490 #7f0a0d0e app:id/img_iv alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{14b72d0 G.ED..... ......I. 0,0-0,0 #7f0a2050 app:id/tag_iv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{9925274 V.E...... ........ 0,490-491,794 #7f0a1855 app:id/product_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.TextView{2b6aa47 V.ED..... ........ 27,30-464,122 #7f0a18f0 app:id/product_title_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{be1b012 V.E...... ........ 27,140-464,181 #7f0a18ec app:id/product_tag_layout alpha=1.0 viewInfo = }
+                                                android.widget.TextView{224a39d V.ED..... ........ 0,0-19,41 alpha=1.0 viewInfo = }
+                                              android.widget.RelativeLayout{6bc21e0 V.E...... ........ 27,205-464,262 alpha=1.0 viewInfo = }
+                                                android.widget.TextView{6fb72c9 G.ED..... ......I. 0,0-0,0 #7f0a2208 app:id/tv_ad alpha=1.0 viewInfo = }
+                                                android.widget.TextView{2a9a3e3 V.ED..... ........ 0,0-425,57 #7f0a18c3 app:id/product_price_tv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{67f4dce G.E...... ......I. 0,0-0,0 #7f0a1a3a app:id/recommend_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{93d14ef V.E...... ......I. 0,0-0,0 #7f0a1197 app:id/label_layout alpha=1.0 viewInfo = }
+                                                android.widget.ImageView{b3cebfc V.ED..... ......I. 0,0-0,0 #7f0a1a43 app:id/recommend_label_iv alpha=1.0 viewInfo = }
+                                                android.widget.TextView{9bf7285 V.ED..... ......ID 0,0-0,0 #7f0a1a44 app:id/recommend_label_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{34678da V.ED..... ......I. 0,0-0,0 #7f0a1a58 app:id/recommend_title_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{70110b V.ED..... ......ID 0,0-0,0 #7f0a1a3c app:id/recommend_desc_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{e6acbe8 V.E...... ......I. 0,0-0,0 #7f0a1a55 app:id/recommend_tag_layout alpha=1.0 viewInfo = }
+                                    androidx.recyclerview.widget.RecyclerView{39d8b03 VFE...C.. ........ 0,576-1080,1405 #7f0a1d29 app:id/rv_agile_mydd_recommend alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{1b3f06c VFE...C.. ........ 0,0-540,829 alpha=1.0 viewInfo = }
+                                        androidx.cardview.widget.CardView{225a758 V.E...... ........ 34,0-525,802 alpha=1.0 viewInfo = }
+                                          android.view.View{b09b201 G.ED..... ......I. 0,0-0,0 #7f0a1a38 app:id/recommend_beautify_view alpha=1.0 viewInfo = }
+                                          android.widget.LinearLayout{488743b V.E...... ........ 0,0-491,794 alpha=1.0 viewInfo = }
+                                            android.widget.FrameLayout{1a2aaca V.E...... ........ 0,0-491,490 alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{c667635 V.ED..... ........ 0,0-491,490 #7f0a0d0e app:id/img_iv alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{52348a6 G.ED..... ......I. 0,0-0,0 #7f0a2050 app:id/tag_iv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{1a8a996 V.E...... ........ 0,490-491,794 #7f0a1855 app:id/product_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.TextView{91540b1 V.ED..... ........ 27,30-464,122 #7f0a18f0 app:id/product_title_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{4f9e104 V.E...... ........ 27,140-464,181 #7f0a18ec app:id/product_tag_layout alpha=1.0 viewInfo = }
+                                                android.widget.TextView{8801917 V.ED..... ........ 0,0-72,41 alpha=1.0 viewInfo = }
+                                                android.widget.TextView{e0c36ed V.ED..... ........ 84,0-156,41 alpha=1.0 viewInfo = }
+                                              android.widget.RelativeLayout{be32fb3 V.E...... ........ 27,205-464,262 alpha=1.0 viewInfo = }
+                                                android.widget.TextView{68cb2e7 G.ED..... ......I. 0,0-0,0 #7f0a2208 app:id/tv_ad alpha=1.0 viewInfo = }
+                                                android.widget.TextView{c3dc922 V.ED..... ........ 0,0-425,57 #7f0a18c3 app:id/product_price_tv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{e14be94 G.E...... ......I. 0,0-0,0 #7f0a1a3a app:id/recommend_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{b5e6d3d V.E...... ......I. 0,0-0,0 #7f0a1197 app:id/label_layout alpha=1.0 viewInfo = }
+                                                android.widget.ImageView{6ab4932 V.ED..... ......I. 0,0-0,0 #7f0a1a43 app:id/recommend_label_iv alpha=1.0 viewInfo = }
+                                                android.widget.TextView{5e79683 V.ED..... ......ID 0,0-0,0 #7f0a1a44 app:id/recommend_label_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{fc93000 V.ED..... ......I. 0,0-0,0 #7f0a1a58 app:id/recommend_title_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{549a039 V.ED..... ......ID 0,0-0,0 #7f0a1a3c app:id/recommend_desc_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{440c67e V.E...... ......I. 0,0-0,0 #7f0a1a55 app:id/recommend_tag_layout alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{fb60970 VFE...C.. ........ 540,0-1080,829 alpha=1.0 viewInfo = }
+                                        androidx.cardview.widget.CardView{13556e V.E...... ........ 15,0-506,802 alpha=1.0 viewInfo = }
+                                          android.view.View{40254e9 V.ED..... ........ 0,679-491,802 #7f0a1a38 app:id/recommend_beautify_view alpha=1.0 viewInfo = }
+                                          android.widget.LinearLayout{e2256a5 V.E...... ........ 0,0-491,802 alpha=1.0 viewInfo = }
+                                            android.widget.FrameLayout{8ca4c9c V.E...... ........ 0,0-491,490 alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{d57140f V.ED..... ........ 0,0-491,490 #7f0a0d0e app:id/img_iv alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{f8317df G.ED..... ......I. 0,0-0,0 #7f0a2050 app:id/tag_iv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{1914c2c G.E...... ......I. 0,0-0,0 #7f0a1855 app:id/product_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.TextView{61b06f5 V.ED..... ......I. 0,0-0,0 #7f0a18f0 app:id/product_title_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{c1ecc8a V.E...... ......I. 0,0-0,0 #7f0a18ec app:id/product_tag_layout alpha=1.0 viewInfo = }
+                                              android.widget.RelativeLayout{82b52fb V.E...... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                                android.widget.TextView{6dcff18 V.ED..... ......I. 0,0-0,0 #7f0a2208 app:id/tv_ad alpha=1.0 viewInfo = }
+                                                android.widget.TextView{6621d71 V.ED..... ......ID 0,0-0,0 #7f0a18c3 app:id/product_price_tv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{b7d9688 V.E...... ........ 0,490-491,802 #7f0a1a3a app:id/recommend_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{67ae22b V.E...... ........ 27,30-240,96 #7f0a1197 app:id/label_layout alpha=1.0 viewInfo = }
+                                                android.widget.ImageView{3a35a7a V.ED..... ........ 0,3-60,63 #7f0a1a43 app:id/recommend_label_iv alpha=1.0 viewInfo = }
+                                                android.widget.TextView{d86b821 V.ED..... ........ 60,13-192,52 #7f0a1a44 app:id/recommend_label_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{8fca446 V.ED..... ........ 27,117-464,166 #7f0a1a58 app:id/recommend_title_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{1c37607 V.ED..... ........ 27,181-464,223 #7f0a1a3c app:id/recommend_desc_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{75b55d V.E...... ........ 27,241-464,282 #7f0a1a55 app:id/recommend_tag_layout alpha=1.0 viewInfo = }
+                                                android.widget.TextView{e999334 V.ED..... ........ 0,0-102,41 alpha=1.0 viewInfo = }
+                                                android.widget.TextView{24ebed2 V.ED..... ........ 114,0-246,41 alpha=1.0 viewInfo = }
+                                    androidx.recyclerview.widget.RecyclerView{4e22f5b VFE...C.. ........ 0,1405-1080,2226 #7f0a1d29 app:id/rv_agile_mydd_recommend alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{d208082 VFE...C.. ........ 0,0-540,821 alpha=1.0 viewInfo = }
+                                        androidx.cardview.widget.CardView{45a22ce V.E...... ........ 34,0-525,794 alpha=1.0 viewInfo = }
+                                          android.view.View{3252756 G.ED..... ......I. 0,0-0,0 #7f0a1a38 app:id/recommend_beautify_view alpha=1.0 viewInfo = }
+                                          android.widget.LinearLayout{cd87bc9 V.E...... ........ 0,0-491,794 alpha=1.0 viewInfo = }
+                                            android.widget.FrameLayout{9c2ffd0 V.E...... ........ 0,0-491,490 alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{48a8393 V.ED..... ........ 0,0-491,490 #7f0a0d0e app:id/img_iv alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{b5223d7 G.ED..... ......I. 0,0-0,0 #7f0a2050 app:id/tag_iv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{82048fc V.E...... ........ 0,490-491,794 #7f0a1855 app:id/product_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.TextView{a4fc5ef V.ED..... ........ 27,30-464,122 #7f0a18f0 app:id/product_title_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{c799dda V.E...... ........ 27,140-464,181 #7f0a18ec app:id/product_tag_layout alpha=1.0 viewInfo = }
+                                                android.widget.TextView{ae40b85 V.ED..... ........ 0,0-102,41 alpha=1.0 viewInfo = }
+                                              android.widget.RelativeLayout{2a6f8e8 V.E...... ........ 27,205-464,262 alpha=1.0 viewInfo = }
+                                                android.widget.TextView{82ef4c4 G.ED..... ......I. 0,0-0,0 #7f0a2208 app:id/tv_ad alpha=1.0 viewInfo = }
+                                                android.widget.TextView{e7cd20b V.ED..... ........ 0,0-425,57 #7f0a18c3 app:id/product_price_tv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{e2a1fad G.E...... ......I. 0,0-0,0 #7f0a1a3a app:id/recommend_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{a6462e2 V.E...... ......I. 0,0-0,0 #7f0a1197 app:id/label_layout alpha=1.0 viewInfo = }
+                                                android.widget.ImageView{fab2673 V.ED..... ......I. 0,0-0,0 #7f0a1a43 app:id/recommend_label_iv alpha=1.0 viewInfo = }
+                                                android.widget.TextView{1889930 V.ED..... ......ID 0,0-0,0 #7f0a1a44 app:id/recommend_label_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{f609a9 V.ED..... ......I. 0,0-0,0 #7f0a1a58 app:id/recommend_title_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{169cb2e V.ED..... ......ID 0,0-0,0 #7f0a1a3c app:id/recommend_desc_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{987b6cf V.E...... ......I. 0,0-0,0 #7f0a1a55 app:id/recommend_tag_layout alpha=1.0 viewInfo = }
+                                      android.widget.FrameLayout{60814cc VFE...C.. ........ 540,0-1080,821 alpha=1.0 viewInfo = }
+                                        androidx.cardview.widget.CardView{e66bb94 V.E...... ........ 15,0-506,794 alpha=1.0 viewInfo = }
+                                          android.view.View{b96185c G.ED..... ......I. 0,0-0,0 #7f0a1a38 app:id/recommend_beautify_view alpha=1.0 viewInfo = }
+                                          android.widget.LinearLayout{f2483e7 V.E...... ........ 0,0-491,794 alpha=1.0 viewInfo = }
+                                            android.widget.FrameLayout{ee3bda6 V.E...... ........ 0,0-491,490 alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{c5edb01 V.ED..... ........ 0,0-491,490 #7f0a0d0e app:id/img_iv alpha=1.0 viewInfo = }
+                                              android.widget.ImageView{d7c9765 G.ED..... ......I. 0,0-0,0 #7f0a2050 app:id/tag_iv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{47e0e32 V.E...... ........ 0,490-491,794 #7f0a1855 app:id/product_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.TextView{75d263d V.ED..... ........ 27,30-464,122 #7f0a18f0 app:id/product_title_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{fbdfd00 V.E...... ........ 27,140-464,181 #7f0a18ec app:id/product_tag_layout alpha=1.0 viewInfo = }
+                                                android.widget.TextView{eab7783 V.ED..... ........ 0,0-72,41 alpha=1.0 viewInfo = }
+                                              android.widget.RelativeLayout{cfadb7e V.E...... ........ 27,205-464,262 alpha=1.0 viewInfo = }
+                                                android.widget.TextView{14b6c3a G.ED..... ......I. 0,0-0,0 #7f0a2208 app:id/tv_ad alpha=1.0 viewInfo = }
+                                                android.widget.TextView{4fae939 V.ED..... ........ 0,0-425,57 #7f0a18c3 app:id/product_price_tv alpha=1.0 viewInfo = }
+                                            android.widget.LinearLayout{6f2f0eb G.E...... ......I. 0,0-0,0 #7f0a1a3a app:id/recommend_bottom_layout alpha=1.0 viewInfo = }
+                                              android.widget.LinearLayout{b9a5e48 V.E...... ......I. 0,0-0,0 #7f0a1197 app:id/label_layout alpha=1.0 viewInfo = }
+                                                android.widget.ImageView{d2444e1 V.ED..... ......I. 0,0-0,0 #7f0a1a43 app:id/recommend_label_iv alpha=1.0 viewInfo = }
+                                                android.widget.TextView{c741206 V.ED..... ......ID 0,0-0,0 #7f0a1a44 app:id/recommend_label_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{18db0c7 V.ED..... ......I. 0,0-0,0 #7f0a1a58 app:id/recommend_title_tv alpha=1.0 viewInfo = }
+                                              android.widget.TextView{61b16f4 V.ED..... ......ID 0,0-0,0 #7f0a1a3c app:id/recommend_desc_tv alpha=1.0 viewInfo = }
+                                              com.dangdang.buy2.widget.taglayout.TagLayout{f3f4e1d V.E...... ......I. 0,0-0,0 #7f0a1a55 app:id/recommend_tag_layout alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.agilemydangnew.fragment.MYDD2022ViewFragment$2{474f338 V.E...... ........ 0,-252-1080,0 alpha=1.0 viewInfo = }
+                                    android.widget.FrameLayout{a02035a V.E...... ........ 0,0-1080,252 alpha=1.0 viewInfo = }
+                                      com.airbnb.lottie.LottieAnimationView{609705 V.ED..... ........ 405,36-675,240 #7f0a1959 app:id/ptr_ui_handler_lottie_animation_view alpha=1.0 viewInfo = }
+                                android.widget.RelativeLayout{ece1fec V.E...... ........ 0,0-1080,252 #7f0a0cad app:id/il_top_view alpha=1.0 viewInfo = }
+                                  android.view.View{8a94e08 V.ED..... ........ 0,0-1080,252 #7f0a2a01 app:id/v_bg alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.widget.StatusBarHeightView{80cd9a1 V.ED..... ........ 0,0-1080,96 #7f0a1db6 app:id/sbhv alpha=1.0 viewInfo = }
+                                  android.view.View{b4de7c6 V.ED..... ........ 929,0-930,1 #7f0a2a53 app:id/v_point alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.widget.EasyTextView{4a3e29f VFED..C.. ........ 45,120-929,228 #7f0a2808 app:id/tv_search alpha=1.0 viewInfo = }
+                                  android.widget.ViewFlipper{c8216de V.E...... ........ 156,120-471,228 #7f0a0616 app:id/dd_view_flipper alpha=1.0 viewInfo = }
+                                    android.widget.TextView{5ee3387 G.ED..... ........ 0,0-315,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                    android.widget.TextView{1367619 G.ED..... ........ 0,0-315,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                    android.widget.TextView{40f90bf G.ED..... ........ 0,0-315,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                    android.widget.TextView{22f5ad5 G.ED..... ........ 0,0-315,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                    android.widget.TextView{194c2ea V.ED..... ........ 0,0-315,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                    android.widget.TextView{ab679db G.ED..... ........ 0,0-315,108 #7f0a1a9f app:id/research_flipper_textview alpha=1.0 viewInfo = }
+                                  android.view.View{805afb5 VFED..C.. ........ 929,120-1043,228 #7f0a2a62 app:id/v_right alpha=1.0 viewInfo = }
+                                android.widget.LinearLayout{d2b0d55 VFE...C.. ........ 915,1967-1050,2102 #7f0a1369 app:id/ll_mydd_to_top_image alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.widget.EasyTextView{a53b05b V.ED..... ........ 37,20-97,80 alpha=1.0 viewInfo = }
+                                  android.widget.TextView{6c000f8 V.ED..... ........ 40,80-94,117 alpha=1.0 viewInfo = }
+                                android.widget.RelativeLayout{d300f86 V.E...... ........ 900,1931-1050,2102 #7f0a1c21 app:id/rl_my_dd_float_icon alpha=1.0 viewInfo = }
+                                  android.widget.ImageView{5cb4f55 VFED..C.. ........ 0,21-150,171 #7f0a105d app:id/iv_my_dd_float_icon alpha=1.0 viewInfo = }
+                                  com.dangdang.buy2.widget.EasyTextView{a7add6a VFED..C.. ........ 108,0-150,42 #7f0a0849 app:id/etv_my_dd_float_icon_close alpha=1.0 viewInfo = }
+                                com.dangdang.buy2.widget.lottie.LottieErrorView{f2f4892 G.E...... ......ID 0,0-0,0 #7f0a147f app:id/lottie_error_view alpha=1.0 viewInfo = }
+                                  android.widget.FrameLayout{22a9263 VFE...C.. ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                    android.widget.LinearLayout{4cae60 V.E...... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                      com.airbnb.lottie.LottieAnimationView{c07af19 V.ED..... ......ID 0,0-0,0 #7f0a0705 app:id/error_lottie_animation_view alpha=1.0 viewInfo = }
+                                      android.widget.TextView{cf55bde V.ED..... ......ID 0,0-0,0 #7f0a0707 app:id/error_text_tv alpha=1.0 viewInfo = }
+                                      android.widget.LinearLayout{229f1bf V.E...... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                        android.widget.TextView{c3e508c GFED..C.. ......I. 0,0-0,0 #7f0a0706 app:id/error_refresh_tv alpha=1.0 viewInfo = }
+                                        android.widget.TextView{b5b23d5 GFED..C.. ......I. 0,0-0,0 #7f0a0703 app:id/error_action_tv alpha=1.0 viewInfo = }
+                                    android.widget.TextView{67757ea VFED..C.. ......I. 0,0-0,0 #7f0a29c5 app:id/upload_log_text alpha=1.0 viewInfo = }
+                                android.widget.FrameLayout{695eadb G.E...... ......I. 0,0-0,0 #7f0a09a8 app:id/fl_container alpha=1.0 viewInfo = }
+                            android.widget.RelativeLayout{bc5e978 G.E...... ......ID 0,0-0,0 #7f0a15e7 app:id/my_dd_title_layout alpha=1.0 viewInfo = }
+                              android.widget.ImageView{b372851 G.ED..... ......ID 0,0-0,0 #7f0a1651 app:id/normal_title_back alpha=1.0 viewInfo = }
+                              android.widget.TextView{46b08b6 G.ED..... ......I. 0,0-0,0 #7f0a1653 app:id/normal_title_back_text alpha=1.0 viewInfo = }
+                              android.widget.RelativeLayout{fe59b7 V.E...... ......I. 0,0-0,0 #7f0a165c app:id/normal_title_operate_layout alpha=1.0 viewInfo = }
+                                android.widget.LinearLayout{62c2524 V.E...... ......I. 0,0-0,0 #7f0a165b app:id/normal_title_operate_content alpha=1.0 viewInfo = }
+                                  android.widget.TextView{1f4f88d V.ED..... ......ID 0,0-0,0 #7f0a165d app:id/normal_title_operate_left alpha=1.0 viewInfo = }
+                                  android.widget.TextView{316fa42 V.ED..... ......ID 0,0-0,0 #7f0a165f app:id/normal_title_operate_right alpha=1.0 viewInfo = }
+                                  android.widget.LinearLayout{214da53 V.E...... ......I. 0,0-0,0 #7f0a1661 app:id/normal_title_right_icon alpha=1.0 viewInfo = }
+                              android.widget.ProgressBar{c986f90 G.ED..... ......I. 0,0-0,0 #7f0a165e app:id/normal_title_operate_loading alpha=1.0 viewInfo = }
+                              android.widget.TextView{8459089 V.ED..... ......ID 0,0-0,0 #7f0a165a app:id/normal_title_name alpha=1.0 viewInfo = }
+                              android.widget.ImageView{a9e788e V.ED..... ......I. 0,0-0,0 #7f0a1655 app:id/normal_title_image alpha=1.0 viewInfo = }
+                              android.widget.FrameLayout{a08c8af V.E...... ......I. 0,0-0,0 #7f0a1665 app:id/normal_title_toast_layout alpha=1.0 viewInfo = }
+                              android.view.View{93cf4bc V.ED..... ......ID 0,0-0,0 #7f0a216a app:id/title_divider alpha=1.0 viewInfo = }
+                            android.widget.RelativeLayout{6edac45 GFE...C.. ......ID 0,0-0,0 #7f0a144a app:id/loading_error_layout alpha=1.0 viewInfo = }
+                              android.widget.LinearLayout{d8f9a VFE...C.. ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                android.widget.ImageView{2a340cb V.ED..... ......I. 0,0-0,0 #7f0a1450 app:id/loading_image alpha=1.0 viewInfo = }
+                                android.widget.TextView{542a0a8 V.ED..... ......ID 0,0-0,0 #7f0a144b app:id/loading_error_text alpha=1.0 viewInfo = }
+                                android.widget.TextView{441c7c1 G.ED..... ......I. 0,0-0,0 #7f0a144c app:id/loading_error_text_gray alpha=1.0 viewInfo = }
+                                android.widget.LinearLayout{b250b66 V.E...... ......I. 0,0-0,0 alpha=1.0 viewInfo = }
+                                  android.widget.Button{f231ea7 VFED..C.. ......I. 0,0-0,0 #7f0a1448 app:id/loading_error_btn alpha=1.0 viewInfo = }
+                                  android.widget.Button{1751f54 GFED..... ......I. 0,0-0,0 #7f0a1449 app:id/loading_error_btn_gray alpha=1.0 viewInfo = }
+                                  android.widget.Button{d621efd GFED..C.. ......I. 0,0-0,0 #7f0a012e app:id/back_to_main alpha=1.0 viewInfo = }
+                              android.widget.TextView{ce677f2 V.ED..... ......ID 0,0-0,0 #7f0a29c5 app:id/upload_log_text alpha=1.0 viewInfo = }
+                            android.widget.RelativeLayout{3f4a39e V.E...... ........ 1050,0-1050,2132 alpha=1.0 viewInfo = }
+                              android.widget.ImageView{dd8fe43 G.ED..... ......I. 0,0-0,0 #7f0a1063 app:id/iv_mydd_to_top_image alpha=1.0 viewInfo = }
+                  android.view.View{cd6855 V.ED..... ........ 0,2132-1080,2133 #7f0a0d84 app:id/index_mark_line alpha=1.0 viewInfo = }
+              android.view.ViewStub{daedcc0 G.E...... ......I. 0,0-0,0 #7f0a0dd1 app:id/index_video_stub alpha=1.0 viewInfo = }
+        android.view.View{84b7602 V.ED..... ........ 0,2280-1080,2412 #1020030 android:id/navigationBarBackground alpha=1.0 viewInfo = }
+    Looper (main, tid 2) {b7e0b7d}
+      Message 0: { when=+111ms what=1 target=android.os.CountDownTimer$1 }
+      Message 1: { when=+1s98ms what=0 target=com.dangdang.core.ui.autoscrollview.AutoScrollViewPager$a }
+      Message 2: { when=+1s99ms what=0 target=com.dangdang.core.ui.autoscrollview.AutoScrollViewPager$a }
+      Message 3: { when=+1s689ms callback=android.widget.ViewFlipper$1 target=android.view.ViewRootImpl$ViewRootHandler }
+      Message 4: { when=+33s463ms callback=com.dangdang.core.log.report.SyncTimeService$1 target=android.os.Handler }
+      Message 5: { when=+17h5m37s335ms what=1000 target=com.dangdang.buy2.redenvelope.RedEnvelopeManager$1 }
+      Message 6: { when=+17h5m42s335ms what=2000 target=com.dangdang.buy2.redenvelope.RedEnvelopeManager$1 }
+      Message 7: { when=+18h5m42s335ms what=3000 target=com.dangdang.buy2.redenvelope.RedEnvelopeManager$1 }
+      Message 8: { when=+23d0h47m17s489ms callback=in.srain.cube.views.ptr.PtrFrameLayout$1 target=android.view.ViewRootImpl$ViewRootHandler }
+      Message 9: { when=+23d0h47m17s489ms callback=in.srain.cube.views.ptr.PtrFrameLayout$1 target=android.view.ViewRootImpl$ViewRootHandler }
+      Message 10: { when=+23d0h47m17s489ms callback=in.srain.cube.views.ptr.PtrFrameLayout$1 target=android.view.ViewRootImpl$ViewRootHandler }
+      Message 11: { when=+23d0h47m17s489ms callback=in.srain.cube.views.ptr.PtrFrameLayout$1 target=android.view.ViewRootImpl$ViewRootHandler }
+      Message 12: { when=+23d0h47m17s501ms callback=in.srain.cube.views.ptr.PtrFrameLayout$1 target=android.view.ViewRootImpl$ViewRootHandler }
+      (Total messages: 13, polling=false, quitting=false)
+    ResourcesManager:
+      total apks: 9
+      resources: 13
+      resource impls: 8
+      
+      1 token android.app.LocalActivityManager$LocalActivityRecord@bf7d2d4
+      com.dangdang.buy2/.activities.MyDDActivity
+      overrideDisplayId 0
+      overrideConfig v35
+      1.1 
+      overrideDisplayId null
+      overrideConfig v35
+      android.content.res.Resources@37d1772
+      android.content.res.ResourcesImpl@736adf9
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      1.2 
+      overrideDisplayId null
+      overrideConfig mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35
+      android.content.res.Resources@2543cea
+      android.content.res.ResourcesImpl@2e0213e
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      1.3 
+      overrideDisplayId null
+      overrideConfig mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35
+      android.content.res.Resources@2b1b950
+      android.content.res.ResourcesImpl@2e0213e
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      2 token android.app.LocalActivityManager$LocalActivityRecord@b20676a
+      com.dangdang.buy2/.home.Home21Activity
+      overrideDisplayId 0
+      overrideConfig v35
+      2.1 
+      overrideDisplayId null
+      overrideConfig v35
+      android.content.res.Resources@24a845b
+      android.content.res.ResourcesImpl@736adf9
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      2.2 
+      overrideDisplayId null
+      overrideConfig mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35
+      android.content.res.Resources@e5ea1ec
+      android.content.res.ResourcesImpl@2e0213e
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      2.3 
+      overrideDisplayId null
+      overrideConfig mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35
+      android.content.res.Resources@89f0d8
+      android.content.res.ResourcesImpl@2e0213e
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      2.4 
+      overrideDisplayId null
+      overrideConfig mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35
+      android.content.res.Resources@3194284
+      android.content.res.ResourcesImpl@2e0213e
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      3 token android.os.BinderProxy@c5a595f
+      com.dangdang.buy2/.activity.ActivityMainTab
+      overrideDisplayId 0
+      overrideConfig mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35
+      3.1 
+      overrideDisplayId null
+      overrideConfig v35
+      android.content.res.Resources@82d2fac
+      android.content.res.ResourcesImpl@7833b9f
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      4 token android.window.WindowTokenClient@3b77404
+      overrideDisplayId 0
+      overrideConfig mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h804dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35
+      4.1 
+      overrideDisplayId null
+      overrideConfig v35
+      android.content.res.Resources@98dcded
+      android.content.res.ResourcesImpl@b0504ec
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h804dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 0 - 1080, 2412) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.51664 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      
+      mResourceReferences:
+      
+      android.content.res.Resources@8cab9cd --> android.content.res.ResourcesImpl@32b30b5
+      android.content.res.Resources@35a2262 --> android.content.res.ResourcesImpl@32b30b5
+      android.content.res.Resources@4e0b8a4 --> android.content.res.ResourcesImpl@32b30b5
+      android.content.res.Resources@5baa86c --> android.content.res.ResourcesImpl@32b30b5
+      mResourceImpls:
+      
+      ResourcesKey{ mHash=a9f5bad2 mResDir=/data/app/~~y4Rq3rWECP7o2yzID2nz0A==/com.dangdang.buy2-CKSQcCUlXUmFYOTo7ps8Fw==/base.apk mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar] mDisplayId=0 mOverrideConfig=mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@e288728
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2184, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+      
+      ResourcesKey{ mHash=d0bcaf94 mResDir=/data/app/~~y4Rq3rWECP7o2yzID2nz0A==/com.dangdang.buy2-CKSQcCUlXUmFYOTo7ps8Fw==/base.apk mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar,/data/app/~~pw0ByybzQW7DNofjv_mktQ==/com.google.android.webview-5v4wRHP2yorGishO4vJmTA==/base.apk,/data/app/~~gRY5V0jwytVzV6_monDH0Q==/com.google.android.trichromelibrary_749919233-PCt9QeYeXLxzt5ObbUv4Hg==/base.apk,/system_ext/framework/androidx.window.extensions.jar,/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mDisplayId=-1 mOverrideConfig=v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@32b30b5
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2184, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+      
+      ResourcesKey{ mHash=d0bd23f3 mResDir=/data/app/~~y4Rq3rWECP7o2yzID2nz0A==/com.dangdang.buy2-CKSQcCUlXUmFYOTo7ps8Fw==/base.apk mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar,/data/app/~~pw0ByybzQW7DNofjv_mktQ==/com.google.android.webview-5v4wRHP2yorGishO4vJmTA==/base.apk,/data/app/~~gRY5V0jwytVzV6_monDH0Q==/com.google.android.trichromelibrary_749919233-PCt9QeYeXLxzt5ObbUv4Hg==/base.apk,/system_ext/framework/androidx.window.extensions.jar,/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mDisplayId=0 mOverrideConfig=v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@736adf9
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2184, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+      
+      ResourcesKey{ mHash=e3b778a mResDir=/data/app/~~y4Rq3rWECP7o2yzID2nz0A==/com.dangdang.buy2-CKSQcCUlXUmFYOTo7ps8Fw==/base.apk mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar] mDisplayId=-1 mOverrideConfig=v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@15fec41
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2184, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+      
+      ResourcesKey{ mHash=e3bebe9 mResDir=/data/app/~~y4Rq3rWECP7o2yzID2nz0A==/com.dangdang.buy2-CKSQcCUlXUmFYOTo7ps8Fw==/base.apk mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar] mDisplayId=0 mOverrideConfig=v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@b1995e6
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2184, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+      
+      ResourcesKey{ mHash=43504510 mResDir=/data/app/~~y4Rq3rWECP7o2yzID2nz0A==/com.dangdang.buy2-CKSQcCUlXUmFYOTo7ps8Fw==/base.apk mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar,/data/app/~~pw0ByybzQW7DNofjv_mktQ==/com.google.android.webview-5v4wRHP2yorGishO4vJmTA==/base.apk,/data/app/~~gRY5V0jwytVzV6_monDH0Q==/com.google.android.trichromelibrary_749919233-PCt9QeYeXLxzt5ObbUv4Hg==/base.apk,/system_ext/framework/androidx.window.extensions.jar,/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mDisplayId=0 mOverrideConfig=mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h804dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@b0504ec
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h804dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 0 - 1080, 2412) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.51664 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2412, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+      
+      ResourcesKey{ mHash=6c767e7d mResDir=/data/app/~~y4Rq3rWECP7o2yzID2nz0A==/com.dangdang.buy2-CKSQcCUlXUmFYOTo7ps8Fw==/base.apk mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar,/data/app/~~pw0ByybzQW7DNofjv_mktQ==/com.google.android.webview-5v4wRHP2yorGishO4vJmTA==/base.apk,/data/app/~~gRY5V0jwytVzV6_monDH0Q==/com.google.android.trichromelibrary_749919233-PCt9QeYeXLxzt5ObbUv4Hg==/base.apk,/system_ext/framework/androidx.window.extensions.jar,/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mDisplayId=0 mOverrideConfig=mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@2e0213e
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.52175 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2184, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+      
+      ResourcesKey{ mHash=6c76f2dc mResDir=/data/app/~~y4Rq3rWECP7o2yzID2nz0A==/com.dangdang.buy2-CKSQcCUlXUmFYOTo7ps8Fw==/base.apk mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mLibDirs=[/system/framework/org.apache.http.legacy.jar,/data/app/~~pw0ByybzQW7DNofjv_mktQ==/com.google.android.webview-5v4wRHP2yorGishO4vJmTA==/base.apk,/data/app/~~gRY5V0jwytVzV6_monDH0Q==/com.google.android.trichromelibrary_749919233-PCt9QeYeXLxzt5ObbUv4Hg==/base.apk,/system_ext/framework/androidx.window.extensions.jar,/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/data/resource-cache/com.android.systemui-neutral-T6hV.frro,/data/resource-cache/com.android.systemui-accent-F5yH.frro,/data/resource-cache/com.android.systemui-dynamic-GqEU.frro] mDisplayId=0 mOverrideConfig=mcc460-mnc1-zh-rCN-ldltr-sw360dp-w360dp-h728dp-normal-long-notround-widecg-highdr-port-notnight-xxhdpi-finger-keysexposed-nokeys-navhidden-nonav-v35 mCompatInfo={480dpi always-compat} mLoaders=[]}
+      android.content.res.ResourcesImpl@7833b9f
+      {1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.2 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}
+      DisplayMetrics{density=3.0, width=1080, height=2184, scaledDensity=3.0, xdpi=391.885, ydpi=392.723}
+    1 dumpables:
+    #0: AutofillManager
+        AutofillManager:
+          sessionId: 2147483647
+          state: UNKNOWN
+          context: com.dangdang.buy2.activity.ActivityMainTab@c499bba
+          service client: null
+          client: android.view.autofill.AutofillClientController@339134a (android.os.BinderProxy@c5a595f)
+          enabled: false
+          enabledAugmentedOnly: false
+          hasService: true
+          hasCallback: false
+          onInvisibleCalled false
+          last autofilled data: null
+          id of last fill UI shown: null
+          tracked views: null
+          fillable ids: null
+          entered ids: null
+          save trigger id: null
+          save on finish(): false
+          options: logLvl=6, compatMode=false, augmented=false, appDisabledExpiration=0
+          fill dialog enabled: false
+          fill dialog enabled hints: [password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+          compat mode enabled: false
+          debug: true verbose: true
+        Autofill Compat Mode: false
+    ViewExtraInfo:
+    r =ActivityClientRecord{paused=false, stopped=false, hideForNow=false, startsNotResumed=false, isForward=true, pendingConfigChanges=0, preserveWindow=false, Activity{resumed=true, stopped=false, finished=false, destroyed=false, startedActivity=false, changingConfigurations=false}}
+    r.overrideConfig={1.0 ??mcc??mnc [zh_CN] ldltr sw360dp w360dp h728dp 480dpi nrml long hdr widecg port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2412) mAppBounds=Rect(0, 96 - 1080, 2280) mMaxBounds=Rect(0, 0 - 1080, 2412) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.4 fontWeightAdjustment=0mThemeChanged= 0, mThemeChangedFlags= 0, mFlipFont= 0, mScenario= 0, mAccessibleChanged= -1, mUxIconConfig= 1163078655912968224, mMaterialColor= 0, mUserId= 0, mFontUserId= 0, mFontVariationSettings= 1226, mFoldingAngle = -1.0, mIconPackName= , mDarkModeBackgroundMaxL= 0.0, mDarkModeDialogBgMaxL= 27.0, mDarkModeForegroundMinL= 100.0, mOplusConfigType= 1, mOplusChangedConfigs= 0, OpSans= -1, mBurmeseFontFlag= 2, mFlag= 0, mFlexibleActivitySuitable= -1, mPuttDisplayFlag= -1}

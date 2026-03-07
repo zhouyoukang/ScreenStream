@@ -1,0 +1,40 @@
+# 会话意图配置
+
+# 自定义意图
+intents:
+  HassTurnOn:
+    - "开启{name}"
+    - "打开{name}"
+    - "启动{name}"
+    - "开{name}"
+    - "turn on {name}"
+    - "switch on {name}"
+    - "enable {name}"
+  HassTurnOff:
+    - "关闭{name}"
+    - "关掉{name}"
+    - "关{name}"
+    - "停止{name}"
+    - "关了{name}"
+    - "turn off {name}"
+    - "switch off {name}"
+    - "disable {name}"
+  HassSetTemperature:
+    - "设置{name}温度为{temperature}"
+    - "把{name}温度调到{temperature}度"
+    - "将{name}温度设为{temperature}"
+    - "set {name} temperature to {temperature}"
+    - "adjust {name} temperature to {temperature}"
+  HassSetBrightness:
+    - "设置{name}亮度为{brightness}"
+    - "把{name}亮度调到{brightness}"
+    - "将{name}亮度设为{brightness}%"
+    - "set {name} brightness to {brightness}"
+    - "adjust {name} brightness to {brightness} percent"
+  HassGetStatus:
+    - "{name}现在状态如何"
+    - "{name}当前状态"
+    - "查询{name}状态"
+    - "what is the status of {name}"
+    - "check {name} state"
+    - "get {name} status" 

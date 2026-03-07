@@ -1,0 +1,46 @@
+{
+	"compilerOptions": {
+		"lib": [
+			"es2020",
+			"dom"
+		],
+		"baseUrl": "./src",
+		"outDir": "build",
+		"target": "esnext",
+		"module": "node16",
+		"newLine": "lf",
+		"sourceMap": true,
+		"emitDeclarationOnly": true,
+		"allowImportingTsExtensions": true,
+		"inlineSourceMap": false,
+		"inlineSources": false,
+		"declaration": true,
+		"allowUnreachableCode": false,
+		"allowUnusedLabels": false,
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		"removeComments": true,
+		"alwaysStrict": true,
+		"noImplicitUseStrict": false,
+		"strictBindCallApply": true,
+		"strictFunctionTypes": true,
+		"strictPropertyInitialization": false,
+		"strictNullChecks": false,
+		"forceConsistentCasingInFileNames": true,
+		"checkJs": false,
+		"allowJs": true,
+		"esModuleInterop": true,
+		"importHelpers": false
+	},
+	"include": [
+		"src/**/*"
+, "example/ts/LoaderUtils.ts"	],
+	"exclude": [
+		"example/**/*",
+		"node_modules/**/*",
+		"docs/**/*",
+		"build/**/*",
+		"assets/**/*",
+		"dist/**/*",
+	]
+}

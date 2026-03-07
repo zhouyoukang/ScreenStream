@@ -1,0 +1,260 @@
+# Extended REST API Endpoints - Cycle #4 Round #10
+
+# API configuration
+api_config:
+  base_url: /api
+  version: v1
+  authentication: required
+  rate_limiting: true
+  
+  # CORS
+  cors:
+    enabled: true
+    origins: ["*"]
+    methods: [GET, POST, PUT, DELETE, PATCH]
+
+# New endpoints
+endpoints:
+  
+  # Scenes API
+  scenes:
+    - path: /api/scenes
+      method: GET
+      description: "List all scenes"
+      response:
+        - scene_id
+        - name
+        - entities
+        - icon
+    
+    - path: /api/scenes/{scene_id}/activate
+      method: POST
+      description: "Activate a scene"
+      parameters:
+        scene_id: string
+      response:
+        success: boolean
+  
+  # Automations API
+  automations:
+    - path: /api/automations
+      method: GET
+      description: "List all automations"
+    
+    - path: /api/automations/{id}/trigger
+      method: POST
+      description: "Manually trigger automation"
+    
+    - path: /api/automations/{id}/toggle
+      method: POST
+      description: "Enable/disable automation"
+  
+  # Dashboard API
+  dashboards:
+    - path: /api/dashboards
+      method: GET
+      description: "List available dashboards"
+    
+    - path: /api/dashboards/{id}/config
+      method: GET
+      description: "Get dashboard configuration"
+    
+    - path: /api/dashboards/{id}/config
+      method: PUT
+      description: "Update dashboard configuration"
+      permissions: [admin]
+  
+  # User Profiles API
+  profiles:
+    - path: /api/profiles
+      method: GET
+      description: "List user profiles"
+    
+    - path: /api/profiles/current
+      method: GET
+      description: "Get current profile"
+    
+    - path: /api/profiles/switch
+      method: POST
+      data:
+        profile_id: string
+        pin: string
+      description: "Switch user profile"
+  
+  # Notifications API
+  notifications:
+    - path: /api/notifications
+      method: GET
+      description: "Get all notifications"
+      query_params:
+        filter: string
+        limit: integer
+    
+    - path: /api/notifications
+      method: POST
+      data:
+        title: string
+        message: string
+        priority: string
+      description: "Send notification"
+    
+    - path: /api/notifications/{id}/dismiss
+      method: DELETE
+      description: "Dismiss notification"
+  
+  # Performance API
+  performance:
+    - path: /api/performance/metrics
+      method: GET
+      description: "Get system metrics"
+      response:
+        cpu: float
+        memory: float
+        disk: float
+        network: object
+    
+    - path: /api/performance/history
+      method: GET
+      query_params:
+        metric: string
+        duration: string
+      description: "Get historical metrics"
+  
+  # Energy API
+  energy:
+    - path: /api/energy/current
+      method: GET
+      description: "Current power usage"
+    
+    - path: /api/energy/daily
+      method: GET
+      description: "Daily energy statistics"
+    
+    - path: /api/energy/cost
+      method: GET
+      query_params:
+        period: string
+      description: "Energy cost calculation"
+  
+  # Device Health API
+  health:
+    - path: /api/health/devices
+      method: GET
+      description: "Device health summary"
+    
+    - path: /api/health/battery
+      method: GET
+      description: "Battery levels of all devices"
+    
+    - path: /api/health/connectivity
+      method: GET
+      description: "Device connectivity status"
+  
+  # ML Suggestions API
+  ml:
+    - path: /api/ml/suggest-scene
+      method: GET
+      description: "Get scene suggestion"
+      response:
+        scene: string
+        confidence: float
+        reasons: [string]
+    
+    - path: /api/ml/record-usage
+      method: POST
+      data:
+        scene: string
+        context: object
+      description: "Record scene usage"
+  
+  # Export API
+  export:
+    - path: /api/export/daily-report
+      method: GET
+      query_params:
+        date: string
+        format: string
+      description: "Export daily report"
+    
+    - path: /api/export/configuration
+      method: GET
+      description: "Export configuration backup"
+    
+    - path: /api/export/history
+      method: GET
+      query_params:
+        entities: [string]
+        start: datetime
+        end: datetime
+      description: "Export historical data"
+
+# Webhooks
+webhooks:
+  - path: /api/webhook/{webhook_id}
+    method: POST
+    description: "Trigger webhook automation"
+    security: webhook_secret
+
+# GraphQL endpoint
+graphql:
+  enabled: true
+  path: /api/graphql
+  playground: true
+  
+  # Schema
+  schema: |
+    type Query {
+      states(entity_ids: [String!]): [State]
+      devices: [Device]
+      automations: [Automation]
+      scenes: [Scene]
+    }
+    
+    type Mutation {
+      callService(domain: String!, service: String!, data: JSON): Result
+      activateScene(scene_id: String!): Result
+    }
+    
+    type Subscription {
+      stateChanged(entity_ids: [String!]): State
+    }
+
+# Response formats
+response_formats:
+  - json
+  - yaml
+  - xml
+  - msgpack
+
+# API documentation
+documentation:
+  swagger: true
+  redoc: true
+  path: /api/docs
+  
+  # OpenAPI spec
+  openapi_spec: /api/openapi.json
+
+# SDK support
+sdk_support:
+  languages:
+    - python
+    - javascript
+    - java
+    - csharp
+  
+  # Python example
+  python_example: |
+    from ha_api import HomeAssistantAPI
+    
+    api = HomeAssistantAPI('http://localhost:8123', token='YOUR_TOKEN')
+    
+    # Get current state
+    states = api.states.get()
+    
+    # Activate scene
+    api.scenes.activate('breakfast_mode')
+    
+    # Get ML suggestion
+    suggestion = api.ml.suggest_scene()
+    print(f"Suggested: {suggestion['scene']}")

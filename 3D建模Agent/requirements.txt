@@ -1,0 +1,4 @@
+trimesh>=4.0
+numpy>=1.20
+Pillow>=10.0
+rtree>=1.0

@@ -1,0 +1,22 @@
+run_script:
+  name: 运行脚本
+  description: 运行Home Assistant工具库中的脚本
+  fields:
+    script_path:
+      name: 脚本路径
+      description: 要运行的脚本的路径
+      required: true
+      example: "D:\\homeassistant\\HA备份\\备份脚本.ps1"
+      selector:
+        text:
+    params:
+      name: 参数
+      description: 脚本的参数，格式为对象
+      required: false
+      example: "{'mode': 'full', 'quiet': true}"
+      selector:
+        object:
+
+restart_ha:
+  name: 重启Home Assistant
+  description: 使用工具库中的重启脚本重启Home Assistant 

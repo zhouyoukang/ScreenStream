@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Downloads & Cache
+douyin_cache/*.mp4
+douyin_cache/*.mp3
+downloads/
+*.wav
+*.mp4
+
+# Temp
+*.tmp
+*.bak

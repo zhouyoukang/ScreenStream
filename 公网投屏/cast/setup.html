@@ -1,0 +1,2283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ScreenStream 配置中心</title>
+<meta name="description" content="一站式完成手机投屏+反向操控的所有配置">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--card2:#253347;--accent:#22c55e;--accent2:#16a34a;--text:#f1f5f9;--dim:#94a3b8;--danger:#ef4444;--warn:#f59e0b;--info:#3b82f6;--r:14px;--r2:10px}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.6;padding-bottom:env(safe-area-inset-bottom,0)}
+
+/* 顶栏 */
+.top-bar{position:sticky;top:0;z-index:50;background:rgba(15,23,42,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06);padding:12px 16px;display:flex;align-items:center;gap:10px}
+.top-bar h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,var(--accent),#6ee7b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.top-bar .ver{font-size:11px;color:var(--dim);margin-left:auto}
+
+/* 进度条 */
+.progress{display:flex;gap:4px;padding:0 16px;margin:12px 0}
+.progress .dot{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.08);transition:all .3s}
+.progress .dot.done{background:var(--accent)}
+.progress .dot.active{background:var(--warn);animation:pulse 1.5s infinite}
+@keyframes pulse{50%{opacity:.5}}
+
+/* 容器 */
+.container{max-width:640px;margin:0 auto;padding:0 16px 32px}
+
+/* 步骤卡片 */
+.step{background:var(--card);border-radius:var(--r);margin:16px 0;overflow:hidden;border:1px solid rgba(255,255,255,.06);transition:all .3s}
+.step.active{border-color:rgba(34,197,94,.3);box-shadow:0 0 20px rgba(34,197,94,.08)}
+.step.done{opacity:.85}
+.step-head{padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.step-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;transition:all .3s}
+.step.pending .step-num{background:rgba(255,255,255,.08);color:var(--dim)}
+.step.active .step-num{background:var(--warn);color:#000}
+.step.done .step-num{background:var(--accent);color:#000}
+.step.error .step-num{background:var(--danger);color:#fff}
+.step-title{font-size:15px;font-weight:600;flex:1}
+.step-status{font-size:12px;padding:3px 8px;border-radius:6px;font-weight:500}
+.step.done .step-status{background:rgba(34,197,94,.15);color:#4ade80}
+.step.error .step-status{background:rgba(239,68,68,.15);color:#f87171}
+.step.active .step-status{background:rgba(245,158,11,.15);color:#fbbf24}
+.step-body{padding:0 16px 16px;display:none}
+.step.active .step-body,.step.expanded .step-body{display:block}
+
+/* 检测项 */
+.check-list{display:flex;flex-direction:column;gap:8px}
+.check-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card2);border-radius:var(--r2);font-size:13px}
+.check-item .icon{width:20px;text-align:center;flex-shrink:0;font-size:16px}
+.check-item .label{flex:1}
+.check-item .result{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px}
+.check-item .result.pass{background:rgba(34,197,94,.15);color:#4ade80}
+.check-item .result.fail{background:rgba(239,68,68,.15);color:#f87171}
+.check-item .result.wait{background:rgba(245,158,11,.15);color:#fbbf24}
+.check-item .result.skip{background:rgba(148,163,184,.15);color:#94a3b8}
+
+/* 按钮 */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border:none;border-radius:var(--r2);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 15px rgba(34,197,94,.25)}
+.btn-secondary{background:var(--card2);color:var(--text);border:1px solid rgba(255,255,255,.1)}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.2)}
+.btn-block{width:100%}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+/* 指南卡片 */
+.guide{background:var(--card2);border-radius:var(--r2);padding:14px;margin:8px 0}
+.guide-title{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.guide ol{padding-left:20px;font-size:13px;color:var(--dim)}
+.guide ol li{margin:6px 0}
+.guide ol li b{color:var(--text)}
+
+/* 折叠面板 */
+.collapse-trigger{cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 0;font-size:13px;color:var(--info);font-weight:500}
+.collapse-trigger::before{content:'▶';font-size:10px;transition:transform .2s}
+.collapse-trigger.open::before{transform:rotate(90deg)}
+.collapse-content{display:none;margin-top:4px}
+.collapse-trigger.open+.collapse-content{display:block}
+
+/* 输入框 */
+.input-group{display:flex;gap:8px;align-items:center;margin:12px 0}
+.input-group input{flex:1;padding:12px;background:rgba(15,23,42,.8);border:2px solid rgba(255,255,255,.1);border-radius:var(--r2);color:#fff;font-size:20px;text-align:center;letter-spacing:8px;outline:none;font-family:'Courier New',monospace;font-weight:700}
+.input-group input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+
+/* 链接框 */
+.link-box{background:var(--card2);border-radius:var(--r2);padding:12px;display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;word-break:break-all}
+.link-box .url{flex:1;color:var(--accent);font-family:monospace}
+.link-box button{padding:6px 12px;font-size:12px}
+
+/* QR码 */
+.qr-area{text-align:center;margin:12px 0}
+.qr-area canvas{background:#fff;border-radius:8px;padding:8px}
+
+/* 诊断结果 */
+.diag-summary{padding:14px;border-radius:var(--r2);margin:12px 0;font-size:13px}
+.diag-summary.ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:#4ade80}
+.diag-summary.warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#fbbf24}
+.diag-summary.err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171}
+
+/* 标签 */
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.tag-green{background:rgba(34,197,94,.15);color:#4ade80}
+.tag-yellow{background:rgba(245,158,11,.15);color:#fbbf24}
+.tag-red{background:rgba(239,68,68,.15);color:#f87171}
+.tag-blue{background:rgba(59,130,246,.15);color:#60a5fa}
+
+/* 分隔 */
+.sep{height:1px;background:rgba(255,255,255,.06);margin:12px 0}
+
+/* 提示 */
+.hint{font-size:12px;color:var(--dim);margin:8px 0}
+
+/* 底部 */
+.footer{text-align:center;padding:24px 16px;color:#334155;font-size:12px}
+
+/* 响应式 */
+@media(max-width:400px){
+  .top-bar h1{font-size:16px}
+  .step-head{padding:12px}
+  .btn{padding:10px 16px;font-size:13px}
+  .input-group input{font-size:18px;letter-spacing:6px}
+}
+
+/* 加载动画 */
+.spin{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ADB Bridge */
+.adb-banner{background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(59,130,246,.3);border-radius:var(--r);margin:0 auto 16px;max-width:760px;padding:16px;display:none}
+.adb-banner.show{display:block}
+.adb-banner .adb-title{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:#60a5fa}
+.adb-banner .adb-desc{font-size:12px;color:var(--dim);margin:6px 0 12px}
+.adb-banner .adb-device{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:var(--r2);padding:10px 14px;margin:8px 0;font-size:13px}
+.adb-banner .adb-log{max-height:200px;overflow-y:auto;background:rgba(0,0,0,.3);border-radius:var(--r2);padding:10px;font-family:monospace;font-size:11px;line-height:1.6;margin:8px 0}
+.adb-banner .adb-log .log-ok{color:#4ade80}
+.adb-banner .adb-log .log-fail{color:#f87171}
+.adb-banner .adb-log .log-info{color:#94a3b8}
+.adb-banner .adb-log .log-wait{color:#fbbf24}
+.adb-no{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.15);border-radius:var(--r);margin:0 auto 16px;max-width:760px;padding:12px 16px;display:none;font-size:12px;color:#fbbf24}
+.adb-no.show{display:flex;align-items:center;gap:8px}
+.adb-no code{background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;font-size:11px;color:#e2e8f0;user-select:all}
+
+/* 公网远程ADB */
+.public-adb{background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(139,92,246,.3);border-radius:var(--r);margin:0 auto 16px;max-width:760px;padding:16px}
+.public-adb .pa-title{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:#a78bfa}
+.public-adb .pa-desc{font-size:12px;color:var(--dim);margin:6px 0 12px}
+.public-adb .pa-code-row{display:flex;gap:8px;align-items:center}
+.public-adb .pa-code-row input{flex:0 0 200px;padding:14px;background:rgba(15,23,42,.8);border:2px solid rgba(139,92,246,.3);border-radius:var(--r2);color:#fff;font-size:24px;text-align:center;letter-spacing:10px;outline:none;font-family:'Courier New',monospace;font-weight:700}
+.public-adb .pa-code-row input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.15)}
+.public-adb .pa-status{margin:12px 0;padding:10px 14px;border-radius:var(--r2);font-size:13px;display:none}
+.public-adb .pa-status.connected{display:block;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:#4ade80}
+.public-adb .pa-status.connecting{display:block;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#fbbf24}
+.public-adb .pa-status.error{display:block;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171}
+.public-adb .pa-log{max-height:250px;overflow-y:auto;background:rgba(0,0,0,.3);border-radius:var(--r2);padding:10px;font-family:monospace;font-size:11px;line-height:1.6;margin:8px 0;display:none}
+.public-adb .pa-log .log-ok{color:#4ade80}
+.public-adb .pa-log .log-fail{color:#f87171}
+.public-adb .pa-log .log-info{color:#94a3b8}
+.public-adb .pa-log .log-wait{color:#fbbf24}
+
+/* 直连手机 — 纯公网模式 */
+.direct-phone{background:linear-gradient(135deg,#1a1028,#2a1040);border:1px solid rgba(168,85,247,.3);border-radius:var(--r);margin:0 auto 16px;max-width:760px;padding:16px}
+.direct-phone .dp-title{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;color:#c084fc}
+.direct-phone .dp-desc{font-size:12px;color:var(--dim);margin:4px 0 12px}
+.direct-phone .dp-url-row{display:flex;gap:8px;margin:8px 0}
+.direct-phone .dp-url-row input{flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r2);color:var(--text);padding:10px 14px;font-size:13px;font-family:monospace}
+.direct-phone .dp-status{margin:8px 0;padding:8px 14px;border-radius:var(--r2);font-size:13px;display:none}
+.direct-phone .dp-status.ok{display:block;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:#4ade80}
+.direct-phone .dp-status.err{display:block;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171}
+.direct-phone .dp-status.trying{display:block;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#c084fc}
+.mjpeg-box{margin:10px 0;text-align:center;position:relative}
+.mjpeg-box img{max-width:100%;max-height:500px;border-radius:var(--r2);border:1px solid rgba(255,255,255,.1);cursor:crosshair}
+.mjpeg-box .mjpeg-badge{position:absolute;top:8px;right:8px;background:rgba(239,68,68,.8);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.tap-ring{position:absolute;width:30px;height:30px;border:2px solid #4ade80;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;animation:tapPulse .5s ease-out forwards}
+@keyframes tapPulse{0%{opacity:1;transform:translate(-50%,-50%) scale(.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
+.app-list{max-height:200px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.app-item{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:var(--r2);padding:6px 10px;font-size:11px;cursor:pointer;transition:all .2s;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.app-item:hover{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3)}
+.conn-mode{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:8px}
+.conn-mode.dp{background:rgba(168,85,247,.2);color:#c084fc}.conn-mode.pa{background:rgba(59,130,246,.2);color:#60a5fa}.conn-mode.adb{background:rgba(34,197,94,.2);color:#4ade80}
+
+/* 五感仪表盘 — 对标remote-agent五感架构 */
+.sense-dash{background:linear-gradient(135deg,#0a1628,#0f1f3a);border:1px solid rgba(124,138,255,.3);border-radius:var(--r);margin:0 auto 16px;max-width:760px;padding:16px;display:none}
+.sense-dash.show{display:block}
+.sense-dash .sd-title{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;color:#7c8aff}
+.sense-dash .sd-desc{font-size:12px;color:var(--dim);margin:4px 0 12px}
+.sense-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:10px 0}
+.sense-card{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);border-radius:var(--r2);padding:12px;text-align:center;transition:all .2s}
+.sense-card:hover{border-color:rgba(124,138,255,.3)}
+.sense-card .sc-icon{font-size:28px;margin-bottom:4px}
+.sense-card .sc-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.sense-card .sc-value{font-size:13px;font-weight:600;color:#e0e0e0;word-break:break-all}
+.sense-card .sc-value.ok{color:#4ade80}.sense-card .sc-value.warn{color:#fbbf24}.sense-card .sc-value.err{color:#f87171}
+.health-bar{display:flex;align-items:center;gap:12px;margin:12px 0;padding:12px 16px;border-radius:var(--r2);background:rgba(0,0,0,.3)}
+.health-score{font-size:32px;font-weight:700;font-family:'Cascadia Code',monospace;min-width:60px;text-align:center}
+.health-score.ok{color:#4ade80}.health-score.warn{color:#fbbf24}.health-score.err{color:#f87171}
+.health-meter{flex:1;height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.health-fill{height:100%;border-radius:4px;transition:width .5s,background .3s}
+.health-fill.ok{background:linear-gradient(90deg,#22c55e,#4ade80)}.health-fill.warn{background:linear-gradient(90deg,#f59e0b,#fbbf24)}.health-fill.err{background:linear-gradient(90deg,#ef4444,#f87171)}
+.health-text{font-size:12px;color:var(--dim);flex:0 0 200px}
+.diag-results{margin:10px 0;max-height:300px;overflow-y:auto}
+.diag-row{display:flex;align-items:center;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px}
+.diag-row .dr-name{flex:1;color:var(--dim)}
+.diag-row .dr-status{padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;min-width:36px;text-align:center}
+.diag-row .dr-status.pass{background:rgba(34,197,94,.15);color:#4ade80}
+.diag-row .dr-status.fail{background:rgba(239,68,68,.15);color:#f87171}
+.diag-row .dr-detail{font-size:10px;color:#556;margin-left:8px;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.screenshot-box{margin:10px 0;text-align:center}
+.screenshot-box img{max-width:280px;max-height:500px;border-radius:var(--r2);border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:transform .2s}
+.screenshot-box img:hover{transform:scale(1.02)}
+.diag-issues{margin:10px 0;padding:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);border-radius:var(--r2);font-size:12px}
+.diag-issues.ok{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.15)}
+.diag-issues b{color:#e0e0e0}
+.diag-fixes{margin:4px 0 0;padding:0;list-style:none}
+.diag-fixes li{padding:3px 0;color:var(--dim)}
+.diag-fixes li::before{content:'→ ';color:#7c8aff}
+
+/* 远程控制面板 */
+.ctrl-panel{background:linear-gradient(135deg,#1a2e1a,#1a3e16);border:1px solid rgba(34,197,94,.3);border-radius:var(--r);margin:0 auto 16px;max-width:760px;padding:16px;display:none}
+.ctrl-panel.show{display:block}
+.ctrl-panel .cp-title{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:#4ade80}
+.ctrl-panel .cp-desc{font-size:12px;color:var(--dim);margin:6px 0 12px}
+.ctrl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin:8px 0}
+.ctrl-btn{padding:10px 8px;background:var(--card2);border:1px solid rgba(255,255,255,.08);border-radius:var(--r2);color:var(--text);font-size:12px;cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.ctrl-btn:hover{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3)}
+.ctrl-btn:active{transform:scale(.95)}
+.ctrl-btn .cb-icon{font-size:20px}
+.ctrl-btn .cb-label{font-size:11px;color:var(--dim)}
+.ctrl-section{margin:12px 0}
+.ctrl-section-title{font-size:12px;font-weight:600;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.ctrl-input-row{display:flex;gap:8px;align-items:center}
+.ctrl-input-row input,.ctrl-input-row select{padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r2);color:#fff;font-size:13px;outline:none}
+.ctrl-input-row input:focus{border-color:var(--accent)}
+.ctrl-input-row input[style*="max-width"]{flex:0 0 auto}
+.ctrl-input-row input:not([style*="max-width"]){flex:1}
+.ctrl-status{padding:10px 14px;border-radius:var(--r2);font-size:12px;font-family:monospace;background:rgba(0,0,0,.3);margin:8px 0;max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.ctrl-touch-pad{width:100%;height:200px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:var(--r2);position:relative;touch-action:none;cursor:crosshair;margin:8px 0}
+.ctrl-touch-pad .tp-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--dim);font-size:12px;pointer-events:none;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <span style="font-size:24px">🔧</span>
+  <h1>ScreenStream 配置中心</h1>
+  <a href="./" style="font-size:11px;color:var(--dim);text-decoration:none;margin-left:8px;padding:4px 10px;border:1px solid rgba(255,255,255,.1);border-radius:6px">📺 观看页</a>
+  <span class="ver" id="serverStatus">检测中...</span>
+</div>
+
+<!-- ADB Bridge 面板 -->
+<div class="adb-banner" id="adbPanel">
+  <div class="adb-title">🔌 ADB Bridge 已连接</div>
+  <div class="adb-desc">检测到本地ADB服务，可自动完成手机配置（安装APK、授权、启动投屏）</div>
+  <div class="adb-device" id="adbDeviceInfo">检测设备中...</div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="adbAutoBtn" onclick="runAutoConfig()" disabled>⚡ 一键自动配置</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('adbPanel').classList.remove('show')">手动配置</button>
+  </div>
+  <div class="adb-log" id="adbLog" style="display:none"></div>
+</div>
+<div class="adb-no" id="adbHint">
+  <span>💡</span>
+  <span>手机插USB后运行 <code>python adb-bridge.py</code> 可启用自动配置 · <a href="adb-bridge.py" download style="color:#60a5fa">下载脚本</a></span>
+</div>
+
+<!-- 公网远程ADB -->
+<!-- 直连手机 — 纯公网模式，无需USB/ADB -->
+<div class="direct-phone" id="directPhone">
+  <div class="dp-title">📱 直连手机 (纯公网，无需USB)</div>
+  <div class="dp-desc">手机运行ScreenStream + FRP穿透即可，网页直接控制 — 零有线依赖</div>
+
+  <div class="dp-url-row">
+    <input type="text" id="dpBaseUrl" placeholder="手机公网地址" value="">
+    <button class="btn btn-primary" id="dpConnBtn" onclick="connectDirectPhone()" style="white-space:nowrap">🔗 连接手机</button>
+  </div>
+  <div class="dp-status" id="dpStatus"></div>
+
+  <div id="dpDeviceBox" style="display:none">
+    <div class="adb-device" id="dpDeviceInfo" style="margin:8px 0;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:var(--r2);padding:10px 14px;font-size:13px"></div>
+    <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="toggleMjpegStream()" id="dpStreamBtn" style="flex:1">📺 实时画面</button>
+      <button class="btn btn-secondary" onclick="runPhoneDiag()" style="flex:0 0 auto">🔍 诊断</button>
+      <button class="btn btn-secondary" onclick="takeScreenshot()" style="flex:0 0 auto">📸 截屏</button>
+      <button class="btn btn-danger" onclick="disconnectDirectPhone()" style="flex:0 0 auto">✖ 断开</button>
+    </div>
+    <div class="mjpeg-box" id="mjpegBox" style="display:none">
+      <img id="mjpegStream" alt="实时画面">
+      <div class="mjpeg-badge">LIVE</div>
+    </div>
+  </div>
+</div>
+
+<div class="public-adb" id="publicAdb">
+  <div class="pa-title">🌐 远程一键配置手机 (需USB+电脑)</div>
+  <div class="pa-desc">通过电脑USB连接手机，网页自动完成全部配置（适合首次设置）</div>
+
+  <!-- 步骤引导 -->
+  <div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.15);border-radius:var(--r2);padding:12px">
+      <div style="font-size:20px;font-weight:700;color:#a78bfa;margin-bottom:4px">① 下载</div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:8px">下载到电脑，双击运行</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <a href="start-adb-bridge.bat" download class="btn btn-primary" style="font-size:12px;padding:6px 12px;text-decoration:none">⬇ 一键启动器.bat</a>
+        <a href="adb-bridge.py" download class="btn btn-secondary" style="font-size:11px;padding:6px 10px;text-decoration:none">📄 adb-bridge.py</a>
+      </div>
+    </div>
+    <div style="flex:1;min-width:200px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.15);border-radius:var(--r2);padding:12px">
+      <div style="font-size:20px;font-weight:700;color:#a78bfa;margin-bottom:4px">② 输入连接码</div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:8px">电脑屏幕显示6位码，填入下方</div>
+      <div class="pa-code-row">
+        <input type="text" id="adbCodeInput" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="连接码" autocomplete="off">
+        <button class="btn btn-primary" id="adbConnectBtn" onclick="connectPublicADB()">🔗 连接</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pa-status" id="paStatus"></div>
+  <div id="paDeviceInfo" style="display:none">
+    <div class="adb-device" id="paDevice" style="margin:8px 0;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:var(--r2);padding:10px 14px;font-size:13px"></div>
+    <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap">
+      <button class="btn btn-primary" id="paAutoBtn" onclick="runPublicAutoConfig()" disabled style="flex:1">⚡ 一键自动配置（权限+启动+端口转发）</button>
+      <button class="btn btn-danger" onclick="disconnectPublicADB()" style="flex:0 0 auto">✖ 断开</button>
+    </div>
+  </div>
+  <div class="pa-log" id="paLog"></div>
+
+  <div class="collapse-trigger" onclick="toggleCollapse(this)" style="margin-top:8px">💡 前置要求和常见问题</div>
+  <div class="collapse-content">
+    <div class="guide" style="margin-top:0">
+      <p style="font-size:12px;color:var(--dim);margin:0 0 8px"><b>前置要求：</b></p>
+      <ol style="font-size:12px;margin:0 0 8px">
+        <li>电脑安装 <b>Python 3.8+</b>（<a href="https://python.org" target="_blank" style="color:#a78bfa">python.org</a>，勾选Add to PATH）</li>
+        <li>电脑安装 <b>ADB平台工具</b>（<a href="https://developer.android.com/tools/releases/platform-tools" target="_blank" style="color:#a78bfa">developer.android.com</a>，解压到D:\platform-tools）</li>
+        <li>手机开启 <b>开发者选项 → USB调试</b>，用USB线连接电脑</li>
+      </ol>
+      <p style="font-size:12px;color:var(--dim);margin:0 0 4px"><b>常见问题：</b></p>
+      <ul style="font-size:11px;color:var(--dim);margin:0;padding-left:16px">
+        <li>“连接码未找到” → 确认电脑端已运行并显示相同连接码</li>
+        <li>“0台设备” → 检查USB线连接，手机弹窗授权调试</li>
+        <li>“无障碍未开启” → 需在手机设置手动开启（无法通过ADB自动开启）</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 五感仪表盘 — 道·手机中枢 -->
+<div class="sense-dash" id="senseDash">
+  <div class="sd-title">道 · 手机中枢</div>
+  <div class="sd-desc">五感连接手机 · 大脑分析万象 — 对标远程中枢架构，一网页掌控Android全局</div>
+
+  <div class="health-bar" id="healthBar">
+    <div class="health-score" id="healthScore">—</div>
+    <div style="flex:1">
+      <div class="health-meter"><div class="health-fill" id="healthFill" style="width:0%"></div></div>
+      <div id="healthSummary" style="font-size:12px;color:var(--dim);margin-top:4px">点击"全面诊断"开始</div>
+    </div>
+  </div>
+
+  <div class="sense-grid" id="senseGrid">
+    <div class="sense-card"><div class="sc-icon">👁</div><div class="sc-label">视·型号</div><div class="sc-value" id="sv_model">—</div></div>
+    <div class="sense-card"><div class="sc-icon">📱</div><div class="sc-label">视·系统</div><div class="sc-value" id="sv_android">—</div></div>
+    <div class="sense-card"><div class="sc-icon">🔋</div><div class="sc-label">嗅·电量</div><div class="sc-value" id="sv_battery">—</div></div>
+    <div class="sense-card"><div class="sc-icon">💾</div><div class="sc-label">嗅·存储</div><div class="sc-value" id="sv_storage">—</div></div>
+    <div class="sense-card"><div class="sc-icon">📶</div><div class="sc-label">听·网络</div><div class="sc-value" id="sv_network">—</div></div>
+    <div class="sense-card"><div class="sc-icon">📺</div><div class="sc-label">味·投屏</div><div class="sc-value" id="sv_streaming">—</div></div>
+    <div class="sense-card"><div class="sc-icon">🎮</div><div class="sc-label">味·控制</div><div class="sc-value" id="sv_input">—</div></div>
+    <div class="sense-card"><div class="sc-icon">♿</div><div class="sc-label">触·无障碍</div><div class="sc-value" id="sv_a11y">—</div></div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="runPhoneDiag()" id="diagBtn" style="flex:1">🔍 全面诊断 (20+项检查)</button>
+    <button class="btn btn-secondary" onclick="takeScreenshot()" style="flex:0 0 auto">📸 截屏</button>
+  </div>
+
+  <div class="screenshot-box" id="screenshotBox" style="display:none">
+    <img id="screenshotImg" alt="手机截图" onclick="this.style.maxWidth=this.style.maxWidth==='100%'?'280px':'100%'">
+    <div style="font-size:10px;color:var(--dim);margin-top:4px" id="screenshotInfo"></div>
+  </div>
+
+  <div id="diagAnalysis" style="display:none"></div>
+
+  <div class="collapse-trigger" onclick="toggleCollapse(this)">📋 诊断详情</div>
+  <div class="collapse-content">
+    <div class="diag-results" id="diagResults"><div style="color:var(--dim);text-align:center;padding:20px">运行诊断后显示详细结果</div></div>
+  </div>
+</div>
+
+<!-- 远程控制面板 -->
+<div class="ctrl-panel" id="ctrlPanel">
+  <div class="cp-title">🎮 远程控制面板</div>
+  <div class="cp-desc" id="cpDesc">通过ADB Bridge代理，远程调用手机70+ API — 触摸/滑动/文本/导航/截图/AI</div>
+
+  <div class="ctrl-section">
+    <div class="ctrl-section-title">📊 设备状态</div>
+    <div class="ctrl-status" id="ctrlDevStatus">点击"刷新状态"查看</div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="ctrlRefreshStatus()" style="font-size:12px;padding:8px 12px">🔄 刷新状态</button>
+    </div>
+  </div>
+
+  <div class="ctrl-section">
+    <div class="ctrl-section-title">🧭 导航</div>
+    <div class="ctrl-grid">
+      <button class="ctrl-btn" onclick="ctrlNav('home')"><span class="cb-icon">🏠</span><span class="cb-label">主页</span></button>
+      <button class="ctrl-btn" onclick="ctrlNav('back')"><span class="cb-icon">◀</span><span class="cb-label">返回</span></button>
+      <button class="ctrl-btn" onclick="ctrlNav('recents')"><span class="cb-icon">📋</span><span class="cb-label">最近</span></button>
+      <button class="ctrl-btn" onclick="ctrlNav('wake')"><span class="cb-icon">☀️</span><span class="cb-label">亮屏</span></button>
+      <button class="ctrl-btn" onclick="ctrlNav('lock')"><span class="cb-icon">🔒</span><span class="cb-label">锁屏</span></button>
+      <button class="ctrl-btn" onclick="ctrlNav('notifications')"><span class="cb-icon">🔔</span><span class="cb-label">通知栏</span></button>
+      <button class="ctrl-btn" onclick="ctrlVolume('up')"><span class="cb-icon">🔊</span><span class="cb-label">音量+</span></button>
+      <button class="ctrl-btn" onclick="ctrlVolume('down')"><span class="cb-icon">🔉</span><span class="cb-label">音量-</span></button>
+    </div>
+  </div>
+
+  <div class="ctrl-section">
+    <div class="ctrl-section-title">👆 触摸板 (点击=点击 · 拖动=滑动 · 长按=长按)</div>
+    <div class="ctrl-touch-pad" id="ctrlTouchPad">
+      <div class="tp-hint">点击或拖动控制手机屏幕<br>坐标自动映射到手机分辨率</div>
+    </div>
+    <div class="ctrl-input-row">
+      <input type="text" id="ctrlCoordX" placeholder="X" style="max-width:70px">
+      <input type="text" id="ctrlCoordY" placeholder="Y" style="max-width:70px">
+      <button class="btn btn-primary" onclick="ctrlTapXY()" style="font-size:12px;padding:8px 12px">点击</button>
+      <button class="btn btn-secondary" onclick="ctrlLongPress()" style="font-size:12px;padding:8px 12px">长按</button>
+    </div>
+  </div>
+
+  <div class="ctrl-section">
+    <div class="ctrl-section-title">⌨️ 文本输入</div>
+    <div class="ctrl-input-row">
+      <input type="text" id="ctrlTextInput" placeholder="输入文本后按回车或点发送..." onkeydown="if(event.key==='Enter')ctrlSendText()">
+      <button class="btn btn-primary" onclick="ctrlSendText()" style="font-size:12px;padding:8px 12px">发送</button>
+    </div>
+  </div>
+
+  <div class="ctrl-section">
+    <div class="ctrl-section-title">📱 应用管理</div>
+    <div class="btn-row" style="flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="ctrlListApps()" style="font-size:12px;padding:8px 12px">📋 应用列表</button>
+      <button class="btn btn-secondary" onclick="ctrlForeground()" style="font-size:12px;padding:8px 12px">🔍 前台应用</button>
+    </div>
+    <div class="ctrl-input-row" style="margin-top:6px">
+      <input type="text" id="ctrlAppPkg" placeholder="包名 (如 com.tencent.mm)">
+      <button class="btn btn-primary" onclick="ctrlOpenApp()" style="font-size:12px;padding:8px 12px">▶ 打开</button>
+    </div>
+    <div class="app-list" id="ctrlAppList" style="display:none"></div>
+  </div>
+
+  <div class="collapse-trigger" onclick="toggleCollapse(this)">🛠 高级API调用</div>
+  <div class="collapse-content">
+    <div class="ctrl-section" style="margin:4px 0">
+      <div class="ctrl-input-row">
+        <select id="ctrlApiMethod" style="max-width:70px"><option>GET</option><option>POST</option></select>
+        <input type="number" id="ctrlApiPort" value="8084" placeholder="端口" style="max-width:65px">
+        <input type="text" id="ctrlApiPath" placeholder="/status" style="flex:2">
+        <button class="btn btn-primary" onclick="ctrlApiCall()" style="font-size:12px;padding:8px 12px">调用</button>
+      </div>
+      <div class="ctrl-status" id="ctrlApiResult" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="collapse-trigger" onclick="toggleCollapse(this)">📜 控制日志</div>
+  <div class="collapse-content">
+    <div class="ctrl-status" id="ctrlLog" style="max-height:200px"></div>
+  </div>
+</div>
+
+<div class="progress" id="progressBar">
+  <div class="dot" data-step="1"></div>
+  <div class="dot" data-step="2"></div>
+  <div class="dot" data-step="3"></div>
+  <div class="dot" data-step="4"></div>
+  <div class="dot" data-step="5"></div>
+  <div class="dot" data-step="6"></div>
+  <div class="dot" data-step="7"></div>
+</div>
+
+<div class="container">
+
+<!-- ① 服务器健康检查 -->
+<div class="step active" id="step1" data-step="1">
+  <div class="step-head" onclick="toggleStep(1)">
+    <div class="step-num">1</div>
+    <div class="step-title">服务器健康检查</div>
+    <span class="step-status" id="step1Status">检测中</span>
+  </div>
+  <div class="step-body">
+    <div class="check-list" id="healthChecks">
+      <div class="check-item" id="hc-relay"><span class="icon">📡</span><span class="label">Relay中继服务器</span><span class="result wait">检测中</span></div>
+      <div class="check-item" id="hc-signal"><span class="icon">🔗</span><span class="label">P2P信令服务器</span><span class="result wait">检测中</span></div>
+      <div class="check-item" id="hc-health"><span class="icon">💚</span><span class="label">健康检查API</span><span class="result wait">检测中</span></div>
+      <div class="check-item" id="hc-ssl"><span class="icon">🔒</span><span class="label">SSL证书</span><span class="result wait">检测中</span></div>
+      <div class="check-item" id="hc-cast"><span class="icon">📺</span><span class="label">观看页可访问</span><span class="result wait">检测中</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="runHealthCheck()">🔄 重新检测</button>
+      <button class="btn btn-primary" onclick="completeStep(1)" id="step1Next" disabled>下一步 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ② 安装ScreenStream -->
+<div class="step pending" id="step2" data-step="2">
+  <div class="step-head" onclick="toggleStep(2)">
+    <div class="step-num">2</div>
+    <div class="step-title">安装 ScreenStream</div>
+    <span class="step-status"></span>
+  </div>
+  <div class="step-body">
+    <div class="guide">
+      <div class="guide-title">📱 安装方式</div>
+      <ol>
+        <li>点击下方按钮<b>下载APK</b>到手机</li>
+        <li>打开下载的文件，允许<b>安装未知来源应用</b></li>
+        <li>安装完成后打开 <b>ScreenStream</b></li>
+      </ol>
+    </div>
+    <div class="btn-row">
+      <a class="btn btn-primary" href="https://aiotvr.xyz/relay/ScreenStream.apk" target="_blank">⬇ 下载APK (56MB)</a>
+      <button class="btn btn-secondary" onclick="showQR('https://aiotvr.xyz/relay/ScreenStream.apk','apkQR')">📷 扫码下载</button>
+    </div>
+    <div class="qr-area" id="apkQR" style="display:none"></div>
+    <div class="hint">版本：PlayStoreDebug · 含WebRTC+CloudRelay模块 · 支持Android 8.0+</div>
+
+    <div class="sep"></div>
+
+    <div class="collapse-trigger" onclick="toggleCollapse(this)">已安装？跳过此步</div>
+    <div class="collapse-content">
+      <p class="hint">如果手机已安装ScreenStream，可直接进入下一步。</p>
+    </div>
+
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn btn-secondary" onclick="goStep(1)">← 上一步</button>
+      <button class="btn btn-primary" onclick="completeStep(2)">已安装，下一步 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ③ 权限配置 -->
+<div class="step pending" id="step3" data-step="3">
+  <div class="step-head" onclick="toggleStep(3)">
+    <div class="step-num">3</div>
+    <div class="step-title">权限配置</div>
+    <span class="step-status"></span>
+  </div>
+  <div class="step-body">
+    <p class="hint" style="margin-bottom:12px">ScreenStream需要以下权限才能正常工作。请在手机上逐项开启：</p>
+
+    <div class="guide">
+      <div class="guide-title">📺 屏幕录制权限 <span class="tag tag-green">必需</span></div>
+      <ol>
+        <li>打开ScreenStream → 点击<b>"开始"</b></li>
+        <li>系统弹窗<b>"开始录制屏幕"</b> → 点击<b>"立即开始"</b></li>
+        <li>首次会请求<b>通知权限</b>，建议允许</li>
+      </ol>
+    </div>
+
+    <div class="guide">
+      <div class="guide-title">♿ 无障碍服务 <span class="tag tag-yellow">反向控制必需</span></div>
+      <ol>
+        <li>手机<b>设置</b> → <b>无障碍</b>（或搜索"无障碍"）</li>
+        <li>找到 <b>ScreenStream</b> → 开启</li>
+        <li>确认弹窗中选择<b>"允许"</b></li>
+      </ol>
+    </div>
+
+    <div class="collapse-trigger" onclick="toggleCollapse(this)">🔄 Android 13+ 受限设置（点击展开）</div>
+    <div class="collapse-content">
+      <div class="guide">
+        <div class="guide-title">🔄 解除受限设置 <span class="tag tag-red">Android 13+ 必需</span></div>
+        <ol>
+          <li>手机<b>设置</b> → <b>应用</b> → 找到 <b>ScreenStream</b></li>
+          <li>点击右上角 <b>⋮</b> 菜单 → <b>"允许受限设置"</b></li>
+          <li>验证PIN/指纹后，回到无障碍页面重新开启</li>
+        </ol>
+        <p class="hint">Android 13及以上版本，通过APK安装的应用默认被限制使用无障碍服务。必须先解除限制才能开启。</p>
+      </div>
+    </div>
+
+    <div class="guide">
+      <div class="guide-title">🔋 电池优化 <span class="tag tag-blue">推荐</span></div>
+      <ol>
+        <li>手机<b>设置</b> → <b>电池</b> → <b>应用省电管理</b></li>
+        <li>找到 ScreenStream → 选择<b>"不限制"</b></li>
+        <li>防止系统杀后台导致投屏中断</li>
+      </ol>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(2)">← 上一步</button>
+      <button class="btn btn-primary" onclick="completeStep(3)">权限已配置，下一步 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ④ 网络连通性测试 -->
+<div class="step pending" id="step4" data-step="4">
+  <div class="step-head" onclick="toggleStep(4)">
+    <div class="step-num">4</div>
+    <div class="step-title">网络连通性测试</div>
+    <span class="step-status"></span>
+  </div>
+  <div class="step-body">
+    <p class="hint" style="margin-bottom:12px">测试当前浏览器到服务器的网络连通性：</p>
+    <div class="check-list" id="netChecks">
+      <div class="check-item" id="nc-ws"><span class="icon">🌐</span><span class="label">WebSocket连接</span><span class="result skip">待测试</span></div>
+      <div class="check-item" id="nc-stun"><span class="icon">🔀</span><span class="label">STUN穿透(Google)</span><span class="result skip">待测试</span></div>
+      <div class="check-item" id="nc-stun2"><span class="icon">🔀</span><span class="label">STUN穿透(国内)</span><span class="result skip">待测试</span></div>
+      <div class="check-item" id="nc-turn"><span class="icon">🔄</span><span class="label">TURN中继</span><span class="result skip">待测试</span></div>
+      <div class="check-item" id="nc-latency"><span class="icon">⏱</span><span class="label">延迟</span><span class="result skip">待测试</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-block" onclick="runNetworkTest()" id="netTestBtn">🚀 开始网络测试</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(3)">← 上一步</button>
+      <button class="btn btn-primary" onclick="completeStep(4)" id="step4Next" disabled>下一步 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ⑤ 投屏设置 -->
+<div class="step pending" id="step5" data-step="5">
+  <div class="step-head" onclick="toggleStep(5)">
+    <div class="step-num">5</div>
+    <div class="step-title">投屏设置建议</div>
+    <span class="step-status"></span>
+  </div>
+  <div class="step-body">
+    <p class="hint" style="margin-bottom:12px">在手机ScreenStream APP中配置以下参数获得最佳体验：</p>
+
+    <div class="guide">
+      <div class="guide-title">⚙ 推荐设置</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+        <div class="check-item"><span class="icon">🎬</span><span class="label">编码格式</span><span class="tag tag-green">H264</span></div>
+        <div class="check-item"><span class="icon">📐</span><span class="label">缩放比例</span><span class="tag tag-yellow">50%</span></div>
+        <div class="check-item"><span class="icon">📊</span><span class="label">码率</span><span class="tag tag-blue">1 Mbps</span></div>
+        <div class="check-item"><span class="icon">🖼</span><span class="label">帧率</span><span class="tag tag-blue">30fps</span></div>
+      </div>
+    </div>
+
+    <div class="collapse-trigger" onclick="toggleCollapse(this)">📶 网络带宽建议</div>
+    <div class="collapse-content">
+      <div class="guide" style="margin-top:0">
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <tr style="color:var(--dim)"><td style="padding:4px 0">场景</td><td>缩放</td><td>码率</td><td>带宽需求</td></tr>
+          <tr><td style="padding:4px 0"><b>4G/流量</b></td><td>30%</td><td>500Kbps</td><td>~0.6Mbps</td></tr>
+          <tr><td style="padding:4px 0"><b>WiFi标准</b></td><td>50%</td><td>1Mbps</td><td>~1.2Mbps</td></tr>
+          <tr><td style="padding:4px 0"><b>WiFi高清</b></td><td>75%</td><td>2Mbps</td><td>~2.5Mbps</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(4)">← 上一步</button>
+      <button class="btn btn-primary" onclick="completeStep(5)">设置完成，下一步 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ⑥ 开始使用 -->
+<div class="step pending" id="step6" data-step="6">
+  <div class="step-head" onclick="toggleStep(6)">
+    <div class="step-num">6</div>
+    <div class="step-title">开始投屏</div>
+    <span class="step-status"></span>
+  </div>
+  <div class="step-body">
+    <div class="guide">
+      <div class="guide-title">📱 手机端操作</div>
+      <ol>
+        <li>打开 ScreenStream APP</li>
+        <li>选择 <b>H264</b> 编码模式</li>
+        <li>点击 <b>"开始"</b> 按钮</li>
+        <li>记下屏幕上显示的 <b>6位房间码</b></li>
+      </ol>
+    </div>
+
+    <div class="sep"></div>
+
+    <p style="font-size:14px;font-weight:600;margin-bottom:8px">输入房间码</p>
+    <div class="input-group">
+      <input type="text" id="setupRoomInput" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="6位数字" autocomplete="off" oninput="onRoomInput(this)">
+    </div>
+
+    <div id="viewerLinks" style="display:none">
+      <p style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--accent)">✅ 观看链接已生成</p>
+
+      <div class="link-box">
+        <span class="url" id="viewerUrl"></span>
+        <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="copyViewerUrl(event)">复制</button>
+      </div>
+
+      <div class="btn-row">
+        <a class="btn btn-primary" id="openViewerBtn" href="#" target="_blank">📺 打开观看页</a>
+        <button class="btn btn-secondary" onclick="showQR(document.getElementById('viewerUrl').textContent,'viewerQR')">📷 生成QR码</button>
+      </div>
+      <div class="qr-area" id="viewerQR" style="display:none"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn btn-secondary" onclick="goStep(5)">← 上一步</button>
+      <button class="btn btn-primary" onclick="completeStep(6)" id="step6Next" disabled>下一步 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ⑦ 连接诊断 -->
+<div class="step pending" id="step7" data-step="7">
+  <div class="step-head" onclick="toggleStep(7)">
+    <div class="step-num">7</div>
+    <div class="step-title">连接诊断</div>
+    <span class="step-status"></span>
+  </div>
+  <div class="step-body">
+    <p class="hint" style="margin-bottom:12px">验证投屏连接是否正常工作：</p>
+
+    <div class="check-list" id="diagChecks">
+      <div class="check-item" id="dc-room"><span class="icon">🏠</span><span class="label">房间存在</span><span class="result skip">待测试</span></div>
+      <div class="check-item" id="dc-signal"><span class="icon">🔗</span><span class="label">信令连接</span><span class="result skip">待测试</span></div>
+      <div class="check-item" id="dc-p2p"><span class="icon">⚡</span><span class="label">P2P直连</span><span class="result skip">待测试</span></div>
+      <div class="check-item" id="dc-relay"><span class="icon">☁</span><span class="label">CloudRelay降级</span><span class="result skip">待测试</span></div>
+      <div class="check-item" id="dc-video"><span class="icon">🎬</span><span class="label">视频帧接收</span><span class="result skip">待测试</span></div>
+    </div>
+
+    <div id="diagResult" style="display:none"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary btn-block" onclick="runDiagnosis()" id="diagBtn">🔍 开始诊断</button>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(6)">← 上一步</button>
+    </div>
+  </div>
+</div>
+
+<!-- 完成 -->
+<div id="completionCard" style="display:none;text-align:center;padding:32px 16px">
+  <div style="font-size:48px;margin-bottom:12px">🎉</div>
+  <h2 style="font-size:22px;font-weight:700;margin-bottom:8px">配置完成！</h2>
+  <p style="color:var(--dim);font-size:14px;margin-bottom:20px">所有配置已就绪，现在可以随时远程查看和操控手机了</p>
+  <div class="btn-row" style="justify-content:center">
+    <a class="btn btn-primary" id="finalViewerBtn" href="#" target="_blank">📺 打开观看页</a>
+    <button class="btn btn-secondary" onclick="location.reload()">🔄 重新配置</button>
+  </div>
+</div>
+
+</div>
+
+<div class="footer">
+  ScreenStream 配置中心 · P2P直连 · 数据不经服务器<br>
+  <a href="https://aiotvr.xyz/cast/" style="color:var(--dim)">aiotvr.xyz</a>
+</div>
+
+<script>
+// ═══ 配置 ═══
+const BASE_URL = 'https://aiotvr.xyz';
+const RELAY_URL = BASE_URL + '/relay/';
+const SIGNAL_URL = 'wss://aiotvr.xyz/signal/';
+const HEALTH_URL = BASE_URL + '/api/health';
+const ICE_SERVERS = [
+  {urls:'stun:stun.l.google.com:19302'},
+  {urls:'stun:stun.miwifi.com:3478'},
+  {urls:'turn:a.relay.metered.ca:80',username:'e8dd65b92f6dfe65e84a0e73',credential:'4F5qRhMPjmG/jKXF'},
+  {urls:'turn:a.relay.metered.ca:443?transport=tcp',username:'e8dd65b92f6dfe65e84a0e73',credential:'4F5qRhMPjmG/jKXF'}
+];
+
+let currentStep = 1;
+let roomCode = '';
+
+// ═══ 步骤控制 ═══
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => {
+    s.classList.remove('active');
+    const sn = parseInt(s.dataset.step);
+    if (sn < n) s.classList.add('done');
+  });
+  const el = document.getElementById('step' + n);
+  if (el) {
+    el.classList.remove('pending','done');
+    el.classList.add('active');
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  currentStep = n;
+  updateProgress();
+}
+
+function completeStep(n) {
+  const el = document.getElementById('step' + n);
+  el.classList.remove('active','pending','error');
+  el.classList.add('done');
+  const st = el.querySelector('.step-status');
+  if (st) st.textContent = '✓ 完成';
+  if (n < 7) {
+    goStep(n + 1);
+  } else {
+    document.getElementById('completionCard').style.display = 'block';
+    if (roomCode) {
+      document.getElementById('finalViewerBtn').href = BASE_URL + '/cast/?room=' + roomCode;
+    }
+  }
+  updateProgress();
+}
+
+function toggleStep(n) {
+  const el = document.getElementById('step' + n);
+  if (el.classList.contains('done') || el.classList.contains('pending')) {
+    el.classList.toggle('expanded');
+  }
+}
+
+function updateProgress() {
+  document.querySelectorAll('.progress .dot').forEach(d => {
+    const sn = parseInt(d.dataset.step);
+    d.classList.remove('done', 'active');
+    if (sn < currentStep) d.classList.add('done');
+    else if (sn === currentStep) d.classList.add('active');
+  });
+}
+
+// ═══ 折叠面板 ═══
+function toggleCollapse(el) {
+  el.classList.toggle('open');
+}
+
+// ═══ ① 健康检查 ═══
+async function runHealthCheck() {
+  const checks = [
+    { id: 'hc-relay', test: checkRelay },
+    { id: 'hc-signal', test: checkSignal },
+    { id: 'hc-health', test: checkHealth },
+    { id: 'hc-ssl', test: checkSSL },
+    { id: 'hc-cast', test: checkCast }
+  ];
+
+  // Reset all
+  checks.forEach(c => setCheckResult(c.id, 'wait', '检测中'));
+
+  let allPass = true;
+  for (const c of checks) {
+    try {
+      const r = await c.test();
+      setCheckResult(c.id, r.ok ? 'pass' : 'fail', r.msg);
+      if (!r.ok) allPass = false;
+    } catch (e) {
+      setCheckResult(c.id, 'fail', '异常');
+      allPass = false;
+    }
+  }
+
+  const st = document.getElementById('step1Status');
+  const next = document.getElementById('step1Next');
+  if (allPass) {
+    st.textContent = '全部通过';
+    next.disabled = false;
+    document.getElementById('serverStatus').textContent = '🟢 服务正常';
+  } else {
+    st.textContent = '有异常';
+    next.disabled = false; // 仍允许继续
+    document.getElementById('serverStatus').textContent = '🟡 部分异常';
+  }
+}
+
+function setCheckResult(id, cls, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const r = el.querySelector('.result');
+  r.className = 'result ' + cls;
+  r.textContent = text;
+}
+
+async function checkRelay() {
+  try {
+    const r = await fetch(RELAY_URL + 'api/status', { signal: AbortSignal.timeout(5000) });
+    const d = await r.json();
+    return { ok: d.ok, msg: d.ok ? '在线 (' + (d.rooms || 0) + '房间)' : '异常' };
+  } catch (e) { return { ok: false, msg: '不可达' }; }
+}
+
+async function checkSignal() {
+  return new Promise(resolve => {
+    try {
+      const ws = new WebSocket(SIGNAL_URL + '?role=viewer&room=__test__');
+      const timer = setTimeout(() => { ws.close(); resolve({ ok: false, msg: '超时' }); }, 5000);
+      ws.onopen = () => { clearTimeout(timer); ws.close(); resolve({ ok: true, msg: '在线' }); };
+      ws.onerror = () => { clearTimeout(timer); resolve({ ok: false, msg: '不可达' }); };
+    } catch (e) { resolve({ ok: false, msg: '异常' }); }
+  });
+}
+
+async function checkHealth() {
+  try {
+    const r = await fetch(HEALTH_URL, { signal: AbortSignal.timeout(5000) });
+    const d = await r.json();
+    const isOk = d.status === 'healthy' || d.status === 'ok' || d.ok === true;
+    return { ok: isOk, msg: isOk ? '健康' : (d.status || '异常') };
+  } catch (e) { return { ok: false, msg: '不可达' }; }
+}
+
+async function checkSSL() {
+  try {
+    const r = await fetch(BASE_URL + '/cast/', { method: 'HEAD', signal: AbortSignal.timeout(5000) });
+    return { ok: r.ok, msg: r.ok ? '有效 (HTTPS)' : 'HTTP ' + r.status };
+  } catch (e) { return { ok: false, msg: '异常' }; }
+}
+
+async function checkCast() {
+  try {
+    const r = await fetch(BASE_URL + '/cast/', { signal: AbortSignal.timeout(5000) });
+    return { ok: r.ok, msg: r.ok ? '可访问' : 'HTTP ' + r.status };
+  } catch (e) { return { ok: false, msg: '不可达' }; }
+}
+
+// ═══ ④ 网络测试 ═══
+async function runNetworkTest() {
+  const btn = document.getElementById('netTestBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 测试中...';
+
+  // WebSocket
+  setCheckResult('nc-ws', 'wait', '测试中');
+  const wsResult = await testWS();
+  setCheckResult('nc-ws', wsResult.ok ? 'pass' : 'fail', wsResult.msg);
+
+  // STUN Google
+  setCheckResult('nc-stun', 'wait', '测试中');
+  const stunResult = await testSTUN('stun:stun.l.google.com:19302');
+  setCheckResult('nc-stun', stunResult.ok ? 'pass' : 'fail', stunResult.msg);
+
+  // STUN 国内
+  setCheckResult('nc-stun2', 'wait', '测试中');
+  const stun2Result = await testSTUN('stun:stun.miwifi.com:3478');
+  setCheckResult('nc-stun2', stun2Result.ok ? 'pass' : 'fail', stun2Result.msg);
+
+  // TURN
+  setCheckResult('nc-turn', 'wait', '测试中');
+  const turnResult = await testTURN();
+  setCheckResult('nc-turn', turnResult.ok ? 'pass' : 'fail', turnResult.msg);
+
+  // Latency
+  setCheckResult('nc-latency', 'wait', '测试中');
+  const latResult = await testLatency();
+  setCheckResult('nc-latency', latResult.ok ? 'pass' : 'fail', latResult.msg);
+
+  btn.disabled = false;
+  btn.textContent = '🚀 重新测试';
+  document.getElementById('step4Next').disabled = false;
+
+  const step = document.getElementById('step4');
+  const st = step.querySelector('.step-status');
+  const allOk = wsResult.ok && (stunResult.ok || stun2Result.ok);
+  st.textContent = allOk ? '网络正常' : '部分异常';
+}
+
+function testWS() {
+  return new Promise(resolve => {
+    try {
+      const t0 = Date.now();
+      const ws = new WebSocket(SIGNAL_URL + '?role=viewer&room=__nettest__');
+      const timer = setTimeout(() => { ws.close(); resolve({ ok: false, msg: '超时(>5s)' }); }, 5000);
+      ws.onopen = () => {
+        clearTimeout(timer);
+        const ms = Date.now() - t0;
+        ws.close();
+        resolve({ ok: true, msg: '通 (' + ms + 'ms)' });
+      };
+      ws.onerror = () => { clearTimeout(timer); resolve({ ok: false, msg: '失败' }); };
+    } catch (e) { resolve({ ok: false, msg: '异常' }); }
+  });
+}
+
+function testSTUN(url) {
+  return new Promise(resolve => {
+    try {
+      const pc = new RTCPeerConnection({ iceServers: [{ urls: url }] });
+      const timer = setTimeout(() => { pc.close(); resolve({ ok: false, msg: '超时' }); }, 5000);
+      pc.createDataChannel('test');
+      pc.createOffer().then(o => pc.setLocalDescription(o));
+      pc.onicecandidate = e => {
+        if (e.candidate && e.candidate.candidate.includes('srflx')) {
+          clearTimeout(timer);
+          const ip = e.candidate.candidate.match(/(\d+\.\d+\.\d+\.\d+)/);
+          pc.close();
+          resolve({ ok: true, msg: '通 ' + (ip ? ip[1] : '') });
+        }
+      };
+      pc.onicegatheringstatechange = () => {
+        if (pc.iceGatheringState === 'complete') {
+          clearTimeout(timer);
+          pc.close();
+          resolve({ ok: false, msg: '无srflx候选' });
+        }
+      };
+    } catch (e) { resolve({ ok: false, msg: '异常' }); }
+  });
+}
+
+function testTURN() {
+  return new Promise(resolve => {
+    try {
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: 'turn:a.relay.metered.ca:443?transport=tcp', username: 'e8dd65b92f6dfe65e84a0e73', credential: '4F5qRhMPjmG/jKXF' }],
+        iceTransportPolicy: 'relay'
+      });
+      const timer = setTimeout(() => { pc.close(); resolve({ ok: false, msg: '超时' }); }, 8000);
+      pc.createDataChannel('test');
+      pc.createOffer().then(o => pc.setLocalDescription(o));
+      pc.onicecandidate = e => {
+        if (e.candidate && e.candidate.candidate.includes('relay')) {
+          clearTimeout(timer);
+          pc.close();
+          resolve({ ok: true, msg: '可用 (TCP)' });
+        }
+      };
+      pc.onicegatheringstatechange = () => {
+        if (pc.iceGatheringState === 'complete') {
+          clearTimeout(timer);
+          pc.close();
+          resolve({ ok: false, msg: '不可用' });
+        }
+      };
+    } catch (e) { resolve({ ok: false, msg: '异常' }); }
+  });
+}
+
+async function testLatency() {
+  try {
+    const times = [];
+    for (let i = 0; i < 3; i++) {
+      const t0 = performance.now();
+      await fetch(BASE_URL + '/cast/', { method: 'HEAD', signal: AbortSignal.timeout(5000), cache: 'no-store' });
+      times.push(Math.round(performance.now() - t0));
+    }
+    const avg = Math.round(times.reduce((a, b) => a + b) / times.length);
+    return { ok: avg < 500, msg: avg + 'ms (avg ' + times.join('/') + ')' };
+  } catch (e) { return { ok: false, msg: '测试失败' }; }
+}
+
+// ═══ ⑥ 房间码 ═══
+function onRoomInput(el) {
+  el.value = el.value.replace(/\D/g, '');
+  roomCode = el.value;
+  const links = document.getElementById('viewerLinks');
+  const next = document.getElementById('step6Next');
+  if (roomCode.length >= 4) {
+    const url = BASE_URL + '/cast/?room=' + roomCode;
+    document.getElementById('viewerUrl').textContent = url;
+    document.getElementById('openViewerBtn').href = url;
+    links.style.display = 'block';
+    next.disabled = false;
+  } else {
+    links.style.display = 'none';
+    next.disabled = true;
+  }
+}
+
+function copyViewerUrl(e) {
+  const url = document.getElementById('viewerUrl').textContent;
+  const btn = (e && e.target) || document.querySelector('.link-box button');
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '已复制✓';
+    setTimeout(() => btn.textContent = '复制', 1500);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    btn.textContent = '已复制✓';
+    setTimeout(() => btn.textContent = '复制', 1500);
+  });
+}
+
+// ═══ ⑦ 连接诊断 ═══
+async function runDiagnosis() {
+  const btn = document.getElementById('diagBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 诊断中...';
+
+  const room = roomCode || document.getElementById('setupRoomInput').value.replace(/\D/g, '');
+  if (!room || room.length < 4) {
+    showDiagResult('warn', '请先在第⑥步输入房间码');
+    btn.disabled = false;
+    btn.textContent = '🔍 开始诊断';
+    return;
+  }
+
+  // Test 1: Room exists (relay)
+  setCheckResult('dc-room', 'wait', '检测中');
+  const roomResult = await checkRoom(room);
+  setCheckResult('dc-room', roomResult.ok ? 'pass' : 'fail', roomResult.msg);
+
+  // Test 2: Signal connection
+  setCheckResult('dc-signal', 'wait', '检测中');
+  const sigResult = await checkSignalRoom(room);
+  setCheckResult('dc-signal', sigResult.ok ? 'pass' : 'fail', sigResult.msg);
+
+  // Test 3: P2P possibility
+  setCheckResult('dc-p2p', 'wait', '检测中');
+  if (sigResult.ok && sigResult.hasStreamer) {
+    setCheckResult('dc-p2p', 'pass', '手机在线，可P2P');
+  } else if (sigResult.ok) {
+    setCheckResult('dc-p2p', 'fail', '手机未在线');
+  } else {
+    setCheckResult('dc-p2p', 'skip', '依赖信令');
+  }
+
+  // Test 4: Relay fallback
+  setCheckResult('dc-relay', 'wait', '检测中');
+  const relayResult = await checkRelayRoom(room);
+  setCheckResult('dc-relay', relayResult.ok ? 'pass' : 'fail', relayResult.msg);
+
+  // Test 5: Video frames
+  setCheckResult('dc-video', 'wait', '检测中');
+  if (relayResult.hasFrames) {
+    setCheckResult('dc-video', 'pass', '有帧数据');
+  } else if (sigResult.hasStreamer) {
+    setCheckResult('dc-video', 'wait', '等待P2P视频...');
+  } else {
+    setCheckResult('dc-video', 'fail', '无帧数据');
+  }
+
+  // Summary
+  const issues = [];
+  if (!roomResult.ok) issues.push('Relay房间不存在');
+  if (!sigResult.ok) issues.push('信令连接失败');
+  if (!sigResult.hasStreamer) issues.push('手机未在线投屏');
+
+  if (issues.length === 0) {
+    showDiagResult('ok', '✅ 一切正常！手机在线投屏中，可以打开观看页直接使用。');
+    completeStep(7);
+  } else if (sigResult.ok) {
+    showDiagResult('warn', '⚠ 部分问题：' + issues.join('；') + '。请确认手机已开启ScreenStream投屏。');
+  } else {
+    showDiagResult('err', '❌ 连接异常：' + issues.join('；') + '。请检查网络连接和服务器状态。');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔍 重新诊断';
+}
+
+async function checkRoom(room) {
+  try {
+    const r = await fetch(RELAY_URL + 'api/status', { signal: AbortSignal.timeout(5000) });
+    const d = await r.json();
+    return { ok: d.ok, msg: d.ok ? '服务正常' : '服务异常' };
+  } catch (e) { return { ok: false, msg: '不可达' }; }
+}
+
+function checkSignalRoom(room) {
+  return new Promise(resolve => {
+    try {
+      const ws = new WebSocket(SIGNAL_URL + '?role=viewer&room=' + room);
+      const timer = setTimeout(() => { ws.close(); resolve({ ok: false, hasStreamer: false, msg: '超时' }); }, 8000);
+      let hasStreamer = false;
+      ws.onopen = () => {};
+      ws.onmessage = ev => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg.type === 'joined') {
+            clearTimeout(timer);
+            ws.close();
+            resolve({ ok: true, hasStreamer: true, msg: '已加入房间' });
+            return;
+          }
+          if (msg.type === 'offer') {
+            hasStreamer = true;
+          }
+          if (msg.type === 'room_not_found' || msg.type === 'error') {
+            clearTimeout(timer);
+            ws.close();
+            resolve({ ok: true, hasStreamer: false, msg: msg.data?.message || '房间不存在' });
+            return;
+          }
+        } catch (e) {}
+      };
+      ws.onclose = () => {
+        clearTimeout(timer);
+        resolve({ ok: true, hasStreamer, msg: hasStreamer ? '有推流端' : '已连接' });
+      };
+      ws.onerror = () => { clearTimeout(timer); resolve({ ok: false, hasStreamer: false, msg: '连接失败' }); };
+    } catch (e) { resolve({ ok: false, hasStreamer: false, msg: '异常' }); }
+  });
+}
+
+function checkRelayRoom(room) {
+  return new Promise(resolve => {
+    try {
+      const url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + 'aiotvr.xyz/relay/?role=viewer&token=screenstream_2026&room=' + room;
+      const ws = new WebSocket(url);
+      ws.binaryType = 'arraybuffer';
+      const timer = setTimeout(() => { ws.close(); resolve({ ok: true, hasFrames: false, msg: '已连接(无帧)' }); }, 5000);
+      let frames = 0;
+      ws.onopen = () => {};
+      ws.onmessage = ev => {
+        if (ev.data instanceof ArrayBuffer) {
+          frames++;
+          if (frames >= 3) {
+            clearTimeout(timer);
+            ws.close();
+            resolve({ ok: true, hasFrames: true, msg: '有帧 (' + frames + '+)' });
+          }
+        }
+      };
+      ws.onclose = e => {
+        clearTimeout(timer);
+        if (e.code === 4004) resolve({ ok: false, hasFrames: false, msg: '房间不存在' });
+        else resolve({ ok: frames > 0, hasFrames: frames > 0, msg: frames > 0 ? frames + '帧' : '无帧' });
+      };
+      ws.onerror = () => { clearTimeout(timer); resolve({ ok: false, hasFrames: false, msg: '连接失败' }); };
+    } catch (e) { resolve({ ok: false, hasFrames: false, msg: '异常' }); }
+  });
+}
+
+function showDiagResult(level, text) {
+  const el = document.getElementById('diagResult');
+  el.style.display = 'block';
+  el.innerHTML = '<div class="diag-summary ' + level + '">' + text + '</div>';
+}
+
+// ═══ QR码生成 (轻量级实现) ═══
+function showQR(url, containerId) {
+  const container = document.getElementById(containerId);
+  if (container.style.display === 'block') { container.style.display = 'none'; return; }
+  container.style.display = 'block';
+  container.innerHTML = '<div style="background:#fff;display:inline-block;padding:16px;border-radius:12px"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url) + '" alt="QR Code" width="200" height="200" style="display:block"></div><p class="hint" style="margin-top:8px">' + url.substring(0, 50) + '...</p>';
+}
+
+// ═══ ADB Bridge (本地模式) ═══
+const ADB_BRIDGE = 'http://localhost:8085';
+
+// ═══ 直连手机 (纯公网模式) ═══
+let directPhoneConnected = false;
+let dpScreenBase = '';  // e.g. '/screen' or 'https://aiotvr.xyz/screen'
+let dpInputBase = '';   // e.g. '/input' or 'https://aiotvr.xyz/input'
+let dpDeviceData = null;
+
+function setDpStatus(cls, text) {
+  const el = document.getElementById('dpStatus');
+  el.className = 'dp-status ' + cls;
+  el.textContent = text;
+}
+
+async function connectDirectPhone() {
+  const urlInput = document.getElementById('dpBaseUrl');
+  let base = urlInput.value.trim();
+  if (!base) base = location.origin;
+  base = base.replace(/\/+$/, '');
+  document.getElementById('dpConnBtn').disabled = true;
+  setDpStatus('trying', '🔄 探测手机API...');
+
+  // 判断URL格式: 如果包含协议则用绝对路径, 否则用相对路径
+  let screenBase, inputBase;
+  if (base.startsWith('http')) {
+    screenBase = base + '/screen';
+    inputBase = base + '/input';
+  } else {
+    screenBase = '/screen';
+    inputBase = '/input';
+  }
+
+  try {
+    // 探测 /input/status (InputService)
+    const statusR = await fetch(inputBase + '/status', { signal: AbortSignal.timeout(8000) });
+    if (!statusR.ok) throw new Error('InputService不可达 (HTTP ' + statusR.status + ')');
+    const statusData = await statusR.json();
+
+    // 探测 /screen/deviceinfo 或 /input/deviceinfo
+    let devInfo = {};
+    try {
+      const devR = await fetch(inputBase + '/deviceinfo', { signal: AbortSignal.timeout(5000) });
+      if (devR.ok) devInfo = await devR.json();
+    } catch(e) {
+      try {
+        const devR2 = await fetch(screenBase + '/deviceinfo', { signal: AbortSignal.timeout(5000) });
+        if (devR2.ok) devInfo = await devR2.json();
+      } catch(e2) {}
+    }
+
+    dpScreenBase = screenBase;
+    dpInputBase = inputBase;
+    dpDeviceData = { status: statusData, info: devInfo };
+    directPhoneConnected = true;
+
+    const model = devInfo.model || devInfo.device || '未知设备';
+    const android = devInfo.androidVersion || devInfo.android || '?';
+    const wifi = devInfo.wifiSSID || devInfo.wifi || '';
+    const connected = statusData.connected !== undefined ? statusData.connected : true;
+    const inputEnabled = statusData.inputEnabled !== undefined ? statusData.inputEnabled : true;
+
+    setDpStatus('ok', '✔ 已连接: ' + model + ' · Android ' + android + (wifi ? ' · ' + wifi : ''));
+    document.getElementById('dpDeviceBox').style.display = 'block';
+    document.getElementById('dpDeviceInfo').innerHTML = '📱 <b>' + model + '</b> · Android ' + android
+      + ' · 投屏: ' + (connected ? '<span style="color:#4ade80">开</span>' : '<span style="color:#f87171">关</span>')
+      + ' · 控制: ' + (inputEnabled ? '<span style="color:#4ade80">开</span>' : '<span style="color:#f87171">关</span>')
+      + (wifi ? ' · 📶 ' + wifi : '');
+
+    // 设置屏幕尺寸(触摸板坐标映射)
+    if (devInfo.screenWidth && devInfo.screenHeight) {
+      screenW = devInfo.screenWidth; screenH = devInfo.screenHeight;
+    }
+
+    // 更新控制面板描述
+    const cpDesc = document.getElementById('cpDesc');
+    if (cpDesc) cpDesc.innerHTML = '📱 直连公网模式 · ' + model + ' <span class="conn-mode dp">Direct</span>';
+
+    // 自动填充五感卡片
+    dpAutoPopulateSense(devInfo, statusData);
+
+    showCtrlPanel();
+    urlInput.value = base;
+    dpStartHeartbeat();
+
+  } catch(e) {
+    setDpStatus('err', '✖ 连接失败: ' + e.message);
+    directPhoneConnected = false;
+  }
+  document.getElementById('dpConnBtn').disabled = false;
+}
+
+function disconnectDirectPhone() {
+  directPhoneConnected = false;
+  dpScreenBase = ''; dpInputBase = '';
+  dpDeviceData = null;
+  dpStopHeartbeat();
+  setDpStatus('', '');
+  document.getElementById('dpDeviceBox').style.display = 'none';
+  document.getElementById('mjpegBox').style.display = 'none';
+  document.getElementById('mjpegStream').src = '';
+  const cpDesc = document.getElementById('cpDesc');
+  if (cpDesc) cpDesc.textContent = '通过ADB Bridge代理，远程调用手机70+ API — 触摸/滑动/文本/导航/截图/AI';
+}
+
+function toggleMjpegStream() {
+  const box = document.getElementById('mjpegBox');
+  const img = document.getElementById('mjpegStream');
+  const btn = document.getElementById('dpStreamBtn');
+  if (box.style.display === 'none') {
+    box.style.display = 'block';
+    img.src = dpScreenBase + '/stream/mjpeg';
+    btn.textContent = '⏹ 停止画面';
+    // 点击画面 = 点击手机屏幕
+    img.onclick = function(e) {
+      if (!img.naturalWidth) return;
+      const rect = img.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width;
+      const py = (e.clientY - rect.top) / rect.height;
+      const tx = Math.round(px * screenW);
+      const ty = Math.round(py * screenH);
+      // 视觉反馈
+      const ring = document.createElement('div');
+      ring.className = 'tap-ring';
+      ring.style.left = (px * 100) + '%';
+      ring.style.top = (py * 100) + '%';
+      box.appendChild(ring);
+      setTimeout(() => ring.remove(), 600);
+      ctrlCall('GET', '/tap?x=' + tx + '&y=' + ty, 8084);
+      ctrlLogMsg('👆 画面点击 (' + tx + ', ' + ty + ')');
+    };
+  } else {
+    box.style.display = 'none';
+    img.src = '';
+    img.onclick = null;
+    btn.textContent = '📺 实时画面';
+  }
+}
+
+async function directCall(method, path, port) {
+  const base = (port === 8084) ? dpInputBase : dpScreenBase;
+  const opts = { method, signal: AbortSignal.timeout(10000) };
+  const r = await fetch(base + path, opts);
+  try { return await r.json(); } catch(e) { return { ok: r.ok, status: r.status }; }
+}
+
+function dpAutoPopulateSense(devInfo, statusData) {
+  showSenseDash();
+  setText('sv_model', devInfo.model || devInfo.device || '—');
+  setText('sv_android', 'Android ' + (devInfo.androidVersion || devInfo.android || '?'));
+  const batEl = document.getElementById('sv_battery');
+  if (devInfo.batteryLevel !== undefined) {
+    const lv = devInfo.batteryLevel;
+    batEl.textContent = lv + '%';
+    batEl.className = 'sc-value ' + (lv > 30 ? 'ok' : lv > 10 ? 'warn' : 'err');
+  }
+  const netEl = document.getElementById('sv_network');
+  netEl.textContent = '公网连通'; netEl.className = 'sc-value ok';
+  const conn = statusData.connected !== undefined ? statusData.connected : true;
+  const inp = statusData.inputEnabled !== undefined ? statusData.inputEnabled : false;
+  const ssEl = document.getElementById('sv_streaming');
+  ssEl.textContent = conn ? '运行中' : '未投屏'; ssEl.className = 'sc-value ' + (conn ? 'ok' : 'warn');
+  const inEl = document.getElementById('sv_input');
+  inEl.textContent = inp ? '可用' : '不可用'; inEl.className = 'sc-value ' + (inp ? 'ok' : 'err');
+}
+
+let dpHbTimer = null;
+function dpStartHeartbeat() {
+  dpStopHeartbeat();
+  dpHbTimer = setInterval(async () => {
+    if (!directPhoneConnected) { dpStopHeartbeat(); return; }
+    try {
+      const r = await fetch(dpInputBase + '/status', { signal: AbortSignal.timeout(5000) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      const conn = d.connected !== undefined ? d.connected : true;
+      const inp = d.inputEnabled !== undefined ? d.inputEnabled : false;
+      const ssEl = document.getElementById('sv_streaming');
+      ssEl.textContent = conn ? '运行中' : '未投屏'; ssEl.className = 'sc-value ' + (conn ? 'ok' : 'warn');
+      const inEl = document.getElementById('sv_input');
+      inEl.textContent = inp ? '可用' : '不可用'; inEl.className = 'sc-value ' + (inp ? 'ok' : 'err');
+    } catch(e) {
+      setDpStatus('err', '⚠ 连接中断: ' + e.message + ' (自动重试中...)');
+      // 尝试重连
+      try {
+        const r2 = await fetch(dpInputBase + '/status', { signal: AbortSignal.timeout(8000) });
+        if (r2.ok) setDpStatus('ok', '✔ 已恢复连接');
+        else { directPhoneConnected = false; dpStopHeartbeat(); setDpStatus('err', '✖ 手机离线'); }
+      } catch(e2) { directPhoneConnected = false; dpStopHeartbeat(); setDpStatus('err', '✖ 手机离线，请重新连接'); }
+    }
+  }, 30000);
+}
+function dpStopHeartbeat() { if (dpHbTimer) { clearInterval(dpHbTimer); dpHbTimer = null; } }
+
+async function ctrlListApps() {
+  const listEl = document.getElementById('ctrlAppList');
+  listEl.style.display = 'flex';
+  listEl.innerHTML = '<span style="color:var(--dim);font-size:12px">加载中...</span>';
+  try {
+    const r = await ctrlCall('GET', '/apps', 8084);
+    const apps = r.body || r;
+    if (Array.isArray(apps)) {
+      listEl.innerHTML = apps.map(a => {
+        const name = a.label || a.name || a.packageName || a;
+        const pkg = a.packageName || a.package || a;
+        return '<div class="app-item" onclick="document.getElementById(\'ctrlAppPkg\').value=\'' + pkg + '\'" title="' + pkg + '">' + name + '</div>';
+      }).join('');
+    } else {
+      listEl.innerHTML = '<span style="color:var(--dim);font-size:12px">' + JSON.stringify(apps).substring(0, 200) + '</span>';
+    }
+  } catch(e) { listEl.innerHTML = '<span style="color:#f87171;font-size:12px">获取失败: ' + e.message + '</span>'; }
+}
+
+async function ctrlOpenApp() {
+  const pkg = document.getElementById('ctrlAppPkg').value.trim();
+  if (!pkg) return;
+  try { await ctrlCall('GET', '/openapp?package=' + encodeURIComponent(pkg), 8084); } catch(e) {}
+}
+
+async function ctrlForeground() {
+  try {
+    const r = await ctrlCall('GET', '/foreground', 8084);
+    const d = r.body || r;
+    const pkg = d.packageName || d.package || JSON.stringify(d);
+    document.getElementById('ctrlAppPkg').value = pkg;
+    ctrlLogMsg('前台: ' + pkg);
+  } catch(e) {}
+}
+
+// ═══ 公网远程ADB (公网模式) ═══
+let publicWs = null;
+let publicConnected = false;
+let paReqCounter = 0;
+const paPending = new Map();
+
+function connectPublicADB() {
+  const code = document.getElementById('adbCodeInput').value.trim();
+  if (!code || code.length < 4) {
+    setPaStatus('error', '请输入连接码（至少4位）');
+    return;
+  }
+  if (publicWs) { publicWs.close(); publicWs = null; }
+
+  setPaStatus('connecting', '✴ 正在连接...');
+  document.getElementById('adbConnectBtn').disabled = true;
+  document.getElementById('adbConnectBtn').textContent = '连接中...';
+
+  const url = SIGNAL_URL + '?role=adb-controller&room=' + code;
+  publicWs = new WebSocket(url);
+
+  publicWs.onmessage = (ev) => {
+    try { handlePaMessage(JSON.parse(ev.data)); } catch (e) {}
+  };
+
+  publicWs.onclose = (ev) => {
+    publicConnected = false;
+    document.getElementById('adbConnectBtn').disabled = false;
+    document.getElementById('adbConnectBtn').textContent = '🔗 连接';
+    document.getElementById('paDeviceInfo').style.display = 'none';
+    if (ev.code === 4004) {
+      setPaStatus('error', 'ADB Bridge未找到，请检查连接码是否正确，或确认电脑端已运行 adb-bridge.py --public');
+    } else if (ev.code === 4001) {
+      setPaStatus('error', '连接码已被占用');
+    } else if (ev.code !== 1000 && ev.code !== 1005) {
+      setPaStatus('error', '连接断开 (code=' + ev.code + ')');
+    }
+  };
+
+  publicWs.onerror = () => { setPaStatus('error', '连接失败'); };
+}
+
+function disconnectPublicADB() {
+  if (publicWs) { publicWs.close(1000); publicWs = null; }
+  publicConnected = false;
+  setPaStatus('', '');
+  document.getElementById('paDeviceInfo').style.display = 'none';
+  document.getElementById('adbConnectBtn').disabled = false;
+  document.getElementById('adbConnectBtn').textContent = '🔗 连接';
+  document.getElementById('paLog').style.display = 'none';
+}
+
+function handlePaMessage(msg) {
+  const t = msg.type;
+  if (t === 'adb_connected') {
+    publicConnected = true;
+    setPaStatus('connected', '✔ 已连接到 ADB Bridge');
+    document.getElementById('adbConnectBtn').textContent = '✅ 已连接';
+    const info = msg.data?.deviceInfo;
+    if (info && info.model) showPaDevice(info);
+    showCtrlPanel();
+    return;
+  }
+  if (t === 'device_info') {
+    if (msg.data) showPaDevice(msg.data);
+    return;
+  }
+  if (t === 'bridge_disconnected') {
+    publicConnected = false;
+    setPaStatus('error', 'ADB Bridge已断开，请检查电脑端');
+    document.getElementById('paDeviceInfo').style.display = 'none';
+    document.getElementById('paAutoBtn').disabled = true;
+    return;
+  }
+  if (t === 'error') { setPaStatus('error', msg.data?.message || '未知错误'); return; }
+  if (t === 'replaced') { setPaStatus('error', '被另一个控制端替代'); return; }
+
+  // Resolve pending request
+  if (msg.id && paPending.has(msg.id)) {
+    paPending.get(msg.id)(msg);
+    paPending.delete(msg.id);
+  }
+}
+
+function showPaDevice(info) {
+  const devCount = info.devices || 0;
+  document.getElementById('paDevice').innerHTML = '📱 <b>' + (info.model||'unknown') + '</b> · Android ' + (info.android||'?') + ' · ' + devCount + '台设备';
+  document.getElementById('paDeviceInfo').style.display = 'block';
+  const btn = document.getElementById('paAutoBtn');
+  if (devCount > 0) {
+    btn.disabled = false;
+    btn.textContent = '⚡ 一键自动配置（权限+启动+端口转发）';
+  } else {
+    btn.disabled = true;
+    btn.textContent = '⚠ 未检测到手机，请插USB并授权调试';
+  }
+}
+
+function setPaStatus(cls, text) {
+  const el = document.getElementById('paStatus');
+  el.className = 'pa-status ' + cls;
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+}
+
+function sendPaCommand(cmd) {
+  return new Promise((resolve, reject) => {
+    if (!publicWs || publicWs.readyState !== WebSocket.OPEN) { reject(new Error('未连接')); return; }
+    const id = 'pa-' + (++paReqCounter);
+    cmd.id = id;
+    paPending.set(id, resolve);
+    publicWs.send(JSON.stringify(cmd));
+    setTimeout(() => { if (paPending.has(id)) { paPending.delete(id); reject(new Error('超时(30s)')); } }, 30000);
+  });
+}
+
+function paLog(text, cls) {
+  const log = document.getElementById('paLog');
+  log.style.display = 'block';
+  const div = document.createElement('div');
+  div.className = cls || 'log-info';
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function runPublicAutoConfig() {
+  const btn = document.getElementById('paAutoBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 配置中...';
+  const log = document.getElementById('paLog');
+  log.innerHTML = '';
+  log.style.display = 'block';
+
+  paLog('▶ 开始公网远程自动配置...', 'log-info');
+
+  try {
+    const result = await sendPaCommand({ type: 'auto_config' });
+    if (result.type === 'auto_config_result') {
+      const steps = result.results || [];
+      if (steps.length === 0 && !result.ok) {
+        paLog('⚠ ' + (result.error || '无法执行配置，请检查手机是否通过USB连接'), 'log-fail');
+        paLog('💡 请确认: 手机已插USB + 已开启USB调试 + 已授权此电脑调试', 'log-info');
+      }
+      for (const r of steps) {
+        paLog((r.ok ? '✓' : '⚠') + ' ' + r.step + ': ' + (r.output || ''), r.ok ? 'log-ok' : 'log-fail');
+      }
+      if (result.ok) {
+        paLog('', 'log-info');
+        paLog('══ 自动配置完成 ══', 'log-ok');
+        paLog('已完成: 权限配置 + 应用启动 + 端口转发', 'log-ok');
+        completeStep(2);
+        completeStep(3);
+        btn.textContent = '✅ 配置完成';
+        showCtrlPanel();
+      } else {
+        paLog('', 'log-info');
+        paLog('⚠ 配置未完全成功: ' + (result.error || ''), 'log-fail');
+        if (result.error === '应用未安装') paLog('请先在手机上安装 ScreenStream APK', 'log-info');
+        btn.disabled = false;
+        btn.textContent = '⚡ 重试自动配置';
+      }
+    } else {
+      paLog('✗ 未知响应: ' + JSON.stringify(result), 'log-fail');
+      btn.disabled = false;
+      btn.textContent = '⚡ 重试自动配置';
+    }
+  } catch (e) {
+    paLog('✗ 错误: ' + e.message, 'log-fail');
+    btn.disabled = false;
+    btn.textContent = '⚡ 重试自动配置';
+  }
+}
+let adbConnected = false;
+
+async function detectADBBridge() {
+  try {
+    const r = await fetch(ADB_BRIDGE + '/status', { signal: AbortSignal.timeout(2000) });
+    const d = await r.json();
+    if (!d.ok) return;
+    adbConnected = true;
+    const panel = document.getElementById('adbPanel');
+    panel.classList.add('show');
+    document.getElementById('adbHint').classList.remove('show');
+    if (d.has_device) {
+      // 获取设备详情
+      const [model, ver] = await Promise.all([
+        fetch(ADB_BRIDGE + '/preset/get_device_info').then(r=>r.json()).catch(()=>({output:'未知'})),
+        fetch(ADB_BRIDGE + '/preset/get_android_version').then(r=>r.json()).catch(()=>({output:'?'}))
+      ]);
+      document.getElementById('adbDeviceInfo').innerHTML = '📱 <b>' + (model.output||'未知') + '</b> · Android ' + (ver.output||'?') + ' · ' + d.device_count + '台设备';
+      document.getElementById('adbAutoBtn').disabled = false;
+      showCtrlPanel();
+    } else {
+      document.getElementById('adbDeviceInfo').innerHTML = '⚠ ADB Bridge在线，但未检测到手机。请用USB线连接手机并开启USB调试。';
+      document.getElementById('adbDeviceInfo').style.borderColor = 'rgba(245,158,11,.3)';
+      document.getElementById('adbDeviceInfo').style.background = 'rgba(245,158,11,.08)';
+    }
+  } catch (e) {
+    // Bridge不可用，显示提示
+    document.getElementById('adbHint').classList.add('show');
+  }
+}
+
+function adbLog(text, cls) {
+  const log = document.getElementById('adbLog');
+  log.style.display = 'block';
+  const div = document.createElement('div');
+  div.className = cls || 'log-info';
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function runAutoConfig() {
+  const btn = document.getElementById('adbAutoBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 配置中...';
+  const log = document.getElementById('adbLog');
+  log.innerHTML = '';
+  log.style.display = 'block';
+
+  try {
+    adbLog('▶ 开始自动配置...', 'log-info');
+
+    // Step 1: 检查设备
+    adbLog('① 检查设备连接...', 'log-wait');
+    const devR = await fetch(ADB_BRIDGE + '/devices').then(r=>r.json());
+    if (!devR.devices || devR.devices.length === 0) {
+      adbLog('✗ 未检测到设备，请连接USB并开启调试', 'log-fail');
+      btn.disabled = false; btn.textContent = '⚡ 重试自动配置'; return;
+    }
+    const dev = devR.devices[0];
+    adbLog('✓ 设备: ' + dev.id + ' (' + (dev.model||'unknown') + ')', 'log-ok');
+
+    // Step 2: 检查是否已安装
+    adbLog('② 检查ScreenStream安装状态...', 'log-wait');
+    const pkgR = await fetch(ADB_BRIDGE + '/preset/check_package').then(r=>r.json());
+    const installed = pkgR.output && pkgR.output.includes('info.nicedoc.screenstream');
+    if (installed) {
+      adbLog('✓ ScreenStream已安装', 'log-ok');
+    } else {
+      adbLog('⚠ ScreenStream未安装，请手动安装APK后重试', 'log-fail');
+      adbLog('  下载: https://aiotvr.xyz/relay/ScreenStream.apk', 'log-info');
+      btn.disabled = false; btn.textContent = '⚡ 重试自动配置'; return;
+    }
+
+    // Step 3: 授予权限
+    adbLog('③ 配置权限...', 'log-wait');
+    const perms = [
+      { name: '悬浮窗', preset: 'grant_overlay' },
+      { name: '电池优化白名单', preset: 'disable_battery_optimization' },
+    ];
+    for (const p of perms) {
+      const r = await fetch(ADB_BRIDGE + '/preset/' + p.preset).then(r=>r.json());
+      adbLog((r.ok?'✓':'⚠') + ' ' + p.name + ': ' + (r.output||'done'), r.ok?'log-ok':'log-fail');
+    }
+
+    // Step 4: 检查无障碍服务
+    adbLog('④ 检查无障碍服务...', 'log-wait');
+    const accR = await fetch(ADB_BRIDGE + '/preset/check_accessibility').then(r=>r.json());
+    if (accR.output && accR.output.includes('screenstream')) {
+      adbLog('✓ 无障碍服务已开启', 'log-ok');
+    } else {
+      adbLog('⚠ 无障碍服务未开启（需手动在设置中开启）', 'log-fail');
+      adbLog('  路径: 设置 → 无障碍 → ScreenStream → 开启', 'log-info');
+    }
+
+    // Step 5: 启动应用
+    adbLog('⑤ 启动ScreenStream...', 'log-wait');
+    const startR = await fetch(ADB_BRIDGE + '/preset/start_app').then(r=>r.json());
+    adbLog((startR.ok?'✓':'✗') + ' 应用启动: ' + (startR.output||''), startR.ok?'log-ok':'log-fail');
+
+    // Step 6: 端口转发
+    adbLog('⑥ 设置端口转发...', 'log-wait');
+    const fwdPorts = [8080, 8081, 8084];
+    for (const port of fwdPorts) {
+      const r = await fetch(ADB_BRIDGE + '/adb', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({args: ['forward', 'tcp:'+port, 'tcp:'+port]})
+      }).then(r=>r.json());
+      adbLog((r.ok?'✓':'⚠') + ' 端口 ' + port, r.ok?'log-ok':'log-fail');
+    }
+
+    // 完成
+    adbLog('', 'log-info');
+    adbLog('══ 自动配置完成 ══', 'log-ok');
+    adbLog('已完成: 权限配置 + 应用启动 + 端口转发', 'log-ok');
+    adbLog('如需反向控制，请手动开启无障碍服务', 'log-info');
+    showCtrlPanel();
+
+    // 自动完成步骤2、3
+    completeStep(2);
+    completeStep(3);
+
+    btn.textContent = '✅ 配置完成';
+  } catch (e) {
+    adbLog('✗ 错误: ' + e.message, 'log-fail');
+    btn.disabled = false;
+    btn.textContent = '⚡ 重试自动配置';
+  }
+}
+
+// ═══ 远程控制面板 ═══
+let screenW = 1080, screenH = 2400;
+
+function showCtrlPanel() {
+  document.getElementById('ctrlPanel').classList.add('show');
+  showSenseDash();
+  initTouchPad();
+}
+
+async function ctrlCall(method, path, port, body) {
+  ctrlLogMsg('→ ' + method + ' :' + port + path);
+  try {
+    let result;
+    if (directPhoneConnected) {
+      const base = (port === 8084) ? dpInputBase : dpScreenBase;
+      const opts = { method, signal: AbortSignal.timeout(10000) };
+      if (body) { opts.headers = {'Content-Type':'application/json'}; opts.body = JSON.stringify(body); }
+      const r = await fetch(base + path, opts);
+      const text = await r.text();
+      try { result = { ok: r.ok, status: r.status, body: JSON.parse(text) }; }
+      catch(e) { result = { ok: r.ok, status: r.status, body: text }; }
+    } else if (publicConnected) {
+      result = await sendPaCommand({ type: 'http_proxy', method, path, port, body });
+    } else if (adbConnected) {
+      const opts = { method, signal: AbortSignal.timeout(10000) };
+      if (body) { opts.headers = {'Content-Type':'application/json'}; opts.body = JSON.stringify(body); }
+      const r = await fetch('http://127.0.0.1:' + port + path, opts);
+      const text = await r.text();
+      try { result = { ok: r.ok, status: r.status, body: JSON.parse(text) }; }
+      catch(e) { result = { ok: r.ok, status: r.status, body: text }; }
+    } else {
+      throw new Error('未连接（请先连接手机）');
+    }
+    const preview = JSON.stringify(result.body||result.output||'').substring(0,200);
+    ctrlLogMsg('← ' + (result.ok?'✓':'✗') + ' ' + preview);
+    return result;
+  } catch(e) {
+    ctrlLogMsg('✗ ' + e.message, true);
+    throw e;
+  }
+}
+
+function ctrlLogMsg(text) {
+  const log = document.getElementById('ctrlLog');
+  if (!log) return;
+  const t = new Date().toLocaleTimeString();
+  log.textContent += t + ' ' + text + '\n';
+  log.scrollTop = log.scrollHeight;
+}
+
+async function ctrlRefreshStatus() {
+  const el = document.getElementById('ctrlDevStatus');
+  el.textContent = '刷新中...';
+  try {
+    let info = '';
+    if (directPhoneConnected) {
+      // 直连模式: 只有 /input(8084) 和 /screen(8081) 可用, 网关(8080)未代理
+      const [ss, dev] = await Promise.all([
+        fetch(dpInputBase + '/status', { signal: AbortSignal.timeout(5000) }).then(r => r.json()).catch(() => null),
+        fetch(dpInputBase + '/deviceinfo', { signal: AbortSignal.timeout(5000) }).then(r => r.json()).catch(() => null)
+      ]);
+      if (ss) {
+        info += '🎮 InputService:\n';
+        for (const [k,v] of Object.entries(ss)) info += '  ' + k + ': ' + v + '\n';
+        if (ss.screenWidth) { screenW = ss.screenWidth; screenH = ss.screenHeight; }
+      } else { info += '⚠ InputService不可达\n'; }
+      if (dev) {
+        info += '\n📱 设备信息:\n';
+        for (const [k,v] of Object.entries(dev)) info += '  ' + k + ': ' + v + '\n';
+      }
+    } else {
+      const [ss, dev] = await Promise.all([
+        ctrlCall('GET', '/status', 8084).catch(()=>null),
+        ctrlCall('GET', '/api/status', 8080).catch(()=>null)
+      ]);
+      if (ss && ss.body) {
+        const b = typeof ss.body === 'string' ? JSON.parse(ss.body) : ss.body;
+        info += '🎮 InputService:\n';
+        for (const [k,v] of Object.entries(b)) info += '  ' + k + ': ' + v + '\n';
+        if (b.screenWidth) { screenW = b.screenWidth; screenH = b.screenHeight; }
+      } else { info += '⚠ InputService不可达 (8084)\n'; }
+      if (dev && dev.body) {
+        const b = typeof dev.body === 'string' ? JSON.parse(dev.body) : dev.body;
+        info += '\n📺 ScreenStream:\n';
+        for (const [k,v] of Object.entries(b)) info += '  ' + k + ': ' + v + '\n';
+      } else { info += '\n⚠ ScreenStream不可达 (8080)\n'; }
+    }
+    el.textContent = info;
+  } catch(e) { el.textContent = '✗ 错误: ' + e.message; }
+}
+
+async function ctrlNav(action) {
+  try { await ctrlCall('GET', '/' + action, 8084); } catch(e) {}
+}
+
+async function ctrlTapXY() {
+  const x = parseInt(document.getElementById('ctrlCoordX').value) || 0;
+  const y = parseInt(document.getElementById('ctrlCoordY').value) || 0;
+  try { await ctrlCall('GET', '/tap?x=' + x + '&y=' + y, 8084); } catch(e) {}
+}
+
+async function ctrlLongPress() {
+  const x = parseInt(document.getElementById('ctrlCoordX').value) || 0;
+  const y = parseInt(document.getElementById('ctrlCoordY').value) || 0;
+  try { await ctrlCall('GET', '/longpress?x=' + x + '&y=' + y, 8084); } catch(e) {}
+}
+
+async function ctrlSendText() {
+  const input = document.getElementById('ctrlTextInput');
+  const text = input.value;
+  if (!text) return;
+  try { await ctrlCall('POST', '/text', 8084, { text }); input.value = ''; } catch(e) {}
+}
+
+async function ctrlVolume(dir) {
+  const keyMap = { up: '/key?code=24', down: '/key?code=25', mute: '/key?code=164' };
+  try { await ctrlCall('GET', keyMap[dir], 8084); } catch(e) {}
+}
+
+async function ctrlApiCall() {
+  const method = document.getElementById('ctrlApiMethod').value;
+  const port = parseInt(document.getElementById('ctrlApiPort').value) || 8084;
+  const path = document.getElementById('ctrlApiPath').value || '/status';
+  const resultEl = document.getElementById('ctrlApiResult');
+  resultEl.style.display = 'block';
+  resultEl.textContent = '调用中...';
+  try {
+    const r = await ctrlCall(method, path, port);
+    resultEl.textContent = JSON.stringify(r.body || r, null, 2);
+  } catch(e) { resultEl.textContent = '错误: ' + e.message; }
+}
+
+function initTouchPad() {
+  const pad = document.getElementById('ctrlTouchPad');
+  if (!pad || pad.dataset.init) return;
+  pad.dataset.init = '1';
+  let startX, startY, startTime;
+
+  function getCoords(e) {
+    const rect = pad.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: Math.round((cx - rect.left) / rect.width * screenW), y: Math.round((cy - rect.top) / rect.height * screenH) };
+  }
+
+  function onStart(e) {
+    e.preventDefault();
+    const c = getCoords(e);
+    startX = c.x; startY = c.y; startTime = Date.now();
+    pad.querySelector('.tp-hint').textContent = '(' + c.x + ', ' + c.y + ')';
+  }
+
+  function onEnd(e) {
+    e.preventDefault();
+    const rect = pad.getBoundingClientRect();
+    const cx = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+    const cy = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+    const endX = Math.round((cx - rect.left) / rect.width * screenW);
+    const endY = Math.round((cy - rect.top) / rect.height * screenH);
+    const dist = Math.sqrt((endX-startX)**2 + (endY-startY)**2);
+    const dur = Date.now() - startTime;
+
+    if (dist < 20) {
+      if (dur > 500) {
+        ctrlCall('GET', '/longpress?x='+startX+'&y='+startY, 8084);
+        pad.querySelector('.tp-hint').textContent = '长按 ('+startX+', '+startY+')';
+      } else {
+        ctrlCall('GET', '/tap?x='+startX+'&y='+startY, 8084);
+        pad.querySelector('.tp-hint').textContent = '点击 ('+startX+', '+startY+')';
+      }
+    } else {
+      ctrlCall('GET', '/swipe?x1='+startX+'&y1='+startY+'&x2='+endX+'&y2='+endY+'&duration='+Math.max(dur,100), 8084);
+      pad.querySelector('.tp-hint').textContent = '滑动 ('+startX+','+startY+')→('+endX+','+endY+')';
+    }
+    document.getElementById('ctrlCoordX').value = endX;
+    document.getElementById('ctrlCoordY').value = endY;
+  }
+
+  pad.addEventListener('mousedown', onStart);
+  pad.addEventListener('mouseup', onEnd);
+  pad.addEventListener('touchstart', onStart, {passive:false});
+  pad.addEventListener('touchend', onEnd, {passive:false});
+}
+
+// ═══ 五感仪表盘 — 道·手机中枢 ═══
+function showSenseDash() {
+  document.getElementById('senseDash').classList.add('show');
+}
+
+async function runDirectPhoneDiag() {
+  const results = [];
+  const issues = [];
+  const fixes = [];
+  let score = 10;
+
+  async function probe(name, url, extract) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (!r.ok) { results.push({name, ok: false, output: 'HTTP ' + r.status}); score -= 0.5; return; }
+      const data = await r.json();
+      extract(data);
+    } catch(e) {
+      results.push({name, ok: false, output: e.message});
+      score -= 0.5;
+    }
+  }
+
+  // 1. /deviceinfo — 设备基础信息
+  await probe('deviceinfo', dpInputBase + '/deviceinfo', (d) => {
+    results.push({name: 'model', ok: true, output: d.model || d.device || '?'});
+    results.push({name: 'manufacturer', ok: true, output: d.manufacturer || d.brand || '?'});
+    results.push({name: 'android_version', ok: true, output: d.androidVersion || d.android || '?'});
+    results.push({name: 'sdk_version', ok: true, output: d.sdkVersion || d.sdk || '?'});
+    results.push({name: 'serial', ok: true, output: d.serial || '—'});
+    if (d.wifiSSID || d.wifi) results.push({name: 'wifi_ssid', ok: true, output: d.wifiSSID || d.wifi});
+    if (d.ipAddress || d.ip) results.push({name: 'ip_address', ok: true, output: d.ipAddress || d.ip});
+    if (d.batteryLevel !== undefined) {
+      const lv = d.batteryLevel;
+      results.push({name: 'battery', ok: lv > 10, output: 'level: ' + lv + (d.batteryCharging ? ' (charging)' : '')});
+      if (lv <= 15) { issues.push('电量低 (' + lv + '%)'); fixes.push('请给手机充电'); score -= 1; }
+    }
+    if (d.screenWidth && d.screenHeight) {
+      results.push({name: 'screen_size', ok: true, output: d.screenWidth + 'x' + d.screenHeight});
+    }
+    if (d.uptime) results.push({name: 'uptime', ok: true, output: d.uptime});
+  });
+
+  // 2. /status — InputService状态
+  await probe('status', dpInputBase + '/status', (d) => {
+    const conn = d.connected !== undefined ? d.connected : true;
+    const inp = d.inputEnabled !== undefined ? d.inputEnabled : false;
+    results.push({name: 'ss_running', ok: true, output: 'ScreenStream运行中'});
+    results.push({name: 'mjpeg_api', ok: conn, output: conn ? '投屏已连接' : '投屏未连接'});
+    results.push({name: 'input_api', ok: inp, output: inp ? '控制已启用' : '控制未启用'});
+    results.push({name: 'connectivity', ok: true, output: '网络可达(公网)'});
+    if (!conn) { issues.push('投屏未启动'); fixes.push('在手机上启动ScreenStream投屏'); score -= 1; }
+    if (!inp) { issues.push('反向控制未启用'); fixes.push('在ScreenStream设置中开启反向控制'); score -= 1; }
+  });
+
+  // 3. /a11y/status — 无障碍服务
+  await probe('a11y', dpInputBase + '/a11y/status', (d) => {
+    const enabled = d.enabled || d.running || d.active;
+    results.push({name: 'accessibility', ok: !!enabled, output: enabled ? '无障碍已启用' : '无障碍未启用'});
+    if (!enabled) { issues.push('无障碍服务未开启'); fixes.push('设置→无障碍→ScreenStream→开启'); score -= 1.5; }
+  });
+
+  // 4. /files/storage — 存储信息
+  await probe('storage', dpInputBase + '/files/storage', (d) => {
+    const total = d.totalSpace || d.total || 0;
+    const free = d.freeSpace || d.free || d.available || 0;
+    const totalGB = (total / 1073741824).toFixed(1);
+    const freeGB = (free / 1073741824).toFixed(1);
+    const pct = total > 0 ? Math.round((1 - free / total) * 100) : 0;
+    results.push({name: 'storage', ok: pct < 90, output: freeGB + 'GB / ' + totalGB + 'GB (' + pct + '%已用)'});
+    if (pct >= 90) { issues.push('存储空间不足 (' + pct + '%已用)'); fixes.push('清理手机存储空间'); score -= 1; }
+  });
+
+  // 5. /foreground — 前台应用
+  await probe('foreground', dpInputBase + '/foreground', (d) => {
+    results.push({name: 'foreground_app', ok: true, output: d.packageName || d.package || JSON.stringify(d).substring(0, 50)});
+  });
+
+  score = Math.max(0, Math.min(10, score));
+  const level = score >= 8 ? 'ok' : score >= 5 ? 'warn' : 'err';
+  const total = results.length;
+  const passed = results.filter(r => r.ok).length;
+  const summary = passed + '/' + total + ' 项通过 · 直连公网模式';
+
+  return { results, analysis: { score, level, summary, total, passed, issues, fixes } };
+}
+
+async function runPhoneDiag() {
+  showSenseDash();
+  const btn = document.getElementById('diagBtn');
+  btn.disabled = true; btn.textContent = '🔄 诊断中...';
+  document.getElementById('healthSummary').textContent = '正在运行20+项诊断检查...';
+  document.getElementById('healthScore').textContent = '...';
+  document.getElementById('healthScore').className = 'health-score';
+  document.getElementById('healthFill').style.width = '0%';
+  document.getElementById('diagAnalysis').style.display = 'none';
+
+  try {
+    let result;
+    if (directPhoneConnected) {
+      result = await runDirectPhoneDiag();
+    } else if (publicConnected) {
+      result = await sendPaCommand({ type: 'phone_diag' });
+    } else if (adbConnected) {
+      const r = await fetch('http://127.0.0.1:8085/phone-diag', { signal: AbortSignal.timeout(60000) });
+      result = await r.json();
+    } else {
+      throw new Error('未连接（请先连接手机）');
+    }
+
+    const data = result.body || result;
+    const results = data.results || [];
+    const analysis = data.analysis || {};
+
+    // 更新五感卡片
+    const get = (name) => { const r = results.find(x => x.name === name); return r ? r.output : '—'; };
+    const ok = (name) => { const r = results.find(x => x.name === name); return r && r.ok; };
+
+    setText('sv_model', get('model') || '—');
+    setText('sv_android', 'Android ' + (get('android_version') || '?'));
+
+    // 电池解析
+    const batOut = get('battery');
+    const batLevel = batOut.match(/level:\s*(\d+)/i);
+    const batEl = document.getElementById('sv_battery');
+    if (batLevel) {
+      const lv = parseInt(batLevel[1]);
+      batEl.textContent = lv + '%';
+      batEl.className = 'sc-value ' + (lv > 30 ? 'ok' : lv > 10 ? 'warn' : 'err');
+    } else { batEl.textContent = batOut.substring(0, 20) || '—'; }
+
+    // 存储
+    const storOut = get('storage');
+    const storEl = document.getElementById('sv_storage');
+    storEl.textContent = storOut.substring(0, 30) || '—';
+
+    // 网络
+    const netEl = document.getElementById('sv_network');
+    netEl.textContent = ok('connectivity') ? '已连接' : '离线';
+    netEl.className = 'sc-value ' + (ok('connectivity') ? 'ok' : 'err');
+
+    // ScreenStream
+    const ssEl = document.getElementById('sv_streaming');
+    ssEl.textContent = ok('mjpeg_api') ? '运行中' : (ok('ss_running') ? '未投屏' : '未启动');
+    ssEl.className = 'sc-value ' + (ok('mjpeg_api') ? 'ok' : ok('ss_running') ? 'warn' : 'err');
+
+    // Input
+    const inEl = document.getElementById('sv_input');
+    inEl.textContent = ok('input_api') ? '可用' : '不可用';
+    inEl.className = 'sc-value ' + (ok('input_api') ? 'ok' : 'err');
+
+    // 无障碍
+    const a11yEl = document.getElementById('sv_a11y');
+    a11yEl.textContent = ok('accessibility') ? '已启用' : '未启用';
+    a11yEl.className = 'sc-value ' + (ok('accessibility') ? 'ok' : 'err');
+
+    // 屏幕尺寸更新触摸板
+    const sizeOut = get('screen_size');
+    const sizeMatch = sizeOut.match(/(\d+)x(\d+)/);
+    if (sizeMatch) { screenW = parseInt(sizeMatch[1]); screenH = parseInt(sizeMatch[2]); }
+
+    // 健康评分
+    const score = analysis.score || 0;
+    const level = analysis.level || 'ok';
+    const scoreEl = document.getElementById('healthScore');
+    scoreEl.textContent = score.toFixed(1);
+    scoreEl.className = 'health-score ' + level;
+    const fill = document.getElementById('healthFill');
+    fill.style.width = (score * 10) + '%';
+    fill.className = 'health-fill ' + level;
+    document.getElementById('healthSummary').textContent = analysis.summary || '';
+
+    // 分析结果
+    const analysisDiv = document.getElementById('diagAnalysis');
+    if (analysis.issues && analysis.issues.length > 0) {
+      let html = '<div class="diag-issues"><b>发现 ' + analysis.issues.length + ' 个问题:</b><ul style="margin:4px 0 0;padding-left:16px;font-size:12px">';
+      analysis.issues.forEach(i => html += '<li>' + i + '</li>');
+      html += '</ul>';
+      if (analysis.fixes && analysis.fixes.length > 0) {
+        html += '<div style="margin-top:8px"><b>建议修复:</b><ul class="diag-fixes">';
+        analysis.fixes.forEach(f => html += '<li>' + f + '</li>');
+        html += '</ul></div>';
+      }
+      html += '</div>';
+      analysisDiv.innerHTML = html;
+    } else {
+      analysisDiv.innerHTML = '<div class="diag-issues ok"><b>一切正常</b> — 所有 ' + (analysis.total || 0) + ' 项检查通过</div>';
+    }
+    analysisDiv.style.display = 'block';
+
+    // 诊断详情列表
+    const detailDiv = document.getElementById('diagResults');
+    let rows = '';
+    results.forEach(r => {
+      const cls = r.ok ? 'pass' : 'fail';
+      const icon = r.ok ? '✓' : '✗';
+      const detail = (r.output || '').substring(0, 60).replace(/</g, '&lt;');
+      rows += '<div class="diag-row"><span class="dr-name">' + r.name + '</span><span class="dr-status ' + cls + '">' + icon + '</span><span class="dr-detail" title="' + detail + '">' + detail + '</span></div>';
+    });
+    detailDiv.innerHTML = rows || '<div style="color:var(--dim);text-align:center;padding:20px">无结果</div>';
+
+  } catch(e) {
+    document.getElementById('healthSummary').textContent = '诊断失败: ' + e.message;
+    document.getElementById('healthScore').textContent = '!';
+    document.getElementById('healthScore').className = 'health-score err';
+  }
+  btn.disabled = false; btn.textContent = '🔍 全面诊断 (20+项检查)';
+}
+
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+async function takeScreenshot() {
+  showSenseDash();
+  const box = document.getElementById('screenshotBox');
+  const img = document.getElementById('screenshotImg');
+  const info = document.getElementById('screenshotInfo');
+  box.style.display = 'block';
+  info.textContent = '截屏中...';
+  img.style.opacity = '0.3';
+
+  try {
+    let result;
+    if (directPhoneConnected) {
+      // 直连模式: 先尝试POST /screenshot获取截图, 然后用MJPEG帧作为预览
+      try {
+        const r = await fetch(dpInputBase + '/screenshot', { method: 'POST', signal: AbortSignal.timeout(10000) });
+        if (r.ok) {
+          const ct = r.headers.get('content-type') || '';
+          if (ct.includes('image')) {
+            const blob = await r.blob();
+            img.src = URL.createObjectURL(blob);
+            img.style.opacity = '1';
+            info.textContent = new Date().toLocaleTimeString() + ' · ' + Math.round(blob.size / 1024) + 'KB · 直连截屏';
+            return;
+          }
+          const data = await r.clone().json().catch(() => null);
+          if (data && data.image) {
+            img.src = 'data:image/' + (data.format || 'png') + ';base64,' + data.image;
+            img.style.opacity = '1';
+            info.textContent = new Date().toLocaleTimeString() + ' · ' + Math.round((data.size || data.image.length * 0.75) / 1024) + 'KB';
+            return;
+          }
+        }
+      } catch(e) { /* fallback to MJPEG frame */ }
+      // 降级: 从MJPEG流截取当前帧
+      const mjpegImg = document.getElementById('mjpegStream');
+      if (mjpegImg && mjpegImg.src && mjpegImg.naturalWidth > 0) {
+        const canvas = document.createElement('canvas');
+        canvas.width = mjpegImg.naturalWidth; canvas.height = mjpegImg.naturalHeight;
+        canvas.getContext('2d').drawImage(mjpegImg, 0, 0);
+        img.src = canvas.toDataURL('image/jpeg', 0.9);
+        img.style.opacity = '1';
+        info.textContent = new Date().toLocaleTimeString() + ' · MJPEG帧截取 · ' + canvas.width + 'x' + canvas.height;
+      } else {
+        info.textContent = '请先开启实时画面后再截屏';
+        img.style.opacity = '0';
+      }
+      return;
+    } else if (publicConnected) {
+      result = await sendPaCommand({ type: 'screenshot' });
+    } else if (adbConnected) {
+      const r = await fetch('http://127.0.0.1:8085/screenshot', { signal: AbortSignal.timeout(30000) });
+      result = await r.json();
+    } else {
+      throw new Error('未连接（请先连接手机）');
+    }
+
+    const data = result.body || result;
+    if (data.ok && data.image) {
+      const fmt = data.format || 'png';
+      img.src = 'data:image/' + fmt + ';base64,' + data.image;
+      img.style.opacity = '1';
+      info.textContent = new Date().toLocaleTimeString() + ' · ' + Math.round(data.size / 1024) + 'KB · ' + fmt;
+    } else {
+      throw new Error(data.error || '截屏失败');
+    }
+  } catch(e) {
+    info.textContent = '截屏失败: ' + e.message;
+    img.style.opacity = '0';
+  }
+}
+
+// ═══ 启动 ═══
+window.addEventListener('load', () => {
+  runHealthCheck();
+  updateProgress();
+  detectADBBridge();
+
+  const p = new URLSearchParams(location.search);
+
+  // 直连手机: 预填默认地址 (当前域名)
+  const dpInput = document.getElementById('dpBaseUrl');
+  if (dpInput && !dpInput.value) dpInput.value = location.origin;
+
+  // URL参数 ?direct 或 ?direct=https://xxx — 自动连接直连手机
+  const directParam = p.get('direct');
+  if (directParam !== null) {
+    if (directParam && directParam.startsWith('http')) dpInput.value = directParam;
+    setTimeout(() => connectDirectPhone(), 300);
+  } else {
+    // 无?direct时，静默探测公网手机API (不报错)
+    setTimeout(async () => {
+      try {
+        const r = await fetch('/input/status', { signal: AbortSignal.timeout(3000) });
+        if (r.ok) {
+          dpInput.value = location.origin;
+          setDpStatus('trying', '💡 检测到手机在线，点击"连接手机"即可控制');
+        }
+      } catch(e) {}
+    }, 1000);
+  }
+
+  // URL参数预填ADB连接码
+  const adbCode = p.get('adb');
+  if (adbCode) {
+    document.getElementById('adbCodeInput').value = adbCode;
+    setTimeout(() => connectPublicADB(), 500);
+  }
+
+  // URL参数预填房间码
+  const room = p.get('room');
+  if (room) {
+    document.getElementById('setupRoomInput').value = room;
+    onRoomInput(document.getElementById('setupRoomInput'));
+  }
+});
+</script>
+</body>
+</html>

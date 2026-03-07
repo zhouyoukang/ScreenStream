@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=3 uid="uid://bbwedgq63bj84"]
+
+[ext_resource type="Script" path="res://content/entities/number/number.gd" id="1_26xwp"]
+[ext_resource type="PackedScene" uid="uid://pk5k1q8bx0rj" path="res://content/ui/components/slider/slider.tscn" id="2_sninv"]
+[ext_resource type="Script" path="res://content/functions/movable.gd" id="3_x8wda"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7mk8w"]
+size = Vector3(0.0390625, 0.150391, 0.0142822)
+
+[node name="Number" type="StaticBody3D"]
+script = ExtResource("1_26xwp")
+
+[node name="Slider" parent="." instance=ExtResource("2_sninv")]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
+value = 0.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.00762939)
+shape = SubResource("BoxShape3D_7mk8w")
+
+[node name="Movable" type="Node" parent="."]
+script = ExtResource("3_x8wda")
+resizable = true

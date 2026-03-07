@@ -1,0 +1,73 @@
+# Build the Android APK on push to the master branch
+name: Build APK
+on:
+  push:
+    tags:
+      - "v*-test"
+
+env:
+  GODOT_VERSION: 4.2
+  EXPORT_NAME: immersive-home
+  GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /home/runner/work/Immersive-Home/Immersive-Home/debug.keystore
+  GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+  GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+
+jobs:
+  # job id, can be anything
+  export_game:
+    # Always use ubuntu-latest for this action
+    runs-on: ubuntu-latest
+    # Add permission for release creation. Can be made narrower according to your needs
+    permissions: write-all
+    # Job name, can be anything
+    name: Export Game
+    steps:
+      # Always include the checkout step so that
+      # your project is available for Godot to export
+      - name: checkout
+        uses: actions/checkout@v3.3.0
+        with:
+          lfs: true
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Android Export
+        run: |
+          keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999 -deststoretype pkcs12
+
+          mkdir -p ./android/build
+          touch ./android/build/.gdignore
+
+          wget -nv https://downloads.tuxfamily.org/godotengine/4.2/Godot_v4.2-stable_export_templates.tpz -O ./godot_templates.tpz
+          unzip -q ./godot_templates.tpz -d .
+          rm ./godot_templates.tpz
+          unzip -q ./templates/android_source.zip -d ./android/build/
+          rm ./templates/android_source.zip
+
+      - name: export game
+        id: export
+        # Use latest version (see releases for all versions)
+        uses: nitwel/godot-export@latest
+        with:
+          # Defining all the required inputs
+          godot_executable_download_url: https://downloads.tuxfamily.org/godotengine/4.2/Godot_v4.2-stable_linux.x86_64.zip
+          godot_export_templates_download_url: https://downloads.tuxfamily.org/godotengine/4.2/Godot_v4.2-stable_export_templates.tpz
+          export_debug: true
+          relative_project_path: ./
+          archive_output: true
+          filter_exports: "Android"
+
+      - name: create release
+        uses: ncipollo/release-action@v1.11.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generateReleaseNotes: false
+          prerelease: true
+          artifacts: ${{ steps.export.outputs.archive_directory }}/* # Added "/*" at the end is glob pattern match for this action

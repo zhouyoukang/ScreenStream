@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hip Sync — 臀部追踪×ORS6 实时同步</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden}
+#top-bar{display:flex;align-items:center;gap:12px;padding:8px 16px;background:#111;border-bottom:1px solid #333;height:48px}
+#top-bar h1{font-size:15px;color:#0ff;white-space:nowrap}
+#status{font-size:12px;padding:3px 10px;border-radius:10px;background:#222}
+#status.ok{background:#0a3a0a;color:#0f0}
+#status.err{background:#3a0a0a;color:#f44}
+.btn{padding:5px 14px;border:1px solid #444;background:#1a1a2e;color:#ddd;border-radius:4px;cursor:pointer;font-size:12px}
+.btn:hover{background:#2a2a4e}
+.btn.active{background:#0a3a5a;border-color:#0af}
+#main{display:flex;height:calc(100vh - 48px)}
+#video-area{flex:1;position:relative;background:#000;display:flex;align-items:center;justify-content:center}
+#video-container{position:relative;max-width:100%;max-height:100%}
+video{display:block;max-width:100%;max-height:calc(100vh - 48px)}
+#skeleton-canvas{position:absolute;top:0;left:0;pointer-events:none}
+#no-video{color:#666;font-size:18px;text-align:center}
+#sidebar{width:320px;background:#111;border-left:1px solid #333;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
+.panel{background:#1a1a1f;border:1px solid #2a2a3a;border-radius:6px;padding:10px}
+.panel h3{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.axis-row{display:flex;align-items:center;gap:8px;margin:4px 0}
+.axis-label{width:28px;font-size:11px;font-weight:bold;color:#0af}
+.axis-bar{flex:1;height:16px;background:#222;border-radius:3px;position:relative;overflow:hidden}
+.axis-fill{height:100%;background:linear-gradient(90deg,#0af,#0ff);border-radius:3px;transition:width 33ms linear}
+.axis-val{width:45px;text-align:right;font-size:11px;font-family:monospace;color:#aaa}
+#pose-info{font-size:11px;line-height:1.6;color:#999}
+#pose-info span{color:#0ff}
+.kp-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;font-size:10px;font-family:monospace;color:#777}
+.kp-grid .hip{color:#f80;font-weight:bold}
+#log{font-size:10px;font-family:monospace;color:#666;max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.settings-row{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:11px}
+.settings-row label{flex:1;color:#aaa}
+.settings-row input[type=range]{width:80px}
+.settings-row input[type=number]{width:50px;background:#222;border:1px solid #444;color:#ddd;padding:2px 4px;border-radius:3px}
+#fps-display{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.7);color:#0f0;padding:3px 8px;border-radius:4px;font-size:11px;font-family:monospace;z-index:10}
+</style>
+</head>
+<body>
+<div id="top-bar">
+  <h1>Hip Sync × ORS6</h1>
+  <div id="status" class="err">未连接</div>
+  <input type="file" id="file-input" accept="video/*" style="display:none">
+  <button class="btn" onclick="document.getElementById('file-input').click()">📁 打开视频</button>
+  <button class="btn" id="btn-url">🔗 URL</button>
+  <button class="btn" id="btn-webcam">📷 摄像头</button>
+  <button class="btn" id="btn-test">🎬 测试视频</button>
+  <button class="btn" id="btn-douyin">🎵 抖音注入</button>
+  <button class="btn" id="btn-connect">⚡ 连接ORS6</button>
+  <button class="btn" id="btn-sync" disabled>▶ 开始同步</button>
+  <button class="btn" id="btn-stop" disabled>■ 停止</button>
+</div>
+<div id="main">
+  <div id="video-area">
+    <div id="video-container">
+      <div id="no-video">加载视频或点击"抖音注入"开始</div>
+      <video id="video" crossorigin="anonymous" playsinline></video>
+      <canvas id="skeleton-canvas"></canvas>
+      <div id="fps-display" style="display:none">-- fps</div>
+    </div>
+  </div>
+  <div id="sidebar">
+    <div class="panel">
+      <h3>ORS6 轴状态</h3>
+      <div class="axis-row"><span class="axis-label">L0</span><div class="axis-bar"><div class="axis-fill" id="bar-L0" style="width:50%"></div></div><span class="axis-val" id="val-L0">5000</span></div>
+      <div class="axis-row"><span class="axis-label">L1</span><div class="axis-bar"><div class="axis-fill" id="bar-L1" style="width:50%"></div></div><span class="axis-val" id="val-L1">5000</span></div>
+      <div class="axis-row"><span class="axis-label">R0</span><div class="axis-bar"><div class="axis-fill" id="bar-R0" style="width:50%"></div></div><span class="axis-val" id="val-R0">5000</span></div>
+      <div class="axis-row"><span class="axis-label">R2</span><div class="axis-bar"><div class="axis-fill" id="bar-R2" style="width:50%"></div></div><span class="axis-val" id="val-R2">5000</span></div>
+    </div>
+    <div class="panel">
+      <h3>姿态追踪</h3>
+      <div id="pose-info">
+        模型: <span id="model-status">未加载</span><br>
+        检测: <span id="detect-status">--</span><br>
+        臀部Y: <span id="hip-y">--</span> | X: <span id="hip-x">--</span><br>
+        扭转: <span id="hip-twist">--</span>° | 倾斜: <span id="hip-tilt">--</span>°
+      </div>
+      <div class="kp-grid" id="kp-grid"></div>
+    </div>
+    <div class="panel">
+      <h3>映射设置</h3>
+      <div class="settings-row"><label>L0 灵敏度</label><input type="range" id="sens-L0" min="0.5" max="3" step="0.1" value="1.5"><span id="sens-L0-val">1.5</span></div>
+      <div class="settings-row"><label>R0 灵敏度</label><input type="range" id="sens-R0" min="0.5" max="3" step="0.1" value="1.0"><span id="sens-R0-val">1.0</span></div>
+      <div class="settings-row"><label>平滑系数</label><input type="range" id="smoothing" min="0.1" max="0.9" step="0.05" value="0.4"><span id="smooth-val">0.4</span></div>
+      <div class="settings-row"><label>更新频率(Hz)</label><input type="number" id="update-hz" min="10" max="60" value="30"></div>
+      <div class="settings-row"><label>Hub地址</label><input type="text" id="hub-url" value="ws://localhost:8086" style="width:140px;background:#222;border:1px solid #444;color:#ddd;padding:2px 4px;border-radius:3px"></div>
+    </div>
+    <div class="panel">
+      <h3>日志</h3>
+      <div id="log"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+const S = {
+  ws: null, wsOk: false,
+  model: null, modelReady: false,
+  syncing: false,
+  video: null,
+  // Smoothed axis values
+  axes: {L0: 5000, L1: 5000, R0: 5000, R2: 5000},
+  // Raw hip data
+  hipCenter: {x: 0.5, y: 0.5},
+  hipTwist: 0, hipTilt: 0,
+  // Stats
+  frameCount: 0, lastFpsTime: 0, fps: 0,
+  cmdCount: 0, lastCmdTime: 0,
+  // Calibration
+  hipBaseline: null, // auto-set from first few frames
+  calibFrames: [],
+};
+
+const log = (msg) => {
+  const el = document.getElementById('log');
+  const t = new Date().toLocaleTimeString('zh', {hour12:false});
+  el.textContent = `[${t}] ${msg}\n` + el.textContent.slice(0, 2000);
+};
+
+// ── TF.js + MoveNet Loading ──
+async function loadPoseModel() {
+  document.getElementById('model-status').textContent = '加载中...';
+  log('加载 TF.js + MoveNet...');
+  
+  try {
+    // Load TF.js
+    if (typeof tf === 'undefined') {
+      await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
+      log('TF.js 已加载');
+    }
+    // Load pose detection
+    if (typeof poseDetection === 'undefined') {
+      await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js');
+      log('Pose Detection 已加载');
+    }
+    
+    // Create MoveNet detector (Lightning = fast, Thunder = accurate)
+    S.model = await poseDetection.createDetector(
+      poseDetection.SupportedModels.MoveNet,
+      {modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING}
+    );
+    S.modelReady = true;
+    document.getElementById('model-status').textContent = 'MoveNet Lightning ✓';
+    log('MoveNet 模型就绪');
+    document.getElementById('btn-sync').disabled = false;
+  } catch(e) {
+    document.getElementById('model-status').textContent = '加载失败: ' + e.message;
+    log('模型加载失败: ' + e.message);
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Failed to load: ' + src));
+    document.head.appendChild(s);
+  });
+}
+
+// ── WebSocket Connection to ORS6 Hub ──
+function connectHub() {
+  const url = document.getElementById('hub-url').value;
+  log('连接 Hub: ' + url);
+  
+  try {
+    S.ws = new WebSocket(url);
+    S.ws.onopen = () => {
+      S.wsOk = true;
+      document.getElementById('status').className = 'ok';
+      document.getElementById('status').textContent = '已连接 ORS6';
+      log('Hub WebSocket 连接成功');
+    };
+    S.ws.onclose = () => {
+      S.wsOk = false;
+      document.getElementById('status').className = 'err';
+      document.getElementById('status').textContent = '已断开';
+      log('Hub WebSocket 断开');
+    };
+    S.ws.onerror = (e) => {
+      log('WebSocket 错误');
+    };
+    S.ws.onmessage = (e) => {
+      // Ignore hub responses
+    };
+  } catch(e) {
+    log('连接失败: ' + e.message);
+  }
+}
+
+function sendTCode(cmd) {
+  if (S.wsOk && S.ws.readyState === 1) {
+    S.ws.send(JSON.stringify({type: 'command', cmd: cmd}));
+    S.cmdCount++;
+  }
+}
+
+// ── Video Loading ──
+function loadVideoFile(file) {
+  const url = URL.createObjectURL(file);
+  loadVideoSrc(url);
+}
+
+function loadVideoSrc(src) {
+  const video = document.getElementById('video');
+  const noVid = document.getElementById('no-video');
+  noVid.style.display = 'none';
+  video.style.display = 'block';
+  video.src = src;
+  video.load();
+  video.onloadedmetadata = () => {
+    const canvas = document.getElementById('skeleton-canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    log(`视频加载: ${video.videoWidth}×${video.videoHeight}`);
+    // Auto-load model if not loaded
+    if (!S.modelReady) loadPoseModel();
+  };
+  S.video = video;
+}
+
+// ── Pose Estimation + Hip Tracking ──
+const KEYPOINT_NAMES = [
+  'nose','left_eye','right_eye','left_ear','right_ear',
+  'left_shoulder','right_shoulder','left_elbow','right_elbow',
+  'left_wrist','right_wrist',
+  'left_hip','right_hip',
+  'left_knee','right_knee','left_ankle','right_ankle'
+];
+const HIP_L = 11, HIP_R = 12, KNEE_L = 13, KNEE_R = 14;
+const SHOULDER_L = 5, SHOULDER_R = 6;
+
+// Skeleton connections for drawing
+const SKELETON = [
+  [0,1],[0,2],[1,3],[2,4],[5,6],[5,7],[7,9],[6,8],[8,10],
+  [5,11],[6,12],[11,12],[11,13],[13,15],[12,14],[14,16]
+];
+
+async function processFrame() {
+  if (!S.syncing || !S.modelReady || !S.video) return;
+  const video = S.video;
+  if (video.paused || video.ended) {
+    requestAnimationFrame(processFrame);
+    return;
+  }
+  
+  try {
+    const poses = await S.model.estimatePoses(video);
+    if (poses.length > 0) {
+      const kps = poses[0].keypoints;
+      drawSkeleton(kps);
+      trackHips(kps);
+      updateAxes();
+      sendAxisCommands();
+      updateUI(kps);
+    }
+    
+    // FPS calc
+    S.frameCount++;
+    const now = performance.now();
+    if (now - S.lastFpsTime > 1000) {
+      S.fps = Math.round(S.frameCount * 1000 / (now - S.lastFpsTime));
+      S.frameCount = 0;
+      S.lastFpsTime = now;
+      document.getElementById('fps-display').textContent = S.fps + ' fps';
+    }
+  } catch(e) {
+    // Skip frame on error
+  }
+  
+  // Schedule next frame based on update Hz
+  const hz = parseInt(document.getElementById('update-hz').value) || 30;
+  setTimeout(() => requestAnimationFrame(processFrame), 1000/hz);
+}
+
+function trackHips(kps) {
+  const lh = kps[HIP_L], rh = kps[HIP_R];
+  const ls = kps[SHOULDER_L], rs = kps[SHOULDER_R];
+  
+  // Skip if confidence too low
+  if (lh.score < 0.3 || rh.score < 0.3) return;
+  
+  const vw = S.video.videoWidth, vh = S.video.videoHeight;
+  
+  // Normalize hip center (0-1)
+  const hipX = ((lh.x + rh.x) / 2) / vw;
+  const hipY = ((lh.y + rh.y) / 2) / vh;
+  
+  // Hip twist: angle between left and right hip
+  const twist = Math.atan2(rh.y - lh.y, rh.x - lh.x) * (180 / Math.PI);
+  
+  // Hip tilt: angle relative to shoulders (if available)
+  let tilt = 0;
+  if (ls.score > 0.3 && rs.score > 0.3) {
+    const shoulderCenter = {
+      x: (ls.x + rs.x) / 2 / vw,
+      y: (ls.y + rs.y) / 2 / vh,
+    };
+    // Vertical angle between shoulder center and hip center
+    tilt = Math.atan2(hipX - shoulderCenter.x, shoulderCenter.y - hipY) * (180 / Math.PI);
+  }
+  
+  // Auto-calibrate baseline from first 30 frames
+  if (S.calibFrames.length < 30) {
+    S.calibFrames.push({x: hipX, y: hipY, twist, tilt});
+    if (S.calibFrames.length === 30) {
+      S.hipBaseline = {
+        x: S.calibFrames.reduce((s,f) => s+f.x, 0) / 30,
+        y: S.calibFrames.reduce((s,f) => s+f.y, 0) / 30,
+        twist: S.calibFrames.reduce((s,f) => s+f.twist, 0) / 30,
+        tilt: S.calibFrames.reduce((s,f) => s+f.tilt, 0) / 30,
+      };
+      log(`基线校准完成: Y=${S.hipBaseline.y.toFixed(3)} X=${S.hipBaseline.x.toFixed(3)}`);
+    }
+    return;
+  }
+  
+  S.hipCenter = {x: hipX, y: hipY};
+  S.hipTwist = twist;
+  S.hipTilt = tilt;
+}
+
+function updateAxes() {
+  if (!S.hipBaseline) return;
+  
+  const smooth = parseFloat(document.getElementById('smoothing').value);
+  const sensL0 = parseFloat(document.getElementById('sens-L0').value);
+  const sensR0 = parseFloat(document.getElementById('sens-R0').value);
+  
+  // Map hip Y to L0 (stroke) — down=0, up=9999
+  // Delta from baseline, amplified by sensitivity
+  const deltaY = (S.hipBaseline.y - S.hipCenter.y) * sensL0;
+  const rawL0 = 5000 + deltaY * 10000;
+  
+  // Map hip X to L1 (surge) — left=0, right=9999
+  const deltaX = (S.hipCenter.x - S.hipBaseline.x) * sensL0;
+  const rawL1 = 5000 + deltaX * 10000;
+  
+  // Map hip twist to R0 — center=5000
+  const deltaTwist = (S.hipTwist - S.hipBaseline.twist) * sensR0;
+  const rawR0 = 5000 + deltaTwist * 50;
+  
+  // Map hip tilt to R2 — center=5000
+  const deltaTilt = (S.hipTilt - S.hipBaseline.tilt) * sensR0;
+  const rawR2 = 5000 + deltaTilt * 50;
+  
+  // Apply smoothing (EMA)
+  S.axes.L0 = lerp(S.axes.L0, clamp(rawL0), smooth);
+  S.axes.L1 = lerp(S.axes.L1, clamp(rawL1), smooth);
+  S.axes.R0 = lerp(S.axes.R0, clamp(rawR0), smooth);
+  S.axes.R2 = lerp(S.axes.R2, clamp(rawR2), smooth);
+}
+
+function sendAxisCommands() {
+  if (!S.wsOk) return;
+  const hz = parseInt(document.getElementById('update-hz').value) || 30;
+  const interval = Math.round(1000 / hz);
+  const L0 = Math.round(S.axes.L0);
+  const L1 = Math.round(S.axes.L1);
+  const R0 = Math.round(S.axes.R0);
+  const R2 = Math.round(S.axes.R2);
+  const cmd = `L0${pad(L0)}I${interval} L1${pad(L1)}I${interval} R0${pad(R0)}I${interval} R2${pad(R2)}I${interval}`;
+  sendTCode(cmd);
+}
+
+// ── Drawing ──
+function drawSkeleton(kps) {
+  const canvas = document.getElementById('skeleton-canvas');
+  const ctx = canvas.getContext('2d');
+  const video = S.video;
+  
+  // Match canvas to video display size
+  const rect = video.getBoundingClientRect();
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw skeleton lines
+  ctx.strokeStyle = 'rgba(0,255,255,0.6)';
+  ctx.lineWidth = 2;
+  for (const [i, j] of SKELETON) {
+    if (kps[i].score > 0.3 && kps[j].score > 0.3) {
+      ctx.beginPath();
+      ctx.moveTo(kps[i].x, kps[i].y);
+      ctx.lineTo(kps[j].x, kps[j].y);
+      // Highlight hip connections
+      if ((i === HIP_L || i === HIP_R || j === HIP_L || j === HIP_R)) {
+        ctx.strokeStyle = 'rgba(255,136,0,0.9)';
+        ctx.lineWidth = 3;
+      } else {
+        ctx.strokeStyle = 'rgba(0,255,255,0.5)';
+        ctx.lineWidth = 2;
+      }
+      ctx.stroke();
+    }
+  }
+  
+  // Draw keypoints
+  for (let i = 0; i < kps.length; i++) {
+    if (kps[i].score > 0.3) {
+      const isHip = (i === HIP_L || i === HIP_R);
+      ctx.beginPath();
+      ctx.arc(kps[i].x, kps[i].y, isHip ? 8 : 4, 0, Math.PI * 2);
+      ctx.fillStyle = isHip ? '#f80' : '#0ff';
+      ctx.fill();
+      ctx.strokeStyle = isHip ? '#fff' : 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = isHip ? 2 : 1;
+      ctx.stroke();
+    }
+  }
+  
+  // Draw hip center cross
+  if (kps[HIP_L].score > 0.3 && kps[HIP_R].score > 0.3) {
+    const cx = (kps[HIP_L].x + kps[HIP_R].x) / 2;
+    const cy = (kps[HIP_L].y + kps[HIP_R].y) / 2;
+    ctx.strokeStyle = '#ff0';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - 15, cy); ctx.lineTo(cx + 15, cy);
+    ctx.moveTo(cx, cy - 15); ctx.lineTo(cx, cy + 15);
+    ctx.stroke();
+  }
+}
+
+function updateUI(kps) {
+  // Update axis bars
+  for (const axis of ['L0','L1','R0','R2']) {
+    const val = Math.round(S.axes[axis]);
+    document.getElementById('bar-' + axis).style.width = (val / 100) + '%';
+    document.getElementById('val-' + axis).textContent = val;
+  }
+  
+  // Update pose info
+  document.getElementById('detect-status').textContent = 
+    `${S.fps}fps | ${S.cmdCount}cmd`;
+  document.getElementById('hip-y').textContent = S.hipCenter.y.toFixed(3);
+  document.getElementById('hip-x').textContent = S.hipCenter.x.toFixed(3);
+  document.getElementById('hip-twist').textContent = S.hipTwist.toFixed(1);
+  document.getElementById('hip-tilt').textContent = S.hipTilt.toFixed(1);
+}
+
+// ── Utilities ──
+function clamp(v, min=0, max=9999) { return Math.max(min, Math.min(max, v)); }
+function lerp(a, b, t) { return a + (b - a) * (1 - t); }
+function pad(n) { return String(Math.round(n)).padStart(4, '0'); }
+
+// ── Douyin Injection ──
+// Generate a JS snippet to inject into Douyin page
+function getDouyinInjectionScript() {
+  const hubUrl = document.getElementById('hub-url').value;
+  return `
+(async function() {
+  // Find video element
+  const videos = document.querySelectorAll('video');
+  if (!videos.length) { console.error('No video found'); return; }
+  const video = Array.from(videos).find(v => !v.paused && v.readyState >= 2) || videos[0];
+  console.log('Found video:', video.videoWidth, 'x', video.videoHeight);
+  
+  // Load TF.js
+  const loadJS = (src) => new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  
+  if (typeof tf === 'undefined')
+    await loadJS('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
+  if (typeof poseDetection === 'undefined')
+    await loadJS('https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js');
+  
+  console.log('TF.js loaded, creating MoveNet detector...');
+  const detector = await poseDetection.createDetector(
+    poseDetection.SupportedModels.MoveNet,
+    {modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING}
+  );
+  console.log('MoveNet ready');
+  
+  // Connect to ORS6 Hub
+  const ws = new WebSocket('${hubUrl}');
+  ws.onopen = () => console.log('ORS6 Hub connected');
+  
+  // Create overlay canvas
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+  video.parentElement.style.position = 'relative';
+  video.parentElement.appendChild(canvas);
+  
+  // Tracking state
+  let baseline = null, calibFrames = [];
+  const axes = {L0:5000, L1:5000, R0:5000, R2:5000};
+  const smooth = ${parseFloat(document.getElementById('smoothing').value)};
+  
+  async function tick() {
+    if (video.paused || video.ended) { requestAnimationFrame(tick); return; }
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    
+    const poses = await detector.estimatePoses(video);
+    if (poses.length === 0) { requestAnimationFrame(tick); return; }
+    
+    const kps = poses[0].keypoints;
+    const lh = kps[11], rh = kps[12]; // left_hip, right_hip
+    
+    if (lh.score < 0.3 || rh.score < 0.3) { requestAnimationFrame(tick); return; }
+    
+    // Draw hip points
+    ctx.fillStyle = '#f80';
+    [lh, rh].forEach(p => {
+      ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI*2); ctx.fill();
+    });
+    // Draw hip line
+    ctx.strokeStyle = '#f80'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(lh.x, lh.y); ctx.lineTo(rh.x, rh.y); ctx.stroke();
+    
+    // Hip center
+    const hipX = (lh.x + rh.x) / 2 / video.videoWidth;
+    const hipY = (lh.y + rh.y) / 2 / video.videoHeight;
+    const twist = Math.atan2(rh.y - lh.y, rh.x - lh.x) * 180 / Math.PI;
+    
+    // Calibrate
+    if (calibFrames.length < 30) {
+      calibFrames.push({x: hipX, y: hipY, twist});
+      if (calibFrames.length === 30) {
+        baseline = {
+          x: calibFrames.reduce((s,f)=>s+f.x,0)/30,
+          y: calibFrames.reduce((s,f)=>s+f.y,0)/30,
+          twist: calibFrames.reduce((s,f)=>s+f.twist,0)/30,
+        };
+        console.log('Baseline calibrated:', baseline);
+      }
+      requestAnimationFrame(tick); return;
+    }
+    
+    // Map to axes
+    const dY = (baseline.y - hipY) * ${parseFloat(document.getElementById('sens-L0').value)};
+    const dX = (hipX - baseline.x) * ${parseFloat(document.getElementById('sens-L0').value)};
+    const dT = (twist - baseline.twist) * ${parseFloat(document.getElementById('sens-R0').value)};
+    
+    axes.L0 = axes.L0 + (Math.max(0,Math.min(9999, 5000 + dY*10000)) - axes.L0) * (1-smooth);
+    axes.L1 = axes.L1 + (Math.max(0,Math.min(9999, 5000 + dX*10000)) - axes.L1) * (1-smooth);
+    axes.R0 = axes.R0 + (Math.max(0,Math.min(9999, 5000 + dT*50)) - axes.R0) * (1-smooth);
+    
+    // Send TCode
+    if (ws.readyState === 1) {
+      const cmd = 'L0' + String(Math.round(axes.L0)).padStart(4,'0') + 'I33 ' +
+                  'L1' + String(Math.round(axes.L1)).padStart(4,'0') + 'I33 ' +
+                  'R0' + String(Math.round(axes.R0)).padStart(4,'0') + 'I33';
+      ws.send(JSON.stringify({type:'command', cmd}));
+    }
+    
+    // Status overlay
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, 0, 280, 60);
+    ctx.fillStyle = '#0f0'; ctx.font = '12px monospace';
+    ctx.fillText('Hip Sync: L0=' + Math.round(axes.L0) + ' L1=' + Math.round(axes.L1) + ' R0=' + Math.round(axes.R0), 8, 20);
+    ctx.fillText('Hip: Y=' + hipY.toFixed(3) + ' X=' + hipX.toFixed(3) + ' Twist=' + twist.toFixed(1) + '°', 8, 40);
+    
+    setTimeout(() => requestAnimationFrame(tick), 33);
+  }
+  
+  video.play();
+  tick();
+  console.log('Hip Sync started!');
+  window.__hipSyncStop = () => { /* TODO: cleanup */ };
+})();
+`;
+}
+
+// ── Event Bindings ──
+document.getElementById('file-input').addEventListener('change', (e) => {
+  if (e.target.files[0]) loadVideoFile(e.target.files[0]);
+});
+
+document.getElementById('btn-url').addEventListener('click', () => {
+  const url = prompt('输入视频URL (mp4/webm):');
+  if (url) loadVideoSrc(url);
+});
+
+document.getElementById('btn-connect').addEventListener('click', connectHub);
+
+document.getElementById('btn-sync').addEventListener('click', () => {
+  if (!S.modelReady) { log('模型未加载'); return; }
+  if (!S.video || !S.video.src) { log('请先加载视频'); return; }
+  S.syncing = true;
+  S.calibFrames = [];
+  S.hipBaseline = null;
+  S.cmdCount = 0;
+  S.lastFpsTime = performance.now();
+  S.frameCount = 0;
+  document.getElementById('fps-display').style.display = 'block';
+  document.getElementById('btn-sync').disabled = true;
+  document.getElementById('btn-stop').disabled = false;
+  S.video.play();
+  processFrame();
+  log('同步已开始 — 校准中(30帧)...');
+});
+
+document.getElementById('btn-stop').addEventListener('click', () => {
+  S.syncing = false;
+  document.getElementById('btn-sync').disabled = false;
+  document.getElementById('btn-stop').disabled = true;
+  if (S.wsOk) sendTCode('D1'); // Home
+  log('同步已停止');
+});
+
+document.getElementById('btn-douyin').addEventListener('click', () => {
+  const script = getDouyinInjectionScript();
+  navigator.clipboard.writeText(script).then(() => {
+    log('注入脚本已复制到剪贴板');
+    alert('注入脚本已复制!\n\n在抖音页面的DevTools Console中粘贴执行即可。');
+  }).catch(() => {
+    // Fallback: show in log
+    log('注入脚本(手动复制):\n' + script.slice(0, 200) + '...');
+  });
+});
+
+// Settings listeners
+['sens-L0','sens-R0','smoothing'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    document.getElementById(id === 'smoothing' ? 'smooth-val' : id+'-val').textContent = el.value;
+  });
+});
+
+document.getElementById('btn-test').addEventListener('click', () => {
+  loadVideoSrc('/video/dance_test.mp4');
+  log('加载测试视频: dance_test.mp4');
+});
+
+document.getElementById('btn-webcam').addEventListener('click', async () => {
+  log('请求摄像头...');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480, facingMode: 'user' },
+      audio: false
+    });
+    const video = document.getElementById('video');
+    const noVid = document.getElementById('no-video');
+    noVid.style.display = 'none';
+    video.style.display = 'block';
+    video.srcObject = stream;
+    video.onloadedmetadata = () => {
+      const canvas = document.getElementById('skeleton-canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      video.play();
+      log('摄像头就绪: ' + video.videoWidth + 'x' + video.videoHeight);
+      if (!S.modelReady) loadPoseModel();
+    };
+    S.video = video;
+  } catch(e) {
+    log('摄像头失败: ' + e.message);
+  }
+});
+
+// Auto-connect on page load, defer model loading until video is loaded
+window.addEventListener('load', () => {
+  log('Hip Sync 页面就绪');
+  // Auto-connect to Hub after short delay
+  setTimeout(connectHub, 1000);
+});
+</script>
+</body>
+</html>

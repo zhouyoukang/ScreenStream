@@ -1,0 +1,74 @@
+# ==================== HTTP Shell Command 备份 (2024-12-24) ====================
+# 原始配置，使用 curl 发送 HTTP 请求到 MacroDroid
+# 适用于局域网环境（手机IP: 192.168.31.40）
+
+shell_command:
+  macrodroid_cmd: "curl -s 'http://192.168.31.40:8080/%7Bha%7D?cmd={{ cmd }}'"
+
+# ==================== 原始 Intent Script 配置（使用 HTTP）====================
+
+intent_script:
+  # ========== MacroDroid 手表控制 ==========
+  OpenWechat:
+    speech:
+      text: "好的，正在打开微信"
+    action:
+      - service: shell_command.macrodroid_cmd
+        data:
+          cmd: open_wechat
+
+  OpenAlipay:
+    speech:
+      text: "好的，正在打开支付宝"
+    action:
+      - service: shell_command.macrodroid_cmd
+        data:
+          cmd: open_alipay
+
+  OpenTaobao:
+    speech:
+      text: "好的，正在打开淘宝"
+    action:
+      - service: shell_command.macrodroid_cmd
+        data:
+          cmd: open_taobao
+
+  OpenDoubao:
+    speech:
+      text: "好的，正在打开豆包"
+    action:
+      - service: shell_command.macrodroid_cmd
+        data:
+          cmd: open_doubao
+
+  OpenAmap:
+    speech:
+      text: "好的，正在打开高德地图"
+    action:
+      - service: shell_command.macrodroid_cmd
+        data:
+          cmd: open_amap
+
+  OpenMijia:
+    speech:
+      text: "好的，正在打开米家"
+    action:
+      - service: shell_command.macrodroid_cmd
+        data:
+          cmd: open_mijia
+
+  SetMute:
+    speech:
+      text: "好的，已开启静音模式"
+    action:
+      - service: shell_command.macrodroid_cmd
+        data:
+          cmd: mute
+
+  DoVibrate:
+    speech:
+      text: "好的，已震动提醒"
+    action:
+      - service: shell_command.macrodroid_cmd
+        data:
+          cmd: vibrate

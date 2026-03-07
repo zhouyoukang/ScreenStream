@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RayNeo V3 Hybrid Simulator v3.0</title>
+<style>
+:root {
+  --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a28;
+  --fg: #e0e0e8; --fg2: #8888a0; --accent: #00d4ff;
+  --green: #22c55e; --yellow: #eab308; --red: #ef4444; --orange: #f97316;
+  --purple: #a855f7; --radius: 8px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--fg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* Header */
+header { background: var(--bg2); border-bottom: 1px solid var(--bg3); padding: 8px 16px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; height: 44px; }
+header h1 { font-size: 15px; font-weight: 600; }
+header h1 span { font-size: 18px; margin-right: 4px; }
+.hstats { display: flex; gap: 8px; font-size: 11px; color: var(--fg2); }
+.hstats .s { background: var(--bg3); padding: 2px 8px; border-radius: 10px; }
+.hstats .s.on { color: var(--green); border: 1px solid var(--green); }
+.hstats .s.off { color: var(--red); border: 1px solid var(--red); }
+.hactions { margin-left: auto; display: flex; gap: 6px; }
+.btn { background: var(--bg3); border: 1px solid #333; color: var(--fg); padding: 3px 10px; border-radius: var(--radius); cursor: pointer; font-size: 11px; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+
+/* Main */
+main { display: flex; flex: 1; overflow: hidden; }
+
+/* Left — Controls */
+.panel-left { width: 240px; background: var(--bg2); border-right: 1px solid var(--bg3); overflow-y: auto; flex-shrink: 0; }
+.section { border-bottom: 1px solid var(--bg3); padding: 10px 12px; }
+.section h3 { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg2); margin-bottom: 8px; }
+.ctrl-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+.ctrl-row label { width: 50px; color: var(--fg2); font-size: 11px; flex-shrink: 0; }
+.ctrl-row input[type=range] { flex: 1; accent-color: var(--accent); }
+.ctrl-row .val { width: 40px; text-align: right; font-family: monospace; font-size: 11px; }
+.toggle { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; cursor: pointer; }
+.toggle input { accent-color: var(--accent); }
+.gesture-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.gesture-btn { background: var(--bg); border: 1px solid #333; color: var(--fg); padding: 6px; border-radius: var(--radius); cursor: pointer; font-size: 11px; text-align: center; }
+.gesture-btn:hover { border-color: var(--accent); color: var(--accent); }
+.gesture-btn:active { background: var(--accent); color: #000; }
+.btn-row { display: flex; gap: 4px; margin-bottom: 4px; }
+.hw-btn { flex: 1; background: var(--bg); border: 1px solid #333; color: var(--fg); padding: 8px 4px; border-radius: var(--radius); cursor: pointer; font-size: 11px; text-align: center; }
+.hw-btn:active { background: var(--orange); color: #000; border-color: var(--orange); }
+.voice-input { display: flex; gap: 4px; }
+.voice-input input { flex: 1; background: var(--bg); border: 1px solid #333; color: var(--fg); padding: 4px 8px; border-radius: var(--radius); font-size: 12px; }
+.voice-input button { padding: 4px 8px; }
+
+/* Center — Glasses Display */
+.panel-center { flex: 1; display: flex; flex-direction: column; }
+.display-bar { display: flex; align-items: center; gap: 8px; padding: 4px 12px; background: var(--bg2); border-bottom: 1px solid var(--bg3); font-size: 11px; color: var(--fg2); }
+.display-bar .badge { padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; }
+.display-bar .badge.sim { background: rgba(0,212,255,.15); color: var(--accent); }
+.glasses-viewport { flex: 1; display: flex; align-items: center; justify-content: center; background: #000; position: relative; overflow: hidden; }
+.glasses-screen { width: 640px; height: 360px; background: #111; border: 2px solid #333; border-radius: 12px; position: relative; overflow: hidden; box-shadow: 0 0 40px rgba(0,212,255,.1); }
+.glasses-screen .hud { position: absolute; inset: 0; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+.hud-top { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,.6); }
+.hud-center { flex: 1; display: flex; align-items: center; justify-content: center; }
+.hud-center .msg { font-size: 18px; color: #fff; text-shadow: 0 0 10px rgba(0,212,255,.5); text-align: center; max-width: 90%; opacity: 0; transition: opacity .3s; }
+.hud-center .msg.show { opacity: 1; }
+.hud-bottom { display: flex; justify-content: center; gap: 16px; font-size: 10px; color: rgba(255,255,255,.4); }
+
+/* Touchpad overlay */
+.tp-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, rgba(0,212,255,.05)); display: flex; align-items: center; justify-content: center; cursor: grab; }
+.tp-track { width: 80%; height: 4px; background: rgba(255,255,255,.1); border-radius: 2px; position: relative; }
+.tp-thumb { width: 16px; height: 16px; background: var(--accent); border-radius: 50%; position: absolute; top: -6px; transform: translateX(-50%); box-shadow: 0 0 8px var(--accent); transition: left .05s; }
+
+/* Right — Monitor */
+.panel-right { width: 260px; background: var(--bg2); border-left: 1px solid var(--bg3); display: flex; flex-direction: column; flex-shrink: 0; }
+.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 8px; }
+.metric { background: var(--bg); border-radius: var(--radius); padding: 6px 8px; }
+.metric .label { font-size: 9px; color: var(--fg2); text-transform: uppercase; }
+.metric .value { font-size: 16px; font-weight: 700; font-family: monospace; }
+.metric .value.g { color: var(--green); }
+.metric .value.y { color: var(--yellow); }
+.metric .value.r { color: var(--red); }
+
+/* IMU Viz */
+.imu-viz { padding: 8px 12px; border-bottom: 1px solid var(--bg3); }
+.imu-viz h3 { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg2); margin-bottom: 6px; }
+.imu-canvas { width: 100%; height: 80px; background: var(--bg); border-radius: var(--radius); }
+
+/* Event Log */
+.event-log { flex: 1; overflow-y: auto; padding: 0; font-family: monospace; font-size: 10px; }
+.event-log .ev { padding: 2px 8px; border-bottom: 1px solid rgba(255,255,255,.03); }
+.event-log .ev.gesture { color: var(--accent); }
+.event-log .ev.tts { color: var(--green); }
+.event-log .ev.action { color: var(--orange); }
+.event-log .ev.imu { color: var(--fg2); }
+.event-log .ev.error { color: var(--red); }
+.log-header { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg2); padding: 8px 8px 4px; }
+
+/* Mode Switcher */
+.mode-switch { display: flex; gap: 2px; background: var(--bg); border-radius: 6px; padding: 2px; }
+.mode-switch button { background: none; border: none; color: var(--fg2); padding: 2px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: 600; }
+.mode-switch button.active { background: var(--accent); color: #000; }
+.mode-switch button.active.live { background: var(--green); }
+.badge.live { background: rgba(34,197,94,.15); color: var(--green); }
+
+/* Recording Controls */
+.rec-bar { display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: var(--bg2); border-bottom: 1px solid var(--bg3); font-size: 11px; }
+.rec-bar .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; }
+.rec-bar .rec-dot.on { background: var(--red); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.rec-bar .rec-info { color: var(--fg2); margin-left: auto; }
+
+/* 3D Pose Cube */
+.pose-container { padding: 8px 12px; border-bottom: 1px solid var(--bg3); }
+.pose-container h3 { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg2); margin-bottom: 6px; }
+.pose-scene { width: 100%; height: 100px; perspective: 400px; display: flex; align-items: center; justify-content: center; }
+.pose-cube { width: 60px; height: 36px; position: relative; transform-style: preserve-3d; transition: transform .15s ease-out; }
+.pose-cube .face { position: absolute; border: 1px solid rgba(0,212,255,.3); display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--accent); background: rgba(0,212,255,.05); }
+.pose-cube .front  { width: 60px; height: 36px; transform: translateZ(18px); background: rgba(0,212,255,.12); border-color: var(--accent); }
+.pose-cube .back   { width: 60px; height: 36px; transform: rotateY(180deg) translateZ(18px); }
+.pose-cube .left   { width: 36px; height: 36px; left: -6px; transform: rotateY(-90deg) translateZ(12px); }
+.pose-cube .right  { width: 36px; height: 36px; right: -6px; transform: rotateY(90deg) translateZ(48px); }
+.pose-cube .top    { width: 60px; height: 36px; transform: rotateX(90deg) translateZ(18px); }
+.pose-cube .bottom { width: 60px; height: 36px; transform: rotateX(-90deg) translateZ(18px); }
+
+/* Dao Panel */
+.dao-panel { padding: 8px 12px; border-bottom: 1px solid var(--bg3); }
+.dao-panel h3 { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--purple); margin-bottom: 6px; }
+.dao-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.dao-item { background: var(--bg); border-radius: var(--radius); padding: 4px 6px; text-align: center; }
+.dao-item .dao-label { font-size: 8px; color: var(--fg2); }
+.dao-item .dao-val { font-size: 13px; font-weight: 700; }
+
+/* Scenario Panel */
+.scenario-list { display: flex; flex-direction: column; gap: 3px; }
+.scenario-item { display: flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid #333; border-radius: var(--radius); padding: 4px 8px; cursor: pointer; font-size: 11px; }
+.scenario-item:hover { border-color: var(--accent); }
+.scenario-item .sc-name { flex: 1; }
+.scenario-item .sc-steps { color: var(--fg2); font-size: 10px; }
+.scenario-bar { display: flex; align-items: center; gap: 6px; padding: 3px 12px; background: rgba(168,85,247,.08); border-bottom: 1px solid var(--bg3); font-size: 11px; color: var(--purple); }
+.scenario-bar .sc-progress { flex: 1; height: 3px; background: var(--bg3); border-radius: 2px; }
+.scenario-bar .sc-fill { height: 100%; background: var(--purple); border-radius: 2px; transition: width .3s; }
+
+/* AI Result */
+.ai-result { padding: 6px 12px; border-bottom: 1px solid var(--bg3); }
+.ai-result h3 { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--green); margin-bottom: 4px; }
+.ai-result .ai-text { font-size: 12px; color: var(--fg); background: var(--bg); border-radius: var(--radius); padding: 6px 8px; min-height: 24px; word-break: break-all; }
+
+/* Five Senses Matrix */
+.senses-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 8px; }
+.sense-card { background: var(--bg); border-radius: var(--radius); padding: 4px 6px; text-align: center; border: 1px solid transparent; }
+.sense-card.active { border-color: var(--green); }
+.sense-card .sense-icon { font-size: 16px; }
+.sense-card .sense-name { font-size: 8px; color: var(--fg2); }
+.sense-card .sense-val { font-size: 10px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>🕶️</span> RayNeo V3 <small style="font-size:10px;color:var(--fg2)">v3.0</small></h1>
+  <div class="mode-switch">
+    <button id="btnSim" class="active" onclick="setMode('sim')">SIM</button>
+    <button id="btnLive" onclick="setMode('live')">LIVE</button>
+  </div>
+  <div class="hstats">
+    <span class="s" id="wsStatus">⚪ Disconnected</span>
+    <span class="s" id="wornStatus">👓 --</span>
+    <span class="s" id="battStatus">🔋 --%</span>
+  </div>
+  <div class="hactions">
+    <button class="btn" onclick="toggleRec()" id="btnRec">⏺ Rec</button>
+    <button class="btn" onclick="playRec()">▶ Play</button>
+    <button class="btn" onclick="saveRec()">💾 Save</button>
+    <button class="btn" onclick="connect()">🔌</button>
+    <button class="btn" onclick="resetState()">🔄</button>
+    <button class="btn primary" onclick="requestState()">📊</button>
+  </div>
+</header>
+
+<main>
+  <!-- Left Panel — Controls -->
+  <div class="panel-left">
+
+    <div class="section">
+      <h3>🖐️ Touchpad (SDK TempleAction)</h3>
+      <div class="gesture-grid">
+        <button class="gesture-btn" onclick="sendGesture('tap')">👆 Tap</button>
+        <button class="gesture-btn" onclick="sendGesture('double_tap')">👆👆 Double</button>
+        <button class="gesture-btn" onclick="sendGesture('triple_click')">👆³ Triple</button>
+        <button class="gesture-btn" onclick="sendGesture('long_press')">⏳ Long</button>
+        <button class="gesture-btn" onclick="sendGesture('slide_fwd')">➡️ Forward</button>
+        <button class="gesture-btn" onclick="sendGesture('slide_back')">⬅️ Back</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>🔘 Buttons</h3>
+      <div class="btn-row">
+        <button class="hw-btn" onclick="sendButton('action','press')">Action</button>
+        <button class="hw-btn" onclick="sendButton('vol_up','press')">Vol +</button>
+        <button class="hw-btn" onclick="sendButton('vol_down','press')">Vol -</button>
+      </div>
+      <div class="btn-row">
+        <button class="hw-btn" onclick="sendButton('action','long_press')" style="width:100%">Action Long Press</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>🎤 Voice & Mic</h3>
+      <div class="voice-input" style="margin-bottom:6px">
+        <input type="text" id="voiceText" placeholder="小雷小雷 ..." value="小雷小雷 今天天气">
+        <button class="btn" onclick="sendVoice()">🎙️</button>
+      </div>
+      <div class="btn-row">
+        <button class="hw-btn" onclick="send({type:'voice_wakeup'})" style="flex:2">🗣️ 小雷小雷</button>
+        <button class="hw-btn" id="btnMic" onclick="send({type:'mic',action:'toggle'})">🎙️ Mic</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>🌍 Environment</h3>
+      <div class="ctrl-row">
+        <label>Light</label>
+        <input type="range" min="0" max="10000" value="250" id="slLight" oninput="setEnv('light',+this.value)">
+        <span class="val" id="vLight">250</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Battery</label>
+        <input type="range" min="0" max="100" value="85" id="slBatt" oninput="setEnv('battery',+this.value)">
+        <span class="val" id="vBatt">85%</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Bright</label>
+        <input type="range" min="0" max="255" value="128" id="slBright" oninput="setEnv('brightness',+this.value)">
+        <span class="val" id="vBright">128</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Volume</label>
+        <input type="range" min="0" max="100" value="80" id="slVol" oninput="send({type:'set_volume',volume:+this.value})">
+        <span class="val" id="vVol">80</span>
+      </div>
+      <div class="toggle"><input type="checkbox" id="chkWorn" checked onchange="setEnv('worn',this.checked)"><span>Wearing</span></div>
+      <div class="toggle"><input type="checkbox" id="chkWifi" checked onchange="setEnv('wifi_connected',this.checked)"><span>WiFi</span></div>
+      <div class="toggle"><input type="checkbox" id="chkCharge" onchange="setEnv('charging',this.checked)"><span>Charging</span></div>
+    </div>
+
+    <div class="section">
+      <h3>📢 TTS</h3>
+      <div class="voice-input">
+        <input type="text" id="ttsText" placeholder="TTS text..." value="Hello World">
+        <button class="btn" onclick="sendTTS()">🔊</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>📸 Camera + AI</h3>
+      <button class="btn" onclick="sendPhoto()" style="width:100%">📷 Take Photo & AI Recognize</button>
+    </div>
+
+    <div class="section">
+      <h3>🎬 Scenarios</h3>
+      <div class="scenario-list" id="scenarioList">
+        <div class="scenario-item" onclick="runScenario('outdoor_walk')"><span class="sc-name">🚶 户外行走</span><span class="sc-steps">7</span></div>
+        <div class="scenario-item" onclick="runScenario('indoor_office')"><span class="sc-name">🏢 室内办公</span><span class="sc-steps">6</span></div>
+        <div class="scenario-item" onclick="runScenario('night_dark')"><span class="sc-name">🌙 夜间暗光</span><span class="sc-steps">5</span></div>
+        <div class="scenario-item" onclick="runScenario('wear_cycle')"><span class="sc-name">👓 摘戴循环</span><span class="sc-steps">5</span></div>
+        <div class="scenario-item" onclick="runScenario('battery_drain')"><span class="sc-name">🪫 电量耗尽</span><span class="sc-steps">8</span></div>
+        <div class="scenario-item" onclick="runScenario('full_gestures')"><span class="sc-name">🖐️ 全手势</span><span class="sc-steps">6</span></div>
+      </div>
+      <button class="btn" onclick="send({type:'scenario',action:'stop'})" style="width:100%;margin-top:4px">⏹ Stop Scenario</button>
+    </div>
+  </div>
+
+  <!-- Center — Glasses Display -->
+  <div class="panel-center">
+    <div class="display-bar">
+      <span>XRGF50</span>
+      <span class="badge sim" id="modeBadge">SIM</span>
+      <span>1920×1080</span>
+      <span id="headPose" style="margin-left:auto">Head: neutral</span>
+    </div>
+    <div class="rec-bar" id="recBar" style="display:none">
+      <div class="rec-dot" id="recDot"></div>
+      <span id="recLabel">REC</span>
+      <button class="btn" onclick="toggleRec()" style="padding:1px 6px;font-size:10px" id="recStopBtn">Stop</button>
+      <span class="rec-info" id="recInfo">0 frames</span>
+    </div>
+    <div class="scenario-bar" id="scenarioBar" style="display:none">
+      <span>🎬</span>
+      <span id="scName">--</span>
+      <div class="sc-progress"><div class="sc-fill" id="scFill" style="width:0%"></div></div>
+      <span id="scStep">0/0</span>
+    </div>
+    <div class="glasses-viewport">
+      <div class="glasses-screen" id="glassesScreen">
+        <div class="hud">
+          <div class="hud-top">
+            <span id="hudTime">--:--</span>
+            <span id="hudBatt">🔋 --%</span>
+          </div>
+          <div class="hud-center">
+            <div class="msg" id="hudMsg">RayNeo V3 Simulator Ready</div>
+          </div>
+          <div class="hud-bottom">
+            <span>单击=拍照</span>
+            <span>双击=AI</span>
+            <span>前滑=下一</span>
+            <span>后滑=上一</span>
+          </div>
+        </div>
+        <div class="tp-overlay" id="tpOverlay">
+          <div class="tp-track">
+            <div class="tp-thumb" id="tpThumb" style="left:50%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right — Monitor -->
+  <div class="panel-right">
+    <div class="senses-grid">
+      <div class="sense-card active" id="sVision"><div class="sense-icon">👁️</div><div class="sense-name">Vision</div><div class="sense-val" id="svVision">ON</div></div>
+      <div class="sense-card active" id="sHearing"><div class="sense-icon">👂</div><div class="sense-name">Hearing</div><div class="sense-val" id="svHearing">ON</div></div>
+      <div class="sense-card active" id="sTouch"><div class="sense-icon">🖐️</div><div class="sense-name">Touch</div><div class="sense-val" id="svTouch">ON</div></div>
+      <div class="sense-card active" id="sSpatial"><div class="sense-icon">🧭</div><div class="sense-name">Spatial</div><div class="sense-val" id="svSpatial">ON</div></div>
+      <div class="sense-card active" id="sEnv"><div class="sense-icon">🌍</div><div class="sense-name">Environ</div><div class="sense-val" id="svEnv">ON</div></div>
+      <div class="sense-card" id="sWugan"><div class="sense-icon">☯</div><div class="sense-name">Wugan</div><div class="sense-val" id="svWugan">0</div></div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="label">WS</div><div class="value" id="mWS">--</div></div>
+      <div class="metric"><div class="label">Battery</div><div class="value g" id="mBatt">--%</div></div>
+      <div class="metric"><div class="label">Light</div><div class="value" id="mLight">--</div></div>
+      <div class="metric"><div class="label">Worn</div><div class="value" id="mWorn">--</div></div>
+      <div class="metric"><div class="label">WiFi</div><div class="value g" id="mWifi">--</div></div>
+      <div class="metric"><div class="label">Volume</div><div class="value" id="mVol">80</div></div>
+      <div class="metric"><div class="label">Charge</div><div class="value" id="mCharge">--</div></div>
+      <div class="metric"><div class="label">Mic</div><div class="value" id="mMic">OFF</div></div>
+      <div class="metric"><div class="label">Head</div><div class="value" id="mHead">--</div></div>
+      <div class="metric"><div class="label">Cam</div><div class="value" id="mCam">OFF</div></div>
+    </div>
+    <div class="ai-result">
+      <h3>🤖 AI Result</h3>
+      <div class="ai-text" id="aiResultText">--</div>
+    </div>
+
+    <div class="pose-container">
+      <h3>3D Head Pose</h3>
+      <div class="pose-scene">
+        <div class="pose-cube" id="poseCube">
+          <div class="face front">FRONT</div>
+          <div class="face back">BACK</div>
+          <div class="face left">L</div>
+          <div class="face right">R</div>
+          <div class="face top">TOP</div>
+          <div class="face bottom">BTM</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="imu-viz">
+      <h3>IMU Waveform</h3>
+      <canvas class="imu-canvas" id="imuCanvas" width="236" height="60"></canvas>
+    </div>
+
+    <div class="dao-panel">
+      <h3>☯ Dao Context</h3>
+      <div class="dao-grid">
+        <div class="dao-item"><div class="dao-label">STATE</div><div class="dao-val" id="daoState" style="color:var(--green)">IDLE</div></div>
+        <div class="dao-item"><div class="dao-label">INTENT</div><div class="dao-val" id="daoIntent" style="color:var(--accent)">--</div></div>
+        <div class="dao-item"><div class="dao-label">WUGAN</div><div class="dao-val" id="daoWugan" style="color:var(--purple)">0</div></div>
+        <div class="dao-item"><div class="dao-label">EVENTS</div><div class="dao-val" id="daoEvents" style="color:var(--fg2)">0</div></div>
+      </div>
+    </div>
+
+    <div class="log-header">Event Log</div>
+    <div class="event-log" id="eventLog"></div>
+  </div>
+</main>
+
+<script>
+// ============================================================
+// WebSocket Connection
+// ============================================================
+let ws = null;
+const WS_URL = 'ws://localhost:8767';
+let reconnectTimer = null;
+let imuHistory = [];
+
+function connect() {
+  if (ws && ws.readyState === WebSocket.OPEN) return;
+  try {
+    ws = new WebSocket(WS_URL);
+    ws.onopen = () => {
+      setStatus('wsStatus', '🟢 Connected', 'on');
+      document.getElementById('mWS').textContent = '✅';
+      document.getElementById('mWS').className = 'value g';
+      addLog('info', 'WebSocket connected');
+    };
+    ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
+    ws.onclose = () => {
+      setStatus('wsStatus', '🔴 Disconnected', 'off');
+      document.getElementById('mWS').textContent = '❌';
+      document.getElementById('mWS').className = 'value r';
+      addLog('error', 'WebSocket disconnected');
+      // Auto-reconnect after 3s
+      if (!reconnectTimer) {
+        reconnectTimer = setTimeout(() => { reconnectTimer = null; connect(); }, 3000);
+      }
+    };
+    ws.onerror = () => addLog('error', 'WebSocket error');
+  } catch (e) {
+    addLog('error', 'Connect failed: ' + e.message);
+  }
+}
+
+function send(msg) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(msg));
+  } else {
+    addLog('error', 'Not connected');
+  }
+}
+
+// ============================================================
+// Message Handling
+// ============================================================
+let currentMode = 'sim';
+let isRecording = false;
+let eventCount = 0;
+
+function handleMessage(msg) {
+  switch (msg.type) {
+    case 'state':
+      updateState(msg.data);
+      break;
+    case 'event':
+      handleEvent(msg.event);
+      break;
+    case 'tts_play':
+      playTTS(msg.text);
+      break;
+    case 'action':
+      showHudMessage(msg.msg, 3000);
+      addLog('action', msg.msg);
+      break;
+    case 'imu':
+      updateIMU(msg.data);
+      break;
+    case 'photo_result':
+      showHudMessage('📸 ' + msg.msg, 2000);
+      addLog('info', msg.msg);
+      if (msg.ai) updateAIResult(msg.ai);
+      break;
+    case 'ai_result':
+      updateAIResult(msg.text);
+      showHudMessage('🤖 ' + msg.text, 3000);
+      addLog('info', '🤖 AI: ' + msg.text);
+      break;
+    case 'mode':
+      updateMode(msg.mode);
+      break;
+    case 'rec_status':
+      updateRecStatus(msg.data);
+      break;
+    case 'rec_saved':
+      addLog('info', '💾 Saved: ' + msg.path + ' (' + msg.frames + ' frames)');
+      showHudMessage('💾 Recording saved', 2000);
+      break;
+    case 'scenario':
+      handleScenario(msg);
+      break;
+    case 'adb_result':
+      addLog('info', '$ ' + msg.cmd + ' → ' + (msg.output || '').substring(0, 200));
+      break;
+    case 'scenarios':
+      addLog('info', 'Scenarios: ' + Object.keys(msg.data).join(', '));
+      break;
+  }
+}
+
+function updateState(s) {
+  // Status bar
+  setStatus('wornStatus', s.is_worn ? '👓 Worn' : '👓 Off', s.is_worn ? 'on' : 'off');
+  const battIcon = s.charging ? '🔌' : '🔋';
+  setStatus('battStatus', `${battIcon} ${s.battery}%`, s.battery > 20 ? 'on' : 'off');
+  // Core metrics
+  const bc = s.battery > 50 ? 'g' : s.battery > 20 ? 'y' : 'r';
+  document.getElementById('mBatt').textContent = s.battery + '%';
+  document.getElementById('mBatt').className = 'value ' + bc;
+  document.getElementById('mLight').textContent = (s.light || 0).toFixed ? s.light.toFixed(0) : s.light;
+  document.getElementById('mWorn').textContent = s.is_worn ? '✅' : '❌';
+  document.getElementById('mWorn').className = 'value ' + (s.is_worn ? 'g' : 'r');
+  document.getElementById('mHead').textContent = s.head_pose;
+  // New V3 metrics
+  const wifiConn = s.wifi ? s.wifi.connected : s.wifi_connected;
+  const wifiSsid = s.wifi ? s.wifi.ssid : s.wifi_ssid;
+  const mWifi = document.getElementById('mWifi');
+  if (mWifi) {
+    mWifi.textContent = wifiConn ? (wifiSsid || 'ON') : 'OFF';
+    mWifi.className = 'value ' + (wifiConn ? 'g' : 'r');
+  }
+  const mVol = document.getElementById('mVol');
+  if (mVol) mVol.textContent = s.volume !== undefined ? s.volume : '--';
+  const mCharge = document.getElementById('mCharge');
+  if (mCharge) {
+    mCharge.textContent = s.charging ? '⚡' : '--';
+    mCharge.className = 'value ' + (s.charging ? 'y' : '');
+  }
+  const mMic = document.getElementById('mMic');
+  if (mMic) {
+    mMic.textContent = s.mic_recording ? '🔴' : 'OFF';
+    mMic.className = 'value ' + (s.mic_recording ? 'r' : '');
+  }
+  const mCam = document.getElementById('mCam');
+  if (mCam) {
+    mCam.textContent = s.camera_active ? '🔴' : 'OFF';
+    mCam.className = 'value ' + (s.camera_active ? 'r' : '');
+  }
+  // HUD
+  document.getElementById('hudBatt').textContent = battIcon + ' ' + s.battery + '%';
+  // Sliders sync
+  document.getElementById('slLight').value = s.light;
+  document.getElementById('vLight').textContent = (s.light || 0).toFixed ? s.light.toFixed(0) : s.light;
+  document.getElementById('slBatt').value = s.battery;
+  document.getElementById('vBatt').textContent = s.battery + '%';
+  document.getElementById('chkWorn').checked = s.is_worn;
+  if (s.volume !== undefined) {
+    document.getElementById('slVol').value = s.volume;
+    document.getElementById('vVol').textContent = s.volume;
+  }
+  const wfConn = s.wifi ? s.wifi.connected : s.wifi_connected;
+  if (wfConn !== undefined) document.getElementById('chkWifi').checked = wfConn;
+  if (s.charging !== undefined) document.getElementById('chkCharge').checked = s.charging;
+  // Mic button state
+  const btnMic = document.getElementById('btnMic');
+  if (btnMic) btnMic.style.color = s.mic_recording ? 'var(--red)' : '';
+  // Screen brightness
+  const screen = document.getElementById('glassesScreen');
+  const opacity = 0.3 + (s.brightness / 255) * 0.7;
+  screen.style.filter = `brightness(${opacity})`;
+  // Five senses update
+  updateSenses(s);
+}
+
+function updateSenses(s) {
+  const setS = (id, active, val) => {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'sense-card' + (active ? ' active' : ''); }
+    const v = document.getElementById('sv' + id.substring(1));
+    if (v) v.textContent = val;
+  };
+  const wc = s.wifi ? s.wifi.connected : s.wifi_connected;
+  setS('sVision', s.is_worn && s.brightness > 0, s.camera_active ? 'CAM' : (s.is_worn ? 'ON' : 'OFF'));
+  setS('sHearing', s.volume > 0 || s.mic_recording, s.mic_recording ? 'MIC' : (s.volume > 0 ? s.volume : 'OFF'));
+  setS('sTouch', s.is_worn, s.proximity !== undefined ? (s.proximity < 2 ? 'NEAR' : 'FAR') : 'ON');
+  setS('sSpatial', s.is_worn, s.head_pose || '--');
+  setS('sEnv', true, s.light > 1000 ? 'BRIGHT' : s.light > 100 ? 'NORMAL' : 'DARK');
+  const wugan = Math.min(100, eventCount * 2);
+  setS('sWugan', wugan > 50, wugan);
+}
+
+function handleEvent(ev) {
+  const cls = ev.type === 'gesture' ? 'gesture' : ev.type === 'tts' ? 'tts' : ev.type;
+  const time = new Date(ev.time * 1000).toLocaleTimeString('en', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const detail = ev.data ? JSON.stringify(ev.data) : '';
+  addLog(cls, `[${ev.type}] ${detail}`);
+  // Dao panel updates
+  eventCount++;
+  document.getElementById('daoEvents').textContent = eventCount;
+  if (ev.type === 'gesture' && ev.data) {
+    document.getElementById('daoState').textContent = 'SENSING';
+    document.getElementById('daoIntent').textContent = ev.data.gesture || '--';
+    const wugan = Math.min(100, eventCount * 2);
+    document.getElementById('daoWugan').textContent = wugan;
+    setTimeout(() => { document.getElementById('daoState').textContent = 'IDLE'; }, 2000);
+  } else if (ev.type === 'voice_input') {
+    document.getElementById('daoState').textContent = 'LISTENING';
+    document.getElementById('daoIntent').textContent = 'voice';
+    setTimeout(() => { document.getElementById('daoState').textContent = 'IDLE'; }, 3000);
+  }
+}
+
+function updateIMU(data) {
+  const mAX = document.getElementById('mAX');
+  const mAY = document.getElementById('mAY');
+  const mAZ = document.getElementById('mAZ');
+  if (mAX) mAX.textContent = data.accel[0].toFixed(1);
+  if (mAY) mAY.textContent = data.accel[1].toFixed(1);
+  if (mAZ) mAZ.textContent = data.accel[2].toFixed(1);
+  const mHead = document.getElementById('mHead');
+  if (mHead) mHead.textContent = data.head_pose;
+  const headPose = document.getElementById('headPose');
+  if (headPose) headPose.textContent = 'Head: ' + data.head_pose;
+  // IMU history for canvas
+  imuHistory.push({ax: data.accel[0], ay: data.accel[1], az: data.accel[2], t: Date.now()});
+  if (imuHistory.length > 100) imuHistory.shift();
+  drawIMU();
+  // 3D Pose Cube
+  updatePoseCube(data.accel, data.head_pose);
+}
+
+function updatePoseCube(accel, pose) {
+  const cube = document.getElementById('poseCube');
+  if (!cube) return;
+  const ax = accel[0], ay = accel[1];
+  const rotX = Math.max(-45, Math.min(45, -ay * 4.5));
+  const rotY = Math.max(-45, Math.min(45, ax * 4.5));
+  cube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+}
+
+// ============================================================
+// Mode Switching
+// ============================================================
+function setMode(mode) {
+  send({type: 'set_mode', mode: mode});
+}
+
+function updateMode(mode) {
+  currentMode = mode;
+  const badge = document.getElementById('modeBadge');
+  const btnSim = document.getElementById('btnSim');
+  const btnLive = document.getElementById('btnLive');
+  if (mode === 'live') {
+    badge.textContent = 'LIVE';
+    badge.className = 'badge live';
+    btnSim.className = '';
+    btnLive.className = 'active live';
+  } else {
+    badge.textContent = 'SIM';
+    badge.className = 'badge sim';
+    btnSim.className = 'active';
+    btnLive.className = '';
+  }
+  addLog('info', 'Mode: ' + mode.toUpperCase());
+}
+
+// ============================================================
+// Recording Controls
+// ============================================================
+function toggleRec() {
+  if (!isRecording) {
+    send({type: 'rec_start'});
+    isRecording = true;
+  } else {
+    send({type: 'rec_stop'});
+    isRecording = false;
+  }
+}
+
+function playRec() {
+  send({type: 'rec_play'});
+  addLog('info', '▶ Playing recording...');
+}
+
+function saveRec() {
+  send({type: 'rec_save'});
+}
+
+function updateRecStatus(data) {
+  const bar = document.getElementById('recBar');
+  const dot = document.getElementById('recDot');
+  const label = document.getElementById('recLabel');
+  const info = document.getElementById('recInfo');
+  const btn = document.getElementById('btnRec');
+  if (data.recording) {
+    bar.style.display = 'flex';
+    dot.className = 'rec-dot on';
+    label.textContent = 'REC';
+    btn.textContent = '⏹ Stop';
+    btn.style.borderColor = 'var(--red)';
+    btn.style.color = 'var(--red)';
+  } else if (data.playing) {
+    bar.style.display = 'flex';
+    dot.className = 'rec-dot';
+    dot.style.background = 'var(--green)';
+    label.textContent = 'PLAY';
+    btn.textContent = '⏺ Rec';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  } else {
+    bar.style.display = data.frame_count > 0 ? 'flex' : 'none';
+    dot.className = 'rec-dot';
+    dot.style.background = '';
+    label.textContent = 'IDLE';
+    btn.textContent = '⏺ Rec';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+  info.textContent = data.frame_count + ' frames / ' + data.duration.toFixed(1) + 's';
+  isRecording = data.recording;
+}
+
+// ============================================================
+// Controls → Server
+// ============================================================
+function sendGesture(g) {
+  send({type: 'tp_gesture', gesture: g});
+  showHudMessage({tap:'👆 Tap', double_tap:'👆👆 Double Tap', triple_click:'👆³ Triple Click',
+    slide_fwd:'➡️ Slide Forward', slide_back:'⬅️ Slide Back', long_press:'⏳ Long Press'}[g] || g, 1500);
+}
+
+function sendButton(button, action) {
+  send({type: 'button', button, action});
+  addLog('info', `Button: ${button} ${action}`);
+}
+
+function sendVoice() {
+  const text = document.getElementById('voiceText').value;
+  if (text) { send({type: 'speak', text}); addLog('info', '🎤 ' + text); }
+}
+
+function sendTTS() {
+  const text = document.getElementById('ttsText').value;
+  if (text) send({type: 'tts', text});
+}
+
+function sendPhoto() {
+  send({type: 'photo'});
+  showHudMessage('📸 Capturing...', 1500);
+}
+
+function setEnv(key, val) {
+  const msg = {type: 'set_env'};
+  msg[key] = val;
+  send(msg);
+  if (key === 'light') document.getElementById('vLight').textContent = val;
+  if (key === 'battery') document.getElementById('vBatt').textContent = val + '%';
+  if (key === 'brightness') document.getElementById('vBright').textContent = val;
+  if (key === 'volume') document.getElementById('vVol').textContent = val;
+}
+
+function requestState() { send({type: 'get_state'}); }
+
+function resetState() {
+  send({type: 'set_env', light: 250, battery: 85, brightness: 128, worn: true, volume: 80, wifi_connected: true, charging: false});
+  document.getElementById('slLight').value = 250;
+  document.getElementById('slBatt').value = 85;
+  document.getElementById('slBright').value = 128;
+  document.getElementById('slVol').value = 80;
+  document.getElementById('vVol').textContent = '80';
+  document.getElementById('chkWorn').checked = true;
+  document.getElementById('chkWifi').checked = true;
+  document.getElementById('chkCharge').checked = false;
+}
+
+// ============================================================
+// AI Result Display
+// ============================================================
+function updateAIResult(text) {
+  const el = document.getElementById('aiResultText');
+  if (el) el.textContent = text;
+}
+
+// ============================================================
+// Scenario Runner
+// ============================================================
+function runScenario(name) {
+  send({type: 'scenario', action: 'run', name: name});
+  addLog('action', '🎬 Starting scenario: ' + name);
+}
+
+function handleScenario(msg) {
+  const bar = document.getElementById('scenarioBar');
+  const fill = document.getElementById('scFill');
+  const nameEl = document.getElementById('scName');
+  const stepEl = document.getElementById('scStep');
+  if (msg.action === 'start') {
+    bar.style.display = 'flex';
+    nameEl.textContent = msg.name;
+    stepEl.textContent = '0/' + msg.total;
+    fill.style.width = '0%';
+    addLog('action', '🎬 Scenario started: ' + msg.name);
+  } else if (msg.action === 'step') {
+    stepEl.textContent = msg.index + '/' + msg.total;
+    fill.style.width = ((msg.index / msg.total) * 100) + '%';
+  } else if (msg.action === 'done') {
+    fill.style.width = '100%';
+    stepEl.textContent = 'DONE';
+    addLog('action', '✅ Scenario completed: ' + msg.name);
+    setTimeout(() => { bar.style.display = 'none'; }, 3000);
+  } else if (msg.action === 'stopped') {
+    bar.style.display = 'none';
+    addLog('action', '⏹ Scenario stopped');
+  }
+}
+
+// ============================================================
+// TTS Playback (Web Speech API)
+// ============================================================
+function playTTS(text) {
+  showHudMessage('🔊 ' + text, 3000);
+  addLog('tts', '🔊 ' + text);
+  if ('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 1.1;
+    speechSynthesis.speak(u);
+  }
+}
+
+// ============================================================
+// HUD Message
+// ============================================================
+let hudTimer = null;
+function showHudMessage(text, duration = 2000) {
+  const el = document.getElementById('hudMsg');
+  el.textContent = text;
+  el.classList.add('show');
+  if (hudTimer) clearTimeout(hudTimer);
+  hudTimer = setTimeout(() => el.classList.remove('show'), duration);
+}
+
+// ============================================================
+// Touchpad Mouse Interaction
+// ============================================================
+(function() {
+  const overlay = document.getElementById('tpOverlay');
+  const thumb = document.getElementById('tpThumb');
+  let dragging = false;
+
+  overlay.addEventListener('mousedown', (e) => {
+    dragging = true;
+    overlay.style.cursor = 'grabbing';
+    updateTP(e);
+    send({type: 'tp_touch', x: getTPX(e), action: 'down'});
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    updateTP(e);
+    send({type: 'tp_touch', x: getTPX(e), action: 'move'});
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    overlay.style.cursor = 'grab';
+    send({type: 'tp_touch', x: 640, action: 'up'});
+  });
+
+  function getTPX(e) {
+    const rect = overlay.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    return Math.round(pct * 1279);
+  }
+  function updateTP(e) {
+    const rect = overlay.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    thumb.style.left = (pct * 100) + '%';
+  }
+})();
+
+// ============================================================
+// Keyboard → IMU simulation
+// ============================================================
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  const map = {
+    'ArrowUp':    [0, 7, 9.8],
+    'ArrowDown':  [0, -7, 9.8],
+    'ArrowLeft':  [-7, 0, 9.8],
+    'ArrowRight': [7, 0, 9.8],
+    ' ':          [0, 0, 9.8],  // neutral
+  };
+  if (map[e.key]) {
+    e.preventDefault();
+    send({type: 'imu', accel: map[e.key], gyro: [0, 0, 0]});
+  }
+  // Gesture shortcuts
+  if (e.key === 'Enter') sendGesture('tap');
+  if (e.key === 'Backspace') sendGesture('slide_back');
+  if (e.key === 'Tab') { e.preventDefault(); sendGesture('slide_fwd'); }
+});
+document.addEventListener('keyup', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+    send({type: 'imu', accel: [0, 0, 9.8], gyro: [0, 0, 0]});
+  }
+});
+
+// ============================================================
+// IMU Canvas
+// ============================================================
+function drawIMU() {
+  const canvas = document.getElementById('imuCanvas');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,.05)';
+  ctx.beginPath();
+  ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
+  ctx.stroke();
+
+  if (imuHistory.length < 2) return;
+  const draw = (data, color) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < imuHistory.length; i++) {
+      const x = (i / 100) * w;
+      const y = h/2 - (data(imuHistory[i]) / 20) * h/2;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  };
+  draw(d => d.ax, '#ef4444');
+  draw(d => d.ay, '#22c55e');
+  draw(d => d.az - 9.8, '#00d4ff');
+}
+
+// ============================================================
+// Event Log
+// ============================================================
+function addLog(cls, msg) {
+  const log = document.getElementById('eventLog');
+  const div = document.createElement('div');
+  div.className = 'ev ' + cls;
+  const t = new Date().toLocaleTimeString('en', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  div.textContent = `[${t}] ${msg}`;
+  log.appendChild(div);
+  if (log.children.length > 200) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ============================================================
+// Utilities
+// ============================================================
+function setStatus(id, text, cls) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 's ' + (cls || '');
+}
+
+// HUD clock
+setInterval(() => {
+  document.getElementById('hudTime').textContent = new Date().toLocaleTimeString('en', {hour12:false, hour:'2-digit', minute:'2-digit'});
+}, 1000);
+
+// Auto-connect on load
+showHudMessage('RayNeo V3 Simulator v3.0', 3000);
+addLog('info', 'v3.0 loaded — 5 senses, scenarios, AI, full V3 hardware sim');
+setTimeout(connect, 500);
+</script>
+</body>
+</html>

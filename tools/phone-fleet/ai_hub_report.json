@@ -1,0 +1,108 @@
+{
+  "timestamp": "2026-02-26 22:11:11",
+  "device": "http://192.168.31.32:8084",
+  "test_prompt": "今天星期几",
+  "results": [
+    {
+      "name": "小布助手",
+      "package": "com.heytap.speechassist",
+      "type": "assistant",
+      "steps": {
+        "launch": true,
+        "identify": true,
+        "find_input": true,
+        "send": true,
+        "reply": true
+      },
+      "score": 5,
+      "max_score": 5,
+      "screen_texts": [
+        "drawer",
+        "自动播报TTS",
+        "小布助手",
+        "DeepSeek 满血版",
+        "晚上好！来唠嗑吧",
+        "有问题欢迎随时向我发起提问。",
+        "你可以这样问",
+        "手机太卡了清理一下",
+        "放一个窜天猴烟花",
+        "让光子鸡给我跳一个舞",
+        "换一换",
+        "按住 说话",
+        "深度思考",
+        "联网搜索"
+      ],
+      "foreground": "com.heytap.speechassist",
+      "ai_reply": "手机太卡了清理一下"
+    },
+    {
+      "name": "夸克AI",
+      "package": "com.quark.browser",
+      "type": "browser",
+      "steps": {
+        "launch": true,
+        "identify": true,
+        "find_input": true,
+        "send": true,
+        "reply": true
+      },
+      "score": 5,
+      "max_score": 5,
+      "screen_texts": [
+        "夸克-新生代智能搜索",
+        "继续下拉加载上一个问题",
+        "全部",
+        "图片",
+        "经验",
+        "资讯",
+        "文档",
+        "YzwrAHuQltG0treOsyTwAAAA==",
+        "返回主页",
+        "多窗口",
+        "语音搜索",
+        "菜单",
+        "AI写作",
+        "AI生图",
+        "翻译"
+      ],
+      "foreground": "com.quark.browser",
+      "ai_reply": "继续下拉加载上一个问题"
+    },
+    {
+      "name": "通义千问",
+      "package": "com.aliyun.tongyi",
+      "type": "chat",
+      "steps": {
+        "launch": true,
+        "identify": true,
+        "find_input": true,
+        "send": true,
+        "reply": false
+      },
+      "score": 4,
+      "max_score": 5,
+      "screen_texts": [
+        "立即登录，解锁更多功能",
+        "我是千问",
+        "随时为你答疑、创作，也欢迎找我聊天",
+        "千问，帮我下单适合小朋友吃的零食，最好有优惠",
+        "吃苦味食物有助于恢复精力吗？",
+        "多社交能延缓细胞衰老吗？",
+        "深度思考",
+        "拍题答疑",
+        "AI生视频",
+        "作业批改",
+        "发消息或按住说话...",
+        "内容由AI生成"
+      ],
+      "foreground": "com.aliyun.tongyi",
+      "ai_reply": ""
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "launchable": 3,
+    "interactive": 3,
+    "full_pass": 2
+  }
+}

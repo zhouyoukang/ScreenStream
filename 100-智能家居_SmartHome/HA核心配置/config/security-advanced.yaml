@@ -1,0 +1,125 @@
+# Advanced Security Features - Cycle #5 Round #3
+
+# Two-Factor Authentication (2FA)
+two_factor_auth:
+  enabled: true
+  required_for_admin: true
+  
+  # 2FA methods
+  methods:
+    - totp  # Time-based OTP (Google Authenticator)
+    - sms   # SMS verification
+    - email # Email verification
+    - backup_codes  # Recovery codes
+  
+  # TOTP configuration
+  totp:
+    issuer: "Home Assistant"
+    algorithm: SHA1
+    digits: 6
+    period: 30  # seconds
+  
+  # Backup codes
+  backup_codes:
+    count: 10
+    length: 8
+    single_use: true
+
+# Biometric Authentication
+biometric_auth:
+  enabled: true
+  
+  # Supported types
+  types:
+    - fingerprint
+    - face_recognition
+    - iris_scan
+  
+  # Fallback
+  fallback_to_pin: true
+  max_attempts: 3
+  lockout_duration: 300  # seconds
+
+# Session Management
+session_management:
+  
+  # Session settings
+  session_timeout: 3600  # 1 hour
+  remember_me_duration: 2592000  # 30 days
+  concurrent_sessions: 3
+  
+  # Security
+  session_security:
+    rotate_on_login: true
+    invalidate_on_password_change: true
+    bind_to_ip: false
+    bind_to_user_agent: true
+
+# Encryption
+encryption:
+  
+  # Data at rest
+  data_encryption:
+    enabled: true
+    algorithm: AES-256-GCM
+    key_rotation: 90  # days
+  
+  # Data in transit
+  transit_encryption:
+    force_https: true
+    min_tls_version: 1.2
+    hsts_enabled: true
+    hsts_max_age: 31536000
+
+# Access Control
+access_control:
+  
+  # IP whitelist
+  ip_whitelist:
+    enabled: false
+    allowed_ips: []
+  
+  # Rate limiting
+  rate_limiting:
+    enabled: true
+    max_requests_per_minute: 60
+    ban_duration: 3600  # 1 hour
+  
+  # Brute force protection
+  brute_force:
+    max_attempts: 5
+    lockout_duration: 900  # 15 minutes
+    track_by: ip_and_username
+
+# Audit Logging
+audit_logging:
+  enabled: true
+  
+  # Logged events
+  events:
+    - login_success
+    - login_failure
+    - logout
+    - password_change
+    - 2fa_enable
+    - 2fa_disable
+    - permission_change
+    - sensitive_action
+  
+  # Retention
+  retention_days: 90
+  
+  # Alerts
+  alert_on:
+    - multiple_failed_logins
+    - unusual_location
+    - permission_escalation
+
+# Security Headers
+security_headers:
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: "1; mode=block"
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: "default-src 'self'"
+  Permissions-Policy: "geolocation=(), microphone=(), camera=()"

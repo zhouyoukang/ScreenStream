@@ -1,0 +1,14 @@
+# VAM-agent 核心依赖
+# pip install -r requirements.txt
+
+# SignalR WebSocket通信 (voxta/signalr.py)
+websocket-client>=1.6.0
+
+# GUI自动化 - Windows专用 (vam/gui.py)
+# 仅Windows环境需要，Linux/Mac跳过
+pywin32>=306; sys_platform == "win32"
+mss>=9.0.0
+rapidocr-onnxruntime>=1.3.0
+
+# Browser Bridge - 可选 (browser_bridge/)
+# pip install -r requirements-bridge.txt

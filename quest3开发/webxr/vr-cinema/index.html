@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VR Cinema — Quest 3 Simulator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #fff; font-family: system-ui, sans-serif; overflow: hidden; }
+    canvas { display: block; width: 100%; height: 100%; }
+    #ui { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 10; }
+    #ui button { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px 20px; font-size: 14px; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.2s; }
+    #ui button:hover { background: rgba(255,255,255,0.3); }
+    #ui button.active { background: rgba(100,200,255,0.4); border-color: #64c8ff; }
+    #info { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); text-align: center; font-size: 24px; opacity: 0.8; pointer-events: none; }
+    #vr-btn { position: fixed; bottom: 20px; right: 20px; z-index: 20; }
+    #vr-btn button { background: #4a9eff; color: #fff; border: none; border-radius: 8px; padding: 12px 24px; font-size: 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="info">🎬 VR Cinema — Immersive Theater</div>
+  <div id="ui">
+    <button class="active" onclick="setEnvironment('theater')">🎭 Theater</button>
+    <button onclick="setEnvironment('outdoor')">🌌 Outdoor</button>
+    <button onclick="setEnvironment('void')">⬛ Void</button>
+    <button onclick="toggleLights()">💡 Lights</button>
+  </div>
+  <div id="vr-btn"></div>
+
+  <script type="importmap">
+  { "imports": { "three": "https://unpkg.com/three@0.165.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/" } }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { VRButton } from 'three/addons/webxr/VRButton.js';
+
+    let scene, camera, renderer, screen, seats = [], lights = true;
+    let currentEnv = 'theater';
+
+    function init() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x050510);
+      scene.fog = new THREE.Fog(0x050510, 8, 30);
+
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 2, 6);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.xr.enabled = true;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
+      document.body.appendChild(renderer.domElement);
+
+      document.getElementById('vr-btn').appendChild(VRButton.createButton(renderer));
+
+      // Cinema screen (16:9 curved)
+      const screenGeo = new THREE.PlaneGeometry(10, 5.625, 32, 1);
+      // Slight curve
+      const pos = screenGeo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        pos.setZ(i, pos.getZ(i) - Math.pow(x / 8, 2) * 2);
+      }
+      screenGeo.computeVertexNormals();
+
+      // Animated gradient material
+      const screenMat = new THREE.ShaderMaterial({
+        uniforms: {
+          time: { value: 0 },
+          color1: { value: new THREE.Color(0x1a237e) },
+          color2: { value: new THREE.Color(0x4a148c) },
+          color3: { value: new THREE.Color(0x00695c) }
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform float time;
+          uniform vec3 color1, color2, color3;
+          varying vec2 vUv;
+          void main() {
+            float t = sin(time * 0.5) * 0.5 + 0.5;
+            vec3 c = mix(mix(color1, color2, vUv.x + sin(time * 0.3) * 0.3), color3, vUv.y * t);
+            // Add scanlines
+            float scanline = sin(vUv.y * 300.0 + time * 2.0) * 0.03;
+            c += scanline;
+            // Vignette
+            float vignette = 1.0 - length((vUv - 0.5) * 1.5);
+            c *= smoothstep(0.0, 0.8, vignette);
+            gl_FragColor = vec4(c, 1.0);
+          }
+        `,
+        side: THREE.DoubleSide
+      });
+
+      screen = new THREE.Mesh(screenGeo, screenMat);
+      screen.position.set(0, 3.5, -5);
+      scene.add(screen);
+
+      // Screen frame
+      const frameGeo = new THREE.BoxGeometry(10.4, 6, 0.15);
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.2 });
+      const frame = new THREE.Mesh(frameGeo, frameMat);
+      frame.position.copy(screen.position);
+      frame.position.z -= 0.1;
+      scene.add(frame);
+
+      // Floor
+      const floorGeo = new THREE.PlaneGeometry(20, 20);
+      const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.8 });
+      const floor = new THREE.Mesh(floorGeo, floorMat);
+      floor.rotation.x = -Math.PI / 2;
+      scene.add(floor);
+
+      // Ceiling
+      const ceiling = floor.clone();
+      ceiling.position.y = 8;
+      ceiling.rotation.x = Math.PI / 2;
+      ceiling.material = new THREE.MeshStandardMaterial({ color: 0x0a0a15, roughness: 1 });
+      scene.add(ceiling);
+
+      // Walls
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0x16213e, roughness: 0.9 });
+      const wallGeo = new THREE.PlaneGeometry(20, 8);
+      [-10, 10].forEach(x => {
+        const wall = new THREE.Mesh(wallGeo, wallMat);
+        wall.position.set(x, 4, 0);
+        wall.rotation.y = x > 0 ? -Math.PI / 2 : Math.PI / 2;
+        scene.add(wall);
+      });
+      const backWall = new THREE.Mesh(new THREE.PlaneGeometry(20, 8), wallMat);
+      backWall.position.set(0, 4, 10);
+      backWall.rotation.y = Math.PI;
+      scene.add(backWall);
+
+      // Seats (3 rows)
+      const seatMat = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.6, metalness: 0.1 });
+      for (let row = 0; row < 3; row++) {
+        for (let col = -3; col <= 3; col++) {
+          const seat = new THREE.Group();
+          // Back
+          const back = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.0, 0.15), seatMat);
+          back.position.y = 0.7;
+          back.position.z = -0.3;
+          seat.add(back);
+          // Seat
+          const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.15, 0.6), seatMat);
+          cushion.position.y = 0.25;
+          seat.add(cushion);
+          // Arms
+          [-0.45, 0.45].forEach(ax => {
+            const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.6), new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5 }));
+            arm.position.set(ax, 0.4, 0);
+            seat.add(arm);
+          });
+
+          seat.position.set(col * 1.2, row * 0.3, 3 + row * 2);
+          scene.add(seat);
+          seats.push(seat);
+        }
+      }
+
+      // Lighting
+      const ambient = new THREE.AmbientLight(0x222244, 0.3);
+      scene.add(ambient);
+
+      // Screen glow
+      const screenLight = new THREE.PointLight(0x4466ff, 2, 15);
+      screenLight.position.set(0, 3.5, -3);
+      scene.add(screenLight);
+
+      // Ceiling spots
+      for (let i = -2; i <= 2; i++) {
+        const spot = new THREE.SpotLight(0xffcc88, 0.5, 12, Math.PI / 6, 0.5);
+        spot.position.set(i * 4, 7.8, 3);
+        spot.target.position.set(i * 4, 0, 3);
+        scene.add(spot);
+        scene.add(spot.target);
+      }
+
+      // Stars particles (for outdoor mode)
+      const starsGeo = new THREE.BufferGeometry();
+      const starPositions = new Float32Array(3000);
+      for (let i = 0; i < 3000; i++) {
+        starPositions[i] = (Math.random() - 0.5) * 100;
+      }
+      starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+      const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1, transparent: true, opacity: 0 });
+      const stars = new THREE.Points(starsGeo, starsMat);
+      stars.name = 'stars';
+      scene.add(stars);
+
+      window.addEventListener('resize', onResize);
+      renderer.setAnimationLoop(animate);
+    }
+
+    function animate() {
+      const t = performance.now() * 0.001;
+      if (screen && screen.material.uniforms) {
+        screen.material.uniforms.time.value = t;
+      }
+
+      // Gentle seat breathing
+      seats.forEach((s, i) => {
+        s.position.y += Math.sin(t * 0.5 + i * 0.3) * 0.0002;
+      });
+
+      renderer.render(scene, camera);
+    }
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.setEnvironment = function(env) {
+      currentEnv = env;
+      document.querySelectorAll('#ui button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const stars = scene.getObjectByName('stars');
+      if (env === 'theater') {
+        scene.background = new THREE.Color(0x050510);
+        scene.fog = new THREE.Fog(0x050510, 8, 30);
+        if (stars) stars.material.opacity = 0;
+        seats.forEach(s => s.visible = true);
+      } else if (env === 'outdoor') {
+        scene.background = new THREE.Color(0x000005);
+        scene.fog = null;
+        if (stars) stars.material.opacity = 0.8;
+        seats.forEach(s => s.visible = true);
+      } else {
+        scene.background = new THREE.Color(0x000000);
+        scene.fog = null;
+        if (stars) stars.material.opacity = 0;
+        seats.forEach(s => s.visible = false);
+      }
+    };
+
+    window.toggleLights = function() {
+      lights = !lights;
+      scene.traverse(obj => {
+        if (obj instanceof THREE.SpotLight) obj.intensity = lights ? 0.5 : 0;
+      });
+    };
+
+    init();
+  </script>
+</body>
+</html>

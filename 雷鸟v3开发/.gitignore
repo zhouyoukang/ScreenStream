@@ -1,0 +1,34 @@
+__pycache__/
+*.pyc
+*.pyo
+
+# TTS缓存音频
+_tts.wav
+_tts_test.wav
+_sl_tts.wav
+_sj_tts.wav
+_beep.wav
+
+# 截图缓存
+captures/
+san_lian_captures/
+cap_*.jpg
+cap_*.png
+mic_*.wav
+
+# 大文件（SDK二进制）
+SDK/*.apk
+SDK/*.aar
+SDK/*.zip
+
+# macOS垃圾
+.DS_Store
+
+# Dashboard TTS缓存
+_dashboard_tts.wav
+
+# 无线配置缓存
+.wireless_config.json
+
+# 会话日志
+dao_session.jsonl

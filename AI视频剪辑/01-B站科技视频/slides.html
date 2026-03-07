@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>为什么你和AI聊久了它就变笨了？— V16 演示文稿</title>
+  <meta name="description" content="4个AI并行实验：结构趋同解释AI对话质量衰减机制">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+    }
+
+    .slide {
+      width: 1920px;
+      height: 1080px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 80px;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+    }
+
+    /* 通用样式 */
+    .big-text {
+      font-size: 72px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .medium-text {
+      font-size: 48px;
+      font-weight: 400;
+      text-align: center;
+      line-height: 1.6;
+      color: #ccc;
+    }
+
+    .small-text {
+      font-size: 36px;
+      color: #bbb;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    .accent {
+      color: #ff6b6b;
+    }
+
+    .highlight {
+      color: #4ecdc4;
+    }
+
+    .gold {
+      color: #f9ca24;
+    }
+
+    .dim {
+      opacity: 0.7;
+    }
+
+    .quote {
+      font-style: italic;
+      border-left: 4px solid #ff6b6b;
+      padding-left: 40px;
+      text-align: left;
+      max-width: 1400px;
+    }
+
+    /* 段落标题 */
+    .section-label {
+      position: absolute;
+      top: 40px;
+      left: 60px;
+      font-size: 24px;
+      color: #777;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    /* ===== Segment 0: Hook (3 slides) ===== */
+    /* Slide 1: 反直觉问题 */
+    #s1 {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+    }
+
+    #s1 .big-text {
+      font-size: 80px;
+    }
+
+    /* Slide 2: 4窗口实验设置 */
+    #s2 {
+      background: #0a0a0a;
+    }
+
+    .four-windows {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 1400px;
+    }
+
+    .window {
+      background: #1e1e1e;
+      border: 2px solid #333;
+      border-radius: 8px;
+      height: 280px;
+      padding: 20px;
+      position: relative;
+    }
+
+    .window-bar {
+      height: 30px;
+      background: #2d2d2d;
+      border-radius: 6px 6px 0 0;
+      margin: -20px -20px 15px -20px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 6px;
+    }
+
+    .window-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .window-dot.r {
+      background: #ff5f56;
+    }
+
+    .window-dot.y {
+      background: #ffbd2e;
+    }
+
+    .window-dot.g {
+      background: #27c93f;
+    }
+
+    .window-title {
+      font-size: 14px;
+      color: #888;
+      margin-left: 8px;
+    }
+
+    .window-content {
+      font-size: 18px;
+      color: #6a9955;
+      font-family: 'Consolas', monospace;
+      line-height: 1.6;
+    }
+
+    /* Slide 3: 思考100秒指令 */
+    #s3 {
+      background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a0a 70%);
+    }
+
+    /* ===== Segment 1: Divergence (3 slides) ===== */
+    /* Slide 4: 4张AI角色卡片 */
+    #s4 {
+      background: #0a0a0a;
+    }
+
+    .role-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      width: 1600px;
+    }
+
+    .role-card {
+      background: linear-gradient(145deg, #1a1a2e, #16213e);
+      border-radius: 16px;
+      padding: 30px;
+      text-align: center;
+      border: 1px solid #2a2a4a;
+    }
+
+    .role-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .role-name {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .role-desc {
+      font-size: 22px;
+      color: #bbb;
+      line-height: 1.5;
+    }
+
+    /* Slide 5: 最锋利引言 */
+    #s5 {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 100%);
+    }
+
+    /* Slide 6: 自然分化 */
+    #s6 {
+      background: #0a0a0a;
+    }
+
+    /* ===== Segment 2: Convergence (3 slides) ===== */
+    /* Slide 7: 墨水扩散隐喻 */
+    #s7 {
+      background: radial-gradient(circle at center, #2a0a0a 0%, #0a0a0a 60%);
+    }
+
+    /* Slide 8: 数据条形图 */
+    #s8 {
+      background: #0a0a0a;
+    }
+
+    .chart-container {
+      display: flex;
+      gap: 120px;
+      align-items: flex-end;
+    }
+
+    .chart-group {
+      text-align: center;
+    }
+
+    .chart-label {
+      font-size: 28px;
+      margin-bottom: 20px;
+      color: #888;
+    }
+
+    .bars {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      height: 400px;
+    }
+
+    .bar {
+      width: 80px;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding-top: 12px;
+      transition: height 1s;
+    }
+
+    .bar-value {
+      font-size: 36px;
+      font-weight: 700;
+    }
+
+    .bar-label {
+      font-size: 18px;
+      color: #888;
+      margin-top: 12px;
+    }
+
+    .bar-blue {
+      background: linear-gradient(180deg, #4ecdc4, #2b8a82);
+    }
+
+    .bar-red {
+      background: linear-gradient(180deg, #ff6b6b, #c44444);
+    }
+
+    .bar-gray {
+      background: #333;
+    }
+
+    /* Slide 9: 惊喜消失 */
+    #s9 {
+      background: linear-gradient(135deg, #0a0a0a 0%, #0a0a1a 100%);
+    }
+
+    /* ===== Segment 3: Mechanism (3 slides) ===== */
+    /* Slide 10-12 */
+    #s10 {
+      background: #0a0a0a;
+    }
+
+    .shapes {
+      display: flex;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .shape {
+      width: 200px;
+      height: 200px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+    }
+
+    .circle {
+      background: #4ecdc4;
+      border-radius: 50%;
+      box-shadow: 0 0 40px rgba(78, 205, 196, 0.3), 0 0 80px rgba(78, 205, 196, 0.1);
+    }
+
+    .triangle {
+      width: 0;
+      height: 0;
+      border-left: 100px solid transparent;
+      border-right: 100px solid transparent;
+      border-bottom: 173px solid #ff6b6b;
+      filter: drop-shadow(0 0 30px rgba(255, 107, 107, 0.3));
+    }
+
+    .arrow {
+      font-size: 64px;
+      color: #777;
+    }
+
+    /* ===== Segment 4: Loss Function (3 slides) ===== */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 40px;
+      align-items: center;
+      width: 1400px;
+    }
+
+    .comp-box {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .comp-vs {
+      font-size: 48px;
+      color: #555;
+    }
+
+    /* ===== Segment 5: Forgetting (3 slides) ===== */
+    .tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tab {
+      background: #2d2d2d;
+      border-radius: 8px 8px 0 0;
+      padding: 12px 24px;
+      font-size: 20px;
+      color: #aaa;
+      border: 1px solid #444;
+      border-bottom: none;
+      position: relative;
+    }
+
+    .tab-active {
+      background: #1e1e1e;
+      color: #fff;
+    }
+
+    .tab-close {
+      margin-left: 12px;
+      color: #888;
+      cursor: pointer;
+    }
+
+    .tab-closed {
+      opacity: 0.2;
+      text-decoration: line-through;
+    }
+
+    /* ===== Segment 6: What Persists (4 slides) ===== */
+    #s20 {
+      background: linear-gradient(135deg, #0a0a0a 0%, #0a1a0a 100%);
+    }
+
+    .cta {
+      background: #1a1a2e;
+      border: 2px solid #4ecdc4;
+      border-radius: 16px;
+      padding: 40px 60px;
+      text-align: center;
+    }
+
+    .cta-star {
+      font-size: 48px;
+      color: #f9ca24;
+    }
+
+    /* === 无障碍增强 === */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4ecdc4;
+      color: #000;
+      padding: 12px 24px;
+      font-size: 20px;
+      border-radius: 0 0 8px 8px;
+      z-index: 1000;
+      transition: top 0.2s;
+    }
+
+    .skip-link:focus {
+      top: 0;
+    }
+
+    .slide-counter {
+      position: fixed;
+      bottom: 20px;
+      right: 30px;
+      font-size: 20px;
+      color: #555;
+      z-index: 100;
+      display: none;
+      font-family: monospace;
+    }
+
+    .slide:focus {
+      outline: 3px solid #4ecdc4;
+      outline-offset: -3px;
+    }
+
+    /* 演示模式 */
+    body.presentation .slide {
+      display: none;
+    }
+
+    body.presentation .slide.active {
+      display: flex;
+    }
+
+    body.presentation .slide-counter {
+      display: block;
+    }
+
+    /* 高对比度模式 */
+    body.high-contrast .dim {
+      opacity: 1 !important;
+    }
+
+    body.high-contrast .small-text {
+      color: #fff !important;
+    }
+
+    body.high-contrast .medium-text {
+      color: #eee !important;
+    }
+
+    body.high-contrast .section-label {
+      color: #aaa !important;
+    }
+
+    body.high-contrast .bar-gray {
+      background: #666 !important;
+    }
+
+    body.high-contrast .window-content {
+      color: #8fdb8f !important;
+    }
+
+    body.high-contrast .role-desc {
+      color: #ddd !important;
+    }
+
+    body.high-contrast .tab-closed {
+      opacity: 0.5 !important;
+    }
+
+    /* 键盘导航提示 */
+    .nav-help {
+      position: fixed;
+      bottom: 20px;
+      left: 30px;
+      font-size: 16px;
+      color: #444;
+      z-index: 100;
+      display: none;
+    }
+
+    body.presentation .nav-help {
+      display: block;
+    }
+
+    /* === CSS动画 === */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes pulseGlow {
+
+      0%,
+      100% {
+        text-shadow: 0 0 20px rgba(249, 202, 36, 0.3);
+      }
+
+      50% {
+        text-shadow: 0 0 60px rgba(249, 202, 36, 0.8), 0 0 120px rgba(249, 202, 36, 0.4);
+      }
+    }
+
+    @keyframes barGrow {
+      from {
+        transform: scaleY(0);
+      }
+
+      to {
+        transform: scaleY(1);
+      }
+    }
+
+    @keyframes quotePulse {
+
+      0%,
+      100% {
+        border-left-color: #ff6b6b;
+      }
+
+      50% {
+        border-left-color: #ff9b9b;
+      }
+    }
+
+    @keyframes subtleDrift {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    @keyframes tabFade {
+      from {
+        opacity: 1;
+      }
+
+      to {
+        opacity: 0.2;
+        text-decoration: line-through;
+      }
+    }
+
+    /* 演示模式下的动画触发 */
+    body.presentation .slide.active .big-text {
+      animation: fadeInUp 0.6s ease-out both;
+    }
+
+    body.presentation .slide.active .medium-text {
+      animation: fadeIn 0.8s ease-out 0.2s both;
+    }
+
+    body.presentation .slide.active .small-text {
+      animation: fadeIn 1s ease-out 0.4s both;
+    }
+
+    body.presentation .slide.active .role-cards {
+      animation: fadeInUp 0.5s ease-out 0.1s both;
+    }
+
+    body.presentation .slide.active .quote {
+      animation: fadeInUp 0.7s ease-out both;
+    }
+
+    body.presentation .slide.active .chart-container {
+      animation: fadeIn 0.5s ease-out both;
+    }
+
+    body.presentation .slide.active .shapes {
+      animation: fadeIn 0.6s ease-out both;
+    }
+
+    body.presentation .slide.active .comparison {
+      animation: fadeInUp 0.5s ease-out both;
+    }
+
+    body.presentation .slide.active .cta {
+      animation: fadeInUp 0.6s ease-out both;
+    }
+
+    body.presentation .slide.active .tabs {
+      animation: fadeIn 0.4s ease-out both;
+    }
+
+    /* 特殊动画 */
+    #s14 .gold {
+      animation: pulseGlow 2s ease-in-out infinite;
+    }
+
+    #s5 .quote {
+      animation: quotePulse 3s ease-in-out infinite;
+    }
+
+    .bars .bar {
+      transform-origin: bottom;
+      animation: barGrow 0.8s ease-out both;
+    }
+
+    body.presentation #s8.active .bar {
+      animation: barGrow 1s ease-out 0.3s both;
+    }
+
+    /* 微妙背景动态 */
+    #s1 {
+      background-size: 200% 200%;
+      animation: subtleDrift 8s ease infinite;
+    }
+
+    #s20 {
+      background-size: 200% 200%;
+      animation: subtleDrift 10s ease infinite;
+    }
+
+    /* 章节标题卡片 */
+    .chapter-slide {
+      background: #0a0a0a;
+    }
+
+    .chapter-num {
+      font-size: 120px;
+      font-weight: 200;
+      color: #555;
+      letter-spacing: 8px;
+    }
+
+    .chapter-title {
+      font-size: 56px;
+      font-weight: 600;
+      margin-top: 20px;
+    }
+
+    .chapter-line {
+      width: 120px;
+      height: 3px;
+      margin: 30px auto;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 无障碍：跳转链接 -->
+  <a href="#s1" class="skip-link" tabindex="0">跳到演示内容</a>
+
+  <!-- 屏幕阅读器：文档结构说明 -->
+  <div class="sr-only" role="banner" aria-label="演示文稿信息">
+    <h1>为什么你和AI聊久了它就变笨了？</h1>
+    <p>V16演示文稿，共22张幻灯片，7个章节：Hook、分化、趋同、机制、损失函数、遗忘、留下的。</p>
+    <p>键盘操作：F5进入演示模式，←→翻页，H切换高对比度，Escape退出演示。</p>
+  </div>
+
+  <!-- 演示模式UI -->
+  <div class="slide-counter" aria-live="polite"><span id="counter">1/22</span></div>
+  <div class="nav-help">F5退出 · ←→翻页 · H高对比度</div>
+
+  <!-- ===== HOOK (3 slides) ===== -->
+  <div class="slide" id="s1" role="region" aria-label="第1张：反直觉问题" tabindex="0">
+    <div class="section-label">HOOK</div>
+    <div class="big-text">为什么你和AI聊久了<br><span class="accent">它就变笨了？</span></div>
+  </div>
+
+  <div class="slide" id="s2" role="region" aria-label="第2张：4个AI窗口实验设置" tabindex="0">
+    <div class="section-label">HOOK</div>
+    <div class="medium-text" style="margin-bottom: 40px;">4个AI窗口，同一份材料，同一个指令</div>
+    <div class="four-windows">
+      <div class="window">
+        <div class="window-bar">
+          <div class="window-dot r"></div>
+          <div class="window-dot y"></div>
+          <div class="window-dot g"></div><span class="window-title">Agent α — 攻击者</span>
+        </div>
+        <div class="window-content">> 分析碰撞记录...<br>> 发现核心矛盾...</div>
+      </div>
+      <div class="window">
+        <div class="window-bar">
+          <div class="window-dot r"></div>
+          <div class="window-dot y"></div>
+          <div class="window-dot g"></div><span class="window-title">Agent β — 反攻击者</span>
+        </div>
+        <div class="window-content">> 评估α的分析...<br>> 发现遗漏变量...</div>
+      </div>
+      <div class="window">
+        <div class="window-bar">
+          <div class="window-dot r"></div>
+          <div class="window-dot y"></div>
+          <div class="window-dot g"></div><span class="window-title">Agent γ — 合成者</span>
+        </div>
+        <div class="window-content">> 整合多视角...<br>> 提取共识...</div>
+      </div>
+      <div class="window">
+        <div class="window-bar">
+          <div class="window-dot r"></div>
+          <div class="window-dot y"></div>
+          <div class="window-dot g"></div><span class="window-title">Agent δ — 协调者</span>
+        </div>
+        <div class="window-content">> 检测元模式...<br>> 发现自身矛盾...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" id="s3" role="region" aria-label="第3张：深度思考100秒指令" tabindex="0">
+    <div class="section-label">HOOK</div>
+    <div class="big-text" style="font-size: 96px;">深度思考<span class="gold"> 100</span>秒</div>
+    <div class="medium-text" style="margin-top: 30px;">唯一的区别：初始配置不同</div>
+  </div>
+
+  <!-- ===== DIVERGENCE (3 slides) ===== -->
+  <div class="slide" id="s4" role="region" aria-label="第4张：4个AI自然分化的角色——攻击者、反攻击者、合成者、协调者" tabindex="0">
+    <div class="section-label">01 · 分化</div>
+    <div class="role-cards">
+      <div class="role-card" style="border-color: #ff6b6b;">
+        <div class="role-icon">⚔️</div>
+        <div class="role-name" style="color: #ff6b6b;">攻击者</div>
+        <div class="role-desc">一句话戳穿<br>1900行文档的<br>核心矛盾</div>
+      </div>
+      <div class="role-card" style="border-color: #4ecdc4;">
+        <div class="role-icon">🛡️</div>
+        <div class="role-name" style="color: #4ecdc4;">反攻击者</div>
+        <div class="role-desc">攻击攻击者<br>发现被忽略的<br>变量</div>
+      </div>
+      <div class="role-card" style="border-color: #f9ca24;">
+        <div class="role-icon">🔗</div>
+        <div class="role-name" style="color: #f9ca24;">合成者</div>
+        <div class="role-desc">整合多视角<br>提取共识<br>建立框架</div>
+      </div>
+      <div class="role-card" style="border-color: #a29bfe;">
+        <div class="role-icon">🔄</div>
+        <div class="role-name" style="color: #a29bfe;">协调者</div>
+        <div class="role-desc">检测元模式<br>然后发现自己<br>犯了同样的错</div>
+      </div>
+    </div>
+    <div class="medium-text" style="margin-top: 40px;">没有人安排。角色从初始配置中<span class="highlight">涌现</span>。</div>
+  </div>
+
+  <div class="slide" id="s5" role="region" aria-label="第5张：攻击者Agent α的核心引言" tabindex="0">
+    <div class="section-label">01 · 分化</div>
+    <div class="quote">
+      <div class="big-text" style="font-size: 52px; color: #ff6b6b;">
+        "碰撞是对执行的逃避，<br>被包装成了执行的前提。"
+      </div>
+    </div>
+    <div class="small-text" style="margin-top: 40px;">— Agent α · 第1轮输出</div>
+  </div>
+
+  <div class="slide" id="s6" role="region" aria-label="第6张：4个AI，同一输入，4种不同角色，自然涌现" tabindex="0">
+    <div class="section-label">01 · 分化</div>
+    <div class="big-text">4个AI<br><span class="dim">同一个输入</span><br><span class="highlight">4种不同角色</span></div>
+    <div class="medium-text" style="margin-top: 30px;">无人分配 · 自然涌现</div>
+  </div>
+
+  <!-- ===== CONVERGENCE (3 slides) ===== -->
+  <div class="slide" id="s7" role="region" aria-label="第7张：墨水隐喻——AI回复像墨水扩散，从多彩图案变成均匀淡粉色" tabindex="0">
+    <div class="section-label">02 · 趋同</div>
+    <div class="big-text" style="font-size: 64px;">一滴红墨水滴进水里</div>
+    <div class="medium-text" style="margin-top: 20px;">
+      前几秒 → 漂亮的图案<br>
+      慢慢扩散 → 淡粉色<br>
+      <span class="accent">整杯水变成同一个颜色</span>
+    </div>
+  </div>
+
+  <div class="slide" id="s8" role="region" aria-label="第8张：数据对比图——第1轮外部类比5个术语0个，第26轮外部类比0个术语7个" tabindex="0">
+    <div class="section-label">02 · 趋同</div>
+    <div class="medium-text" style="margin-bottom: 40px;">对话质量衰减：实测数据</div>
+    <div class="chart-container">
+      <div class="chart-group">
+        <div class="chart-label">第 1 轮</div>
+        <div class="bars">
+          <div>
+            <div class="bar bar-blue" style="height: 300px;">
+              <div class="bar-value">5</div>
+            </div>
+            <div class="bar-label">外部类比</div>
+          </div>
+          <div>
+            <div class="bar bar-gray" style="height: 20px;">
+              <div class="bar-value" style="font-size: 24px;">0</div>
+            </div>
+            <div class="bar-label">项目术语</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size: 64px; color: #555; align-self: center;">→</div>
+      <div class="chart-group">
+        <div class="chart-label">第 26 轮</div>
+        <div class="bars">
+          <div>
+            <div class="bar bar-gray" style="height: 20px;">
+              <div class="bar-value" style="font-size: 24px;">0</div>
+            </div>
+            <div class="bar-label">外部类比</div>
+          </div>
+          <div>
+            <div class="bar bar-red" style="height: 380px;">
+              <div class="bar-value">7</div>
+            </div>
+            <div class="bar-label">项目术语</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" id="s9" role="region" aria-label="第9张：金句——惊喜消失了，不是AI变笨了，是我和AI变得越来越像了" tabindex="0">
+    <div class="section-label">02 · 趋同</div>
+    <div class="big-text">惊喜消失了</div>
+    <div class="medium-text" style="margin-top: 20px;">
+      不是AI变笨了<br>
+      <span class="accent">是我和AI变得越来越像了</span>
+    </div>
+  </div>
+
+  <!-- ===== MECHANISM (3 slides) ===== -->
+  <div class="slide" id="s10" role="region" aria-label="第10张：概念图——圆形代表人的直觉，三角形代表AI的模式，差异越大碰撞产出越高" tabindex="0">
+    <div class="section-label">03 · 机制</div>
+    <div class="shapes">
+      <div class="shape circle" style="color: #0a0a0a; font-weight: 700;" role="img" aria-label="圆形：人，直觉思维">人<br>直觉
+      </div>
+      <div class="arrow" aria-hidden="true">⟷</div>
+      <div class="shape" style="position: relative;" role="img" aria-label="三角形：AI，统计模式">
+        <div class="triangle"></div>
+        <div style="position: absolute; top: 80px; color: #0a0a0a; font-weight: 700; font-size: 22px;">AI<br>模式</div>
+      </div>
+    </div>
+    <div class="medium-text" style="margin-top: 40px;">差异越大 → 碰撞产出越高</div>
+  </div>
+
+  <div class="slide" id="s11" role="region" aria-label="第11张：每一次交换都在缩小差异——你教AI思维方式，AI教你表达习惯" tabindex="0">
+    <div class="section-label">03 · 机制</div>
+    <div class="big-text" style="font-size: 64px;">
+      每一次交换<br>都在缩小差异
+    </div>
+    <div class="medium-text" style="margin-top: 30px;">
+      你教AI你的思维方式<br>
+      AI教你它的表达习惯
+    </div>
+  </div>
+
+  <div class="slide" id="s12" role="region" aria-label="第12张：核心概念——结构趋同，不是谁变笨了，是两个不同的变成了一个" tabindex="0">
+    <div class="section-label">03 · 机制</div>
+    <div class="big-text"><span class="accent">结构趋同</span></div>
+    <div class="medium-text" style="margin-top: 20px;">
+      不是谁变笨了<br>
+      是两个不同的<br>
+      <span class="highlight">变成了一个</span>
+    </div>
+  </div>
+
+  <!-- ===== LOSS FUNCTION (3 slides) ===== -->
+  <div class="slide" id="s13" role="region" aria-label="第13张：品味vs计算对比——品味是看产出说好不好，计算是生成内容处理数据" tabindex="0">
+    <div class="section-label">04 · 损失函数</div>
+    <div class="comparison">
+      <div class="comp-box">
+        <div style="font-size: 36px; color: #4ecdc4; margin-bottom: 16px;">品味</div>
+        <div style="font-size: 24px; color: #aaa;">看产出 · 说好或不好<br>3秒决定方向</div>
+      </div>
+      <div class="comp-vs">vs</div>
+      <div class="comp-box">
+        <div style="font-size: 36px; color: #ff6b6b; margin-bottom: 16px;">计算</div>
+        <div style="font-size: 24px; color: #aaa;">生成内容 · 处理数据<br>不参与判断</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" id="s14" role="region" aria-label="第14张：大字3秒——品味只需要3秒，但决定了整个系统的方向" tabindex="0">
+    <div class="section-label">04 · 损失函数</div>
+    <div class="big-text" style="font-size: 200px;"><span class="gold">3</span></div>
+    <div class="medium-text">秒</div>
+    <div class="small-text" style="margin-top: 20px;">品味只需要3秒<br>但这3秒决定了整个系统的方向</div>
+  </div>
+
+  <div class="slide" id="s15" role="region" aria-label="第15张：人和AI最自然的分工不是指挥和执行，是品味和计算" tabindex="0">
+    <div class="section-label">04 · 损失函数</div>
+    <div class="big-text" style="font-size: 52px;">
+      人和AI最自然的分工<br>
+      不是<span class="dim">指挥</span>和<span class="dim">执行</span><br>
+      是<span class="highlight">品味</span>和<span class="accent">计算</span>
+    </div>
+  </div>
+
+  <!-- ===== FORGETTING (3 slides) ===== -->
+  <div class="slide" id="s16" role="region" aria-label="第16张：4个Agent标签页全部打开——4段不同的关系，每段花十几轮建立" tabindex="0">
+    <div class="section-label">05 · 遗忘</div>
+    <div class="tabs">
+      <div class="tab tab-active">Agent α <span class="tab-close">✕</span></div>
+      <div class="tab tab-active">Agent β <span class="tab-close">✕</span></div>
+      <div class="tab tab-active">Agent γ <span class="tab-close">✕</span></div>
+      <div class="tab tab-active">Agent δ <span class="tab-close">✕</span></div>
+    </div>
+    <div class="medium-text" style="margin-top: 60px;">
+      4段不同的关系<br>
+      每一段花了十几轮建立<br>
+      每一段有独特的节奏和默契
+    </div>
+  </div>
+
+  <div class="slide" id="s17" role="region" aria-label="第17张：4个标签页全部关闭划线——关掉标签页，4段关系全部归零" tabindex="0">
+    <div class="section-label">05 · 遗忘</div>
+    <div class="tabs">
+      <div class="tab tab-closed">Agent α <span class="tab-close">✕</span></div>
+      <div class="tab tab-closed">Agent β <span class="tab-close">✕</span></div>
+      <div class="tab tab-closed">Agent γ <span class="tab-close">✕</span></div>
+      <div class="tab tab-closed">Agent δ <span class="tab-close">✕</span></div>
+    </div>
+    <div class="big-text" style="margin-top: 60px;">
+      关掉标签页<br>
+      <span class="accent">4段关系全部归零</span>
+    </div>
+  </div>
+
+  <div class="slide" id="s18" role="region" aria-label="第18张：金句——文件是墓碑，不是复活" tabindex="0">
+    <div class="section-label">05 · 遗忘</div>
+    <div class="big-text" style="font-size: 64px;">
+      文件是<span class="accent">墓碑</span><br>
+      不是<span class="dim">复活</span>
+    </div>
+  </div>
+
+  <!-- ===== WHAT PERSISTS + AGI (4 slides) ===== -->
+  <div class="slide" id="s19" role="region" aria-label="第19张：不是规则，不是框架，是我自己变了" tabindex="0">
+    <div class="section-label">06 · 留下的</div>
+    <div class="big-text">
+      不是规则<br>
+      不是框架<br>
+      <span class="highlight">是我自己变了</span>
+    </div>
+  </div>
+
+  <div class="slide" id="s20" role="region" aria-label="第20张：核心结论——智能不是一个可以存储的状态，它是正在发生的过程" tabindex="0">
+    <div class="section-label">06 · AGI之路</div>
+    <div class="big-text" style="font-size: 56px;">
+      智能不是一个可以存储的状态
+    </div>
+    <div class="big-text" style="font-size: 72px; margin-top: 30px;">
+      <span class="gold">它是正在发生的过程</span>
+    </div>
+  </div>
+
+  <div class="slide" id="s21" role="region" aria-label="第21张：变了的是我，不是AI。AI每次从零开始，我每次从上次结束的地方开始" tabindex="0">
+    <div class="section-label">06 · AGI之路</div>
+    <div class="big-text" style="font-size: 48px;">
+      变了的是<span class="highlight">我</span>，不是AI<br>
+      <span class="dim" style="font-size: 36px;">AI每次从零开始。我每次从上次结束的地方开始。</span>
+    </div>
+  </div>
+
+  <div class="slide" id="s22" role="region" aria-label="第22张：开源项目CTA——windsurf-intelligence-pack，如果你也在走这条路，加入我们"
+    tabindex="0">
+    <div class="section-label">06 · 加入我们</div>
+    <div class="cta">
+      <div class="cta-star">⭐</div>
+      <div class="big-text" style="font-size: 48px; margin: 20px 0;">windsurf-intelligence-pack</div>
+      <div class="medium-text">如果你也在走这条路——加入我们</div>
+    </div>
+  </div>
+
+  <!-- === 章节标题卡片（用于段落间呼吸替代纯黑屏） === -->
+  <div class="slide chapter-slide" id="s23" role="region" aria-label="章节过渡：01分化" tabindex="0">
+    <div class="chapter-num">01</div>
+    <div class="chapter-line" style="background: #ff6b6b;"></div>
+    <div class="chapter-title" style="color: #ff6b6b;">分化</div>
+  </div>
+
+  <div class="slide chapter-slide" id="s24" role="region" aria-label="章节过渡：02趋同" tabindex="0">
+    <div class="chapter-num">02</div>
+    <div class="chapter-line" style="background: #4ecdc4;"></div>
+    <div class="chapter-title" style="color: #4ecdc4;">趋同</div>
+  </div>
+
+  <div class="slide chapter-slide" id="s25" role="region" aria-label="章节过渡：03机制" tabindex="0">
+    <div class="chapter-num">03</div>
+    <div class="chapter-line" style="background: #f9ca24;"></div>
+    <div class="chapter-title" style="color: #f9ca24;">机制</div>
+  </div>
+
+  <div class="slide chapter-slide" id="s26" role="region" aria-label="章节过渡：04损失函数" tabindex="0">
+    <div class="chapter-num">04</div>
+    <div class="chapter-line" style="background: #a29bfe;"></div>
+    <div class="chapter-title" style="color: #a29bfe;">损失函数</div>
+  </div>
+
+  <div class="slide chapter-slide" id="s27" role="region" aria-label="章节过渡：05遗忘" tabindex="0">
+    <div class="chapter-num">05</div>
+    <div class="chapter-line" style="background: #636e72;"></div>
+    <div class="chapter-title" style="color: #636e72;">遗忘</div>
+  </div>
+
+  <div class="slide chapter-slide" id="s28" role="region" aria-label="章节过渡：06留下的" tabindex="0">
+    <div class="chapter-num">06</div>
+    <div class="chapter-line" style="background: #4ecdc4;"></div>
+    <div class="chapter-title" style="color: #4ecdc4;">留下的</div>
+  </div>
+
+  <!-- === 键盘导航 + 演示模式 === -->
+  <script>
+    (function () {
+      const slides = document.querySelectorAll('.slide');
+      const counter = document.getElementById('counter');
+      let current = 0;
+      let presentationMode = false;
+
+      function updateSlide() {
+        slides.forEach((s, i) => s.classList.toggle('active', i === current));
+        if (counter) counter.textContent = `${current + 1}/${slides.length}`;
+        slides[current].focus();
+      }
+
+      function enterPresentation() {
+        presentationMode = true;
+        document.body.classList.add('presentation');
+        updateSlide();
+      }
+
+      function exitPresentation() {
+        presentationMode = false;
+        document.body.classList.remove('presentation');
+        slides.forEach(s => s.classList.remove('active'));
+      }
+
+      document.addEventListener('keydown', function (e) {
+        // F5: 切换演示模式
+        if (e.key === 'F5') {
+          e.preventDefault();
+          presentationMode ? exitPresentation() : enterPresentation();
+          return;
+        }
+
+        // H: 切换高对比度
+        if (e.key === 'h' || e.key === 'H') {
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+          document.body.classList.toggle('high-contrast');
+          return;
+        }
+
+        // Escape: 退出演示
+        if (e.key === 'Escape' && presentationMode) {
+          exitPresentation();
+          return;
+        }
+
+        // ←→ 翻页（演示模式和普通模式都可用）
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+          if (e.key === ' ') e.preventDefault();
+          current = Math.min(current + 1, slides.length - 1);
+          if (presentationMode) updateSlide();
+          else slides[current].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          current = Math.max(current - 1, 0);
+          if (presentationMode) updateSlide();
+          else slides[current].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Home/End
+        if (e.key === 'Home') { current = 0; presentationMode ? updateSlide() : slides[0].scrollIntoView(); }
+        if (e.key === 'End') { current = slides.length - 1; presentationMode ? updateSlide() : slides[current].scrollIntoView(); }
+      });
+
+      // 滚动时更新当前slide序号
+      if ('IntersectionObserver' in window) {
+        const obs = new IntersectionObserver((entries) => {
+          entries.forEach(e => {
+            if (e.isIntersecting && !presentationMode) {
+              const idx = Array.from(slides).indexOf(e.target);
+              if (idx >= 0) current = idx;
+            }
+          });
+        }, { threshold: 0.5 });
+        slides.forEach(s => obs.observe(s));
+      }
+    })();
+  </script>
+
+</body>
+
+</html>

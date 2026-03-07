@@ -1,0 +1,268 @@
+# Home Assistant 配置文件
+# 经过简化以解决语法错误
+
+homeassistant:
+  name: My Home
+  latitude: 43.8256
+  longitude: 87.6168
+  elevation: 918
+  unit_system: metric
+  time_zone: Asia/Urumqi
+
+# 默认配置
+default_config:
+
+# Python脚本支持
+python_script:
+
+# 界面配置
+frontend:
+  themes: !include themes.yaml
+  extra_module_url:
+    - /hacsfiles/lovelace-card-mod/card-mod.js
+    - /local/custom.js
+  panel_custom:
+    - name: panel_restart
+      sidebar_title: 重启
+      sidebar_icon: mdi:restart
+      js_url: /api/hassio/app/entrypoint.js
+      url_path: 'developer-tools/yaml?shouldRestart=1'
+      embed_iframe: true
+      require_admin: true
+      config:
+        ingress: core_configurator
+    
+    - name: migpt_easy
+      sidebar_title: MIGPT-易管理
+      sidebar_icon: mdi:robot-happy-outline
+      url_path: migpt-easy
+      js_url: /local/migpt_easy_launcher.js
+      require_admin: true
+
+panel_iframe:
+  migpt_easy_ui:
+    title: MIGPT-易
+    icon: mdi:robot-happy
+    url: /local/migpt_easy_iframe.html
+  
+  mobile_ui_v2:
+    title: "Mobile UI v2"
+    icon: mdi:cellphone-link
+    url: /local/mobile-ui-v2/index.html
+    require_admin: false
+
+# ========================================
+# 增强版 Recorder 配置（设备状态记录器）
+# ========================================
+recorder:
+  # 数据库路径
+  db_url: sqlite:///D:/homeassistant/config/home-assistant_v2.db
+  
+  # 数据保留1年
+  purge_keep_days: 365
+  
+  # 自动清理和优化
+  auto_purge: true
+  auto_repack: true
+  
+  # 提交间隔（秒）- 降低延迟
+  commit_interval: 1
+  
+  # 包含的域
+  include:
+    domains:
+      - light        # 所有灯光
+      - switch       # 所有开关
+      - sensor       # 所有传感器
+      - binary_sensor # 二元传感器
+      - climate      # 空调/暖气
+      - fan          # 风扇
+      - cover        # 窗帘
+      - lock         # 门锁
+    
+    # 通配符匹配
+    entity_globs:
+      - sensor.*power*         # 所有功率传感器
+      - sensor.*temperature*   # 所有温度传感器
+      - sensor.*humidity*      # 所有湿度传感器
+      - sensor.*energy*        # 所有能耗传感器
+      - switch.sonoff_*        # 所有Sonoff开关
+  
+  # 排除不重要的实体（减少存储）
+  exclude:
+    entities:
+      - sensor.time           # 时间（变化太频繁）
+      - sensor.date           # 日期
+      - sensor.uptime         # 运行时间
+    
+    entity_globs:
+      - sensor.weather_*_next_* # 天气预报
+      - sensor.*_last_boot      # 最后启动时间
+      - sensor.*_memory_*       # 内存使用
+
+# 历史和记录
+history:
+  include:
+    domains:
+      - light
+      - switch
+      - sensor
+      - binary_sensor
+      - fan
+      - climate
+      - cover
+  exclude:
+    entities:
+      - sensor.time
+      - sensor.date
+
+# Logbook 配置（操作日志）
+logbook:
+  include:
+    domains:
+      - light
+      - switch
+      - automation
+      - script
+      - scene
+      - climate
+      - fan
+      - cover
+      - lock
+  exclude:
+    entities:
+      - sensor.time
+      - sensor.date
+
+# 传感器配置
+sensor:
+  # 时间传感器
+  - platform: time_date
+    display_options:
+      - 'time'
+      - 'date'
+      - 'date_time'
+      
+  # 天气预警传感器
+  - platform: template
+    sensors:
+      heweather_alerts:
+        friendly_name: "和风天气预警"
+        value_template: >-
+          {% if state_attr('weather.he_feng_tian_qi', 'description') and 'alert' in state_attr('weather.he_feng_tian_qi', 'description') %}
+            1
+          {% else %}
+            0
+          {% endif %}
+        attribute_templates:
+          detail: >-
+            {% if state_attr('weather.he_feng_tian_qi', 'description') and 'alert' in state_attr('weather.he_feng_tian_qi', 'description') %}
+              [
+                {
+                  "title": "{{state_attr('weather.he_feng_tian_qi', 'description')}}",
+                  "level": "警告",
+                  "type": "天气预警",
+                  "pubTime": "{{now().strftime('%Y-%m-%d %H:%M:%S')}}",
+                  "description": "{{state_attr('weather.he_feng_tian_qi', 'description')}}"
+                }
+              ]
+            {% else %}
+              []
+            {% endif %}
+
+# 引用其他配置文件
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml 
+
+# Card-Mod资源配置 - 由修复脚本添加于 05/31/2025 15:22:25
+lovelace:
+  resources:
+    - url: /hacsfiles/lovelace-card-mod/card-mod.js
+      type: module
+
+shell_command:
+  start_migpt_easy: 'powershell -Command "Start-Process -FilePath \"{{ config_dir }}/www/start_migpt_easy.bat\" -WindowStyle Normal"'
+  stop_migpt_easy: 'powershell -Command "Get-Process -Name python | Where-Object {$_.MainWindowTitle -like \"*MIGPT-易*\"} | Stop-Process -Force"'
+  config_migpt_easy: 'powershell -Command "Start-Process -FilePath \"python\" -ArgumentList \"{{ config_dir }}/custom_components/migpt-easy/config_gui.py\" -WorkingDirectory \"{{ config_dir }}/custom_components/migpt-easy\" -WindowStyle Normal"'
+
+# MacroDroid HTTP 命令 (本地网络)
+rest_command:
+  macrodroid_cmd:
+    url: "http://192.168.31.228:8080/?cmd={{ cmd }}"
+    method: GET
+    timeout: 10
+  # FRP 公网访问版本（如果本地不可用可以尝试这个）
+  # 注意: 旧IP 8.138.177.6 已废弃, 当前阿里云IP 60.205.171.100
+  macrodroid_cmd_frp:
+    url: "http://60.205.171.100:8080/?cmd={{ cmd }}"
+    method: GET
+    timeout: 15
+
+# 语音命令 Intent 处理
+intent_script:
+  OpenWechat:
+    speech:
+      text: "好的，正在打开微信"
+    action:
+      - service: rest_command.macrodroid_cmd
+        data:
+          cmd: "open_wechat"
+  
+  OpenAlipay:
+    speech:
+      text: "好的，正在打开支付宝"
+    action:
+      - service: rest_command.macrodroid_cmd
+        data:
+          cmd: "open_alipay"
+  
+  OpenTaobao:
+    speech:
+      text: "好的，正在打开淘宝"
+    action:
+      - service: rest_command.macrodroid_cmd
+        data:
+          cmd: "open_taobao"
+  
+  OpenDoubao:
+    speech:
+      text: "好的，正在打开豆包"
+    action:
+      - service: rest_command.macrodroid_cmd
+        data:
+          cmd: "open_doubao"
+  
+  OpenAmap:
+    speech:
+      text: "好的，正在打开高德地图"
+    action:
+      - service: rest_command.macrodroid_cmd
+        data:
+          cmd: "open_amap"
+  
+  OpenMijia:
+    speech:
+      text: "好的，正在打开米家"
+    action:
+      - service: rest_command.macrodroid_cmd
+        data:
+          cmd: "open_mijia"
+  
+  SetMute:
+    speech:
+      text: "好的，已设为静音"
+    action:
+      - service: rest_command.macrodroid_cmd
+        data:
+          cmd: "mute"
+  
+  DoVibrate:
+    speech:
+      text: "好的，已振动"
+    action:
+      - service: rest_command.macrodroid_cmd
+        data:
+          cmd: "vibrate"
+
+

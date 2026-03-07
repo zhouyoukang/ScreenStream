@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "工具库管理器设置",
+        "description": "配置工具库管理器API服务器连接",
+        "data": {
+          "host": "主机",
+          "port": "端口"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "无法连接到API服务器",
+      "invalid_auth": "认证无效",
+      "unknown": "未知错误"
+    },
+    "abort": {
+      "already_configured": "该API服务器已经配置"
+    }
+  },
+  "services": {
+    "run_script": {
+      "name": "运行脚本",
+      "description": "运行Home Assistant工具库中的脚本",
+      "fields": {
+        "script_path": {
+          "name": "脚本路径",
+          "description": "要运行的脚本的完整路径"
+        },
+        "params": {
+          "name": "参数",
+          "description": "传递给脚本的参数对象"
+        }
+      }
+    },
+    "restart_ha": {
+      "name": "重启Home Assistant",
+      "description": "使用工具库中的重启脚本重启Home Assistant"
+    }
+  }
+} 

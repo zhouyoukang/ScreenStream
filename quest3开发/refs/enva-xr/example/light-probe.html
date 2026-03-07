@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<meta name="HandheldFriendly" content="true" />
+	  </head>
+	<body>
+		<button id="start" style="display: block; position: absolute; background-color: #FF6666; width: 100%; height: 100%; top: 0px; left: 0px; text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 10vh">
+			Start AR
+		</button>
+        <script async src="./lib/es-module-shims.js"></script>
+        <script type="importmap">
+			{
+				"imports": {
+					"three": "./lib/three.module.js"
+				}
+			}
+		</script>
+        <script type="module">
+            import {BoxGeometry, Mesh, MeshPhysicalMaterial, SphereGeometry, TextureLoader, AmbientLight, Vector2} from "three";
+            import {ARRenderer, Cursor, LightProbe, FloorPlane, AugmentedMaterial, FloorPlane} from "../src/enva.ts";
+
+            (async function () {
+                const renderer = new ARRenderer({
+                    domOverlay: true,
+                    hitTest: true,
+                    lightProbe: true
+                });
+
+                renderer.scene.add(new AmbientLight(0x333333));
+
+                let lightProbe = new LightProbe();
+                renderer.scene.add(lightProbe);
+
+                let cursor = new Cursor();
+                renderer.scene.add(cursor);
+                
+                let floor = new FloorPlane();
+                renderer.scene.add(floor);
+
+                renderer.domContainer.ondblclick = function(event) {
+                    if (cursor.visible) {
+                        let material = new MeshPhysicalMaterial({color: (Math.random() * 0xFFFFFF)});
+                        
+                        let sphere = new Mesh(new SphereGeometry(), material);
+                        sphere.receiveShadow = true;
+                        sphere.castShadow = true;
+                        sphere.scale.setScalar(0.1);
+                        sphere.position.copy(cursor.position);
+                        sphere.position.y += sphere.scale.y / 2.0;
+                        renderer.scene.add(sphere);
+                    }
+                };
+
+                var button = document.getElementById("start");
+                button.onclick = () =>
+                {
+                    renderer.start();
+                };
+            })();
+        </script>
+	</body>
+</html>

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quest 3 WebXR DevOps 全链路管理面板 — 测试/验证/监控/部署">
+    <title>Quest 3 DevOps Portal</title>
+    <style>
+        :root {
+            --bg: #0d1117; --card: #161b22; --border: #30363d;
+            --green: #3fb950; --yellow: #d29922; --red: #f85149;
+            --blue: #58a6ff; --purple: #bc8cff; --text: #c9d1d9;
+            --text2: #8b949e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.5;
+        }
+        header {
+            background: var(--card); border-bottom: 1px solid var(--border);
+            padding: 0.8rem 1.5rem; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 100;
+        }
+        header h1 { font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; }
+        header h1 span { font-size: 1.5rem; }
+        .header-actions { display: flex; gap: 0.5rem; align-items: center; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.2rem 0.6rem; border-radius: 1rem;
+            font-size: 0.75rem; font-weight: 600;
+        }
+        .badge-green { background: rgba(63,185,80,0.15); color: var(--green); }
+        .badge-yellow { background: rgba(210,153,34,0.15); color: var(--yellow); }
+        .badge-red { background: rgba(248,81,73,0.15); color: var(--red); }
+        .badge-blue { background: rgba(88,166,255,0.15); color: var(--blue); }
+
+        main { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+
+        /* Tabs */
+        .tabs {
+            display: flex; gap: 0; border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem; overflow-x: auto;
+        }
+        .tab {
+            padding: 0.6rem 1.2rem; cursor: pointer; border-bottom: 2px solid transparent;
+            color: var(--text2); font-size: 0.85rem; white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* Cards grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.8rem; }
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 0.5rem; padding: 1rem; transition: border-color 0.2s;
+        }
+        .card:hover { border-color: var(--blue); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .card-title { font-weight: 600; font-size: 0.95rem; }
+        .card-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; margin: 0.4rem 0; }
+        .tag {
+            padding: 0.1rem 0.4rem; border-radius: 0.25rem;
+            font-size: 0.7rem; background: rgba(88,166,255,0.1);
+            color: var(--blue); border: 1px solid rgba(88,166,255,0.2);
+        }
+        .card-status { font-size: 0.8rem; margin-top: 0.5rem; }
+        .card-actions { display: flex; gap: 0.4rem; margin-top: 0.6rem; }
+
+        /* Buttons */
+        .btn {
+            padding: 0.35rem 0.7rem; border-radius: 0.375rem;
+            border: 1px solid var(--border); background: var(--card);
+            color: var(--text); cursor: pointer; font-size: 0.78rem;
+            transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem;
+        }
+        .btn:hover { background: #21262d; border-color: var(--text2); }
+        .btn-primary { background: rgba(88,166,255,0.15); border-color: var(--blue); color: var(--blue); }
+        .btn-primary:hover { background: rgba(88,166,255,0.3); }
+        .btn-success { background: rgba(63,185,80,0.15); border-color: var(--green); color: var(--green); }
+        .btn-danger { background: rgba(248,81,73,0.15); border-color: var(--red); color: var(--red); }
+
+        /* Feature matrix */
+        .matrix { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        .matrix th, .matrix td {
+            padding: 0.5rem 0.7rem; border: 1px solid var(--border); text-align: center;
+        }
+        .matrix th { background: #1c2128; color: var(--text); font-weight: 600; position: sticky; top: 3.2rem; }
+        .matrix td:first-child { text-align: left; font-weight: 500; }
+        .check { color: var(--green); } .cross { color: var(--red); } .maybe { color: var(--yellow); }
+
+        /* Console */
+        #console-output {
+            background: #0d1117; border: 1px solid var(--border); border-radius: 0.375rem;
+            padding: 0.8rem; font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 0.78rem; height: 300px; overflow-y: auto; white-space: pre-wrap;
+            color: var(--text2);
+        }
+        .log-info { color: var(--blue); } .log-ok { color: var(--green); }
+        .log-warn { color: var(--yellow); } .log-err { color: var(--red); }
+
+        /* CDN Status */
+        .cdn-row { display: flex; align-items: center; gap: 0.8rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+        .cdn-url { flex: 1; font-family: monospace; font-size: 0.8rem; word-break: break-all; }
+        .cdn-latency { width: 80px; text-align: right; font-size: 0.8rem; }
+        .cdn-status { width: 24px; text-align: center; }
+
+        /* Preview iframe */
+        .preview-frame {
+            width: 100%; height: 400px; border: 1px solid var(--border);
+            border-radius: 0.375rem; background: #000;
+        }
+        .preview-bar {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem; background: var(--card); border: 1px solid var(--border);
+            border-radius: 0.375rem 0.375rem 0 0; margin-bottom: -1px;
+        }
+        .preview-url {
+            flex: 1; padding: 0.3rem 0.6rem; background: var(--bg);
+            border: 1px solid var(--border); border-radius: 0.25rem;
+            color: var(--text); font-family: monospace; font-size: 0.8rem;
+        }
+
+        /* Stats */
+        .stats-row { display: flex; gap: 0.8rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .stat-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 0.5rem; padding: 0.8rem 1.2rem; flex: 1; min-width: 140px;
+        }
+        .stat-value { font-size: 1.8rem; font-weight: 700; }
+        .stat-label { font-size: 0.75rem; color: var(--text2); margin-top: 0.2rem; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            .stats-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><span>🔬</span> Quest 3 DevOps Portal</h1>
+        <div class="header-actions">
+            <span class="badge badge-blue" id="demo-count">12 Demos</span>
+            <span class="badge badge-green" id="xr-status">XR: 检测中...</span>
+            <span class="badge badge-yellow" id="proxy-status">Proxy: 未知</span>
+            <button class="btn btn-primary" onclick="runAllTests()">▶ 全量测试</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="tabs">
+            <div class="tab active" data-tab="overview">📊 总览</div>
+            <div class="tab" data-tab="demos">🎮 Demo管理</div>
+            <div class="tab" data-tab="matrix">📋 特性矩阵</div>
+            <div class="tab" data-tab="cdn">🌐 CDN状态</div>
+            <div class="tab" data-tab="preview">👁 实时预览</div>
+            <div class="tab" data-tab="console">🖥 控制台</div>
+        </div>
+
+        <!-- === Overview === -->
+        <div class="tab-panel active" id="panel-overview">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total" style="color:var(--blue)">12</div>
+                    <div class="stat-label">总Demo数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-pass" style="color:var(--green)">—</div>
+                    <div class="stat-label">测试通过</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-fail" style="color:var(--red)">—</div>
+                    <div class="stat-label">测试失败</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-cdn" style="color:var(--yellow)">—</div>
+                    <div class="stat-label">CDN可达</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-xr" style="color:var(--purple)">—</div>
+                    <div class="stat-label">XR特性</div>
+                </div>
+            </div>
+            <h3 style="margin-bottom:0.5rem;">快速测试结果</h3>
+            <div id="overview-results" class="grid"></div>
+        </div>
+
+        <!-- === Demo Management === -->
+        <div class="tab-panel" id="panel-demos">
+            <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="runAllTests()">▶ 测试全部</button>
+                <button class="btn" onclick="filterDemos('all')">全部</button>
+                <button class="btn" onclick="filterDemos('vr')">VR</button>
+                <button class="btn" onclick="filterDemos('mr')">MR/AR</button>
+                <button class="btn" onclick="filterDemos('aframe')">A-Frame</button>
+                <button class="btn" onclick="filterDemos('threejs')">Three.js</button>
+            </div>
+            <div id="demo-grid" class="grid"></div>
+        </div>
+
+        <!-- === Feature Matrix === -->
+        <div class="tab-panel" id="panel-matrix">
+            <div style="overflow-x:auto;">
+                <table class="matrix" id="feature-matrix"></table>
+            </div>
+        </div>
+
+        <!-- === CDN Status === -->
+        <div class="tab-panel" id="panel-cdn">
+            <div style="margin-bottom:1rem;display:flex;gap:0.5rem;">
+                <button class="btn btn-primary" onclick="checkAllCDN()">🔄 检测全部CDN</button>
+                <span class="badge badge-blue" id="cdn-summary">等待检测...</span>
+            </div>
+            <div id="cdn-list"></div>
+        </div>
+
+        <!-- === Preview === -->
+        <div class="tab-panel" id="panel-preview">
+            <div class="preview-bar">
+                <select id="preview-select" class="preview-url" onchange="loadPreview(this.value)">
+                    <option value="">选择Demo预览...</option>
+                </select>
+                <button class="btn" onclick="loadPreview(document.getElementById('preview-select').value)">🔄</button>
+                <button class="btn" onclick="document.getElementById('preview-iframe').src='about:blank'">✕</button>
+            </div>
+            <iframe id="preview-iframe" class="preview-frame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+
+        <!-- === Console === -->
+        <div class="tab-panel" id="panel-console">
+            <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                <button class="btn" onclick="clearConsole()">🗑 清空</button>
+                <button class="btn btn-primary" onclick="runAllTests()">▶ 运行全量测试</button>
+                <button class="btn" onclick="checkAllCDN()">🌐 CDN检测</button>
+                <button class="btn" onclick="detectXRFeatures()">🥽 XR检测</button>
+            </div>
+            <div id="console-output"></div>
+        </div>
+    </main>
+
+    <script>
+        // === Demo Registry ===
+        const demos = [
+            { id: 'hello-vr', name: 'Hello VR', tech: 'WebGL2', mode: 'vr', tags: ['vr','webgl2','hand-tracking'], path: 'hello-vr/' },
+            { id: 'mr-passthrough', name: 'MR Passthrough', tech: 'WebGL2', mode: 'mr', tags: ['mr','ar','webgl2','passthrough','hand-tracking'], path: 'mr-passthrough/' },
+            { id: 'aframe-playground', name: 'A-Frame Playground', tech: 'A-Frame', mode: 'vr', tags: ['vr','aframe','hand-tracking','animation'], path: 'aframe-playground/' },
+            { id: 'hand-grab', name: 'Hand Grab Lab', tech: 'A-Frame', mode: 'vr', tags: ['vr','aframe','hand-tracking','pinch-grab'], path: 'hand-grab/' },
+            { id: 'shared-space', name: 'Shared Space', tech: 'A-Frame', mode: 'vr', tags: ['vr','aframe','multiplayer','websocket'], path: 'shared-space/' },
+            { id: 'smart-home', name: 'Smart Home MR', tech: 'A-Frame', mode: 'mr', tags: ['mr','aframe','home-assistant','iot'], path: 'smart-home/' },
+            { id: 'ar-placement', name: 'AR Placement', tech: 'Three.js', mode: 'mr', tags: ['ar','threejs','hit-test','plane-detection','anchors'], path: 'ar-placement/' },
+            { id: 'hand-physics', name: 'Hand Physics', tech: 'Three.js', mode: 'vr', tags: ['vr','threejs','hand-tracking','physics'], path: 'hand-physics/' },
+            { id: 'controller-shooter', name: 'Controller Shooter', tech: 'Three.js', mode: 'vr', tags: ['vr','threejs','controller','haptics','game'], path: 'controller-shooter/' },
+            { id: 'spatial-audio', name: 'Spatial Audio', tech: 'Three.js', mode: 'vr', tags: ['vr','threejs','spatial-audio','hrtf'], path: 'spatial-audio/' },
+            { id: 'gaussian-splat', name: '3D Gaussian Splatting', tech: 'A-Frame', mode: 'vr', tags: ['vr','aframe','3dgs','photorealistic'], path: 'gaussian-splat/' },
+            { id: 'vr-painter', name: 'VR Painter', tech: 'Three.js', mode: 'vr', tags: ['vr','threejs','hand-tracking','drawing','creative'], path: 'vr-painter/' },
+        ];
+
+        const CDN_URLS = [
+            { name: 'A-Frame 1.6.0 (self-hosted)', url: '/quest/libs/aframe.min.js', china: true },
+            { name: 'Three.js 0.165', url: 'https://unpkg.com/three@0.165.0/build/three.module.js', china: true },
+            { name: 'Gaussian Splatting (self-hosted)', url: '/quest/libs/aframe-gaussian-splatting.js', china: true },
+            { name: 'Three.js Addons', url: 'https://unpkg.com/three@0.165.0/examples/jsm/webxr/XRControllerModelFactory.js', china: true },
+            { name: 'HuggingFace Splat Data', url: 'https://huggingface.co/cakewalk/splat-data/resolve/main/garden.splat', china: false },
+            { name: 'MozillaVR Font (self-hosted)', url: '/quest/fonts/mozillavr.fnt', china: true },
+        ];
+
+        const XR_FEATURES = [
+            'immersive-vr', 'immersive-ar', 'inline',
+            'local', 'local-floor', 'bounded-floor', 'unbounded',
+            'hand-tracking', 'hit-test', 'plane-detection',
+            'mesh-detection', 'anchors', 'depth-sensing'
+        ];
+
+        let testResults = {};
+        const consoleEl = document.getElementById('console-output');
+
+        // === Console Logging ===
+        function log(msg, level = 'info') {
+            const cls = { info: 'log-info', ok: 'log-ok', warn: 'log-warn', err: 'log-err' }[level] || '';
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const line = document.createElement('div');
+            line.className = cls;
+            line.textContent = `[${time}] ${msg}`;
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+        function clearConsole() { consoleEl.innerHTML = ''; }
+
+        // === Tab Navigation ===
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`panel-${tab.dataset.tab}`).classList.add('active');
+            });
+        });
+
+        // === Demo Cards ===
+        function renderDemoCards() {
+            const grid = document.getElementById('demo-grid');
+            const select = document.getElementById('preview-select');
+            grid.innerHTML = '';
+
+            demos.forEach(d => {
+                const result = testResults[d.id];
+                const statusIcon = result === undefined ? '⏸' : result ? '✅' : '❌';
+                const statusColor = result === undefined ? 'var(--text2)' : result ? 'var(--green)' : 'var(--red)';
+
+                grid.innerHTML += `
+                    <div class="card" data-demo="${d.id}" data-tags="${d.tags.join(' ')}" data-mode="${d.mode}" data-tech="${d.tech.toLowerCase().replace(/[^a-z]/g,'')}">
+                        <div class="card-header">
+                            <span class="card-title">${statusIcon} ${d.name}</span>
+                            <span class="badge badge-blue">${d.tech}</span>
+                        </div>
+                        <div class="card-tags">
+                            ${d.tags.map(t => `<span class="tag">${t}</span>`).join('')}
+                        </div>
+                        <div class="card-status" style="color:${statusColor}" id="status-${d.id}">
+                            ${result === undefined ? '未测试' : result ? '✅ 加载正常' : '❌ 加载失败'}
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="testDemo('${d.id}')">🧪 测试</button>
+                            <button class="btn" onclick="loadPreview('${d.path}')">👁 预览</button>
+                            <a class="btn" href="${d.path}" target="_blank">↗ 打开</a>
+                        </div>
+                    </div>
+                `;
+
+                // Add to preview select
+                const opt = document.createElement('option');
+                opt.value = d.path;
+                opt.textContent = `${d.name} (${d.tech})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function filterDemos(filter) {
+            document.querySelectorAll('#demo-grid .card').forEach(card => {
+                if (filter === 'all') { card.style.display = ''; return; }
+                const tags = card.dataset.tags;
+                const mode = card.dataset.mode;
+                const tech = card.dataset.tech;
+                const show = tags.includes(filter) || mode === filter || tech === filter;
+                card.style.display = show ? '' : 'none';
+            });
+        }
+
+        // === Demo Testing ===
+        async function testDemo(id) {
+            const demo = demos.find(d => d.id === id);
+            if (!demo) return;
+
+            const statusEl = document.getElementById(`status-${id}`);
+            if (statusEl) { statusEl.textContent = '⏳ 测试中...'; statusEl.style.color = 'var(--yellow)'; }
+            log(`测试 ${demo.name} (${demo.path})...`);
+
+            try {
+                const start = performance.now();
+                const resp = await fetch(demo.path, { method: 'GET', cache: 'no-cache' });
+                const elapsed = Math.round(performance.now() - start);
+
+                if (resp.ok) {
+                    const html = await resp.text();
+                    const hasDoctype = html.includes('<!DOCTYPE') || html.includes('<!doctype');
+                    const hasScript = html.includes('<script');
+                    const size = (html.length / 1024).toFixed(1);
+
+                    if (hasDoctype && hasScript) {
+                        testResults[id] = true;
+                        log(`✅ ${demo.name}: ${resp.status} OK | ${size}KB | ${elapsed}ms`, 'ok');
+                        if (statusEl) { statusEl.textContent = `✅ ${resp.status} | ${size}KB | ${elapsed}ms`; statusEl.style.color = 'var(--green)'; }
+                    } else {
+                        testResults[id] = false;
+                        log(`⚠️ ${demo.name}: 响应缺少DOCTYPE或script`, 'warn');
+                        if (statusEl) { statusEl.textContent = '⚠️ 内容不完整'; statusEl.style.color = 'var(--yellow)'; }
+                    }
+                } else {
+                    testResults[id] = false;
+                    log(`❌ ${demo.name}: HTTP ${resp.status}`, 'err');
+                    if (statusEl) { statusEl.textContent = `❌ HTTP ${resp.status}`; statusEl.style.color = 'var(--red)'; }
+                }
+            } catch (e) {
+                testResults[id] = false;
+                log(`❌ ${demo.name}: ${e.message}`, 'err');
+                if (statusEl) { statusEl.textContent = `❌ ${e.message}`; statusEl.style.color = 'var(--red)'; }
+            }
+            updateStats();
+        }
+
+        async function runAllTests() {
+            log('═══ 开始全量测试 ═══', 'info');
+            testResults = {};
+            for (const demo of demos) {
+                await testDemo(demo.id);
+            }
+            updateStats();
+            renderOverviewResults();
+            log(`═══ 测试完成: ${Object.values(testResults).filter(v=>v).length}/${demos.length} 通过 ═══`, 'ok');
+        }
+
+        function updateStats() {
+            const pass = Object.values(testResults).filter(v => v === true).length;
+            const fail = Object.values(testResults).filter(v => v === false).length;
+            document.getElementById('stat-pass').textContent = pass;
+            document.getElementById('stat-fail').textContent = fail;
+        }
+
+        function renderOverviewResults() {
+            const el = document.getElementById('overview-results');
+            el.innerHTML = demos.map(d => {
+                const r = testResults[d.id];
+                const icon = r === undefined ? '⏸' : r ? '✅' : '❌';
+                const color = r === undefined ? 'var(--text2)' : r ? 'var(--green)' : 'var(--red)';
+                return `<div class="card" style="padding:0.6rem;border-left:3px solid ${color}">
+                    <span>${icon} <strong>${d.name}</strong> <span style="color:var(--text2);font-size:0.8rem">${d.tech}</span></span>
+                </div>`;
+            }).join('');
+        }
+
+        // === Feature Matrix ===
+        async function buildFeatureMatrix() {
+            const table = document.getElementById('feature-matrix');
+            let html = '<thead><tr><th>特性</th>';
+            demos.forEach(d => { html += `<th title="${d.id}">${d.name.split(' ')[0]}</th>`; });
+            html += '<th>浏览器</th></tr></thead><tbody>';
+
+            const featureMap = {
+                'immersive-vr': ['hello-vr','aframe-playground','hand-grab','shared-space','hand-physics','controller-shooter','spatial-audio','gaussian-splat','vr-painter'],
+                'immersive-ar': ['mr-passthrough','smart-home','ar-placement'],
+                'hand-tracking': ['hello-vr','mr-passthrough','aframe-playground','hand-grab','shared-space','smart-home','ar-placement','hand-physics','controller-shooter','spatial-audio','gaussian-splat','vr-painter'],
+                'hit-test': ['ar-placement'],
+                'plane-detection': ['ar-placement'],
+                'anchors': ['ar-placement'],
+                'controllers': ['controller-shooter'],
+                'spatial-audio': ['spatial-audio'],
+                'multiplayer': ['shared-space'],
+                'physics': ['hand-physics'],
+                'passthrough': ['mr-passthrough'],
+                '3dgs': ['gaussian-splat'],
+                'drawing': ['vr-painter'],
+            };
+
+            // Detect browser XR
+            let browserXR = {};
+            if (navigator.xr) {
+                for (const f of ['immersive-vr', 'immersive-ar', 'inline']) {
+                    try { browserXR[f] = await navigator.xr.isSessionSupported(f); } catch { browserXR[f] = false; }
+                }
+            }
+
+            for (const [feature, demoIds] of Object.entries(featureMap)) {
+                html += `<tr><td>${feature}</td>`;
+                demos.forEach(d => {
+                    const has = demoIds.includes(d.id);
+                    html += `<td class="${has ? 'check' : ''}">${has ? '✓' : '—'}</td>`;
+                });
+                const bSupport = browserXR[feature];
+                html += `<td class="${bSupport === true ? 'check' : bSupport === false ? 'cross' : ''}">${bSupport === true ? '✓' : bSupport === false ? '✗' : '—'}</td>`;
+                html += '</tr>';
+            }
+
+            html += '</tbody>';
+            table.innerHTML = html;
+        }
+
+        // === CDN Check ===
+        async function checkCDN(cdn, idx) {
+            const row = document.getElementById(`cdn-${idx}`);
+            const statusEl = row.querySelector('.cdn-status');
+            const latencyEl = row.querySelector('.cdn-latency');
+
+            statusEl.textContent = '⏳';
+            latencyEl.textContent = '...';
+
+            try {
+                const start = performance.now();
+                const resp = await fetch(cdn.url, { method: 'HEAD', mode: 'no-cors', cache: 'no-cache' });
+                const elapsed = Math.round(performance.now() - start);
+
+                // no-cors always returns opaque response, so we just measure reachability
+                statusEl.textContent = '✅';
+                statusEl.style.color = 'var(--green)';
+                latencyEl.textContent = `${elapsed}ms`;
+                latencyEl.style.color = elapsed < 500 ? 'var(--green)' : elapsed < 2000 ? 'var(--yellow)' : 'var(--red)';
+                log(`✅ CDN ${cdn.name}: ${elapsed}ms ${cdn.china ? '(China OK)' : '(需代理)'}`, 'ok');
+                return true;
+            } catch (e) {
+                statusEl.textContent = '❌';
+                statusEl.style.color = 'var(--red)';
+                latencyEl.textContent = 'FAIL';
+                latencyEl.style.color = 'var(--red)';
+                log(`❌ CDN ${cdn.name}: ${e.message}`, 'err');
+                return false;
+            }
+        }
+
+        function renderCDNList() {
+            const list = document.getElementById('cdn-list');
+            list.innerHTML = CDN_URLS.map((cdn, i) => `
+                <div class="cdn-row" id="cdn-${i}">
+                    <span class="cdn-status">⏸</span>
+                    <span class="cdn-url">${cdn.url}</span>
+                    <span class="badge ${cdn.china ? 'badge-green' : 'badge-yellow'}">${cdn.china ? '中国直连' : '需代理'}</span>
+                    <span class="cdn-latency">—</span>
+                    <button class="btn" onclick="checkCDN(CDN_URLS[${i}], ${i})">检测</button>
+                </div>
+            `).join('');
+        }
+
+        async function checkAllCDN() {
+            log('═══ CDN 可达性检测 ═══', 'info');
+            let ok = 0;
+            for (let i = 0; i < CDN_URLS.length; i++) {
+                const result = await checkCDN(CDN_URLS[i], i);
+                if (result) ok++;
+            }
+            document.getElementById('stat-cdn').textContent = `${ok}/${CDN_URLS.length}`;
+            document.getElementById('cdn-summary').textContent = `${ok}/${CDN_URLS.length} 可达`;
+            document.getElementById('cdn-summary').className = `badge ${ok === CDN_URLS.length ? 'badge-green' : 'badge-yellow'}`;
+            log(`═══ CDN 检测完成: ${ok}/${CDN_URLS.length} 可达 ═══`, ok === CDN_URLS.length ? 'ok' : 'warn');
+        }
+
+        // === XR Feature Detection ===
+        async function detectXRFeatures() {
+            log('═══ WebXR 特性检测 ═══', 'info');
+            if (!navigator.xr) {
+                log('❌ navigator.xr 不存在 — 非HTTPS或浏览器不支持', 'err');
+                document.getElementById('xr-status').textContent = 'XR: 不可用';
+                document.getElementById('xr-status').className = 'badge badge-red';
+                document.getElementById('stat-xr').textContent = '0';
+                return;
+            }
+
+            let supported = 0;
+            for (const feature of XR_FEATURES) {
+                try {
+                    const s = await navigator.xr.isSessionSupported(feature);
+                    if (s) {
+                        supported++;
+                        log(`  ✓ ${feature}`, 'ok');
+                    } else {
+                        log(`  ✗ ${feature}`, 'warn');
+                    }
+                } catch (e) {
+                    log(`  ? ${feature}: ${e.message}`, 'warn');
+                }
+            }
+
+            document.getElementById('stat-xr').textContent = supported;
+            document.getElementById('xr-status').textContent = `XR: ${supported}/${XR_FEATURES.length}`;
+            document.getElementById('xr-status').className = `badge ${supported > 0 ? 'badge-green' : 'badge-yellow'}`;
+            log(`═══ XR 检测完成: ${supported}/${XR_FEATURES.length} 支持 ═══`, supported > 0 ? 'ok' : 'warn');
+        }
+
+        // === Preview ===
+        function loadPreview(path) {
+            if (!path) return;
+            document.getElementById('preview-iframe').src = path;
+            document.getElementById('preview-select').value = path;
+            // Switch to preview tab
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelector('[data-tab="preview"]').classList.add('active');
+            document.getElementById('panel-preview').classList.add('active');
+            log(`预览: ${path}`, 'info');
+        }
+
+        // === Proxy Status ===
+        async function checkProxy() {
+            try {
+                const resp = await fetch('http://localhost:8444/', { method: 'HEAD', mode: 'no-cors' });
+                document.getElementById('proxy-status').textContent = 'Proxy: ✅ :8444';
+                document.getElementById('proxy-status').className = 'badge badge-green';
+                log('xr-proxy.js (:8444) 运行中', 'ok');
+                return true;
+            } catch {
+                document.getElementById('proxy-status').textContent = 'Proxy: ❌ 离线';
+                document.getElementById('proxy-status').className = 'badge badge-red';
+                log('xr-proxy.js (:8444) 未运行 — 运行: node webxr/xr-proxy.js', 'warn');
+                return false;
+            }
+        }
+
+        // === Init ===
+        async function init() {
+            log('Quest 3 DevOps Portal 初始化...', 'info');
+            renderDemoCards();
+            renderCDNList();
+            renderOverviewResults();
+            await buildFeatureMatrix();
+            await detectXRFeatures();
+            await checkProxy();
+            log('初始化完成 — 点击"全量测试"开始检测', 'ok');
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+# phone_lib — 纯Python标准库，无外部依赖
+# 依赖: json, time, os, http.client, urllib, subprocess, threading, logging

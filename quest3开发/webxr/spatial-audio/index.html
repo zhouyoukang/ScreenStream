@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 3 Spatial Audio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; overflow: hidden; font-family: system-ui, sans-serif; color: #fff; }
+        canvas { display: block; }
+        #overlay {
+            position: fixed; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; background: rgba(0,0,0,0.85);
+            z-index: 10;
+        }
+        h1 { font-size: 2em; margin-bottom: 0.5em; }
+        p { color: #aaa; margin-bottom: 1em; max-width: 500px; text-align: center; line-height: 1.6; }
+        #enter-btn {
+            padding: 16px 48px; font-size: 1.2em; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff;
+            cursor: pointer; font-weight: bold;
+        }
+        #enter-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        #status { margin-top: 12px; color: #888; font-size: 0.9em; }
+        #hud {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 5; display: none; text-align: center;
+            background: rgba(0,0,0,0.5); padding: 8px 24px; border-radius: 8px;
+            font-size: 0.9em; color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <h1>🎵 Spatial Audio</h1>
+        <p>
+            空间音频体验——3D音源定位，头部追踪驱动HRTF渲染。
+            移动头部感受声音方向和距离变化。
+        </p>
+        <p style="font-size:0.85em; color:#666;">
+            🔊 4个空间音源 | 🎧 HRTF空间化 | 📐 距离衰减 | 🌊 可视化波纹
+        </p>
+        <button id="enter-btn" disabled>检测中...</button>
+        <div id="status">正在检测WebXR...</div>
+    </div>
+    <div id="hud">
+        <span>🎵 空间音频活跃 | 移动头部感受3D声音定位</span>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+
+        const overlay = document.getElementById('overlay');
+        const enterBtn = document.getElementById('enter-btn');
+        const statusEl = document.getElementById('status');
+        const hudEl = document.getElementById('hud');
+
+        let renderer, scene, camera, listener, xrSession = null;
+        const audioSources = [];
+        const clock = new THREE.Clock();
+        let audioCtx = null;
+
+        // Audio source configs: position, frequency, color, label
+        const sourceConfigs = [
+            { pos: [-3, 1.5, -3], freq: 261.63, color: 0xff6b6b, label: 'C4 低音' },
+            { pos: [3, 2.0, -2],  freq: 392.00, color: 0x51cf66, label: 'G4 中音' },
+            { pos: [0, 3.0, -5],  freq: 523.25, color: 0x339af0, label: 'C5 高音' },
+            { pos: [-2, 1.0, 2],  freq: 329.63, color: 0xfcc419, label: 'E4 和声' },
+        ];
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+            scene.fog = new THREE.Fog(0x0a0a1a, 8, 20);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 1.6, 3);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.xr.enabled = true;
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
+
+            // AudioListener attached to camera (Three.js spatial audio pattern)
+            listener = new THREE.AudioListener();
+            camera.add(listener);
+
+            // Lighting
+            scene.add(new THREE.AmbientLight(0x222244, 0.5));
+            const dirLight = new THREE.DirectionalLight(0x6366f1, 0.8);
+            dirLight.position.set(3, 8, 5);
+            scene.add(dirLight);
+
+            // Floor
+            const floor = new THREE.Mesh(
+                new THREE.PlaneGeometry(20, 20),
+                new THREE.MeshStandardMaterial({ color: 0x111133, roughness: 0.9 })
+            );
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Grid
+            const grid = new THREE.GridHelper(20, 40, 0x1a1a4e, 0x1a1a4e);
+            grid.position.y = 0.01;
+            scene.add(grid);
+
+            // Center listener indicator (glowing sphere at player position)
+            const listenerIndicator = new THREE.Mesh(
+                new THREE.SphereGeometry(0.1, 16, 16),
+                new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 })
+            );
+            listenerIndicator.position.set(0, 1.6, 0);
+            scene.add(listenerIndicator);
+
+            // Create audio source visualizers
+            sourceConfigs.forEach(cfg => createAudioSource(cfg));
+
+            // Connection lines from listener to sources
+            sourceConfigs.forEach((cfg, i) => {
+                const lineGeo = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, 1.6, 0),
+                    new THREE.Vector3(...cfg.pos)
+                ]);
+                const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({
+                    color: cfg.color, transparent: true, opacity: 0.15
+                }));
+                scene.add(line);
+            });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            renderer.setAnimationLoop(render);
+        }
+
+        function createAudioSource(cfg) {
+            const group = new THREE.Group();
+            group.position.set(...cfg.pos);
+
+            // Main sphere (pulsating)
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(0.15, 16, 16),
+                new THREE.MeshStandardMaterial({
+                    color: cfg.color,
+                    emissive: cfg.color,
+                    emissiveIntensity: 0.5,
+                    metalness: 0.3,
+                    roughness: 0.4
+                })
+            );
+            group.add(sphere);
+
+            // Ripple rings (visual representation of sound waves)
+            const rings = [];
+            for (let i = 0; i < 3; i++) {
+                const ring = new THREE.Mesh(
+                    new THREE.RingGeometry(0.3 + i * 0.4, 0.32 + i * 0.4, 32),
+                    new THREE.MeshBasicMaterial({
+                        color: cfg.color,
+                        transparent: true,
+                        opacity: 0.3 - i * 0.08,
+                        side: THREE.DoubleSide
+                    })
+                );
+                ring.userData.baseRadius = 0.3 + i * 0.4;
+                ring.userData.phase = i * (Math.PI * 2 / 3);
+                group.add(ring);
+                rings.push(ring);
+            }
+
+            // Label (simple sprite)
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 28px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText(cfg.label, 128, 40);
+            const texture = new THREE.CanvasTexture(canvas);
+            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0.8 }));
+            sprite.scale.set(1, 0.25, 1);
+            sprite.position.y = 0.5;
+            group.add(sprite);
+
+            // Point light for glow effect
+            const light = new THREE.PointLight(cfg.color, 0.5, 3);
+            group.add(light);
+
+            scene.add(group);
+
+            audioSources.push({
+                group, sphere, rings, light, cfg,
+                positionalAudio: null // Created when audio context is ready
+            });
+        }
+
+        // Create actual Web Audio oscillators (called after user gesture)
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = listener.context;
+
+            audioSources.forEach(src => {
+                // PositionalAudio (Three.js spatial audio from docs)
+                const positionalAudio = new THREE.PositionalAudio(listener);
+
+                // Create oscillator via Web Audio API (no external files needed)
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(src.cfg.freq, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+
+                // Add subtle LFO for more organic sound
+                const lfo = audioCtx.createOscillator();
+                const lfoGain = audioCtx.createGain();
+                lfo.frequency.setValueAtTime(2 + Math.random() * 3, audioCtx.currentTime);
+                lfoGain.gain.setValueAtTime(src.cfg.freq * 0.02, audioCtx.currentTime);
+                lfo.connect(lfoGain);
+                lfoGain.connect(oscillator.frequency);
+                lfo.start();
+
+                oscillator.connect(gainNode);
+
+                // Connect to positional audio's input
+                positionalAudio.setNodeSource(gainNode);
+                positionalAudio.setRefDistance(1);
+                positionalAudio.setRolloffFactor(1.5);
+                positionalAudio.setDistanceModel('inverse');
+                positionalAudio.setMaxDistance(15);
+                // Directional cone (from Three.js webaudio_orientation example)
+                positionalAudio.setDirectionalCone(180, 270, 0.2);
+
+                oscillator.start();
+
+                src.group.add(positionalAudio);
+                src.positionalAudio = positionalAudio;
+                src.oscillator = oscillator;
+                src.lfo = lfo;
+                src.gainNode = gainNode;
+            });
+        }
+
+        function stopAudio() {
+            audioSources.forEach(src => {
+                try {
+                    if (src.oscillator) { src.oscillator.stop(); src.oscillator = null; }
+                    if (src.lfo) { src.lfo.stop(); src.lfo = null; }
+                    if (src.positionalAudio) {
+                        src.group.remove(src.positionalAudio);
+                        src.positionalAudio = null;
+                    }
+                } catch(e) {}
+            });
+            audioCtx = null;
+        }
+
+        // Check XR
+        async function checkXR() {
+            if (!navigator.xr) { statusEl.textContent = 'WebXR不可用'; return; }
+            const vrOk = await navigator.xr.isSessionSupported('immersive-vr');
+            if (vrOk) {
+                enterBtn.disabled = false;
+                enterBtn.textContent = '进入空间音频';
+                statusEl.textContent = 'WebXR就绪 ✓';
+            } else {
+                statusEl.textContent = 'VR不可用';
+            }
+        }
+
+        // Enter VR
+        enterBtn.addEventListener('click', async () => {
+            if (xrSession) return;
+            try {
+                xrSession = await navigator.xr.requestSession('immersive-vr', {
+                    optionalFeatures: ['local-floor', 'hand-tracking']
+                });
+                overlay.style.display = 'none';
+                hudEl.style.display = 'block';
+
+                initAudio();
+
+                renderer.xr.setReferenceSpaceType('local-floor');
+                await renderer.xr.setSession(xrSession);
+
+                xrSession.addEventListener('end', () => {
+                    xrSession = null;
+                    overlay.style.display = 'flex';
+                    hudEl.style.display = 'none';
+                    stopAudio();
+                });
+            } catch(e) {
+                statusEl.textContent = '启动失败: ' + e.message;
+            }
+        });
+
+        // Render loop
+        function render(time) {
+            const t = (time || performance.now()) * 0.001;
+            const delta = clock.getDelta();
+
+            // Animate audio source visualizers
+            audioSources.forEach((src, idx) => {
+                // Pulse sphere
+                const pulse = 1 + Math.sin(t * 3 + idx * 1.5) * 0.15;
+                src.sphere.scale.setScalar(pulse);
+                src.sphere.material.emissiveIntensity = 0.3 + Math.sin(t * 4 + idx) * 0.2;
+
+                // Animate ripple rings
+                src.rings.forEach((ring, ri) => {
+                    const phase = t * 2 + ring.userData.phase + idx;
+                    const scale = 1 + (Math.sin(phase) + 1) * 0.5;
+                    ring.scale.setScalar(scale);
+                    ring.material.opacity = Math.max(0, 0.25 - (scale - 1) * 0.2);
+                    // Face camera
+                    ring.lookAt(camera.position);
+                });
+
+                // Pulse light
+                src.light.intensity = 0.3 + Math.sin(t * 3 + idx * 2) * 0.2;
+            });
+
+            // Inline preview camera orbit (non-VR)
+            if (!xrSession) {
+                camera.position.x = Math.sin(t * 0.2) * 4;
+                camera.position.z = Math.cos(t * 0.2) * 4;
+                camera.position.y = 2 + Math.sin(t * 0.3) * 0.5;
+                camera.lookAt(0, 1.5, -1);
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Bootstrap
+        init();
+        checkXR();
+    </script>
+</body>
+</html>

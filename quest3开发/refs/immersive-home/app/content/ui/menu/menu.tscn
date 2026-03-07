@@ -1,0 +1,312 @@
+[gd_scene load_steps=22 format=3 uid="uid://c3kdssrmv84kv"]
+
+[ext_resource type="Script" path="res://content/ui/menu/menu.gd" id="1_ng4u3"]
+[ext_resource type="Script" path="res://content/functions/movable.gd" id="2_8coxu"]
+[ext_resource type="Shader" path="res://content/ui/components/panel/glass.gdshader" id="3_htaoi"]
+[ext_resource type="Script" path="res://content/ui/components/tabs/tabs.gd" id="4_eavfx"]
+[ext_resource type="PackedScene" uid="uid://crrb0l3ekuotj" path="res://content/ui/menu/edit/edit_menu.tscn" id="4_r2raj"]
+[ext_resource type="PackedScene" uid="uid://bsjqdvkt0u87c" path="res://content/ui/components/button/button.tscn" id="5_w4i01"]
+[ext_resource type="Script" path="res://content/ui/components/tabs/tabs_content.gd" id="6_7rntr"]
+[ext_resource type="PackedScene" uid="uid://ddpxthb414unp" path="res://content/ui/menu/view/view_menu.tscn" id="8_71pkg"]
+[ext_resource type="PackedScene" uid="uid://c01gkeldvjwtr" path="res://content/ui/menu/room/room_menu.tscn" id="10_u4i1x"]
+[ext_resource type="PackedScene" uid="uid://c6r4higceibif" path="res://content/ui/menu/settings/settings_menu.tscn" id="11_7wm6b"]
+[ext_resource type="AudioStream" uid="uid://nmm8y0xt5wyj" path="res://assets/sound/open_menu.wav" id="12_dsnuc"]
+[ext_resource type="AudioStream" uid="uid://bnx2uv4nmra8f" path="res://assets/sound/close_menu.wav" id="13_nnnln"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_e1esh"]
+size = Vector3(0.51, 0.32, 0.034332)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_du6qr"]
+render_priority = 0
+shader = ExtResource("3_htaoi")
+shader_parameter/color = Color(1, 1, 1, 0.3)
+shader_parameter/border_color = Color(1, 1, 1, 1)
+shader_parameter/edge_color = Color(0, 0, 0, 1)
+shader_parameter/size = Vector2(0.42, 0.32)
+shader_parameter/border_size = 0.001
+shader_parameter/border_fade_in = 0.005
+shader_parameter/border_fade_out = 0.001
+shader_parameter/corner_radius = 0.02
+shader_parameter/roughness = 0.3
+shader_parameter/grain_amount = 0.02
+
+[sub_resource type="QuadMesh" id="QuadMesh_4bh1v"]
+lightmap_size_hint = Vector2i(4, 3)
+size = Vector2(0.42, 0.32)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mhqg4"]
+render_priority = 0
+shader = ExtResource("3_htaoi")
+shader_parameter/color = Color(1, 1, 1, 0.3)
+shader_parameter/border_color = Color(1, 1, 1, 1)
+shader_parameter/edge_color = Color(0, 0, 0, 1)
+shader_parameter/size = Vector2(0.07, 0.32)
+shader_parameter/border_size = 0.001
+shader_parameter/border_fade_in = 0.005
+shader_parameter/border_fade_out = 0.0
+shader_parameter/corner_radius = 0.02
+shader_parameter/roughness = 0.3
+shader_parameter/grain_amount = 0.02
+
+[sub_resource type="QuadMesh" id="QuadMesh_7q1en"]
+size = Vector2(0.07, 0.32)
+
+[sub_resource type="Animation" id="Animation_61md4"]
+length = 0.001
+tracks/0/type = "bezier"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimationContainer:scale:x")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"handle_modes": PackedInt32Array(0),
+"points": PackedFloat32Array(1, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0)
+}
+tracks/1/type = "bezier"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("AnimationContainer:scale:y")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"handle_modes": PackedInt32Array(0),
+"points": PackedFloat32Array(1, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0)
+}
+tracks/2/type = "bezier"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AnimationContainer:scale:z")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"handle_modes": PackedInt32Array(0),
+"points": PackedFloat32Array(1, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0)
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("AnimationContainer:visible")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
+[sub_resource type="Animation" id="Animation_lkh72"]
+resource_name = "hide_menu"
+length = 0.4
+step = 0.01
+tracks/0/type = "bezier"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimationContainer:rotation:x")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 0, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0, 0.4)
+}
+tracks/1/type = "bezier"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("AnimationContainer:rotation:y")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 0, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0, 0.4)
+}
+tracks/2/type = "bezier"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AnimationContainer:rotation:z")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(0, -0.25, 0, 0.18, -0.0484788, -1.5708, -0.24, 0.0818026, 0.25, 0),
+"times": PackedFloat32Array(0, 0.4)
+}
+tracks/3/type = "bezier"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("AnimationContainer:scale:x")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(1, -0.25, 0, 0.25, 0, 0.01, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0, 0.4)
+}
+tracks/4/type = "bezier"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("AnimationContainer:scale:y")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(1, -0.25, 0, 0.25, 0, 0.01, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0, 0.4)
+}
+tracks/5/type = "bezier"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("AnimationContainer:scale:z")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(1, -0.25, 0, 0.25, 0, 0.01, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0, 0.4)
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("AnimationContainer:visible")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0.39, 0.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_s30cd"]
+_data = {
+"RESET": SubResource("Animation_61md4"),
+"hide_menu": SubResource("Animation_lkh72")
+}
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_emmtq"]
+size = Vector3(0.542114, 0.355225, 0.091465)
+
+[node name="Menu" type="StaticBody3D"]
+collision_layer = 6
+collision_mask = 6
+script = ExtResource("1_ng4u3")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.03, 0, -0.015666)
+shape = SubResource("BoxShape3D_e1esh")
+
+[node name="Movable" type="Node" parent="."]
+script = ExtResource("2_8coxu")
+
+[node name="AnimationContainer" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.23, 0.15, 0)
+
+[node name="Background" type="MeshInstance3D" parent="AnimationContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 1.06581e-14, 0, -1.06581e-14, 1, 0.23, -0.15, 0)
+material_override = SubResource("ShaderMaterial_du6qr")
+mesh = SubResource("QuadMesh_4bh1v")
+skeleton = NodePath("../..")
+
+[node name="Background2" type="MeshInstance3D" parent="AnimationContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 1.06581e-14, 0, -1.06581e-14, 1, -0.02, -0.15, 0)
+material_override = SubResource("ShaderMaterial_mhqg4")
+mesh = SubResource("QuadMesh_7q1en")
+skeleton = NodePath("../..")
+
+[node name="Tabs" type="Node3D" parent="AnimationContainer" node_paths=PackedStringArray("initial_selected")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.02, -0.005, 0)
+script = ExtResource("4_eavfx")
+initial_selected = NodePath("View")
+vertical = true
+gap = 0.01
+size = Vector3(0.05, 0.4, 1)
+
+[node name="View" parent="AnimationContainer/Tabs" instance=ExtResource("5_w4i01")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+label = "visibility"
+icon = true
+toggleable = true
+disabled = true
+size = Vector3(0.05, 0.05, 0.01)
+
+[node name="Edit" parent="AnimationContainer/Tabs" instance=ExtResource("5_w4i01")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.085, 0)
+label = "widgets"
+icon = true
+toggleable = true
+size = Vector3(0.05, 0.05, 0.01)
+
+[node name="Room" parent="AnimationContainer/Tabs" instance=ExtResource("5_w4i01")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.145, 0)
+label = "view_in_ar"
+icon = true
+toggleable = true
+size = Vector3(0.05, 0.05, 0.01)
+
+[node name="Automate" parent="AnimationContainer/Tabs" instance=ExtResource("5_w4i01")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.205, 0)
+label = "schema"
+icon = true
+toggleable = true
+size = Vector3(0.05, 0.05, 0.01)
+
+[node name="Settings" parent="AnimationContainer/Tabs" instance=ExtResource("5_w4i01")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.265, 0)
+label = "settings"
+icon = true
+toggleable = true
+size = Vector3(0.05, 0.05, 0.01)
+
+[node name="TabsContent" type="Node3D" parent="AnimationContainer" node_paths=PackedStringArray("tabs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, 0.00999999, 0)
+script = ExtResource("6_7rntr")
+tabs = NodePath("../Tabs")
+
+[node name="ViewMenu" parent="AnimationContainer/TabsContent" instance=ExtResource("8_71pkg")]
+
+[node name="EditMenu" parent="AnimationContainer/TabsContent" instance=ExtResource("4_r2raj")]
+visible = false
+
+[node name="RoomMenu" parent="AnimationContainer/TabsContent" instance=ExtResource("10_u4i1x")]
+visible = false
+
+[node name="AutomateMenu" type="Node3D" parent="AnimationContainer/TabsContent"]
+visible = false
+
+[node name="SettingsMenu" parent="AnimationContainer/TabsContent" instance=ExtResource("11_7wm6b")]
+visible = false
+
+[node name="NotifyPlace" type="Marker3D" parent="AnimationContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.06, 0)
+gizmo_extents = 0.02
+
+[node name="KeyboardPlace" type="Marker3D" parent="AnimationContainer"]
+transform = Transform3D(0.5, 0, 0, 0, 0.433012, 0.25, 0, -0.25, 0.433012, 0.2, -0.38, 0.11)
+gizmo_extents = 0.02
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_s30cd")
+}
+
+[node name="Area3D" type="Area3D" parent="."]
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0299683, 0, 0.0018978)
+shape = SubResource("BoxShape3D_emmtq")
+
+[node name="OpenSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("12_dsnuc")
+volume_db = -6.0
+
+[node name="CloseSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("13_nnnln")
+volume_db = -6.0

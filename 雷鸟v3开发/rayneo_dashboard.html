@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RayNeo V3 管理中枢</title>
+<style>
+:root {
+  --bg: #06060b; --bg1: #0c0c14; --bg2: #13131f; --bg3: #1a1a2a;
+  --fg: #e8e8f0; --fg2: #8888a8; --fg3: #555570;
+  --cyan: #00d4ff; --gold: #f0b429; --green: #22c55e; --red: #ef4444;
+  --orange: #f97316; --purple: #a78bfa; --pink: #f472b6;
+  --radius: 10px; --radius-sm: 6px;
+  --shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--fg); height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-thumb { background:var(--fg3); border-radius:2px; }
+
+/* ─── Header ─── */
+header { background:var(--bg1); border-bottom:1px solid var(--bg3); padding:0 16px; display:flex; align-items:center; height:48px; flex-shrink:0; gap:12px; }
+header .logo { font-size:15px; font-weight:700; white-space:nowrap; }
+header .logo span { color:var(--cyan); }
+.dao-quote { font-size:10px; color:var(--fg3); font-style:italic; margin-left:4px; }
+.hstats { display:flex; gap:6px; margin-left:16px; }
+.hstats .chip { font-size:10px; padding:2px 8px; border-radius:12px; border:1px solid var(--bg3); color:var(--fg2); display:flex; align-items:center; gap:4px; }
+.chip.on { color:var(--green); border-color:rgba(34,197,94,.4); }
+.chip.off { color:var(--red); border-color:rgba(239,68,68,.3); }
+.chip .dot { width:6px; height:6px; border-radius:50%; }
+.chip.on .dot { background:var(--green); box-shadow:0 0 6px var(--green); }
+.chip.off .dot { background:var(--red); }
+.hactions { margin-left:auto; display:flex; gap:6px; }
+.btn { background:var(--bg3); border:1px solid rgba(255,255,255,.08); color:var(--fg); padding:4px 12px; border-radius:var(--radius-sm); cursor:pointer; font-size:11px; transition:all .15s; white-space:nowrap; }
+.btn:hover { border-color:var(--cyan); color:var(--cyan); }
+.btn.primary { background:rgba(0,212,255,.15); border-color:rgba(0,212,255,.3); color:var(--cyan); }
+
+/* ─── Layout ─── */
+.app { display:flex; flex:1; overflow:hidden; }
+
+/* ─── Sidebar ─── */
+.sidebar { width:52px; background:var(--bg1); border-right:1px solid var(--bg3); display:flex; flex-direction:column; align-items:center; padding:8px 0; gap:2px; flex-shrink:0; }
+.nav-btn { width:40px; height:40px; border:none; background:transparent; color:var(--fg3); cursor:pointer; border-radius:var(--radius-sm); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:16px; transition:all .15s; position:relative; }
+.nav-btn .label { font-size:7px; margin-top:1px; letter-spacing:.5px; }
+.nav-btn:hover { background:var(--bg3); color:var(--fg); }
+.nav-btn.active { background:rgba(0,212,255,.1); color:var(--cyan); }
+.nav-btn.active::before { content:''; position:absolute; left:0; top:8px; bottom:8px; width:2px; background:var(--cyan); border-radius:0 2px 2px 0; }
+
+/* ─── Main ─── */
+.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.page-header { padding:12px 16px 8px; display:flex; align-items:center; gap:12px; flex-shrink:0; }
+.page-header h2 { font-size:16px; font-weight:600; }
+.page-header .subtitle { font-size:10px; color:var(--fg3); }
+.content { flex:1; overflow-y:auto; padding:0 16px 16px; }
+
+/* ─── Cards ─── */
+.grid { display:grid; gap:12px; }
+.grid-6 { grid-template-columns:repeat(3,1fr); }
+.grid-3 { grid-template-columns:repeat(3,1fr); }
+.grid-2 { grid-template-columns:repeat(2,1fr); }
+.card { background:var(--bg2); border:1px solid var(--bg3); border-radius:var(--radius); padding:14px; transition:border-color .2s; }
+.card:hover { border-color:rgba(255,255,255,.1); }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.card-header .icon { font-size:20px; }
+.card-header .title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--fg2); }
+.card-header .badge { font-size:9px; padding:1px 6px; border-radius:8px; font-weight:600; }
+.badge.ok { background:rgba(34,197,94,.15); color:var(--green); }
+.badge.warn { background:rgba(234,179,8,.15); color:var(--gold); }
+.badge.err { background:rgba(239,68,68,.15); color:var(--red); }
+.badge.info { background:rgba(0,212,255,.1); color:var(--cyan); }
+.card .value { font-size:28px; font-weight:700; font-family:'Cascadia Code','JetBrains Mono',monospace; }
+.card .value.sm { font-size:18px; }
+.card .sub { font-size:10px; color:var(--fg3); margin-top:4px; }
+.card .meter { height:4px; background:var(--bg3); border-radius:2px; margin-top:8px; overflow:hidden; }
+.card .meter .fill { height:100%; border-radius:2px; transition:width .5s; }
+
+/* ─── Five Senses ─── */
+.sense-icon { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; margin:0 auto 8px; }
+.sense-icon.vision { background:rgba(0,212,255,.1); box-shadow:0 0 20px rgba(0,212,255,.1); }
+.sense-icon.hearing { background:rgba(164,139,250,.1); box-shadow:0 0 20px rgba(164,139,250,.1); }
+.sense-icon.touch { background:rgba(240,180,41,.1); box-shadow:0 0 20px rgba(240,180,41,.1); }
+.sense-icon.space { background:rgba(34,197,94,.1); box-shadow:0 0 20px rgba(34,197,94,.1); }
+.sense-icon.env { background:rgba(249,115,22,.1); box-shadow:0 0 20px rgba(249,115,22,.1); }
+.sense-icon.wugan { background:rgba(244,114,182,.1); box-shadow:0 0 20px rgba(244,114,182,.1); }
+.sense-card { text-align:center; }
+.sense-card .name { font-size:13px; font-weight:600; margin-bottom:2px; }
+.sense-card .status { font-size:11px; color:var(--fg2); }
+.sense-card .last-event { font-size:10px; color:var(--fg3); margin-top:6px; padding-top:6px; border-top:1px solid var(--bg3); }
+
+/* ─── Device diagram ─── */
+.tri-diagram { display:flex; align-items:center; justify-content:center; gap:24px; padding:20px; }
+.tri-node { text-align:center; padding:16px; border-radius:var(--radius); border:2px solid var(--bg3); min-width:120px; transition:all .3s; }
+.tri-node.online { border-color:rgba(34,197,94,.4); box-shadow:0 0 16px rgba(34,197,94,.05); }
+.tri-node.offline { border-color:rgba(239,68,68,.3); opacity:.6; }
+.tri-node .node-icon { font-size:28px; margin-bottom:6px; }
+.tri-node .node-name { font-size:13px; font-weight:600; }
+.tri-node .node-info { font-size:10px; color:var(--fg2); margin-top:4px; }
+.tri-link { width:40px; height:2px; background:var(--bg3); position:relative; }
+.tri-link.active { background:linear-gradient(90deg,var(--cyan),var(--green)); box-shadow:0 0 8px rgba(0,212,255,.3); }
+.tri-link::after { content:'⟷'; position:absolute; top:-10px; left:50%; transform:translateX(-50%); font-size:12px; color:var(--fg3); }
+
+/* ─── Event Log ─── */
+.panel-right { width:280px; background:var(--bg1); border-left:1px solid var(--bg3); display:flex; flex-direction:column; flex-shrink:0; }
+.panel-title { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--fg3); padding:10px 12px 6px; }
+.event-log { flex:1; overflow-y:auto; font-family:monospace; font-size:10px; }
+.ev { padding:3px 12px; border-bottom:1px solid rgba(255,255,255,.02); display:flex; gap:6px; }
+.ev .ts { color:var(--fg3); flex-shrink:0; }
+.ev.gesture { color:var(--cyan); } .ev.tts { color:var(--green); }
+.ev.action { color:var(--orange); } .ev.error { color:var(--red); }
+.ev.info { color:var(--fg2); }
+
+/* ─── Quick Actions ─── */
+.quick-bar { padding:8px 12px; border-top:1px solid var(--bg3); display:flex; flex-wrap:wrap; gap:4px; }
+.quick-btn { font-size:10px; padding:4px 8px; border-radius:var(--radius-sm); border:1px solid var(--bg3); background:var(--bg2); color:var(--fg2); cursor:pointer; transition:all .15s; }
+.quick-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+
+/* ─── Control Panel ─── */
+.ctrl-group { margin-bottom:12px; }
+.ctrl-group h4 { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--fg3); margin-bottom:6px; }
+.ctrl-row { display:flex; gap:6px; margin-bottom:4px; align-items:center; }
+.ctrl-row input[type=text] { flex:1; background:var(--bg1); border:1px solid var(--bg3); color:var(--fg); padding:6px 10px; border-radius:var(--radius-sm); font-size:12px; }
+.ctrl-row input[type=text]:focus { outline:none; border-color:var(--cyan); }
+
+/* ─── Status Bar ─── */
+footer { background:var(--bg1); border-top:1px solid var(--bg3); padding:0 16px; height:24px; display:flex; align-items:center; gap:16px; font-size:10px; color:var(--fg3); flex-shrink:0; }
+footer .indicator { display:flex; align-items:center; gap:4px; }
+
+/* ─── Page visibility ─── */
+.page { display:none; } .page.active { display:block; }
+
+/* ─── Phone management ─── */
+.app-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.app-item { background:var(--bg1); border:1px solid var(--bg3); border-radius:var(--radius-sm); padding:8px; text-align:center; cursor:pointer; transition:all .15s; font-size:11px; }
+.app-item:hover { border-color:var(--cyan); color:var(--cyan); }
+.app-item .app-icon { font-size:20px; margin-bottom:4px; }
+
+/* ─── Canvas ─── */
+.imu-canvas { width:100%; height:100px; background:var(--bg1); border-radius:var(--radius-sm); }
+
+/* ─── Animations ─── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.pulse { animation:pulse 2s infinite; }
+@keyframes glow { 0%,100%{box-shadow:0 0 5px rgba(0,212,255,.2)} 50%{box-shadow:0 0 20px rgba(0,212,255,.4)} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🕶️ <span>RayNeo V3</span> 管理中枢</div>
+  <div class="dao-quote">道生一，一生二，二生三，三生万物</div>
+  <div class="hstats">
+    <span class="chip off" id="chipGlass"><span class="dot"></span>眼镜</span>
+    <span class="chip off" id="chipPhone"><span class="dot"></span>手机</span>
+    <span class="chip off" id="chipBrain"><span class="dot"></span>手机脑</span>
+    <span class="chip on" id="chipWS"><span class="dot"></span>WS</span>
+  </div>
+  <div class="hactions">
+    <button class="btn" onclick="doRefresh()">🔄 刷新</button>
+    <button class="btn primary" onclick="send({type:'get_state'})">📊 状态</button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <button class="nav-btn active" data-page="senses" onclick="showPage('senses')">👁<span class="label">五感</span></button>
+    <button class="nav-btn" data-page="devices" onclick="showPage('devices')">📱<span class="label">设备</span></button>
+    <button class="nav-btn" data-page="dao" onclick="showPage('dao')">☯<span class="label">道</span></button>
+    <button class="nav-btn" data-page="sanlian" onclick="showPage('sanlian')">🔗<span class="label">三联</span></button>
+    <button class="nav-btn" data-page="control" onclick="showPage('control')">🎮<span class="label">控制</span></button>
+    <button class="nav-btn" data-page="phone" onclick="showPage('phone')">📲<span class="label">手机</span></button>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main">
+    <!-- ═══ Page: 五感中枢 ═══ -->
+    <div class="page active" id="page-senses">
+      <div class="page-header">
+        <h2>☰ 五感中枢</h2>
+        <span class="subtitle">老子第十二章：五色令人目盲，五音令人耳聋 — 以简驭繁</span>
+      </div>
+      <div class="content">
+        <div class="grid grid-6" style="margin-bottom:12px">
+          <div class="card sense-card">
+            <div class="sense-icon vision">👁</div>
+            <div class="name">视觉 · Vision</div>
+            <div class="status" id="sVisionStatus">待机</div>
+            <div class="last-event" id="sVisionEvent">—</div>
+          </div>
+          <div class="card sense-card">
+            <div class="sense-icon hearing">👂</div>
+            <div class="name">听觉 · Hearing</div>
+            <div class="status" id="sHearingStatus">待机</div>
+            <div class="last-event" id="sHearingEvent">—</div>
+          </div>
+          <div class="card sense-card">
+            <div class="sense-icon touch">🖐</div>
+            <div class="name">触觉 · Touch</div>
+            <div class="status" id="sTouchStatus">待机</div>
+            <div class="last-event" id="sTouchEvent">—</div>
+          </div>
+          <div class="card sense-card">
+            <div class="sense-icon space">🧭</div>
+            <div class="name">空间 · IMU</div>
+            <div class="status" id="sSpaceStatus">待机</div>
+            <div class="last-event" id="sSpaceEvent">—</div>
+          </div>
+          <div class="card sense-card">
+            <div class="sense-icon env">🌡</div>
+            <div class="name">环境 · Env</div>
+            <div class="status" id="sEnvStatus">待机</div>
+            <div class="last-event" id="sEnvEvent">—</div>
+          </div>
+          <div class="card sense-card">
+            <div class="sense-icon wugan">🧘</div>
+            <div class="name">无感 · 以气听</div>
+            <div class="status" id="sWuganStatus">待机</div>
+            <div class="last-event" id="sWuganEvent">—</div>
+          </div>
+        </div>
+
+        <div class="grid grid-3" style="margin-bottom:12px">
+          <div class="card">
+            <div class="card-header"><span class="title">🌡 环境监听</span><span class="badge" id="monEnvBadge">停止</span></div>
+            <div style="font-size:11px;color:var(--fg2);margin-bottom:8px">光照 · 佩戴 · 电量实时采集</div>
+            <div style="font-size:20px;font-weight:bold;color:var(--cyan)" id="monEnvValue">— lux</div>
+            <button class="btn" onclick="toggleMonitor('env')" id="monEnvBtn" style="margin-top:8px;width:100%;font-size:10px">▶ 开始监听</button>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="title">🎤 声音监听</span><span class="badge" id="monSoundBadge">停止</span></div>
+            <div style="font-size:11px;color:var(--fg2);margin-bottom:8px">麦克风音量 · 唤醒词检测</div>
+            <div style="font-size:20px;font-weight:bold;color:var(--green)" id="monSoundValue">— dB</div>
+            <button class="btn" onclick="toggleMonitor('sound')" id="monSoundBtn" style="margin-top:8px;width:100%;font-size:10px">▶ 开始监听</button>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="title">📷 画面监听</span><span class="badge" id="monCamBadge">停止</span></div>
+            <div style="font-size:11px;color:var(--fg2);margin-bottom:8px">间断拍照 · 场景变化检测</div>
+            <div style="font-size:11px;color:var(--fg3)" id="monCamValue">最后: —</div>
+            <button class="btn" onclick="toggleMonitor('cam')" id="monCamBtn" style="margin-top:8px;width:100%;font-size:10px">▶ 开始监听</button>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <span class="title">IMU 波形</span>
+              <span class="badge info">实时</span>
+            </div>
+            <canvas class="imu-canvas" id="imuCanvas" width="500" height="100"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="title">五感事件流</span>
+              <span class="badge info" id="eventCount">0</span>
+            </div>
+            <div id="senseEvents" style="max-height:100px;overflow-y:auto;font-size:10px;font-family:monospace;color:var(--fg2)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Page: 设备管理 ═══ -->
+    <div class="page" id="page-devices">
+      <div class="page-header">
+        <h2>☷ 设备管理</h2>
+        <span class="subtitle">老子第七十六章：坚强者死之徒，柔弱者生之徒 — 连接如水</span>
+      </div>
+      <div class="content">
+        <div class="grid grid-3">
+          <div class="card">
+            <div class="card-header">
+              <span class="icon">🕶️</span>
+              <span class="title">RayNeo V3 眼镜</span>
+              <span class="badge ok" id="badgeGlass">离线</span>
+            </div>
+            <div class="value sm" id="dGlassConn">—</div>
+            <div class="sub">型号: XRGF50 · Android 12</div>
+            <div style="margin-top:8px;font-size:11px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span>🔋 电量</span><span id="dGlassBatt">—</span>
+              </div>
+              <div class="meter"><div class="fill" id="dGlassBattBar" style="width:0;background:var(--green)"></div></div>
+              <div style="display:flex;justify-content:space-between;margin-top:6px">
+                <span>👓 佩戴</span><span id="dGlassWorn">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:4px">
+                <span>💡 光照</span><span id="dGlassLight">—</span>
+              </div>
+              <div style="margin-top:8px;display:flex;gap:4px">
+                <button class="btn" onclick="doReconnect()" style="flex:1;font-size:10px">🔄 重连</button>
+                <button class="btn" onclick="doCapture()" style="flex:1;font-size:10px">📷 拍照</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="icon">📱</span>
+              <span class="title">手机</span>
+              <span class="badge ok" id="badgePhone">离线</span>
+            </div>
+            <div class="value sm" id="dPhoneConn">—</div>
+            <div class="sub" id="dPhoneIP">IP: —</div>
+            <div style="margin-top:8px;font-size:11px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span>🔋 电量</span><span id="dPhoneBatt">—</span>
+              </div>
+              <div class="meter"><div class="fill" id="dPhoneBattBar" style="width:0;background:var(--green)"></div></div>
+              <div style="display:flex;justify-content:space-between;margin-top:6px">
+                <span>🧠 手机脑</span><span id="dPhoneBrain">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:4px">
+                <span>📱 前台App</span><span id="dPhoneApp">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="icon">💻</span>
+              <span class="title">PC</span>
+              <span class="badge ok">在线</span>
+            </div>
+            <div class="value sm" id="dPCName">—</div>
+            <div class="sub">管理中枢运行中</div>
+            <div style="margin-top:8px;font-size:11px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span>⚙️ 五感引擎</span><span id="dEngFive">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:4px">
+                <span>☯ 道引擎</span><span id="dEngDao">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:4px">
+                <span>🔗 三联道</span><span id="dEngSan">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Page: 道感知 ═══ -->
+    <div class="page" id="page-dao">
+      <div class="page-header">
+        <h2>☯ 道感知层</h2>
+        <span class="subtitle">老子第四十八章：为学日益，为道日损 — 损之又损，以至于无为</span>
+      </div>
+      <div class="content">
+        <div class="grid grid-3" style="margin-bottom:12px">
+          <div class="card">
+            <div class="card-header"><span class="title">意图引擎</span><span class="badge info">IntentEngine</span></div>
+            <div class="value sm" id="daoIntent">无意图</div>
+            <div class="sub">心斋 · 以气听之</div>
+            <div style="margin-top:8px;font-size:10px;color:var(--fg3)">
+              低头+静止 → 视觉捕获<br>
+              抬头+静止 → 语音提问<br>
+              摇头 → 取消/否定
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="title">归根管理</span><span class="badge info">GuiGen</span></div>
+            <div class="value sm" id="daoWear">—</div>
+            <div class="sub">Hall传感器 · 佩戴感知</div>
+            <div style="margin-top:8px;font-size:10px;color:var(--fg3)">
+              戴上 → 五感启动<br>
+              摘下 → 五感休眠<br>
+              省电 · 无感切换
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="title">道上下文</span><span class="badge info">DaoContext</span></div>
+            <div style="font-size:11px;margin-top:4px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span>头部姿态</span><span id="daoHeadPose">neutral</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span>空闲时间</span><span id="daoIdle">0s</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span>连续失败</span><span id="daoFails">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between">
+                <span>意图历史</span><span id="daoHistory">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="title">四圣谛 · 问题解决链</span></div>
+          <div style="display:flex;gap:16px;padding:8px 0;font-size:12px;text-align:center">
+            <div style="flex:1;padding:10px;background:var(--bg1);border-radius:var(--radius-sm)">
+              <div style="font-size:18px;margin-bottom:4px">苦</div>
+              <div style="color:var(--fg3);font-size:10px">症状感知</div>
+            </div>
+            <div style="flex:1;padding:10px;background:var(--bg1);border-radius:var(--radius-sm)">
+              <div style="font-size:18px;margin-bottom:4px">集</div>
+              <div style="color:var(--fg3);font-size:10px">根因分析</div>
+            </div>
+            <div style="flex:1;padding:10px;background:var(--bg1);border-radius:var(--radius-sm)">
+              <div style="font-size:18px;margin-bottom:4px">灭</div>
+              <div style="color:var(--fg3);font-size:10px">期望状态</div>
+            </div>
+            <div style="flex:1;padding:10px;background:var(--bg1);border-radius:var(--radius-sm)">
+              <div style="font-size:18px;margin-bottom:4px">道</div>
+              <div style="color:var(--fg3);font-size:10px">解决路径</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Page: 三联道 ═══ -->
+    <div class="page" id="page-sanlian">
+      <div class="page-header">
+        <h2>🔗 三联道 · 万物</h2>
+        <span class="subtitle">老子第四十二章：道生一，一生二，二生三，三生万物</span>
+      </div>
+      <div class="content">
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-header"><span class="title">三体拓扑</span></div>
+          <div class="tri-diagram">
+            <div class="tri-node" id="triPC">
+              <div class="node-icon">💻</div>
+              <div class="node-name">PC · 道</div>
+              <div class="node-info">AI大脑 + 管理中枢</div>
+            </div>
+            <div class="tri-link" id="triLinkPG"></div>
+            <div class="tri-node" id="triGlasses">
+              <div class="node-icon">🕶️</div>
+              <div class="node-name">眼镜 · 二</div>
+              <div class="node-info">第一视角 + 五感入口</div>
+            </div>
+            <div class="tri-link" id="triLinkGP"></div>
+            <div class="tri-node" id="triPhone">
+              <div class="node-icon">📱</div>
+              <div class="node-name">手机 · 一</div>
+              <div class="node-info">百万App + 网络</div>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-3">
+          <div class="card">
+            <div class="card-header"><span class="title">场景一</span><span class="badge info">眼镜看·说</span></div>
+            <div style="font-size:11px;color:var(--fg2)">单击拍照 → AI识别 → TTS播报<br><span style="font-size:10px;color:var(--fg3)">眼镜→PC(AI)→眼镜</span></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="title">场景二</span><span class="badge info">手机→眼镜</span></div>
+            <div style="font-size:11px;color:var(--fg2)">手机截屏 → OCR → TTS播报<br><span style="font-size:10px;color:var(--fg3)">手机→PC(OCR)→眼镜</span></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="title">场景三</span><span class="badge info">通知转发</span></div>
+            <div style="font-size:11px;color:var(--fg2)">手机通知 → TTS播报到眼镜<br><span style="font-size:10px;color:var(--fg3)">手机→PC→眼镜</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Page: Agent控制 ═══ -->
+    <div class="page" id="page-control">
+      <div class="page-header">
+        <h2>🎮 Agent 控制台</h2>
+        <span class="subtitle">释迦·八正道：正见·正思维·正语·正业·正命·正精进·正念·正定</span>
+      </div>
+      <div class="content">
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="ctrl-group">
+              <h4>📢 TTS 播报</h4>
+              <div class="ctrl-row">
+                <input type="text" id="ctrlTTS" placeholder="输入要播报的内容..." value="道可道，非常道">
+                <button class="btn primary" onclick="doTTS()">🔊 播报</button>
+              </div>
+            </div>
+            <div class="ctrl-group">
+              <h4>🖐 手势模拟</h4>
+              <div class="ctrl-row">
+                <button class="quick-btn" onclick="doGesture('tap')">👆 单击</button>
+                <button class="quick-btn" onclick="doGesture('double_tap')">👆👆 双击</button>
+                <button class="quick-btn" onclick="doGesture('slide_fwd')">➡️ 前滑</button>
+                <button class="quick-btn" onclick="doGesture('slide_back')">⬅️ 后滑</button>
+                <button class="quick-btn" onclick="doGesture('long_press')">⏳ 长按</button>
+              </div>
+            </div>
+            <div class="ctrl-group">
+              <h4>🤖 AI 问答</h4>
+              <div class="ctrl-row">
+                <input type="text" id="ctrlAI" placeholder="问AI一个问题..." value="今天天气怎么样">
+                <button class="btn" onclick="doAskAI()">🧠 提问</button>
+              </div>
+              <div id="aiAnswer" style="font-size:11px;color:var(--fg2);margin-top:6px;min-height:20px"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="ctrl-group">
+              <h4>⚡ ADB 命令</h4>
+              <div class="ctrl-row">
+                <select id="adbDevice" style="background:var(--bg1);border:1px solid var(--bg3);color:var(--fg);padding:6px;border-radius:var(--radius-sm);font-size:12px">
+                  <option value="glasses">🕶️ 眼镜</option>
+                  <option value="phone">📱 手机</option>
+                </select>
+                <input type="text" id="adbCmd" placeholder="shell dumpsys battery" value="shell dumpsys battery">
+                <button class="btn" onclick="doADB()">▶️</button>
+              </div>
+              <pre id="adbResult" style="font-size:10px;color:var(--fg2);margin-top:6px;max-height:150px;overflow-y:auto;background:var(--bg1);padding:6px;border-radius:var(--radius-sm);white-space:pre-wrap"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Page: 手机脑 ═══ -->
+    <div class="page" id="page-phone">
+      <div class="page-header">
+        <h2>📲 手机脑 · Phone Brain</h2>
+        <span class="subtitle">老子第四十二章：万物负阴而抱阳，冲气以为和</span>
+      </div>
+      <div class="content">
+        <div class="grid grid-2" style="margin-bottom:12px">
+          <div class="card">
+            <div class="card-header"><span class="title">服务状态</span><span class="badge" id="brainBadge">—</span></div>
+            <div style="font-size:11px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span>地址</span><span id="brainAddr">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span>AI后端</span><span id="brainAI">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between">
+                <span>延迟</span><span id="brainLatency">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="title">可用App</span></div>
+            <div class="app-grid" id="appGrid"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="title">Termux 部署指南</span></div>
+          <div style="font-size:11px;color:var(--fg2);line-height:1.6">
+            <code style="background:var(--bg1);padding:2px 6px;border-radius:3px">pkg install python python-pip -y</code><br>
+            <code style="background:var(--bg1);padding:2px 6px;border-radius:3px">pip install flask requests</code><br>
+            <code style="background:var(--bg1);padding:2px 6px;border-radius:3px">python phone_server.py</code><br>
+            <span style="color:var(--fg3)">端口: 8765 · 路由: /glasses /tts /ask /see /status</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel: Event Log -->
+  <div class="panel-right">
+    <div class="panel-title">📋 事件日志</div>
+    <div class="event-log" id="eventLog"></div>
+    <div class="quick-bar">
+      <button class="quick-btn" onclick="doRefresh()">🔄 刷新</button>
+      <button class="quick-btn" onclick="clearLog()">🗑 清空</button>
+      <button class="quick-btn" onclick="doCapture()">📷 拍照</button>
+      <button class="quick-btn" onclick="doTTSQuick('你好世界')">🔊 测试</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span class="indicator" id="footWS">⚪ WS断开</span>
+  <span class="indicator" id="footGlass">🕶️ —</span>
+  <span class="indicator" id="footPhone">📱 —</span>
+  <span class="indicator" id="footUpdate">🕐 —</span>
+  <span style="margin-left:auto;color:var(--fg3)">RayNeo V3 管理中枢 · 以道统之</span>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// WebSocket
+// ═══════════════════════════════════════════════════════════
+let ws = null;
+const WS_URL = 'ws://' + location.hostname + ':8801';
+let reconnTimer = null;
+
+function connect() {
+  if (ws && ws.readyState === WebSocket.OPEN) return;
+  try {
+    ws = new WebSocket(WS_URL);
+    ws.onopen = () => {
+      setChip('chipWS', true, 'WS');
+      document.getElementById('footWS').textContent = '🟢 WS已连接';
+      addLog('info', 'WebSocket 已连接');
+    };
+    ws.onmessage = e => handleMessage(JSON.parse(e.data));
+    ws.onclose = () => {
+      setChip('chipWS', false, 'WS');
+      document.getElementById('footWS').textContent = '🔴 WS断开';
+      if (!reconnTimer) reconnTimer = setTimeout(() => { reconnTimer = null; connect(); }, 3000);
+    };
+    ws.onerror = () => addLog('error', 'WebSocket错误');
+  } catch(e) { addLog('error', e.message); }
+}
+
+function send(msg) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+  else addLog('error', '未连接');
+}
+
+// ═══════════════════════════════════════════════════════════
+// Message Handler
+// ═══════════════════════════════════════════════════════════
+function handleMessage(msg) {
+  switch(msg.type) {
+    case 'state': updateState(msg.data); break;
+    case 'event': handleEvent(msg.event); break;
+    case 'tts': addLog('tts', '🔊 ' + msg.text); break;
+    case 'info': addLog('info', msg.msg); break;
+    case 'adb_result': document.getElementById('adbResult').textContent = msg.result || '(空)'; break;
+    case 'error': addLog('error', msg.msg); break;
+  }
+}
+
+function updateState(s) {
+  if (!s) return;
+  const g = s.glasses, p = s.phone, e = s.engines;
+
+  // Header chips
+  setChip('chipGlass', g.online, '眼镜');
+  setChip('chipPhone', p.online, '手机');
+  setChip('chipBrain', p.brain_online, '手机脑');
+
+  // Footer
+  document.getElementById('footGlass').textContent = g.online ? `🕶️ ${g.connection} ${g.battery}%` : '🕶️ 离线';
+  document.getElementById('footPhone').textContent = p.online ? `📱 ${p.battery}%` : '📱 离线';
+  document.getElementById('footUpdate').textContent = '🕐 ' + new Date(s.timestamp*1000).toLocaleTimeString('zh',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+  // Devices page
+  document.getElementById('dGlassConn').textContent = g.online ? g.connection + ' · ' + g.id : '离线';
+  setBadge('badgeGlass', g.online ? 'ok' : 'err', g.online ? '在线' : '离线');
+  document.getElementById('dGlassBatt').textContent = g.battery >= 0 ? g.battery + '%' : '—';
+  document.getElementById('dGlassBattBar').style.width = (g.battery >= 0 ? g.battery : 0) + '%';
+  document.getElementById('dGlassBattBar').style.background = g.battery > 20 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('dGlassWorn').textContent = g.worn ? '✅ 已佩戴' : '❌ 未佩戴';
+  document.getElementById('dGlassLight').textContent = g.light >= 0 ? g.light.toFixed(0) + ' lux' : '—';
+
+  document.getElementById('dPhoneConn').textContent = p.online ? 'USB · ' + p.id : '离线';
+  setBadge('badgePhone', p.online ? 'ok' : 'err', p.online ? '在线' : '离线');
+  document.getElementById('dPhoneIP').textContent = 'IP: ' + p.ip;
+  document.getElementById('dPhoneBatt').textContent = p.battery >= 0 ? p.battery + '%' : '—';
+  document.getElementById('dPhoneBattBar').style.width = (p.battery >= 0 ? p.battery : 0) + '%';
+  document.getElementById('dPhoneBrain').textContent = p.brain_online ? '✅ 在线' : '❌ 离线';
+  document.getElementById('dPhoneApp').textContent = p.fg_app || '—';
+
+  document.getElementById('dPCName').textContent = s.pc.name;
+  document.getElementById('dEngFive').textContent = e.five_senses ? '✅ 运行中' : '⏹ 停止';
+  document.getElementById('dEngDao').textContent = e.dao ? '✅ 运行中' : '⏹ 停止';
+  document.getElementById('dEngSan').textContent = e.san_lian ? '✅ 运行中' : '⏹ 停止';
+
+  // SanLian diagram
+  document.getElementById('triPC').className = 'tri-node online';
+  document.getElementById('triGlasses').className = 'tri-node ' + (g.online ? 'online' : 'offline');
+  document.getElementById('triPhone').className = 'tri-node ' + (p.online ? 'online' : 'offline');
+  document.getElementById('triLinkPG').className = 'tri-link ' + (g.online ? 'active' : '');
+  document.getElementById('triLinkGP').className = 'tri-link ' + (p.online ? 'active' : '');
+
+  // Five senses status
+  document.getElementById('sEnvStatus').textContent = g.online ? (g.light >= 0 ? `光照 ${g.light.toFixed(0)} lux` : '传感器不可用') : '离线';
+  document.getElementById('sEnvEvent').textContent = g.worn ? '已佩戴' : '未佩戴';
+  if (monitors.env && g.online) {
+    document.getElementById('monEnvValue').textContent = g.light >= 0 ? g.light.toFixed(0) + ' lux' : '\u2014';
+  }
+
+  // IMU waveform (if accel data present)
+  if (g.accel && g.accel.length === 3) {
+    pushIMU(g.accel[0], g.accel[1], g.accel[2]);
+  }
+
+  // Dao
+  document.getElementById('daoWear').textContent = g.worn ? '已佩戴 · 五感激活' : '未佩戴 · 休眠';
+
+  // Phone brain
+  const bb = document.getElementById('brainBadge');
+  bb.textContent = p.brain_online ? '在线' : '离线';
+  bb.className = 'badge ' + (p.brain_online ? 'ok' : 'err');
+  document.getElementById('brainAddr').textContent = p.brain_url || `http://${p.ip}:8765`;
+}
+
+function handleEvent(ev) {
+  if (!ev) return;
+  const cls = ev.type === 'gesture' ? 'gesture' : ev.type === 'tts' ? 'tts' : 'info';
+  const detail = ev.data ? JSON.stringify(ev.data) : '';
+  addLog(cls, `[${ev.type}] ${detail}`);
+
+  // Update sense cards
+  if (ev.type === 'gesture') {
+    document.getElementById('sTouchStatus').textContent = ev.data?.gesture || 'tap';
+    document.getElementById('sTouchEvent').textContent = fmtTime(ev.time);
+  } else if (ev.type === 'tts') {
+    document.getElementById('sHearingStatus').textContent = '播报中';
+    document.getElementById('sHearingEvent').textContent = (ev.data?.text || '').slice(0, 20);
+  } else if (ev.type === 'photo' || ev.type === 'vision' || ev.type === 'capture') {
+    document.getElementById('sVisionStatus').textContent = '捕获';
+    document.getElementById('sVisionEvent').textContent = fmtTime(ev.time);
+    document.getElementById('monCamValue').textContent = '最后: ' + fmtTime(ev.time);
+  } else if (ev.type === 'capture_fail') {
+    document.getElementById('sVisionStatus').textContent = '失败';
+    addLog('error', '拍照失败: ' + (ev.data?.reason || ev.data?.error || ''));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Actions
+// ═══════════════════════════════════════════════════════════
+function doRefresh() { send({type:'refresh'}); addLog('info','正在刷新设备状态...'); }
+function doTTS() { const t = document.getElementById('ctrlTTS').value; if(t) send({type:'tts',text:t}); }
+function doTTSQuick(t) { send({type:'tts',text:t}); }
+function doGesture(g) { send({type:'gesture',gesture:g}); addLog('gesture','手势: '+g); }
+function doAskAI() {
+  const q = document.getElementById('ctrlAI').value;
+  if(q) { send({type:'phone_brain',action:'ask',query:q}); document.getElementById('aiAnswer').textContent='思考中...'; }
+}
+function doReconnect() { send({type:'reconnect'}); addLog('action','正在重连眼镜...'); }
+function doCapture() { send({type:'capture'}); addLog('action','正在拍照...'); }
+
+// ─── 监听控制 ───
+const monitors = {env: null, sound: null, cam: null};
+function toggleMonitor(kind) {
+  if (monitors[kind]) {
+    clearInterval(monitors[kind]);
+    monitors[kind] = null;
+    document.getElementById('mon'+kind.charAt(0).toUpperCase()+kind.slice(1)+'Btn').textContent = '▶ 开始监听';
+    setBadge('mon'+kind.charAt(0).toUpperCase()+kind.slice(1)+'Badge', '', '停止');
+    addLog('info', kind + ' 监听已停止');
+  } else {
+    const intervals = {env: 5000, sound: 3000, cam: 15000};
+    if (kind === 'env') {
+      monitors[kind] = setInterval(() => send({type:'adb_cmd', device:'glasses', cmd:['shell','dumpsys','sensorservice']}), intervals[kind]);
+    } else if (kind === 'sound') {
+      monitors[kind] = setInterval(() => send({type:'adb_cmd', device:'glasses', cmd:['shell','dumpsys','audio']}), intervals[kind]);
+    } else if (kind === 'cam') {
+      monitors[kind] = setInterval(() => doCapture(), intervals[kind]);
+    }
+    document.getElementById('mon'+kind.charAt(0).toUpperCase()+kind.slice(1)+'Btn').textContent = '⏹ 停止监听';
+    setBadge('mon'+kind.charAt(0).toUpperCase()+kind.slice(1)+'Badge', 'ok', '运行中');
+    addLog('action', kind + ' 监听已启动');
+    // 立即执行一次
+    if (kind === 'env') send({type:'refresh'});
+    if (kind === 'cam') doCapture();
+  }
+}
+
+function doADB() {
+  const dev = document.getElementById('adbDevice').value;
+  const cmd = document.getElementById('adbCmd').value.split(/\s+/);
+  if(cmd.length) send({type:'adb_cmd',device:dev,cmd:cmd});
+}
+
+// ═══════════════════════════════════════════════════════════
+// UI Helpers
+// ═══════════════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelector(`[data-page="${id}"]`).classList.add('active');
+}
+
+function setChip(id, on, label) {
+  const el = document.getElementById(id);
+  el.className = 'chip ' + (on ? 'on' : 'off');
+  el.innerHTML = `<span class="dot"></span>${label}`;
+}
+
+function setBadge(id, cls, text) {
+  const el = document.getElementById(id);
+  el.className = 'badge ' + cls;
+  el.textContent = text;
+}
+
+function addLog(cls, msg) {
+  const log = document.getElementById('eventLog');
+  const div = document.createElement('div');
+  div.className = 'ev ' + cls;
+  div.innerHTML = `<span class="ts">${fmtNow()}</span>${msg}`;
+  log.appendChild(div);
+  if (log.children.length > 300) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;
+  document.getElementById('eventCount').textContent = log.children.length;
+}
+
+function clearLog() { document.getElementById('eventLog').innerHTML = ''; }
+
+function fmtNow() { return new Date().toLocaleTimeString('zh',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+function fmtTime(ts) { return new Date(ts*1000).toLocaleTimeString('zh',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+
+// ═══════════════════════════════════════════════════════════
+// IMU Canvas Waveform
+// ═══════════════════════════════════════════════════════════
+const imuData = {x:[], y:[], z:[]};
+const IMU_MAX = 120;
+function pushIMU(x,y,z) {
+  imuData.x.push(x); imuData.y.push(y); imuData.z.push(z);
+  if (imuData.x.length > IMU_MAX) { imuData.x.shift(); imuData.y.shift(); imuData.z.shift(); }
+  drawIMU();
+}
+function drawIMU() {
+  const c = document.getElementById('imuCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height, mid = H/2, scale = H/40;
+  ctx.clearRect(0,0,W,H);
+  // grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.beginPath(); ctx.moveTo(0,mid); ctx.lineTo(W,mid); ctx.stroke();
+  // draw axes
+  const colors = ['#00d4ff','#22c55e','#f0b429'];
+  const keys = ['x','y','z'];
+  for (let a=0; a<3; a++) {
+    const arr = imuData[keys[a]];
+    if (arr.length < 2) continue;
+    ctx.strokeStyle = colors[a]; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (let i=0; i<arr.length; i++) {
+      const px = (i/(IMU_MAX-1))*W, py = mid - arr[i]*scale;
+      i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+  }
+  // legend
+  ctx.font = '9px monospace';
+  const last = (k) => imuData[k].length ? imuData[k][imuData[k].length-1].toFixed(1) : '—';
+  ctx.fillStyle=colors[0]; ctx.fillText('X:'+last('x'), 4, 10);
+  ctx.fillStyle=colors[1]; ctx.fillText('Y:'+last('y'), 60, 10);
+  ctx.fillStyle=colors[2]; ctx.fillText('Z:'+last('z'), 116, 10);
+}
+
+// ═══════════════════════════════════════════════════════════
+// App Grid (Phone Brain)
+// ═══════════════════════════════════════════════════════════
+const APPS = {chatgpt:'🤖',kimi:'🌙',tongyi:'🧠',wechat:'💬',feishu:'🐦',dingtalk:'📎',baidu:'🔍',maps:'🗺',tasker:'⚙',bing:'🔎',music:'🎵'};
+function buildAppGrid() {
+  const grid = document.getElementById('appGrid');
+  grid.innerHTML = '';
+  for (const [k,icon] of Object.entries(APPS)) {
+    const d = document.createElement('div');
+    d.className = 'app-item';
+    d.innerHTML = `<div class="app-icon">${icon}</div>${k}`;
+    d.onclick = () => { send({type:'phone_brain',action:'open_app',app:k}); addLog('action','打开: '+k); };
+    grid.appendChild(d);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════════
+buildAppGrid();
+// 从后端获取实际手机脑地址（不再硬编码）
+fetch('/api/status').then(r=>r.json()).then(s=>{
+  const addr = s?.phone?.brain_url || 'http://' + location.hostname + ':8765';
+  document.getElementById('brainAddr').textContent = addr;
+}).catch(()=>{
+  document.getElementById('brainAddr').textContent = 'http://' + location.hostname + ':8765';
+});
+addLog('info', '管理中枢已加载 · 道生一，一生二，二生三，三生万物');
+setTimeout(connect, 300);
+</script>
+</body>
+</html>

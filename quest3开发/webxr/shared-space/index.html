@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 3 Shared Space</title>
+    <script src="/quest/libs/aframe.min.js"></script>
+    <script>
+    // look-at component (not in A-Frame core) — needed for peer name labels
+    AFRAME.registerComponent('look-at', {
+        schema: { type: 'selector' },
+        tick() {
+            if (this.data) this.el.object3D.lookAt(this.data.object3D.getWorldPosition(new THREE.Vector3()));
+        }
+    });
+    </script>
+    <style>
+        .a-enter-vr-button {
+            background: linear-gradient(135deg, #7c3aed, #0ea5e9) !important;
+            border-radius: 12px !important;
+            font-size: 16px !important;
+        }
+        #hud {
+            position: fixed; top: 16px; left: 16px; z-index: 999;
+            font-family: system-ui, sans-serif; color: #fff;
+            pointer-events: none;
+        }
+        #hud .badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 13px; margin-right: 8px;
+        }
+        .badge-ws { background: rgba(34,197,94,0.3); color: #86efac; }
+        .badge-users { background: rgba(124,58,237,0.3); color: #c4b5fd; }
+        .badge-offline { background: rgba(239,68,68,0.3); color: #fca5a5; }
+        #chat-box {
+            position: fixed; bottom: 16px; left: 16px; z-index: 999;
+            font-family: system-ui, sans-serif;
+        }
+        #chat-log {
+            width: 320px; height: 120px; overflow-y: auto;
+            background: rgba(0,0,0,0.6); border-radius: 12px;
+            padding: 8px 12px; color: #fff; font-size: 13px;
+            margin-bottom: 8px; backdrop-filter: blur(8px);
+        }
+        #chat-input {
+            width: 320px; padding: 8px 12px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.5); color: #fff; font-size: 14px;
+            backdrop-filter: blur(8px); outline: none;
+        }
+        #chat-input::placeholder { color: rgba(255,255,255,0.4); }
+    </style>
+</head>
+<body>
+    <div id="hud">
+        <span class="badge badge-ws" id="ws-status">连接中...</span>
+        <span class="badge badge-users" id="user-count">0 人在线</span>
+    </div>
+
+    <div id="chat-box">
+        <div id="chat-log"></div>
+        <input id="chat-input" type="text" placeholder="输入消息，回车发送..." autocomplete="off">
+    </div>
+
+    <a-scene
+        webxr="optionalFeatures: local-floor, hand-tracking;"
+        renderer="colorManagement: true; physicallyCorrectLights: true;"
+        background="color: #0f0f23"
+    >
+        <!-- Floor -->
+        <a-circle position="0 0.01 0" rotation="-90 0 0" radius="8"
+            material="color: #1a1a3e; metalness: 0.1; roughness: 0.8; side: double">
+        </a-circle>
+
+        <!-- Grid Lines on Floor -->
+        <a-entity id="grid-lines"></a-entity>
+
+        <!-- Center Beacon -->
+        <a-cylinder position="0 0.5 0" radius="0.08" height="1" color="#7c3aed"
+            material="emissive: #7c3aed; emissiveIntensity: 0.5; metalness: 0.8"
+            animation="property: rotation; to: 0 360 0; dur: 10000; loop: true; easing: linear">
+        </a-cylinder>
+        <a-torus position="0 1.1 0" radius="0.2" radius-tubular="0.015"
+            color="#7c3aed" material="emissive: #7c3aed; emissiveIntensity: 0.3"
+            animation="property: rotation; to: 0 360 0; dur: 6000; loop: true; easing: linear">
+        </a-torus>
+        <a-torus position="0 0.8 0" radius="0.3" radius-tubular="0.01"
+            color="#0ea5e9" material="emissive: #0ea5e9; emissiveIntensity: 0.3"
+            animation="property: rotation; to: 360 0 0; dur: 8000; loop: true; easing: linear">
+        </a-torus>
+
+        <!-- Boundary Pillars -->
+        <a-cylinder position="5 1 0" radius="0.1" height="2" color="#22c55e"
+            material="emissive: #22c55e; emissiveIntensity: 0.3; opacity: 0.6; transparent: true">
+        </a-cylinder>
+        <a-cylinder position="-5 1 0" radius="0.1" height="2" color="#22c55e"
+            material="emissive: #22c55e; emissiveIntensity: 0.3; opacity: 0.6; transparent: true">
+        </a-cylinder>
+        <a-cylinder position="0 1 5" radius="0.1" height="2" color="#22c55e"
+            material="emissive: #22c55e; emissiveIntensity: 0.3; opacity: 0.6; transparent: true">
+        </a-cylinder>
+        <a-cylinder position="0 1 -5" radius="0.1" height="2" color="#22c55e"
+            material="emissive: #22c55e; emissiveIntensity: 0.3; opacity: 0.6; transparent: true">
+        </a-cylinder>
+
+        <!-- Shared Interactive Objects -->
+        <a-box id="shared-cube" position="-2 0.5 -3" width="0.5" height="0.5" depth="0.5"
+            color="#e94560" material="metalness: 0.5; roughness: 0.3"
+            animation="property: rotation; to: 0 360 0; dur: 8000; loop: true; easing: linear">
+        </a-box>
+        <a-sphere id="shared-sphere" position="2 0.8 -3" radius="0.3"
+            color="#4ade80" material="metalness: 0.6; roughness: 0.2"
+            animation="property: position; to: 2 1.2 -3; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
+        </a-sphere>
+        <a-dodecahedron id="shared-gem" position="0 0.6 -4" radius="0.25"
+            color="#fbbf24" material="metalness: 0.8; roughness: 0.1"
+            animation="property: rotation; to: 360 360 0; dur: 12000; loop: true; easing: linear">
+        </a-dodecahedron>
+
+        <!-- Title -->
+        <a-text value="Shared Space" position="0 3 -5" align="center"
+            color="#ffffff" width="6"
+            font="/quest/fonts/mozillavr.fnt">
+        </a-text>
+        <a-text value="多人共享空间 · WebSocket同步 · 实时位置"
+            position="0 2.6 -5" align="center"
+            color="#94a3b8" width="3.5"
+            font="/quest/fonts/mozillavr.fnt">
+        </a-text>
+
+        <!-- Lighting -->
+        <a-light type="ambient" color="#303050" intensity="0.5"></a-light>
+        <a-light type="directional" color="#ffffff" intensity="0.6" position="2 4 3"></a-light>
+        <a-light type="point" color="#7c3aed" intensity="0.5" position="0 2 0" distance="8"></a-light>
+
+        <a-sky color="#0f0f23"></a-sky>
+
+        <!-- Local Player -->
+        <a-entity id="rig" position="0 0 0">
+            <a-camera id="cam" position="0 1.6 0" look-controls="pointerLockEnabled: false">
+                <a-cursor color="#ffffff" opacity="0.4" fuse="false"></a-cursor>
+            </a-camera>
+        </a-entity>
+
+        <!-- Hand Tracking -->
+        <a-entity hand-tracking-controls="hand: left;"></a-entity>
+        <a-entity hand-tracking-controls="hand: right;"></a-entity>
+
+        <!-- Remote Players Container -->
+        <a-entity id="remote-players"></a-entity>
+    </a-scene>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const COLORS = ['#e94560','#4ade80','#38bdf8','#f472b6','#fbbf24','#7c3aed','#06b6d4','#f97316'];
+        const WS_URL = location.protocol === 'https:'
+            ? 'wss://' + location.host + '/quest-ws/'
+            : 'ws://' + location.host + '/quest-ws/';
+
+        let ws = null;
+        let myId = 'u_' + Math.random().toString(36).slice(2, 8);
+        let myColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+        let myName = '玩家' + myId.slice(2, 5);
+        let peers = {};
+        let connected = false;
+        let sendInterval = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT = 10;
+        let lastSentPos = { x: 0, y: 0, z: 0 };
+
+        const wsStatus = document.getElementById('ws-status');
+        const userCount = document.getElementById('user-count');
+        const chatLog = document.getElementById('chat-log');
+        const chatInput = document.getElementById('chat-input');
+
+        function escapeHtml(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+        }
+
+        function validColor(c) {
+            return /^#[0-9a-fA-F]{3,8}$/.test(c) ? c : '#888';
+        }
+
+        function log(msg, color) {
+            const div = document.createElement('div');
+            div.style.color = validColor(color) || '#94a3b8';
+            div.textContent = msg;
+            chatLog.appendChild(div);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function updateUserCount() {
+            const count = Object.keys(peers).length + 1;
+            userCount.textContent = count + ' 人在线';
+        }
+
+        function connect() {
+            try {
+                ws = new WebSocket(WS_URL);
+            } catch(e) {
+                wsStatus.textContent = '离线模式';
+                wsStatus.className = 'badge badge-offline';
+                log('WebSocket不可用，进入离线浏览模式');
+                return;
+            }
+
+            ws.onopen = function() {
+                connected = true;
+                wsStatus.textContent = '已连接';
+                wsStatus.className = 'badge badge-ws';
+                log('已连接到共享空间', '#4ade80');
+
+                ws.send(JSON.stringify({
+                    type: 'join',
+                    id: myId,
+                    name: myName,
+                    color: myColor
+                }));
+
+                reconnectAttempts = 0;
+                sendInterval = setInterval(sendPosition, 100);
+            };
+
+            ws.onmessage = function(evt) {
+                try {
+                    const msg = JSON.parse(evt.data);
+                    handleMessage(msg);
+                } catch(e) {}
+            };
+
+            ws.onclose = function() {
+                connected = false;
+                wsStatus.textContent = '已断开';
+                wsStatus.className = 'badge badge-offline';
+                if (sendInterval) { clearInterval(sendInterval); sendInterval = null; }
+                if (reconnectAttempts < MAX_RECONNECT) {
+                    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                    reconnectAttempts++;
+                    log('连接断开，' + Math.round(delay/1000) + '秒后重连(' + reconnectAttempts + '/' + MAX_RECONNECT + ')...', '#fca5a5');
+                    setTimeout(connect, delay);
+                } else {
+                    log('已达最大重连次数，请刷新页面', '#f87171');
+                }
+            };
+
+            ws.onerror = function() {
+                wsStatus.textContent = '离线模式';
+                wsStatus.className = 'badge badge-offline';
+                log('服务器未就绪，离线浏览模式', '#fbbf24');
+            };
+        }
+
+        function handleMessage(msg) {
+            switch(msg.type) {
+                case 'join':
+                    if (msg.id !== myId) {
+                        createPeerAvatar(msg.id, msg.name, msg.color);
+                        log(msg.name + ' 加入了空间', '#4ade80');
+                    }
+                    break;
+                case 'leave':
+                    removePeerAvatar(msg.id);
+                    if (peers[msg.id]) {
+                        log(peers[msg.id].name + ' 离开了', '#f87171');
+                        delete peers[msg.id];
+                    }
+                    break;
+                case 'pos':
+                    updatePeerPosition(msg.id, msg.pos, msg.rot);
+                    break;
+                case 'chat':
+                    if (msg.id !== myId) {
+                        const name = peers[msg.id] ? peers[msg.id].name : '未知';
+                        const color = peers[msg.id] ? peers[msg.id].color : '#fff';
+                        log(name + ': ' + msg.text, color);
+                    }
+                    break;
+                case 'state':
+                    if (msg.users) {
+                        msg.users.forEach(function(u) {
+                            if (u.id !== myId) {
+                                createPeerAvatar(u.id, u.name, u.color);
+                            }
+                        });
+                    }
+                    break;
+            }
+            updateUserCount();
+        }
+
+        function createPeerAvatar(id, name, color) {
+            if (peers[id]) return;
+            peers[id] = { name: name, color: color };
+
+            const container = document.getElementById('remote-players');
+            const el = document.createElement('a-entity');
+            el.id = 'peer-' + id;
+            el.setAttribute('position', '0 0 0');
+
+            const safeColor = validColor(color);
+            const safeName = escapeHtml(name).substring(0, 20);
+            el.innerHTML =
+                '<a-sphere radius="0.12" color="' + safeColor + '" ' +
+                'material="metalness: 0.5; roughness: 0.3; emissive: ' + safeColor + '; emissiveIntensity: 0.3" ' +
+                'position="0 1.6 0"></a-sphere>' +
+                '<a-text value="' + safeName + '" position="0 2.0 0" align="center" ' +
+                'color="' + safeColor + '" width="2" ' +
+                'look-at="[camera]"></a-text>' +
+                '<a-cone radius-bottom="0.15" radius-top="0" height="0.3" ' +
+                'color="' + safeColor + '" position="0 1.35 0" ' +
+                'material="opacity: 0.5; transparent: true"></a-cone>';
+
+            container.appendChild(el);
+        }
+
+        function removePeerAvatar(id) {
+            const el = document.getElementById('peer-' + id);
+            if (el) el.parentNode.removeChild(el);
+            delete peers[id];
+        }
+
+        function updatePeerPosition(id, pos, rot) {
+            if (!peers[id]) return;
+            const el = document.getElementById('peer-' + id);
+            if (!el) return;
+            el.setAttribute('position', pos.x + ' ' + 0 + ' ' + pos.z);
+            const head = el.querySelector('a-sphere');
+            if (head) head.setAttribute('position', '0 ' + pos.y + ' 0');
+        }
+
+        function sendPosition() {
+            if (!connected || !ws || ws.readyState !== 1) return;
+            const cam = document.getElementById('cam');
+            if (!cam) return;
+            const pos = cam.object3D.position;
+            const dx = Math.abs(pos.x - lastSentPos.x);
+            const dy = Math.abs(pos.y - lastSentPos.y);
+            const dz = Math.abs(pos.z - lastSentPos.z);
+            if (dx < 0.01 && dy < 0.01 && dz < 0.01) return;
+            lastSentPos = { x: pos.x, y: pos.y, z: pos.z };
+            const rot = cam.object3D.rotation;
+            ws.send(JSON.stringify({
+                type: 'pos',
+                id: myId,
+                pos: { x: +pos.x.toFixed(2), y: +pos.y.toFixed(2), z: +pos.z.toFixed(2) },
+                rot: { x: +rot.x.toFixed(2), y: +rot.y.toFixed(2), z: +rot.z.toFixed(2) }
+            }));
+        }
+
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && chatInput.value.trim()) {
+                const text = chatInput.value.trim().substring(0, 200);
+                log(myName + ': ' + text, myColor);
+                if (connected && ws && ws.readyState === 1) {
+                    ws.send(JSON.stringify({
+                        type: 'chat',
+                        id: myId,
+                        text: text
+                    }));
+                }
+                chatInput.value = '';
+            }
+        });
+
+        // Generate grid lines
+        const scene = document.querySelector('a-scene');
+        scene.addEventListener('loaded', function() {
+            const gridContainer = document.getElementById('grid-lines');
+            for (let i = -8; i <= 8; i += 2) {
+                const lineX = document.createElement('a-entity');
+                lineX.setAttribute('line', 'start: ' + i + ' 0.02 -8; end: ' + i + ' 0.02 8; color: #333366; opacity: 0.3');
+                gridContainer.appendChild(lineX);
+
+                const lineZ = document.createElement('a-entity');
+                lineZ.setAttribute('line', 'start: -8 0.02 ' + i + '; end: 8 0.02 ' + i + '; color: #333366; opacity: 0.3');
+                gridContainer.appendChild(lineZ);
+            }
+        });
+
+        // Connect on load
+        connect();
+    })();
+    </script>
+</body>
+</html>

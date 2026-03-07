@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>亲情远程 — 帮爸妈看手机</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --success: #22c55e;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --text: #f1f5f9;
+    --text-dim: #94a3b8;
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+  }
+
+  /* Join Screen */
+  #joinScreen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; padding: 24px; text-align: center;
+  }
+  #joinScreen h1 { font-size: 28px; margin-bottom: 8px; }
+  #joinScreen p { color: var(--text-dim); margin-bottom: 32px; font-size: 16px; }
+  #roomInput {
+    width: 240px; padding: 16px 24px; font-size: 32px; text-align: center;
+    background: var(--card); border: 2px solid #334155; border-radius: var(--radius);
+    color: var(--text); letter-spacing: 8px; outline: none;
+    font-family: 'Courier New', monospace; font-weight: 700;
+  }
+  #roomInput:focus { border-color: var(--accent); }
+  #joinBtn {
+    margin-top: 20px; padding: 16px 48px; font-size: 20px; font-weight: 600;
+    background: var(--accent); color: white; border: none; border-radius: var(--radius);
+    cursor: pointer; transition: background 0.2s;
+  }
+  #joinBtn:hover { background: var(--accent-hover); }
+  #joinBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #joinError { color: var(--danger); margin-top: 12px; min-height: 20px; font-size: 14px; }
+  .join-hint { color: #64748b; font-size: 13px; margin-top: 16px; line-height: 1.6; }
+
+  /* Main Screen */
+  #mainScreen { display: none; flex-direction: column; height: 100%; }
+
+  /* Status Bar */
+  .status-bar {
+    height: 32px; background: rgba(17,17,17,0.95); border-bottom: 1px solid #1e1e2a;
+    display: flex; align-items: center; padding: 0 12px; gap: 10px; font-size: 12px;
+    flex-shrink: 0; backdrop-filter: blur(8px);
+  }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #4ade80;
+    box-shadow: 0 0 6px #4ade80; flex-shrink: 0;
+  }
+  .status-dot.connecting { background: #fbbf24; box-shadow: 0 0 4px #fbbf24; animation: pulse 1.5s infinite; }
+  .status-dot.disconnected { background: #f87171; box-shadow: none; }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+  .status-spacer { flex: 1; }
+  .status-info { color: #64748b; font-size: 11px; }
+
+  /* Video Container */
+  #videoContainer {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    background: #000; position: relative; overflow: hidden;
+  }
+  #remoteVideo {
+    max-width: 100%; max-height: 100%; object-fit: contain;
+  }
+  #relayCanvas {
+    max-width: 100%; max-height: 100%; object-fit: contain; display: none;
+  }
+  #touchOverlay { position: absolute; inset: 0; z-index: 10; }
+  #connectingOverlay {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.9); color: var(--text-dim); font-size: 16px;
+    flex-direction: column; gap: 12px; z-index: 5;
+  }
+  #connectingOverlay.hidden { display: none; }
+  .spinner {
+    width: 36px; height: 36px; border: 3px solid #1e1e2a;
+    border-top-color: var(--success); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Control Bar */
+  .control-bar {
+    height: 56px; background: rgba(17,17,17,0.95); border-top: 1px solid #1e1e2a;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    padding: 0 6px; flex-shrink: 0; backdrop-filter: blur(8px);
+  }
+  .ctrl-btn {
+    padding: 8px 12px; background: rgba(30,30,42,0.8); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; color: var(--text); font-size: 18px; cursor: pointer;
+    transition: all 0.12s; display: flex; flex-direction: column; align-items: center;
+    gap: 1px; min-width: 42px; white-space: nowrap;
+  }
+  .ctrl-btn:active { background: rgba(59,130,246,0.3); border-color: rgba(59,130,246,0.5); transform: scale(0.93); }
+  .ctrl-btn .lbl { font-size: 9px; color: #64748b; font-weight: 500; }
+
+  /* Keyboard Overlay */
+  .keyboard-overlay {
+    position: fixed; bottom: 56px; left: 0; right: 0; padding: 12px;
+    background: var(--card); border-top: 1px solid #334155;
+    display: none; z-index: 20;
+  }
+  .keyboard-overlay.show { display: flex; gap: 8px; }
+  .keyboard-overlay input {
+    flex: 1; padding: 12px; background: var(--bg); border: 1px solid #334155;
+    border-radius: 8px; color: var(--text); font-size: 16px; outline: none;
+  }
+  .keyboard-overlay button {
+    padding: 12px 20px; background: var(--accent); color: white; border: none;
+    border-radius: 8px; font-size: 16px; cursor: pointer;
+  }
+
+  /* Menu Overlay */
+  .menu-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 30;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .menu-overlay.show { display: flex; }
+  .menu-sheet {
+    width: 100%; max-width: 400px; background: var(--card);
+    border-radius: 16px 16px 0 0; padding: 20px; padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .menu-item {
+    padding: 16px; border-radius: 10px; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .menu-item:active { background: rgba(255,255,255,0.05); }
+  .menu-item.danger { color: var(--danger); }
+
+  /* Touch Ripple */
+  .touch-ripple {
+    position: absolute; width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(59,130,246,0.4); transform: translate(-50%,-50%);
+    pointer-events: none; animation: ripple 0.5s ease-out forwards; z-index: 11;
+  }
+  @keyframes ripple { to { transform: translate(-50%,-50%) scale(2); opacity: 0; } }
+
+  /* Reconnect Banner */
+  #reconnBanner {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    background: linear-gradient(90deg, #dc2626, #ef4444);
+    color: #fff; text-align: center; padding: 10px; font-size: 14px;
+    font-weight: 600; display: none; backdrop-filter: blur(4px);
+  }
+
+  @media (max-width: 480px) {
+    .ctrl-btn { padding: 8px 9px; font-size: 16px; min-width: 38px; }
+    .ctrl-btn .lbl { font-size: 8px; }
+    .status-bar { font-size: 11px; height: 28px; gap: 6px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Join Screen -->
+<div id="joinScreen">
+  <h1>📱 亲情远程</h1>
+  <p>输入爸妈手机上显示的连接码</p>
+  <input id="roomInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000" autocomplete="off">
+  <button id="joinBtn" onclick="joinRoom()">开始连接</button>
+  <div id="joinError"></div>
+  <div class="join-hint">连接码在老人手机APP上显示<br>自动选择最佳连接方式</div>
+</div>
+
+<!-- Reconnect Banner -->
+<div id="reconnBanner"></div>
+
+<!-- Main Screen -->
+<div id="mainScreen">
+  <div class="status-bar">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText" style="font-weight:600">连接中...</span>
+    <span class="status-spacer"></span>
+    <span class="status-info" id="fpsText"></span>
+    <span class="status-info" id="latencyText"></span>
+    <span class="status-info" id="modeText"></span>
+  </div>
+
+  <div id="videoContainer">
+    <video id="remoteVideo" autoplay playsinline muted></video>
+    <canvas id="relayCanvas" width="360" height="640"></canvas>
+    <div id="touchOverlay"></div>
+    <div id="connectingOverlay">
+      <div class="spinner"></div>
+      <span id="connectingText">正在连接...</span>
+    </div>
+  </div>
+
+  <div class="control-bar">
+    <button class="ctrl-btn" onclick="sendControl('back')">◀<span class="lbl">返回</span></button>
+    <button class="ctrl-btn" onclick="sendControl('home')">●<span class="lbl">主页</span></button>
+    <button class="ctrl-btn" onclick="sendControl('recents')">▣<span class="lbl">最近</span></button>
+    <button class="ctrl-btn" onclick="sendControl('volume/up')">🔊<span class="lbl">音量+</span></button>
+    <button class="ctrl-btn" onclick="sendControl('volume/down')">🔉<span class="lbl">音量-</span></button>
+    <button class="ctrl-btn" onclick="sendControl('notifications')">🔔<span class="lbl">通知</span></button>
+    <button class="ctrl-btn" onclick="toggleKeyboard()">⌨<span class="lbl">键盘</span></button>
+    <button class="ctrl-btn" onclick="toggleMenu()">⋮<span class="lbl">更多</span></button>
+  </div>
+</div>
+
+<!-- Keyboard Overlay -->
+<div class="keyboard-overlay" id="keyboardOverlay">
+  <input type="text" id="textInput" placeholder="输入文字发送到手机...">
+  <button onclick="sendText()">发送</button>
+</div>
+
+<!-- Menu Overlay -->
+<div class="menu-overlay" id="menuOverlay" onclick="closeMenu(event)">
+  <div class="menu-sheet">
+    <div class="menu-item" onclick="sendControl('lock'); closeMenu();">⏻ 锁屏</div>
+    <div class="menu-item" onclick="sendControl('wake'); closeMenu();">💡 唤醒</div>
+    <div class="menu-item" onclick="sendControl('screenshot'); closeMenu();">📸 截图</div>
+    <div class="menu-item" onclick="toggleFS(); closeMenu();">⛶ 全屏</div>
+    <div class="menu-item danger" onclick="disconnectAndReturn()">✕ 断开连接</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  统一智能Viewer — P2P优先 + CloudRelay自动降级
+//  同一个房间码同时注册在P2P信令和CloudRelay
+//  策略: P2P尝试10秒 → 成功=零服务器带宽 | 失败=自动切换CloudRelay
+// ═══════════════════════════════════════════════════════
+
+const SIGNALING_URL = 'wss://aiotvr.xyz/signal/';
+const RELAY_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/relay/';
+const RELAY_TOKEN = 'screenstream_2026';
+const P2P_TIMEOUT_MS = 10000;
+
+const ICE_SERVERS = [
+  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
+  { urls: 'turn:a.relay.metered.ca:80', username: 'e43de704e36e127f27bcd5e5', credential: 'mAb7oKv/Mnui8ldr' },
+  { urls: 'turn:a.relay.metered.ca:443', username: 'e43de704e36e127f27bcd5e5', credential: 'mAb7oKv/Mnui8ldr' },
+  { urls: 'turn:a.relay.metered.ca:443?transport=tcp', username: 'e43de704e36e127f27bcd5e5', credential: 'mAb7oKv/Mnui8ldr' }
+];
+
+// State
+let roomId = '';
+let currentMode = 'none'; // 'none' | 'p2p' | 'relay'
+let ws = null;           // Signaling WebSocket (P2P)
+let relayWs = null;      // Relay WebSocket (CloudRelay)
+let pc = null;           // RTCPeerConnection
+let dataChannel = null;  // P2P DataChannel
+let isConnected = false;
+let p2pTimer = null;
+let latencyInterval = null;
+let iceFailCount = 0;
+let fpsCount = 0;
+let decoder = null;
+let canvasCtx = null;
+let reconnAttempt = 0;
+
+// ─── Join ───
+function joinRoom() {
+  const input = document.getElementById('roomInput');
+  roomId = input.value.trim();
+  const err = document.getElementById('joinError');
+
+  if (!roomId || roomId.length < 4) {
+    err.textContent = '请输入有效的连接码';
+    return;
+  }
+
+  err.textContent = '';
+  document.getElementById('joinBtn').disabled = true;
+  iceFailCount = 0;
+  reconnAttempt = 0;
+
+  // Show main screen
+  showMainScreen();
+  updateStatus('connecting', '正在尝试P2P直连...');
+
+  // Strategy: Try P2P first, fallback to CloudRelay after timeout
+  startP2P();
+}
+
+// ─── P2P Path (WebRTC via Signaling) ───
+function startP2P() {
+  console.log('[Strategy] Trying P2P first...');
+  const url = `${SIGNALING_URL}?role=viewer&room=${roomId}`;
+  console.log('[Signaling] Connecting:', url);
+
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    console.log('[Signaling] Connected');
+    // Start P2P timeout — if no video within P2P_TIMEOUT_MS, fallback
+    p2pTimer = setTimeout(() => {
+      if (currentMode === 'none') {
+        console.log('[Strategy] P2P timeout, falling back to CloudRelay');
+        fallbackToRelay();
+      }
+    }, P2P_TIMEOUT_MS);
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      handleSignalingMessage(msg);
+    } catch (e) {
+      console.error('[Signaling] Parse error:', e);
+    }
+  };
+
+  ws.onclose = (event) => {
+    console.log('[Signaling] Closed:', event.code, event.reason);
+    if (event.code === 4004) {
+      // Room not found on signaling — try relay directly
+      console.log('[Strategy] Room not on signaling, trying CloudRelay');
+      clearTimeout(p2pTimer);
+      if (currentMode === 'none') fallbackToRelay();
+    } else if (currentMode === 'none') {
+      // Signaling failed before P2P established
+      clearTimeout(p2pTimer);
+      fallbackToRelay();
+    }
+  };
+
+  ws.onerror = (err) => {
+    console.error('[Signaling] Error:', err);
+    if (currentMode === 'none') {
+      clearTimeout(p2pTimer);
+      fallbackToRelay();
+    }
+  };
+}
+
+function handleSignalingMessage(msg) {
+  console.log('[Signaling] Received:', msg.type);
+
+  switch (msg.type) {
+    case 'joined':
+      if (msg.data.providerOnline) {
+        updateStatus('connecting', `正在与 ${msg.data.device || '手机'} 建立P2P...`);
+      } else {
+        updateStatus('connecting', '等待手机开启投屏...');
+      }
+      break;
+
+    case 'offer':
+      handleOffer(msg.data);
+      break;
+
+    case 'candidate':
+      if (pc && msg.data) {
+        pc.addIceCandidate(new RTCIceCandidate(msg.data))
+          .catch(e => console.error('[WebRTC] addIceCandidate error:', e));
+      }
+      break;
+
+    case 'provider_disconnected':
+      if (currentMode === 'p2p') {
+        updateStatus('disconnected', '手机已断开');
+        closePeerConnection();
+      }
+      break;
+  }
+}
+
+async function handleOffer(offerData) {
+  console.log('[WebRTC] Received offer, creating PeerConnection');
+  closePeerConnection();
+  clearTimeout(p2pTimer); // Got offer, cancel relay fallback
+
+  pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+
+  pc.onicecandidate = (event) => {
+    if (event.candidate && ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'candidate',
+        data: {
+          candidate: event.candidate.candidate,
+          sdpMid: event.candidate.sdpMid,
+          sdpMLineIndex: event.candidate.sdpMLineIndex
+        }
+      }));
+    }
+  };
+
+  pc.ontrack = (event) => {
+    console.log('[WebRTC] Track received:', event.track.kind);
+    if (event.track.kind === 'video') {
+      currentMode = 'p2p';
+      const videoEl = document.getElementById('remoteVideo');
+      videoEl.style.display = '';
+      document.getElementById('relayCanvas').style.display = 'none';
+      videoEl.srcObject = event.streams[0];
+      videoEl.play().catch(() => {});
+      document.getElementById('connectingOverlay').classList.add('hidden');
+      updateStatus('connected', '已连接');
+      document.getElementById('modeText').textContent = 'P2P直连';
+      startLatencyMonitor();
+    }
+  };
+
+  pc.ondatachannel = (event) => {
+    console.log('[WebRTC] DataChannel received:', event.channel.label);
+    setupDataChannel(event.channel);
+  };
+
+  pc.oniceconnectionstatechange = () => {
+    console.log('[WebRTC] ICE state:', pc.iceConnectionState);
+    switch (pc.iceConnectionState) {
+      case 'connected':
+      case 'completed':
+        isConnected = true;
+        updateStatus('connected', '已连接');
+        detectConnectionType();
+        break;
+      case 'disconnected':
+        updateStatus('connecting', '连接不稳定...');
+        break;
+      case 'failed':
+        iceFailCount++;
+        if (iceFailCount >= 2 && currentMode !== 'relay') {
+          console.log('[Strategy] ICE failed twice, falling back to CloudRelay');
+          closePeerConnection();
+          fallbackToRelay();
+        } else {
+          updateStatus('disconnected', 'P2P连接失败，重试中...');
+        }
+        break;
+    }
+  };
+
+  try {
+    await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: offerData.sdp }));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    ws.send(JSON.stringify({ type: 'answer', data: { sdp: answer.sdp, type: 'answer' } }));
+    console.log('[WebRTC] Answer sent');
+  } catch (e) {
+    console.error('[WebRTC] Offer handling error:', e);
+    fallbackToRelay();
+  }
+}
+
+function setupDataChannel(dc) {
+  dataChannel = dc;
+  dc.onopen = () => console.log('[DC] Open');
+  dc.onclose = () => { console.log('[DC] Closed'); dataChannel = null; };
+  dc.onmessage = (event) => {
+    try { console.log('[DC] Message:', JSON.parse(event.data)); } catch (e) {}
+  };
+}
+
+function closePeerConnection() {
+  if (pc) { pc.close(); pc = null; }
+  dataChannel = null;
+  isConnected = false;
+  if (latencyInterval) { clearInterval(latencyInterval); latencyInterval = null; }
+}
+
+// ─── CloudRelay Fallback (WebSocket H264) ───
+function fallbackToRelay() {
+  if (currentMode === 'relay') return; // Already on relay
+  console.log('[Relay] Connecting to CloudRelay...');
+  updateStatus('connecting', '切换到云中继模式...');
+
+  const url = RELAY_URL + '?role=viewer&token=' + RELAY_TOKEN + '&room=' + roomId;
+  relayWs = new WebSocket(url);
+  relayWs.binaryType = 'arraybuffer';
+
+  relayWs.onopen = () => {
+    console.log('[Relay] Connected');
+    currentMode = 'relay';
+    // Switch to canvas display
+    document.getElementById('remoteVideo').style.display = 'none';
+    const canvas = document.getElementById('relayCanvas');
+    canvas.style.display = '';
+    canvasCtx = canvas.getContext('2d');
+    initDecoder();
+    document.getElementById('connectingOverlay').classList.add('hidden');
+    updateStatus('connected', '已连接');
+    document.getElementById('modeText').textContent = '云中继';
+    document.getElementById('reconnBanner').style.display = 'none';
+    reconnAttempt = 0;
+  };
+
+  relayWs.onmessage = (ev) => {
+    if (ev.data instanceof ArrayBuffer) {
+      handleRelayFrame(new Uint8Array(ev.data));
+    } else {
+      try {
+        const msg = JSON.parse(ev.data);
+        handleRelayMsg(msg);
+      } catch(e) {}
+    }
+  };
+
+  relayWs.onclose = (e) => {
+    console.log('[Relay] Closed:', e.code);
+    if (e.code === 4004) {
+      document.getElementById('joinError').textContent = '连接码无效，请确认手机已开始投屏';
+      document.getElementById('joinBtn').disabled = false;
+      showJoinScreen();
+      return;
+    }
+    if (currentMode === 'relay') {
+      updateStatus('disconnected', '云中继断开');
+      scheduleRelayReconn();
+    }
+  };
+
+  relayWs.onerror = () => {
+    if (currentMode === 'none') {
+      updateStatus('disconnected', '无法连接服务器');
+      document.getElementById('connectingText').textContent = '连接失败，请检查网络';
+    }
+  };
+}
+
+function scheduleRelayReconn() {
+  if (!roomId) return;
+  reconnAttempt++;
+  const delay = Math.min(2000 * Math.pow(1.5, reconnAttempt - 1), 30000);
+  document.getElementById('reconnBanner').style.display = 'block';
+  document.getElementById('reconnBanner').textContent = '连接断开，' + Math.round(delay / 1000) + '秒后重连...';
+  setTimeout(() => {
+    if (currentMode === 'relay' || currentMode === 'none') {
+      currentMode = 'none';
+      fallbackToRelay();
+    }
+  }, delay);
+}
+
+function handleRelayMsg(msg) {
+  switch (msg.type) {
+    case 'provider_disconnected':
+      document.getElementById('connectingOverlay').classList.remove('hidden');
+      document.getElementById('connectingText').textContent = '手机已断开投屏';
+      break;
+    case 'provider_reconnected':
+      document.getElementById('connectingOverlay').classList.add('hidden');
+      break;
+    case 'device_info':
+      document.title = '亲情远程 — ' + (msg.data?.model || '手机');
+      break;
+  }
+}
+
+// ─── WebCodecs H264 Decoder ───
+function initDecoder() {
+  if (typeof VideoDecoder === 'undefined') {
+    document.getElementById('connectingText').textContent = '浏览器不支持H264解码，请用Chrome 94+';
+    return;
+  }
+  if (decoder && decoder.state !== 'closed') {
+    try { decoder.close(); } catch(_) {}
+  }
+  const canvas = document.getElementById('relayCanvas');
+  decoder = new VideoDecoder({
+    output: frame => {
+      if (canvas.width !== frame.displayWidth || canvas.height !== frame.displayHeight) {
+        canvas.width = frame.displayWidth;
+        canvas.height = frame.displayHeight;
+      }
+      canvasCtx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+      frame.close();
+      fpsCount++;
+      document.getElementById('connectingOverlay').classList.add('hidden');
+    },
+    error: e => {
+      console.warn('[Decoder] Error:', e);
+      setTimeout(() => initDecoder(), 2000);
+    }
+  });
+}
+
+function handleRelayFrame(data) {
+  if (data.length < 10 || !decoder) return;
+  const ft = data[0]; // 0=config, 1=keyframe, 2=delta, 3=JPEG
+
+  if (ft === 3) {
+    // MJPEG fallback
+    const payload = data.slice(9);
+    const blob = new Blob([payload], { type: 'image/jpeg' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    const canvas = document.getElementById('relayCanvas');
+    img.onload = () => {
+      if (canvas.width !== img.width || canvas.height !== img.height) {
+        canvas.width = img.width; canvas.height = img.height;
+      }
+      canvasCtx.drawImage(img, 0, 0); URL.revokeObjectURL(url); fpsCount++;
+      document.getElementById('connectingOverlay').classList.add('hidden');
+    };
+    img.src = url;
+    return;
+  }
+
+  const ts = (data[1] << 24) | (data[2] << 16) | (data[3] << 8) | data[4];
+  const payload = data.slice(9);
+  if (payload.length < 4) return;
+
+  if (ft === 0 || ft === 1) {
+    // Config or keyframe — need codec string from SPS
+    const sps = findSPS(payload);
+    if (sps && sps.length >= 4) {
+      const codec = 'avc1.' + [sps[1], sps[2], sps[3]].map(b => b.toString(16).padStart(2, '0')).join('');
+      if (decoder.state === 'unconfigured' || codec !== decoder._lastCodec) {
+        decoder.configure({ codec, optimizeForLatency: true });
+        decoder._lastCodec = codec;
+      }
+    }
+    if (ft === 0) return; // Config-only frame
+  }
+
+  try {
+    decoder.decode(new EncodedVideoChunk({
+      type: ft === 1 ? 'key' : 'delta',
+      timestamp: ts * 1000,
+      data: payload
+    }));
+  } catch (e) {}
+}
+
+function findSPS(d) {
+  let i = 0;
+  while (i < d.length - 4) {
+    if (d[i] === 0 && d[i + 1] === 0) {
+      let sc;
+      if (d[i + 2] === 1) sc = 3;
+      else if (d[i + 2] === 0 && i + 3 < d.length && d[i + 3] === 1) sc = 4;
+      else { i++; continue; }
+      const t = d[i + sc] & 0x1F;
+      if (t === 7) {
+        let e = d.length;
+        for (let j = i + sc + 1; j < d.length - 2; j++) {
+          if (d[j] === 0 && d[j + 1] === 0 && (d[j + 2] === 1 || (d[j + 2] === 0 && j + 3 < d.length && d[j + 3] === 1))) { e = j; break; }
+        }
+        return d.slice(i + sc, e);
+      }
+      i += sc + 1;
+    } else i++;
+  }
+  return null;
+}
+
+// ─── Touch Handling ───
+function initTouchHandling() {
+  const overlay = document.getElementById('touchOverlay');
+  let touchStart = null, touchStartTime = 0, longPressTimer = null, isSwiping = false;
+
+  function getVideoCoords(clientX, clientY) {
+    // Works for both video element and canvas
+    const el = currentMode === 'relay' ? document.getElementById('relayCanvas') : document.getElementById('remoteVideo');
+    const rect = el.getBoundingClientRect();
+    let videoW, videoH, videoX, videoY;
+
+    if (currentMode === 'relay') {
+      const vr = el.width / el.height;
+      const rr = rect.width / rect.height;
+      if (vr > rr) { videoW = rect.width; videoH = rect.width / vr; videoX = rect.left; videoY = rect.top + (rect.height - videoH) / 2; }
+      else { videoH = rect.height; videoW = rect.height * vr; videoX = rect.left + (rect.width - videoW) / 2; videoY = rect.top; }
+    } else {
+      const video = el;
+      const vr = video.videoWidth / video.videoHeight || 9 / 16;
+      const rr = rect.width / rect.height;
+      if (vr > rr) { videoW = rect.width; videoH = rect.width / vr; videoX = rect.left; videoY = rect.top + (rect.height - videoH) / 2; }
+      else { videoH = rect.height; videoW = rect.height * vr; videoX = rect.left + (rect.width - videoW) / 2; videoY = rect.top; }
+    }
+
+    const nx = (clientX - videoX) / videoW;
+    const ny = (clientY - videoY) / videoH;
+    return { nx: Math.max(0, Math.min(1, nx)), ny: Math.max(0, Math.min(1, ny)) };
+  }
+
+  overlay.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const { nx, ny } = getVideoCoords(e.clientX, e.clientY);
+    touchStart = { x: e.clientX, y: e.clientY, nx, ny };
+    touchStartTime = Date.now();
+    isSwiping = false;
+    longPressTimer = setTimeout(() => {
+      if (!isSwiping) {
+        sendTouch('longpress', { x: nx, y: ny, duration: 800 });
+        showRipple(e.clientX, e.clientY);
+        touchStart = null;
+      }
+    }, 800);
+  });
+
+  overlay.addEventListener('pointermove', (e) => {
+    if (!touchStart) return;
+    if (Math.abs(e.clientX - touchStart.x) > 10 || Math.abs(e.clientY - touchStart.y) > 10) {
+      isSwiping = true;
+      clearTimeout(longPressTimer);
+    }
+  });
+
+  overlay.addEventListener('pointerup', (e) => {
+    clearTimeout(longPressTimer);
+    if (!touchStart) return;
+    const { nx, ny } = getVideoCoords(e.clientX, e.clientY);
+    const duration = Date.now() - touchStartTime;
+    const dx = e.clientX - touchStart.x, dy = e.clientY - touchStart.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < 10 && duration < 800) {
+      sendTouch('tap', { x: nx, y: ny });
+      showRipple(e.clientX, e.clientY);
+    } else if (dist >= 10) {
+      sendTouch('swipe', {
+        fromX: touchStart.nx, fromY: touchStart.ny,
+        toX: nx, toY: ny,
+        duration: Math.max(100, Math.min(duration, 1000))
+      });
+    }
+    touchStart = null;
+  });
+
+  overlay.addEventListener('pointercancel', () => { clearTimeout(longPressTimer); touchStart = null; });
+
+  overlay.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    sendCmd({ type: 'scroll', data: { deltaY: e.deltaY, direction: e.deltaY > 0 ? 'down' : 'up' } });
+  }, { passive: false });
+}
+
+function showRipple(x, y) {
+  const r = document.createElement('div');
+  r.className = 'touch-ripple';
+  r.style.left = x + 'px'; r.style.top = y + 'px';
+  document.getElementById('videoContainer').appendChild(r);
+  setTimeout(() => r.remove(), 500);
+}
+
+// ─── Send Commands (works for both P2P and Relay) ───
+function sendTouch(action, data) {
+  sendCmd({ type: 'touch', data: { action, ...data } });
+}
+
+function sendControl(action) {
+  sendCmd({ type: 'control', data: { action } });
+}
+
+function sendText() {
+  const input = document.getElementById('textInput');
+  if (!input.value) return;
+  sendCmd({ type: 'text', data: { text: input.value } });
+  input.value = '';
+}
+
+function sendCmd(msg) {
+  if (currentMode === 'p2p' && dataChannel && dataChannel.readyState === 'open') {
+    dataChannel.send(JSON.stringify(msg));
+  } else if (currentMode === 'relay' && relayWs?.readyState === WebSocket.OPEN) {
+    relayWs.send(JSON.stringify(msg));
+  } else if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'control_relay', data: msg }));
+  }
+}
+
+// ─── UI Helpers ───
+function showJoinScreen() {
+  document.getElementById('joinScreen').style.display = 'flex';
+  document.getElementById('mainScreen').style.display = 'none';
+}
+
+function showMainScreen() {
+  document.getElementById('joinScreen').style.display = 'none';
+  document.getElementById('mainScreen').style.display = 'flex';
+  initTouchHandling();
+}
+
+function updateStatus(state, text) {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot' + (state === 'connecting' ? ' connecting' : state === 'disconnected' ? ' disconnected' : '');
+  document.getElementById('statusText').textContent = text;
+}
+
+function toggleKeyboard() {
+  const o = document.getElementById('keyboardOverlay');
+  o.classList.toggle('show');
+  if (o.classList.contains('show')) document.getElementById('textInput').focus();
+}
+
+function toggleMenu() { document.getElementById('menuOverlay').classList.toggle('show'); }
+function closeMenu(e) {
+  if (e && e.target !== document.getElementById('menuOverlay')) return;
+  document.getElementById('menuOverlay').classList.remove('show');
+}
+
+function disconnectAndReturn() {
+  closeMenu();
+  closePeerConnection();
+  if (relayWs) { relayWs.close(); relayWs = null; }
+  if (ws) { ws.close(); ws = null; }
+  if (decoder && decoder.state !== 'closed') { try { decoder.close(); } catch(_) {} }
+  currentMode = 'none';
+  roomId = '';
+  document.getElementById('reconnBanner').style.display = 'none';
+  document.getElementById('joinBtn').disabled = false;
+  showJoinScreen();
+}
+
+function toggleFS() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+// ─── Latency & Connection Info ───
+function startLatencyMonitor() {
+  if (latencyInterval) clearInterval(latencyInterval);
+  latencyInterval = setInterval(() => {
+    if (!pc) return;
+    pc.getStats().then(stats => {
+      stats.forEach(report => {
+        if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+          const rtt = report.currentRoundTripTime;
+          if (rtt !== undefined) {
+            document.getElementById('latencyText').textContent = Math.round(rtt * 1000) + 'ms';
+          }
+        }
+      });
+    });
+  }, 2000);
+}
+
+function detectConnectionType() {
+  if (!pc) return;
+  pc.getStats().then(stats => {
+    let localType = '';
+    stats.forEach(report => {
+      if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+        stats.forEach(r => { if (r.id === report.localCandidateId) localType = r.candidateType; });
+      }
+    });
+    const m = document.getElementById('modeText');
+    if (localType === 'host' || localType === 'srflx' || localType === 'prflx') m.textContent = 'P2P直连';
+    else if (localType === 'relay') m.textContent = 'TURN中继';
+  });
+}
+
+// ─── FPS counter (relay mode) ───
+setInterval(() => {
+  if (currentMode === 'relay') {
+    document.getElementById('fpsText').textContent = fpsCount + 'fps';
+    fpsCount = 0;
+  }
+}, 1000);
+
+// ─── Keyboard Shortcuts ───
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  switch (e.key) {
+    case 'Escape': case 'Backspace': sendControl('back'); e.preventDefault(); break;
+    case 'Home': sendControl('home'); e.preventDefault(); break;
+    case 'ArrowUp': if (e.ctrlKey) sendControl('volume/up'); break;
+    case 'ArrowDown': if (e.ctrlKey) sendControl('volume/down'); break;
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.id === 'textInput') sendText();
+  if (e.key === 'Enter' && e.target.id === 'roomInput') joinRoom();
+});
+
+// ─── Auto-join from URL params ───
+window.addEventListener('load', () => {
+  const p = new URLSearchParams(location.search);
+  const room = p.get('room');
+  if (room) {
+    document.getElementById('roomInput').value = room;
+    joinRoom();
+  } else {
+    document.getElementById('roomInput').focus();
+  }
+});
+</script>
+</body>
+</html>

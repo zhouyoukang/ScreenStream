@@ -1,0 +1,2 @@
+# remote_agent — 纯Python标准库，无外部依赖
+# 依赖: http.server, ctypes, threading, subprocess, sqlite3, socket

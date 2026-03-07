@@ -1,0 +1,32 @@
+{ 
+   "licenseType" : "CC BY-ND", 
+   "creatorName" : "AcidBubbles", 
+   "packageName" : "Voxta", 
+   "includeVersionsInReferences" : "true", 
+   "description" : "Voxta v1.0.0-beta.150", 
+   "credits" : "", 
+   "instructions" : "Go to doc.voxta.ai for instructions", 
+   "promotionalLink" : "https://patreon.com/voxta", 
+   "programVersion" : "1.20.1.0", 
+   "contentList" : [ 
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\Client\\SignalRClient.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\Client\\VoxtaClient.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\Client\\VoxtaVersion.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\Client\\WebSocketClient.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\Components\\AudioAtomTarget.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\Components\\SubtitlesAtomTarget.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\VaM\\SimpleTrigger.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\VaM\\TriggerInvoker.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\VaM\\VamAssets.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\ActionsParser.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\SpeechPlayback.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\ThreadSafeLogger.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\ThreadSafeScheduler.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\UI.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\Voxta.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\src\\VoxtaCredentials.cs",
+    "Custom\\Scripts\\AcidBubbles\\Voxta\\Voxta.cslist"
+   ], 
+   "dependencies" : { 
+   }
+}

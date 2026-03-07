@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e17">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Go1%20%E8%99%9A%E6%8B%9F%E4%BB%BF%E7%9C%9F%E6%8E%A7%E5%88%B6%E5%8F%B0%22%2C%22short_name%22%3A%22Go1%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0e17%22%2C%22theme_color%22%3A%22%230a0e17%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Ctext%20y%3D%27.9em%27%20font-size%3D%2790%27%3E%F0%9F%90%95%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+<title>Go1 虚拟仿真控制台 v2.3</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐕</text></svg>">
+<style>
+:root{--bg:#0a0e17;--card:#131a2b;--border:#1e2d45;--text:#e0e6f0;--dim:#6b7a94;--accent:#3b82f6;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--cyan:#06b6d4;--r:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.header{background:linear-gradient(135deg,#1a1f35,#0d1525);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.header h1{font-size:18px;font-weight:700}.header h1 em{color:var(--accent);font-style:normal}
+.sd{width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0;transition:all .3s}
+.sd.on{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.5}}
+.hr{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--dim)}
+.hr input{width:200px;background:#0d1525;border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:11px;font-family:monospace}
+.hr input:focus{outline:none;border-color:var(--accent)}
+
+.grid{display:grid;grid-template-columns:260px 1fr 260px;gap:12px;padding:12px;flex:1;overflow:hidden;min-height:0}
+@media(max-width:1100px){.grid{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;overflow-y:auto}}
+
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.pt{font-size:11px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px 4px}
+.bg{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:4px 10px 10px}
+.bg3{grid-template-columns:1fr 1fr 1fr}
+.b{background:#1a2540;border:1px solid var(--border);border-radius:7px;padding:7px 4px;color:var(--text);font-size:11px;cursor:pointer;transition:all .15s;text-align:center}
+.b:hover{background:#243352;border-color:var(--accent)}.b:active{transform:scale(.95)}
+.b.p{background:var(--accent);border-color:var(--accent);color:#fff}
+.b.d{background:#7f1d1d;border-color:var(--red)}
+.b.s{background:#14532d;border-color:var(--green)}
+.b.w{background:#713f12;border-color:var(--yellow)}
+.b.f{grid-column:1/-1}
+
+.left{display:flex;flex-direction:column;gap:8px;overflow-y:auto;min-height:0}
+.center{display:flex;flex-direction:column;gap:8px;min-height:0}
+.right{display:flex;flex-direction:column;gap:8px;overflow-y:auto;min-height:0}
+
+.mrow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.m{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center}
+.mv{font-size:18px;font-weight:700;color:var(--accent)}.ml{font-size:9px;color:var(--dim);margin-top:1px}
+.mv.g{color:var(--green)}.mv.y{color:var(--yellow)}.mv.r{color:var(--red)}.mv.c{color:var(--cyan)}
+
+.viz{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--r);position:relative;overflow:hidden;min-height:280px}
+.viz canvas{display:block}
+.vov{position:absolute;font-size:10px;color:var(--dim);pointer-events:none}
+.vtl{top:8px;left:12px}.vbl{bottom:4px;left:12px;font-family:monospace}
+.vtr{top:8px;right:12px;text-align:right}
+.vtr kbd{background:#1e2d45;border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:9px;font-family:monospace;color:var(--cyan)}
+
+.say-bar{display:flex;gap:5px;padding:4px 10px 8px}
+.say-bar input{flex:1;background:#0d1525;border:1px solid var(--border);border-radius:7px;padding:6px 8px;color:var(--text);font-size:12px}
+.say-bar input:focus{outline:none;border-color:var(--accent)}
+.say-bar button{background:var(--accent);border:none;border-radius:7px;padding:6px 12px;color:#fff;font-size:11px;cursor:pointer;font-weight:600}
+
+.emo{text-align:center;padding:10px}
+.emo-i{font-size:36px;margin-bottom:2px}
+.emo-n{font-size:14px;font-weight:600}
+.ebar{height:4px;background:#1a2540;border-radius:2px;margin:4px 12px 0;overflow:hidden}
+.efill{height:100%;border-radius:2px;transition:width .5s}
+.leds{display:flex;gap:3px;justify-content:center;padding:4px}
+.led{width:9px;height:9px;border-radius:50%;transition:background .3s}
+
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px 10px 8px;font-size:11px}
+.ik{color:var(--dim)}.iv{color:var(--text);font-weight:500;text-align:right}
+
+.mwrap{padding:2px 10px 8px}
+#mapCanvas{width:100%;height:110px;border-radius:5px;background:#0d1525;display:block}
+
+.logp{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:100px}
+.logc{flex:1;overflow-y:auto;padding:4px 8px;font-family:'Cascadia Code','Fira Code',monospace;font-size:10px;line-height:1.5}
+.le{padding:1px 0;border-bottom:1px solid #111827}
+.lt{color:var(--cyan);font-weight:600}.lm{color:var(--dim);font-size:9px}
+
+.sbar{display:flex;align-items:center;gap:6px;padding:4px 10px 8px;flex-wrap:wrap;font-size:10px}
+.sbar label{color:var(--dim)}.sbar select{background:#0d1525;border:1px solid var(--border);color:var(--text);border-radius:5px;padding:2px 4px;font-size:10px}
+.fbar{display:flex;gap:4px;padding:4px 10px 8px;align-items:flex-end;height:50px}
+.fb{flex:1;background:var(--border);border-radius:3px 3px 0 0;min-height:2px;transition:height .3s,background .3s;position:relative}
+.fb::after{content:attr(data-n);position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--dim)}
+.fb.on{background:var(--green)}.fb.off{background:var(--red)}
+.sval{color:var(--cyan);min-width:20px;text-align:center;font-family:monospace}
+
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:7px 18px;border-radius:7px;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="sd" id="sDot"></div>
+  <h1><em>Go1</em> 虚拟仿真控制台</h1>
+  <div class="hr">
+    <span id="hInfo">连接中...</span>
+    <input id="apiUrl" value="http://127.0.0.1:8085" title="Brain API 地址" spellcheck="false">
+  </div>
+</div>
+
+<div class="grid">
+  <!-- 左：操控 -->
+  <div class="left">
+    <div class="panel"><div class="pt">🎮 基础操作</div>
+      <div class="bg">
+        <button class="b p" onclick="cmd('stand')">站立</button>
+        <button class="b" onclick="cmd('sit')">坐下</button>
+        <button class="b" onclick="cmd('stop')">停止</button>
+        <button class="b d" onclick="cmd('status')">状态</button>
+      </div>
+    </div>
+    <div class="panel"><div class="pt">🦿 步态 <span style="font-size:9px;color:var(--dim);margin-left:auto" id="gdL">3秒</span></div>
+      <div style="padding:0 10px 2px"><input type="range" id="gDur" min="1" max="15" value="3" style="width:100%;accent-color:var(--accent)" oninput="document.getElementById('gdL').textContent=this.value+'秒'"></div>
+      <div class="bg bg3">
+        <button class="b" onclick="cg('trot')">小跑</button>
+        <button class="b" onclick="cg('pace')">踏步</button>
+        <button class="b" onclick="cg('wave')">挥手</button>
+        <button class="b" onclick="cg('bound')">弹跳</button>
+        <button class="b" onclick="cg('pushup')">俯卧撑</button>
+        <button class="b" onclick="cmd('walk 0.3 '+gd())">行走</button>
+        <button class="b" onclick="cg('gallop')" style="color:#f59e0b">奔跑</button>
+        <button class="b" onclick="cg('trot_run')" style="color:#f59e0b">快跑</button>
+        <button class="b" onclick="cg('crawl')">匍匐</button>
+        <button class="b" onclick="cg('climb')">爬坡</button>
+        <button class="b" onclick="cg('sidestep')">横移</button>
+        <button class="b" onclick="cg('pronk')" style="color:#a855f7">四足弹</button>
+        <button class="b" onclick="cg('spin')" style="color:#a855f7">旋转</button>
+        <button class="b" onclick="cg('backflip')" style="color:#ef4444">后空翻</button>
+        <button class="b" onclick="cg('handshake')" style="color:#22c55e">握手</button>
+        <button class="b" onclick="cg('dance1')" style="color:#ec4899">舞蹈1</button>
+        <button class="b" onclick="cg('dance2')" style="color:#ec4899">舞蹈2</button>
+        <button class="b" onclick="cg('cpg')" style="color:#06b6d4">CPG神经</button>
+        <button class="b d" onclick="cmd('actions')">全部动作</button>
+      </div>
+    </div>
+    <div class="panel"><div class="pt">🧠 智能行为</div>
+      <div class="bg">
+        <button class="b s" onclick="cmd('patrol')">巡逻</button>
+        <button class="b s" onclick="cmd('dance')">舞蹈</button>
+        <button class="b s" onclick="cmd('explore')">探索</button>
+        <button class="b s" onclick="cmd('play')">玩耍</button>
+        <button class="b w" onclick="cmd('greet')">问候</button>
+        <button class="b w" onclick="cmd('guard')">警戒</button>
+        <button class="b w" onclick="cmd('follow')">跟随</button>
+        <button class="b" onclick="cmd('rest')">休息</button>
+        <button class="b p f" onclick="cmd('rl')">🤖 RL策略</button>
+      </div>
+    </div>
+    <div class="panel"><div class="pt">🎭 姿态控制 <small style="color:var(--dim)">(go1pylib/free-dog-sdk)</small></div>
+      <div class="bg">
+        <button class="b" onclick="cmd('pose -0.8 0 0 0')">左倾</button>
+        <button class="b" onclick="cmd('pose 0.8 0 0 0')">右倾</button>
+        <button class="b" onclick="cmd('pose 0 -0.8 0 0')">左扭</button>
+        <button class="b" onclick="cmd('pose 0 0.8 0 0')">右扭</button>
+        <button class="b" onclick="cmd('pose 0 0 -0.8 0')">抬头</button>
+        <button class="b" onclick="cmd('pose 0 0 0.8 0')">低头</button>
+        <button class="b s" onclick="cmd('pose 0 0 0 -0.8')">蹲低</button>
+        <button class="b s" onclick="cmd('pose 0 0 0 0.8')">站高</button>
+      </div>
+    </div>
+    <div class="panel"><div class="pt">🎬 动作演示 <small style="color:var(--dim)">(refs整合)</small></div>
+      <div class="bg">
+        <button class="b w" onclick="cmd('demo walk')" title="free-dog-sdk: euler滚转+身高变化+步态行走">走路秀</button>
+        <button class="b w" onclick="cmd('demo dance')" title="go1pylib: 抬头→低头→侧倾→扭转序列">舞蹈秀</button>
+        <button class="b w" onclick="cmd('demo pushup')" title="free-dog-sdk: 站起→蹲下循环">俯卧撑秀</button>
+        <button class="b w" onclick="cmd('demo square')" title="go1pylib: 正方形路径前进+转弯">正方形</button>
+        <button class="b" onclick="cmd('demo acrobat')" title="弹跳→旋转→后空翻→握手" style="color:#a855f7">杂技秀</button>
+        <button class="b" onclick="cmd('demo party')" title="舞蹈1→舞蹈2→旋转→挥手" style="color:#ec4899">派对秀</button>
+        <button class="b" onclick="cmd('demo agility')" title="小跑→奔跑→快跑→横移→匍匐→爬坡" style="color:#f59e0b">敏捷秀</button>
+      </div>
+    </div>
+    <div class="panel"><div class="pt">💬 语音交互</div>
+      <div class="bg bg3">
+        <button class="b" onclick="cmd('say 你好')">你好</button>
+        <button class="b" onclick="cmd('say 乖')">乖</button>
+        <button class="b" onclick="cmd('say 过来')">过来</button>
+      </div>
+      <div class="say-bar">
+        <input id="sayIn" placeholder="输入指令或对话..." onkeydown="if(event.key==='Enter')doSay()">
+        <button onclick="doSay()">发送</button>
+      </div>
+    </div>
+    <div class="panel"><div class="pt">😊 情感 · 记忆</div>
+      <div class="bg bg3">
+        <button class="b" onclick="cmd('emotion happy')">开心</button>
+        <button class="b" onclick="cmd('emotion alert')">警觉</button>
+        <button class="b" onclick="cmd('emotion curious')">好奇</button>
+        <button class="b" onclick="cmd('remember here')">记住</button>
+        <button class="b" onclick="cmd('memory')">记忆</button>
+        <button class="b" onclick="cmd('health')">健康</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 中：3D -->
+  <div class="center">
+    <div class="mrow">
+      <div class="m"><div class="mv c" id="mH">--</div><div class="ml">高度(m)</div></div>
+      <div class="m"><div class="mv g" id="mS">--</div><div class="ml">稳定性</div></div>
+      <div class="m"><div class="mv" id="mP">--</div><div class="ml">姿态</div></div>
+      <div class="m"><div class="mv g" id="mB">--</div><div class="ml">电量</div></div>
+      <div class="m"><div class="mv c" id="mA">--</div><div class="ml">行为</div></div>
+    </div>
+    <div class="viz" id="vizBox">
+      <div id="rc"></div>
+      <div class="vov vtl">Go1 3D 虚拟仿真</div>
+      <div class="vov vbl" id="vInfo"></div>
+      <div class="vov vtr"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 行走 <kbd>Q</kbd><kbd>E</kbd> 转向 · 鼠标拖拽旋转</div>
+    </div>
+    <div class="panel"><div class="pt">⚙️ 仿真设置</div>
+      <div class="sbar">
+        <label>地形</label>
+        <select id="sTerr" onchange="cmd('terrain '+this.value)"><option value="flat">平地</option><option value="rough">粗糙</option><option value="stairs">台阶</option><option value="slope">斜坡</option><option value="suspended_stairs">悬空阶梯</option><option value="perlin">Perlin起伏</option></select>
+        <label>速度</label>
+        <select id="sSpd" onchange="cmd('speed '+this.value)"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="1" selected>1x</option><option value="2">2x</option><option value="4">4x</option></select>
+        <label>关节</label>
+        <span class="sval" id="jInfo" style="min-width:80px">--</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右：状态 -->
+  <div class="right">
+    <div class="panel"><div class="pt">😊 情感</div>
+      <div class="emo">
+        <div class="emo-i" id="eI">🐕</div>
+        <div class="emo-n" id="eN">--</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:2px" id="eInt">--</div>
+        <div class="ebar"><div class="efill" id="eBar" style="width:100%;background:var(--green)"></div></div>
+        <div style="font-size:8px;color:var(--dim);margin-top:2px">能量</div>
+        <div class="leds" id="leds"></div>
+      </div>
+    </div>
+    <div class="panel"><div class="pt">🦶 足端力</div>
+      <div class="fbar" id="footBar">
+        <div class="fb on" data-n="FR" id="fFR" style="height:80%"></div>
+        <div class="fb on" data-n="FL" id="fFL" style="height:80%"></div>
+        <div class="fb on" data-n="RR" id="fRR" style="height:80%"></div>
+        <div class="fb on" data-n="RL" id="fRL" style="height:80%"></div>
+      </div>
+    </div>
+    <div class="panel"><div class="pt">❤️ 健康</div>
+      <div class="ig" id="hG">
+        <span class="ik">电量</span><span class="iv">--</span>
+        <span class="ik">里程</span><span class="iv">--</span>
+        <span class="ik">跌倒</span><span class="iv">--</span>
+        <span class="ik">运行</span><span class="iv">--</span>
+      </div>
+    </div>
+    <div class="panel"><div class="pt">🗺️ 空间地图</div>
+      <div class="ig" id="mG">
+        <span class="ik">格子</span><span class="iv">--</span>
+        <span class="ik">覆盖</span><span class="iv">--</span>
+        <span class="ik">障碍</span><span class="iv">--</span>
+      </div>
+      <div class="mwrap"><canvas id="mapCanvas"></canvas></div>
+    </div>
+    <div class="panel logp"><div class="pt">📋 日志</div>
+      <div class="logc" id="logC"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script>
+// === 全局配置 ===
+let API = document.getElementById('apiUrl').value.replace(/\/$/,'');
+document.getElementById('apiUrl').addEventListener('change', function(){ API=this.value.replace(/\/$/,''); connected=false; refresh(); });
+let connected = false;
+const RS = {height:.265,roll:0,pitch:0,yaw:0,posture:'standing',fallen:false,foot_contacts:{},terrain:'flat',joint_positions:null,emotion:'calm',_lastTerrain:null};
+const BNAME = {stand:'站立',patrol:'巡逻',dance:'舞蹈',explore:'探索',play:'玩耍',greet:'问候',guard:'警戒',follow:'跟随',rest:'休息',recover:'恢复',balance:'平衡',trot:'小跑',pace:'踏步',bound:'弹跳',wave:'挥手',pushup:'俯卧撑',walk:'行走',gait_cmd:'步态',pose_cmd:'姿态',demo_cmd:'演示',rl_policy:'RL策略',gallop:'奔跑',crawl:'匍匐',pronk:'四足弹',spin:'旋转',sidestep:'横移',backflip:'后空翻',dance1:'舞蹈1',dance2:'舞蹈2',handshake:'握手',trot_run:'快跑',climb:'爬坡',cpg:'CPG神经'};
+const EICON = {calm:'🐕',happy:'🐕‍🦺',curious:'🔍',alert:'⚡',tired:'😴',scared:'😨',excited:'🎉',lonely:'🥺'};
+const ENAME = {calm:'平静',happy:'开心',curious:'好奇',alert:'警觉',tired:'疲惫',scared:'害怕',excited:'兴奋',lonely:'孤独'};
+const PNAME = {standing:'站立',sitting:'坐下',moving:'移动',fallen:'跌倒',low_stand:'低姿',fallen_side:'侧翻',fallen_front:'前扑',fallen_back:'后仰',unknown:'未知'};
+const JNAMES=['FR髋','FR股','FR小腿','FL髋','FL股','FL小腿','RR髋','RR股','RR小腿','RL髋','RL股','RL小腿'];
+
+function gd(){ return document.getElementById('gDur').value; }
+function cg(g){ cmd('gait '+g+' '+gd()); }
+function doSay(){ const i=document.getElementById('sayIn'); const v=i.value.trim(); if(!v)return; const verbs='status|stand|sit|stop|gait|walk|velocity|pose|demo|patrol|dance|explore|play|greet|guard|follow|rest|rl|terrain|speed|emotion|health|map|memory|remember|say|actions'; if(new RegExp('^('+verbs+')\\b','i').test(v)){cmd(v);}else{cmd('say '+v);} i.value=''; }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+
+function addLog(tag, msg){
+  const c=document.getElementById('logC'), d=document.createElement('div');
+  d.className='le';
+  d.innerHTML=`<span class="lm">${new Date().toLocaleTimeString('zh-CN',{hour12:false})}</span> <span class="lt">[${tag}]</span> ${msg}`;
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+  if(c.children.length>150) c.removeChild(c.firstChild);
+}
+
+async function cmd(c){
+  toast('▶ '+c); addLog('CMD',c);
+  try{
+    const r=await fetch(API+'/cmd',{method:'POST',body:c,headers:{'Content-Type':'text/plain'}});
+    const d=await r.json();
+    addLog('RSP',JSON.stringify(d).slice(0,120));
+    if(d.height!==undefined) RS.height=d.height;
+    if(d.ok) refresh();
+    return d;
+  }catch(e){ addLog('ERR',e.message); return {ok:false,error:e.message}; }
+}
+
+// === WASD 键盘行走 (节流防洪) ===
+const keys={};
+let wasdTimer=null, wasdBusy=false;
+window.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+  keys[e.key.toLowerCase()]=true;
+  if('wasdqe'.includes(e.key.toLowerCase())&&!wasdTimer){
+    doWASD();
+    wasdTimer=setInterval(()=>{ if(Object.keys(keys).some(k=>'wasdqe'.includes(k))) doWASD(); else { clearInterval(wasdTimer); wasdTimer=null; } },200);
+  }
+});
+window.addEventListener('keyup',e=>{ delete keys[e.key.toLowerCase()]; });
+function doWASD(){
+  if(wasdBusy) return; wasdBusy=true;
+  let vx=0,vy=0,yr=0;
+  if(keys.w) vx=.4; if(keys.s) vx=-.3;
+  if(keys.a) vy=.3; if(keys.d) vy=-.3;
+  if(keys.q) yr=.5; if(keys.e) yr=-.5;
+  if(vx||vy||yr){
+    fetch(API+'/cmd',{method:'POST',body:`velocity ${vx} ${vy} ${yr} 0.3`,headers:{'Content-Type':'text/plain'}}).then(()=>wasdBusy=false).catch(()=>wasdBusy=false);
+    addLog('WASD',`vx=${vx} vy=${vy} yr=${yr}`);
+  } else wasdBusy=false;
+}
+
+// === 数据刷新 ===
+async function refresh(){
+  try{
+    const [st,em,hl,mp]=await Promise.all([
+      fetch(API+'/status').then(r=>r.json()),
+      fetch(API+'/emotion').then(r=>r.json()),
+      fetch(API+'/health').then(r=>r.json()),
+      fetch(API+'/map').then(r=>r.json()),
+    ]);
+    if(!connected){ connected=true; document.getElementById('sDot').classList.add('on'); document.getElementById('hInfo').textContent='已连接 :'+API.split(':').pop(); }
+
+    const p=st.perception||{};
+    document.getElementById('mH').textContent=(p.height||0).toFixed(3);
+    document.getElementById('mS').textContent=(p.stability||0).toFixed(2);
+    document.getElementById('mP').textContent=PNAME[p.posture]||p.posture||'--';
+    const batt=p.battery_pct||st.battery_pct||0;
+    document.getElementById('mB').textContent=batt.toFixed(0)+'%';
+    const ab=st.active_behavior; document.getElementById('mA').textContent=ab?(BNAME[ab]||ab):'无';
+    const stab=p.stability||0;
+    document.getElementById('mS').className='mv '+(stab>.8?'g':stab>.5?'y':'r');
+    document.getElementById('mB').className='mv '+(batt>50?'g':batt>20?'y':'r');
+
+    RS.height=p.height||.265; RS.roll=p.roll_deg||0; RS.pitch=p.pitch_deg||0; RS.yaw=p.yaw_deg||0;
+    RS.posture=p.posture||'standing'; RS.fallen=p.is_fallen||false; RS.foot_contacts=p.foot_contacts||{};
+    RS.joint_positions=p.joint_positions||null; RS.emotion=em.state||'calm'; RS.terrain=p.terrain_type||'flat'; RS.foot_forces=p.foot_forces||{};
+    // 同步地形选择器
+    const sTerr=document.getElementById('sTerr'); if(sTerr&&sTerr.value!==RS.terrain) sTerr.value=RS.terrain;
+
+    // 情感
+    document.getElementById('eI').textContent=EICON[em.state]||'🐕';
+    document.getElementById('eN').textContent=ENAME[em.state]||em.state||'--';
+    document.getElementById('eInt').textContent='强度: '+((em.intensity||0)*100).toFixed(0)+'%';
+    document.getElementById('eBar').style.width=((em.energy||0)*100)+'%';
+    const led=em.led||[0,100,255],strip=document.getElementById('leds'); strip.innerHTML='';
+    for(let i=0;i<8;i++){const d=document.createElement('div');d.className='led';d.style.background=`rgb(${led[0]},${led[1]},${led[2]})`;d.style.boxShadow=`0 0 5px rgba(${led[0]},${led[1]},${led[2]},.5)`;strip.appendChild(d);}
+
+    // 健康
+    document.getElementById('hG').innerHTML=`
+      <span class="ik">电量</span><span class="iv">${(hl.battery_pct||0).toFixed(0)}%</span>
+      <span class="ik">里程</span><span class="iv">${(hl.distance_m||0).toFixed(2)}m</span>
+      <span class="ik">跌倒</span><span class="iv">${st.fall_count||0}</span>
+      <span class="ik">运行</span><span class="iv">${(hl.uptime_s||0).toFixed(0)}秒</span>
+      <span class="ik">错误</span><span class="iv">${hl.error_count||0}</span>
+      <span class="ik">健康</span><span class="iv">${hl.healthy?'✅':'❌'}</span>`;
+
+    // 地图
+    document.getElementById('mG').innerHTML=`
+      <span class="ik">格子</span><span class="iv">[${(mp.robot_cell||[0,0]).join(',')}]</span>
+      <span class="ik">覆盖</span><span class="iv">${(mp.coverage_pct||0).toFixed(1)}%</span>
+      <span class="ik">障碍</span><span class="iv">${mp.obstacles||0}</span>
+      <span class="ik">已访</span><span class="iv">${mp.visited_cells||0}</span>`;
+    drawMap(mp);
+
+    // 足端力可视化
+    const fc2=RS.foot_contacts||{};
+    for(const fn of ['FR','FL','RR','RL']){
+      const el=document.getElementById('f'+fn);
+      if(el){el.className='fb '+(fc2[fn]!==false?'on':'off');el.style.height=(fc2[fn]!==false?'80':'15')+'%';}
+    }
+
+    if(p.joint_positions&&p.joint_positions.length>=12){
+      const jp=p.joint_positions.map(v=>(v*180/Math.PI).toFixed(0)+'°');
+      document.getElementById('jInfo').textContent='FR['+jp.slice(0,3).join(',')+'] FL['+jp.slice(3,6).join(',')+'] RR['+jp.slice(6,9).join(',')+'] RL['+jp.slice(9,12).join(',')+']';
+    }
+  }catch(e){
+    if(connected){connected=false;document.getElementById('sDot').classList.remove('on');document.getElementById('hInfo').textContent='已断开';}
+  }
+}
+
+// === 2D空间地图 ===
+function drawMap(mp){
+  const cv=document.getElementById('mapCanvas'),ctx=cv.getContext('2d');
+  const W=cv.clientWidth,H=cv.clientHeight; cv.width=W*2;cv.height=H*2;ctx.scale(2,2);
+  ctx.fillStyle='#0d1525';ctx.fillRect(0,0,W,H);
+  const gs=mp.grid_size||50,cw=W/gs,ch=H/gs;
+  if(mp.visited){ctx.fillStyle='rgba(59,130,246,.15)';for(const v of mp.visited)ctx.fillRect(v[0]*cw,(gs-1-v[1])*ch,cw,ch);}
+  if(mp.obstacle_cells){ctx.fillStyle='rgba(239,68,68,.5)';for(const o of mp.obstacle_cells)ctx.fillRect(o[0]*cw,(gs-1-o[1])*ch,cw,ch);}
+  const rc=mp.robot_cell||[gs/2,gs/2];
+  ctx.fillStyle='#22c55e';ctx.beginPath();ctx.arc(rc[0]*cw+cw/2,(gs-1-rc[1])*ch+ch/2,3,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#1e2d45';ctx.lineWidth=.5;
+  for(let i=0;i<=gs;i+=5){ctx.beginPath();ctx.moveTo(i*cw,0);ctx.lineTo(i*cw,H);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*ch);ctx.lineTo(W,i*ch);ctx.stroke();}
+}
+
+// === Three.js 3D Go1 模型 ===
+const ctn=document.getElementById('rc');
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0a0e17);
+const cam=new THREE.PerspectiveCamera(45,1,.01,100); cam.position.set(.6,.35,.8); cam.lookAt(0,.15,0);
+const ren=new THREE.WebGLRenderer({antialias:true}); ren.shadowMap.enabled=true; ren.shadowMap.type=THREE.PCFSoftShadowMap; ctn.appendChild(ren.domElement);
+
+// 鼠标旋转
+let isDrag=false,pm={x:0,y:0},aH=.6,aV=.4,aD=1;
+ren.domElement.addEventListener('mousedown',e=>{isDrag=true;pm={x:e.clientX,y:e.clientY};});
+ren.domElement.addEventListener('mousemove',e=>{if(!isDrag)return;aH-=(e.clientX-pm.x)*.008;aV=Math.max(.1,Math.min(1.2,aV-(e.clientY-pm.y)*.008));pm={x:e.clientX,y:e.clientY};});
+window.addEventListener('mouseup',()=>isDrag=false);
+ren.domElement.addEventListener('wheel',e=>{aD=Math.max(.3,Math.min(3,aD+e.deltaY*.001));e.preventDefault();},{passive:false});
+// 触摸
+let ts=null;
+ren.domElement.addEventListener('touchstart',e=>{if(e.touches.length===1){ts={x:e.touches[0].clientX,y:e.touches[0].clientY};e.preventDefault();}},{passive:false});
+ren.domElement.addEventListener('touchmove',e=>{if(ts&&e.touches.length===1){const t=e.touches[0];aH-=(t.clientX-ts.x)*.008;aV=Math.max(.1,Math.min(1.2,aV-(t.clientY-ts.y)*.008));ts={x:t.clientX,y:t.clientY};e.preventDefault();}},{passive:false});
+ren.domElement.addEventListener('touchend',()=>ts=null);
+
+function uCam(){cam.position.set(Math.sin(aH)*aD,aV*aD,Math.cos(aH)*aD);cam.lookAt(0,.15,0);}
+
+// 灯光
+scene.add(new THREE.AmbientLight(0x334466,.8));
+const dl=new THREE.DirectionalLight(0xccddff,1.2);dl.position.set(2,3,2);dl.castShadow=true;dl.shadow.mapSize.set(1024,1024);scene.add(dl);
+const rl=new THREE.DirectionalLight(0x3b82f6,.4);rl.position.set(-2,1,-2);scene.add(rl);
+
+// 地面+网格 (地形可视化)
+const gndMat=new THREE.MeshStandardMaterial({color:0x0d1525,roughness:.9});
+const gnd=new THREE.Mesh(new THREE.PlaneGeometry(4,4,40,40),gndMat);
+gnd.rotation.x=-Math.PI/2;gnd.receiveShadow=true;scene.add(gnd);
+const gridH=new THREE.GridHelper(4,40,0x1a2540,0x131a2b);scene.add(gridH);
+function setTerrain3D(t){
+  const pos=gnd.geometry.attributes.position;
+  for(let i=0;i<pos.count;i++){
+    if(t==='flat'){pos.setZ(i,0);}
+    else if(t==='rough'){pos.setZ(i,(Math.random()-.5)*.03);}
+    else if(t==='stairs'){const y=pos.getY(i);pos.setZ(i,Math.floor((y+2)/.4)*.02);}
+    else if(t==='slope'){const y=pos.getY(i);pos.setZ(i,(y+2)*.03);}
+    else if(t==='suspended_stairs'){const y=pos.getY(i);const s=Math.floor((y+2)/.35);pos.setZ(i,s*.025+(Math.random()-.5)*.003);}
+    else if(t==='perlin'){const x=pos.getX(i),y=pos.getY(i);pos.setZ(i,.015*Math.sin(x*2.1+.3)*Math.cos(y*1.7+.8)+.008*Math.sin(x*5.3+1.2)*Math.cos(y*4.1+2.1));}
+  }
+  pos.needsUpdate=true;gnd.geometry.computeVertexNormals();
+  const colors={flat:0x0d1525,rough:0x1a1a10,stairs:0x151525,slope:0x101a15,suspended_stairs:0x1a1520,perlin:0x121a10};
+  gndMat.color.setHex(colors[t]||0x0d1525);
+}
+
+// === 1:1 Go1 Official STL Model (from mujoco-menagerie go1.xml) ===
+// 坐标映射: MuJoCo(X前Y侧Z上) → Three.js(X前Z侧Y上)
+const ThL=.213,CL=.213,FR=.023,HO=.08;
+const darkM=new THREE.MeshPhysicalMaterial({color:0x333333,roughness:.6,metalness:.4});
+const footOnM=new THREE.MeshPhysicalMaterial({color:0x22c55e,roughness:.3,emissive:0x113311});
+const footOffM=new THREE.MeshPhysicalMaterial({color:0xef4444,emissive:0xef4444,emissiveIntensity:.5,roughness:.3});
+const eyeM=new THREE.MeshPhysicalMaterial({color:0x22c55e,emissive:0x22c55e,emissiveIntensity:.8});
+
+const rob=new THREE.Group();rob.position.y=.27;scene.add(rob);
+
+// 内置二进制STL解析器 (无需CDN依赖)
+function parseSTL(buf){
+  const dv=new DataView(buf);
+  const tri=dv.getUint32(80,true);
+  const pos=new Float32Array(tri*9);
+  const nrm=new Float32Array(tri*9);
+  let o=84;
+  for(let i=0;i<tri;i++){
+    const nx=dv.getFloat32(o,true),ny=dv.getFloat32(o+4,true),nz=dv.getFloat32(o+8,true);o+=12;
+    for(let j=0;j<3;j++){
+      const vi=i*9+j*3;
+      pos[vi]=dv.getFloat32(o,true);pos[vi+1]=dv.getFloat32(o+4,true);pos[vi+2]=dv.getFloat32(o+8,true);
+      nrm[vi]=nx;nrm[vi+1]=ny;nrm[vi+2]=nz;o+=12;
+    }
+    o+=2;
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('normal',new THREE.BufferAttribute(nrm,3));
+  return g;
+}
+async function loadSTL(url){
+  const r=await fetch(url);
+  if(!r.ok) throw new Error('STL fetch failed: '+r.status);
+  return parseSTL(await r.arrayBuffer());
+}
+
+let stlReady=0,stlTotal=5;
+const stlCache={};
+const legs={};
+
+// 占位几何(STL加载前显示)
+const placeTrunk=new THREE.Mesh(new THREE.BoxGeometry(.25,.114,.16),darkM);
+placeTrunk.castShadow=true;rob.add(placeTrunk);
+// 眼睛(始终显示)
+const eG=new THREE.SphereGeometry(.01,8,8);
+const eyL=new THREE.Mesh(eG,eyeM);eyL.position.set(.26,.02,.04);rob.add(eyL);
+const eyR=new THREE.Mesh(eG,eyeM);eyR.position.set(.26,.02,-.04);rob.add(eyR);
+// 尾巴
+const tl=new THREE.Mesh(new THREE.CylinderGeometry(.005,.003,.06,6),darkM);
+tl.position.set(-.14,.03,0);tl.rotation.z=.8;rob.add(tl);
+
+// 占位腿(STL加载前)
+const LD=[['FR',.1881,-.04675],['FL',.1881,.04675],['RR',-.1881,-.04675],['RL',-.1881,.04675]];
+for(const[n,hx,hz]of LD){
+  const side=hz>0?1:-1;
+  const hGr=new THREE.Group();hGr.position.set(hx,0,hz);rob.add(hGr);
+  const hP=new THREE.Group();hGr.add(hP);
+  const tP=new THREE.Group();tP.position.set(0,0,HO*side);hP.add(tP);
+  const cP=new THREE.Group();cP.position.y=-ThL;tP.add(cP);
+  const ft=new THREE.Mesh(new THREE.SphereGeometry(FR,12,12),footOnM);
+  ft.position.y=-CL;ft.castShadow=true;cP.add(ft);
+  // 占位圆柱
+  const pTh=new THREE.Mesh(new THREE.CylinderGeometry(.018,.014,ThL,8),darkM);
+  pTh.position.y=-ThL/2;pTh.castShadow=true;tP.add(pTh);
+  const pCa=new THREE.Mesh(new THREE.CylinderGeometry(.014,.010,CL,8),darkM);
+  pCa.position.y=-CL/2;pCa.castShadow=true;cP.add(pCa);
+  const pHip=new THREE.Mesh(new THREE.CylinderGeometry(.046,.046,.04,12),darkM);
+  pHip.rotation.x=Math.PI/2;pHip.castShadow=true;hP.add(pHip);
+  legs[n]={hP,tP,cP,ft,placeholders:[pTh,pCa,pHip]};
+}
+
+function setPose(){for(const n in legs){legs[n].hP.rotation.x=0;legs[n].tP.rotation.z=-.9;legs[n].cP.rotation.z=1.8;}}
+setPose();
+
+// STL加载 — 坐标转换: MuJoCo STL (X前,Y侧,Z上) → Three.js (X前,Z侧,Y上)
+function mj2three(geom){geom.rotateX(-Math.PI/2);return geom;}
+
+function onSTLReady(){
+  stlReady++;
+  if(stlReady<stlTotal) return;
+  // 所有STL已加载，替换占位几何
+  rob.remove(placeTrunk);
+  const trunkMesh=new THREE.Mesh(stlCache.trunk,darkM);
+  trunkMesh.castShadow=true;rob.add(trunkMesh);
+
+  for(const[n,hx,hz]of LD){
+    const l=legs[n];const side=hz>0?1:-1;
+    // 移除占位
+    l.placeholders.forEach(p=>p.parent&&p.parent.remove(p));
+    l.placeholders=[];
+    // 髋部mesh
+    const hipMesh=new THREE.Mesh(stlCache.hip,darkM);
+    hipMesh.castShadow=true;
+    // go1.xml hip quaternions: MuJoCo(w,x,y,z) → Three.js .set(x,y,z,w) with Z_mj→Y, Y_mj→-Z
+    if(n==='RR') hipMesh.quaternion.set(0,1,0,0);      // 180° around Y (was Z_mj)
+    else if(n==='RL') hipMesh.quaternion.set(0,0,1,0);  // 180° around Z (was Y_mj)
+    // FR,FL: identity (default)
+    l.hP.add(hipMesh);
+    // 大腿mesh
+    const isRight=(n==='FR'||n==='RR');
+    const thighMesh=new THREE.Mesh(isRight?stlCache.thigh_mirror:stlCache.thigh,darkM);
+    thighMesh.castShadow=true;l.tP.add(thighMesh);
+    // 小腿mesh
+    const calfMesh=new THREE.Mesh(stlCache.calf,darkM);
+    calfMesh.castShadow=true;l.cP.add(calfMesh);
+  }
+  addLog('SYS','1:1 Go1 STL模型加载完成 (5 meshes)');
+}
+
+// 加载5个STL文件 (使用内置解析器)
+const stlFiles={trunk:'trunk.stl',hip:'hip.stl',thigh:'thigh.stl',thigh_mirror:'thigh_mirror.stl',calf:'calf.stl'};
+const stlBase=API.replace(/:\d+$/,':8085');
+for(const[key,file] of Object.entries(stlFiles)){
+  loadSTL(stlBase+'/assets/'+file).then(geom=>{
+    mj2three(geom);geom.computeVertexNormals();stlCache[key]=geom;onSTLReady();
+  }).catch(err=>{
+    addLog('ERR','STL加载失败: '+file+' '+err.message);
+    stlCache[key]=new THREE.BufferGeometry();stlReady++;
+    if(stlReady>=stlTotal) addLog('WARN','STL部分失败，使用占位模型');
+  });
+}
+
+// 窗口自适应
+function onResize(){
+  const b=document.getElementById('vizBox');
+  const w=b.clientWidth,h=b.clientHeight;
+  cam.aspect=w/h;cam.updateProjectionMatrix();
+  ren.setSize(w,h);ren.setPixelRatio(Math.min(devicePixelRatio,2));
+}
+window.addEventListener('resize',onResize);
+new ResizeObserver(onResize).observe(document.getElementById('vizBox'));
+onResize();
+
+// 更新3D模型
+function upd3D(){
+  rob.rotation.set((RS.pitch||0)*Math.PI/180,(RS.yaw||0)*Math.PI/180,(RS.roll||0)*Math.PI/180);
+  rob.position.y=RS.height||.27;
+  const ec=RS.fallen?0xef4444:0x22c55e;
+  eyL.material.color.setHex(ec);eyL.material.emissive.setHex(ec);
+  eyR.material.color.setHex(ec);eyR.material.emissive.setHex(ec);
+  const fc=RS.foot_contacts||{};
+  for(const n in legs) legs[n].ft.material=(fc[n]!==false)?footOnM:footOffM;
+  // 关节角度驱动腿部动画 (髋+大腿+小腿全12关节)
+  const jp=RS.joint_positions;
+  if(jp&&jp.length>=12){
+    const ln=['FR','FL','RR','RL'];
+    for(let i=0;i<4;i++){
+      const l=legs[ln[i]];
+      if(l){l.hP.rotation.x=(jp[i*3]||0);l.tP.rotation.z=-(jp[i*3+1]||0);l.cP.rotation.z=(jp[i*3+2]||0)+0.9;}
+    }
+  }
+  // 地形3D同步
+  if(RS._lastTerrain!==RS.terrain){RS._lastTerrain=RS.terrain;setTerrain3D(RS.terrain);}
+  // 尾巴摇摆 — 情绪影响幅度
+  const tw=RS.emotion==='happy'||RS.emotion==='excited'?.6:.3;
+  tl.rotation.x=Math.sin(Date.now()*.005)*tw;
+  const vi=document.getElementById('vInfo');
+  if(vi) vi.textContent=`H:${(RS.height||0).toFixed(3)}m  R:${(RS.roll||0).toFixed(1)}°  P:${(RS.pitch||0).toFixed(1)}°  Y:${(RS.yaw||0).toFixed(1)}°  T:${RS.terrain||'flat'}`;
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(!isDrag) aH+=.002;
+  uCam(); upd3D();
+  ren.render(scene,cam);
+}
+animate();
+
+// 初始化
+addLog('SYS','虚拟仿真控制台 v2.3 已启动，连接 Brain API...');
+refresh();
+setInterval(refresh,1000);
+
+</script>
+</body>
+</html>

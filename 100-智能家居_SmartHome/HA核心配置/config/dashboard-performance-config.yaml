@@ -1,0 +1,150 @@
+# 移动端性能优化配置
+# 循环#11：全局性能优化
+
+# 性能优化策略
+performance_settings:
+  # 启用GPU加速
+  hardware_acceleration: true
+  
+  # 懒加载配置
+  lazy_loading:
+    enabled: true
+    threshold: 500  # 提前500px加载
+    
+  # 图片优化
+  image_optimization:
+    max_width: 800
+    quality: 85
+    format: webp
+    
+  # 缓存策略
+  cache:
+    enabled: true
+    duration: 3600  # 1小时
+    
+  # 预加载关键资源
+  preload:
+    - /hacsfiles/lovelace-mushroom/mushroom.js
+    - /hacsfiles/apexcharts-card/apexcharts-card.js
+    - /hacsfiles/card-mod/card-mod.js
+    
+  # 资源压缩
+  compression:
+    enabled: true
+    level: 9
+    
+  # Service Worker
+  service_worker:
+    enabled: true
+    offline_support: true
+    cache_strategy: network_first
+    
+# 动画性能优化
+animation_config:
+  # 使用transform代替position
+  use_transform: true
+  
+  # 使用will-change
+  will_change_properties:
+    - transform
+    - opacity
+    - background
+    
+  # 帧率控制
+  target_fps: 60
+  
+  # 减少动画复杂度
+  reduce_motion_on_low_end: true
+  
+# 渲染优化
+rendering:
+  # 虚拟滚动
+  virtual_scroll:
+    enabled: true
+    item_height: 100
+    buffer_size: 5
+    
+  # 批量更新
+  batch_updates: true
+  batch_delay: 16  # ~60fps
+  
+  # 防抖延迟
+  debounce_delay: 300
+  
+  # 节流频率
+  throttle_rate: 100
+
+# 网络优化
+network:
+  # 连接池
+  connection_pool_size: 10
+  
+  # 超时设置
+  timeout: 5000
+  
+  # 重试策略
+  retry:
+    max_attempts: 3
+    backoff: exponential
+    
+  # 数据压缩
+  gzip: true
+  
+# 内存优化
+memory:
+  # 最大缓存大小
+  max_cache_size: 50  # MB
+  
+  # 自动清理
+  auto_cleanup: true
+  cleanup_interval: 3600
+  
+  # 内存监控
+  monitoring:
+    enabled: true
+    warning_threshold: 80  # 80%使用率警告
+    
+# 电池优化
+battery:
+  # 省电模式
+  power_save_mode: auto
+  
+  # 降低刷新率
+  reduce_refresh_rate: true
+  
+  # 暂停后台动画
+  pause_animations_when_inactive: true
+  
+  # 减少网络请求
+  reduce_polling_frequency: true
+
+# 响应式优化
+responsive:
+  # 断点配置
+  breakpoints:
+    mobile: 480
+    tablet: 768
+    desktop: 1024
+    
+  # 移动端特定优化
+  mobile_optimizations:
+    - reduce_shadows
+    - simplify_gradients
+    - limit_animations
+    - compress_images
+    
+# 监控指标
+monitoring:
+  enabled: true
+  metrics:
+    - load_time
+    - first_contentful_paint
+    - time_to_interactive
+    - cumulative_layout_shift
+    - largest_contentful_paint
+    
+  # 性能目标
+  targets:
+    load_time: 2000  # 2秒
+    first_paint: 1000  # 1秒
+    interactive: 3000  # 3秒

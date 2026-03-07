@@ -1,0 +1,200 @@
+# Offline Mode with Local Caching - Cycle #4 Round #6
+
+# Service Worker configuration
+service_worker:
+  enabled: true
+  cache_strategy: cache_first
+  cache_name: ha_offline_v1
+  
+  # Resources to cache
+  cache_resources:
+    - /frontend_latest/
+    - /static/
+    - /local/
+    - /hacsfiles/
+    - /api/states
+    - /api/services
+  
+  # Cache duration
+  cache_duration:
+    static: 86400  # 24 hours
+    api: 300  # 5 minutes
+    images: 604800  # 7 days
+
+# Local storage
+local_storage:
+  enabled: true
+  max_size: 50  # MB
+  
+  # What to store locally
+  cached_data:
+    - states
+    - history_24h
+    - configuration
+    - user_preferences
+    - dashboard_config
+    - scene_definitions
+  
+  # Sync strategy
+  sync:
+    interval: 60  # seconds
+    on_connect: true
+    background_sync: true
+
+# Offline capabilities
+offline_features:
+  
+  # View cached data
+  view_state:
+    enabled: true
+    last_known_state: true
+    timestamp_display: true
+  
+  # Queue actions
+  action_queue:
+    enabled: true
+    max_queue_size: 100
+    retry_on_reconnect: true
+    
+    # Supported actions
+    supported_actions:
+      - light.toggle
+      - switch.toggle
+      - scene.turn_on
+      - script.turn_on
+  
+  # Offline dashboard
+  offline_dashboard:
+    enabled: true
+    fallback_data: true
+    show_offline_indicator: true
+
+# Network detection
+network_monitor:
+  check_interval: 5  # seconds
+  timeout: 3  # seconds
+  
+  # Check endpoints
+  endpoints:
+    - url: /api/
+      method: GET
+    - url: /manifest.json
+      method: HEAD
+  
+  # Connection status
+  indicators:
+    online: 
+      icon: mdi:wifi
+      color: green
+      message: "Connected"
+    
+    offline:
+      icon: mdi:wifi-off
+      color: red
+      message: "Offline - Using cached data"
+    
+    poor:
+      icon: mdi:wifi-strength-1
+      color: orange
+      message: "Poor connection"
+
+# Data synchronization
+sync_manager:
+  
+  # Conflict resolution
+  conflict_strategy: server_wins  # or client_wins, manual
+  
+  # Sync queue
+  queue_management:
+    persist: true
+    max_retry: 3
+    backoff: exponential
+  
+  # Sync events
+  sync_events:
+    on_connect:
+      - sync_queued_actions
+      - update_cached_states
+      - fetch_missed_events
+    
+    on_disconnect:
+      - save_current_state
+      - enable_offline_mode
+      - notify_user
+
+# Offline UI
+offline_ui:
+  
+  # Indicator banner
+  banner:
+    show: true
+    position: top
+    dismissible: false
+    message: "🔌 Offline Mode - Limited functionality"
+    
+  # Cached data badge
+  data_freshness:
+    show: true
+    format: "Last updated: {time_ago}"
+    color_coding:
+      fresh: green  # < 5 min
+      moderate: orange  # 5-30 min
+      stale: red  # > 30 min
+  
+  # Action feedback
+  offline_feedback:
+    queued_action: "✓ Action queued, will execute when online"
+    cache_hit: "📦 Showing cached data"
+    cache_miss: "⚠️ Data not available offline"
+
+# Progressive Web App (PWA)
+pwa_config:
+  enabled: true
+  manifest: /manifest.json
+  
+  # Install prompt
+  install_prompt:
+    show: true
+    defer_minutes: 10
+    max_dismiss: 3
+  
+  # App capabilities
+  capabilities:
+    standalone: true
+    fullscreen_option: true
+    orientation: portrait
+    background_sync: true
+    push_notifications: true
+
+# Background sync
+background_sync:
+  enabled: true
+  
+  # Sync tasks
+  tasks:
+    - name: sync_state
+      interval: 300  # 5 minutes
+      priority: high
+    
+    - name: sync_history
+      interval: 3600  # 1 hour
+      priority: normal
+    
+    - name: cleanup_cache
+      interval: 86400  # 24 hours
+      priority: low
+
+# Offline analytics
+offline_analytics:
+  track_usage: true
+  
+  # Metrics
+  metrics:
+    - time_offline
+    - actions_queued
+    - cache_hits
+    - cache_misses
+    - sync_success_rate
+  
+  # Reporting
+  report_on_connect: true

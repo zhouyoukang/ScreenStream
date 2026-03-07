@@ -1,0 +1,153 @@
+# 娱乐页面所需的Scripts和Automations
+# 将此内容添加到相应的配置文件中
+
+# ==================== SCRIPTS ====================
+
+script:
+  # 统一设置所有音箱音量
+  set_all_speakers_volume:
+    alias: 统一设置音箱音量
+    description: 将所有音箱设置为相同音量
+    fields:
+      volume_level:
+        description: 音量等级 (0-1)
+        example: 0.5
+    sequence:
+      - service: media_player.volume_set
+        data:
+          entity_id:
+            - media_player.xiaomi_lx06_6dfd_play_control
+            - media_player.xiaomi_lx04_12e4_play_control_2
+            - media_player.xiaomi_l16a_0be7_play_control
+            - media_player.xiaomi_x08e_8219_play_control
+            - media_player.xiaomi_lx06_72f9_play_control
+          volume_level: "{{ volume_level }}"
+      - service: persistent_notification.create
+        data:
+          title: "🔊 音量已调节"
+          message: "所有音箱音量已设置为 {{ (volume_level * 100) | int }}%"
+          notification_id: volume_notification
+
+  # 向所有音箱发送统一命令
+  send_command_to_all_speakers:
+    alias: 向所有音箱发送命令
+    description: 同时向所有小米音箱发送相同的语音命令
+    fields:
+      command:
+        description: 语音命令文本
+        example: "播放周杰伦的歌"
+    sequence:
+      # 如果没有传入command参数，使用input_text中的值
+      - variables:
+          cmd_text: >
+            {% if command is defined %}
+              {{ command }}
+            {% else %}
+              {{ states('input_text.unified_speaker_command') }}
+            {% endif %}
+      
+      # 向所有音箱发送命令
+      - service: xiaomi_miot.intelligent_speaker
+        data:
+          entity_id: media_player.xiaomi_lx06_6dfd_play_control
+          text: "{{ cmd_text }}"
+          execute: true
+      
+      - delay:
+          milliseconds: 200
+      
+      - service: xiaomi_miot.intelligent_speaker
+        data:
+          entity_id: media_player.xiaomi_lx04_12e4_play_control_2
+          text: "{{ cmd_text }}"
+          execute: true
+      
+      - delay:
+          milliseconds: 200
+      
+      - service: xiaomi_miot.intelligent_speaker
+        data:
+          entity_id: media_player.xiaomi_l16a_0be7_play_control
+          text: "{{ cmd_text }}"
+          execute: true
+      
+      - delay:
+          milliseconds: 200
+      
+      - service: xiaomi_miot.intelligent_speaker
+        data:
+          entity_id: media_player.xiaomi_x08e_8219_play_control
+          text: "{{ cmd_text }}"
+          execute: true
+      
+      - delay:
+          milliseconds: 200
+      
+      - service: xiaomi_miot.intelligent_speaker
+        data:
+          entity_id: media_player.xiaomi_lx06_72f9_play_control
+          text: "{{ cmd_text }}"
+          execute: true
+      
+      # 发送通知
+      - service: persistent_notification.create
+        data:
+          title: "📢 命令已发送"
+          message: "已向所有音箱发送命令: {{ cmd_text }}"
+          notification_id: command_notification
+      
+      # 清空输入框
+      - service: input_text.set_value
+        data:
+          entity_id: input_text.unified_speaker_command
+          value: ""
+
+  # 播放音乐到所有音箱（保留原有脚本）
+  play_music_all_speakers:
+    alias: 所有音箱播放音乐
+    description: 让所有音箱同时播放指定内容
+    fields:
+      text:
+        description: 播放内容
+        example: "播放周杰伦的歌"
+    sequence:
+      - service: script.send_command_to_all_speakers
+        data:
+          command: "{{ text }}"
+
+
+# ==================== AUTOMATIONS ====================
+
+automation:
+  # 音量滑块变化时自动调节所有音箱
+  - id: sync_all_speakers_volume
+    alias: 同步所有音箱音量
+    description: 当音量滑块变化时，同步调节所有音箱音量
+    trigger:
+      - platform: state
+        entity_id: input_number.all_speakers_volume
+    condition:
+      # 确保是用户操作导致的变化，不是初始化
+      - condition: template
+        value_template: "{{ trigger.to_state.state != trigger.from_state.state }}"
+    action:
+      - service: script.set_all_speakers_volume
+        data:
+          volume_level: "{{ states('input_number.all_speakers_volume') | float / 100 }}"
+    mode: restart
+
+  # 初始化时同步当前音量到滑块
+  - id: init_speakers_volume_slider
+    alias: 初始化音量滑块
+    description: Home Assistant启动时，将滑块设置为主音箱的当前音量
+    trigger:
+      - platform: homeassistant
+        event: start
+    action:
+      - delay:
+          seconds: 10
+      - service: input_number.set_value
+        data:
+          entity_id: input_number.all_speakers_volume
+          value: >
+            {{ (state_attr('media_player.xiaomi_lx06_6dfd_play_control', 'volume_level') | float(0.5) * 100) | int }}

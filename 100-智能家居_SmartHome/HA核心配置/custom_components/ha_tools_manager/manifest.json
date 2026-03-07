@@ -1,0 +1,10 @@
+{
+  "domain": "ha_tools_manager",
+  "name": "工具库管理器",
+  "documentation": "https://github.com/yourusername/ha_tools_manager",
+  "codeowners": ["@your_github_username"],
+  "dependencies": [],
+  "config_flow": true,
+  "version": "1.0.0",
+  "iot_class": "local_polling"
+} 

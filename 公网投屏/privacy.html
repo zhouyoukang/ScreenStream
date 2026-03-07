@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐私政策 — 远程协助</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.8; color: #333; background: #f8f9fa; padding: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        h1 { font-size: 24px; margin-bottom: 8px; color: #1a73e8; }
+        .subtitle { color: #666; margin-bottom: 32px; font-size: 14px; }
+        h2 { font-size: 18px; margin: 24px 0 12px; color: #202124; border-left: 4px solid #1a73e8; padding-left: 12px; }
+        p, li { font-size: 15px; margin-bottom: 8px; }
+        ul { padding-left: 24px; }
+        .highlight { background: #e8f5e9; padding: 16px; border-radius: 8px; margin: 16px 0; }
+        .highlight strong { color: #2e7d32; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0; color: #999; font-size: 13px; text-align: center; }
+        a { color: #1a73e8; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>隐私政策</h1>
+    <p class="subtitle">远程协助（ScreenStream）· 最后更新：2026年3月1日 · 生效日期：2026年3月1日</p>
+
+    <div class="highlight">
+        <strong>一句话总结：</strong>我们不收集、不存储、不传输您的任何个人信息。屏幕画面仅在您主动开启共享时，实时传输给您授权的家人，关闭即断开，不留任何记录。
+    </div>
+
+    <h2>一、我们是谁</h2>
+    <p>「远程协助」是一款帮助家人远程查看和操作您手机屏幕的工具。当您的孩子不在身边时，他们可以通过这个应用看到您的手机画面，帮您点按钮、调设置。</p>
+
+    <h2>二、我们收集什么信息</h2>
+    <div class="highlight">
+        <strong>我们不收集任何个人信息。</strong>
+    </div>
+    <ul>
+        <li>❌ 不收集姓名、电话、邮箱</li>
+        <li>❌ 不收集位置信息</li>
+        <li>❌ 不收集通讯录、短信、通话记录</li>
+        <li>❌ 不收集照片、文件</li>
+        <li>❌ 不使用广告追踪（无广告SDK）</li>
+        <li>❌ 不使用任何第三方分析工具</li>
+    </ul>
+
+    <h2>三、屏幕画面如何传输</h2>
+    <p>当您点击「让家人看我的屏幕」后：</p>
+    <ul>
+        <li>屏幕画面通过<strong>加密连接（TLS/DTLS-SRTP）</strong>实时传输给您的家人</li>
+        <li>优先使用<strong>点对点直连（P2P）</strong>，画面不经过任何服务器</li>
+        <li>如果网络条件不允许P2P，画面会通过我们的中转服务器（位于中国阿里云）临时转发</li>
+        <li>画面<strong>不会被录制、存储或缓存</strong>在任何地方</li>
+        <li>关闭共享后，传输<strong>立即停止</strong>，30分钟无操作<strong>自动断开</strong></li>
+    </ul>
+
+    <h2>四、无障碍服务（Accessibility Service）</h2>
+    <p>本应用使用Android无障碍服务，<strong>仅用于以下目的</strong>：</p>
+    <ul>
+        <li>接收家人发送的触控指令（点击、滑动、返回等），帮您操作手机</li>
+        <li>在您的手机上模拟触摸操作，等同于家人帮您点击屏幕</li>
+    </ul>
+    <p>无障碍服务<strong>不会</strong>：</p>
+    <ul>
+        <li>❌ 读取您的密码或银行信息</li>
+        <li>❌ 监控您的日常操作</li>
+        <li>❌ 在共享关闭后继续运行</li>
+        <li>❌ 向任何第三方发送数据</li>
+    </ul>
+
+    <h2>五、权限说明</h2>
+    <table style="width:100%; border-collapse:collapse; margin:12px 0;">
+        <tr style="background:#f5f5f5;"><th style="padding:8px; text-align:left; border-bottom:1px solid #ddd;">权限</th><th style="padding:8px; text-align:left; border-bottom:1px solid #ddd;">用途</th></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #eee;">屏幕录制</td><td style="padding:8px; border-bottom:1px solid #eee;">捕获屏幕画面传输给家人</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #eee;">前台服务</td><td style="padding:8px; border-bottom:1px solid #eee;">保持屏幕共享在后台稳定运行</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #eee;">无障碍服务</td><td style="padding:8px; border-bottom:1px solid #eee;">让家人能帮您点击屏幕</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #eee;">网络访问</td><td style="padding:8px; border-bottom:1px solid #eee;">传输屏幕画面给家人</td></tr>
+        <tr><td style="padding:8px;">麦克风（可选）</td><td style="padding:8px;">同时传输声音给家人（需手动开启）</td></tr>
+    </table>
+
+    <h2>六、数据安全</h2>
+    <ul>
+        <li>所有传输均使用<strong>TLS 1.3加密</strong></li>
+        <li>P2P模式使用<strong>DTLS-SRTP端到端加密</strong>，即使我们也无法查看</li>
+        <li>每次共享使用<strong>随机生成的6位连接码</strong>，用完即失效</li>
+        <li>连接码不可被猜测（100万种组合，每IP限速5次/分钟）</li>
+    </ul>
+
+    <h2>七、儿童隐私</h2>
+    <p>本应用不面向13岁以下儿童，不会故意收集儿童信息。</p>
+
+    <h2>八、变更通知</h2>
+    <p>如隐私政策有重大变更，我们将在应用内通知您。您可以随时在此页面查看最新版本。</p>
+
+    <h2>九、联系我们</h2>
+    <p>如有任何隐私相关问题，请联系：</p>
+    <ul>
+        <li>邮箱：<a href="mailto:zhouyoukang@outlook.com">zhouyoukang@outlook.com</a></li>
+        <li>GitHub：<a href="https://github.com/zhouyoukang/ScreenStream">github.com/zhouyoukang/ScreenStream</a></li>
+    </ul>
+
+    <div class="footer">
+        <p>© 2026 远程协助（ScreenStream）· 本隐私政策适用于所有版本</p>
+        <p><a href="https://aiotvr.xyz/cast/">返回首页</a></p>
+    </div>
+</div>
+</body>
+</html>

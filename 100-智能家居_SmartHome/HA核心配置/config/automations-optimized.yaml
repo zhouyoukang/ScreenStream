@@ -1,0 +1,114 @@
+# Optimized Automations - Cycle #3 Round #7
+
+# Smart scene activation based on time
+- alias: "⏰ Smart Scene Scheduler"
+  description: "Automatically activate scenes based on time of day"
+  trigger:
+    - platform: time
+      at:
+        - "07:00:00"  # Breakfast
+        - "12:00:00"  # Lunch
+        - "18:30:00"  # Dinner
+        - "22:00:00"  # Sleep
+  action:
+    - choose:
+        - conditions:
+            - condition: time
+              after: "06:59:00"
+              before: "08:00:00"
+          sequence:
+            - service: script.breakfast_mode
+        - conditions:
+            - condition: time
+              after: "11:59:00"
+              before: "13:00:00"
+          sequence:
+            - service: script.lunch_break_mode
+        - conditions:
+            - condition: time
+              after: "18:29:00"
+              before: "19:30:00"
+          sequence:
+            - service: script.dinner_mode
+        - conditions:
+            - condition: time
+              after: "21:59:00"
+              before: "23:00:00"
+          sequence:
+            - service: notify.persistent_notification
+              data:
+                title: "🌙 Sleep Mode Ready"
+                message: "Tap to activate sleep mode"
+                data:
+                  actions:
+                    - action: "ACTIVATE_SLEEP"
+                      title: "Activate"
+
+# Battery monitoring with smart notifications
+- alias: "🔋 Smart Battery Monitor"
+  description: "Intelligent battery level monitoring"
+  trigger:
+    - platform: numeric_state
+      entity_id:
+        - sensor.miaomiaoc_cn_blt_3_1ioerl71o4g02_t9_battery_level_p_2_1003
+        - sensor.xiaomi_cn_blt_3_1kd2sgr5oco00_03_battery_level_p_3_1003
+      below: 20
+  condition:
+    - condition: state
+      entity_id: input_boolean.notify_low_battery
+      state: 'on'
+    - condition: template
+      value_template: >
+        {{ (as_timestamp(now()) - as_timestamp(state_attr(this.entity_id, 'last_triggered') | default(0))) > 3600 }}
+  action:
+    - service: notify.persistent_notification
+      data:
+        title: "🔋 Battery Alert"
+        message: >
+          {{ trigger.to_state.name }} battery is at {{ trigger.to_state.state }}%
+          Please charge soon.
+
+# Adaptive power management
+- alias: "⚡ Adaptive Power Management"
+  description: "Automatically adjust power usage based on consumption"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.sonoff_total_power_usage
+      above: 400
+      for:
+        minutes: 10
+  condition:
+    - condition: state
+      entity_id: input_boolean.notify_high_power
+      state: 'on'
+  action:
+    - service: notify.persistent_notification
+      data:
+        title: "⚡ High Power Usage"
+        message: >
+          Power usage has been above 400W for 10 minutes.
+          Current: {{ states('sensor.sonoff_total_power_usage') }}W
+          
+          Suggestion: Activate energy saving mode?
+        data:
+          actions:
+            - action: "ENERGY_SAVE"
+              title: "Enable Eco Mode"
+
+# Device health check
+- alias: "🏥 Device Health Check"
+  description: "Regular device connectivity check"
+  trigger:
+    - platform: time_pattern
+      hours: "/6"  # Every 6 hours
+  action:
+    - service: python_script.device_health_check
+    - condition: template
+      value_template: >
+        {{ states | selectattr('state', 'eq', 'unavailable') | list | count > 3 }}
+    - service: notify.persistent_notification
+      data:
+        title: "⚠️ Device Health Alert"
+        message: >
+          {{ states | selectattr('state', 'eq', 'unavailable') | list | count }} devices are offline.
+          Please check device status.

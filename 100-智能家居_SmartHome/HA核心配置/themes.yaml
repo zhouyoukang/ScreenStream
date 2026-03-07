@@ -1,0 +1,16 @@
+# Home Assistant 主题配置
+# 默认主题
+
+default:
+  # 主色调
+  primary-color: "#03A9F4"
+  # 背景色
+  primary-background-color: "#f7f7f7"
+  # 卡片背景色
+  card-background-color: "#FFFFFF"
+  # 文本颜色
+  primary-text-color: "#212121"
+  # 二级文本颜色
+  secondary-text-color: "#727272"
+  # 分隔线颜色
+  divider-color: "#BDBDBD" 

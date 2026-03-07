@@ -1,0 +1,2245 @@
+# 移动端UI脚本配置
+
+# 回家模式脚本
+home_mode:
+  alias: 回家模式
+  description: 回家时自动执行的场景
+  icon: mdi:home-import-outline
+  sequence:
+    # 开启主要照明
+    - service: switch.turn_on
+      target:
+        entity_id: switch.sonoff_10022dede9_1
+    
+    # 开启氛围灯带（暖白光）
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 180
+        color_temp: 370
+    
+    # 开启插座（如果有连接设备）
+    - service: switch.turn_on
+      target:
+        entity_id: switch.sonoff_10022dedc7_1
+    
+    # 启动风扇（如果需要）
+    - service: fan.turn_on
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+      data:
+        speed: 2
+    
+    # 发送通知
+    - service: notify.persistent_notification
+      data:
+        title: "🏠 回家模式"
+        message: "欢迎回家！已为您开启舒适模式。"
+
+# 离家模式脚本
+away_mode:
+  alias: 离家模式
+  description: 离家时自动执行的场景
+  icon: mdi:home-export-outline
+  sequence:
+    # 关闭所有照明
+    - service: switch.turn_off
+      target:
+        entity_id: 
+          - switch.sonoff_10022dede9_1
+          - switch.sonoff_10022dedc7_1
+    
+    # 关闭氛围灯带
+    - service: light.turn_off
+      target:
+        entity_id: light.philips_strip3_12ad_light
+    
+    # 关闭风扇
+    - service: fan.turn_off
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+    
+    # 关闭其他可控设备
+    - service: switch.turn_off
+      target:
+        entity_id: switch.xiaomi_x08e_8219_switch_status
+    
+    # 发送通知
+    - service: notify.persistent_notification
+      data:
+        title: "🚪 离家模式"
+        message: "已关闭所有设备，祝您出行愉快！"
+
+# 睡眠模式脚本 - 已禁用 (2025-12-02 凌晨2:29 - 防止灯带自动变暗)
+# sleep_mode:
+#   alias: 睡眠模式
+#   description: 睡前执行的场景
+#   icon: mdi:sleep
+#   sequence:
+#     # 关闭主照明
+#     - service: switch.turn_off
+#       target:
+#         entity_id: switch.sonoff_10022dede9_1
+#     
+#     # 调整氛围灯为夜灯模式
+#     - service: light.turn_on
+#       target:
+#         entity_id: light.philips_strip3_12ad_light
+#       data:
+#         brightness: 30
+#         rgb_color: [255, 147, 41]  # 暖橙色
+#     
+#     # 调整风扇为睡眠模式
+#     - service: fan.turn_on
+#       target:
+#         entity_id: fan.dmaker_p221_5b47_fan
+#       data:
+#         speed: 1
+#     
+#     # 发送通知
+#     - service: notify.persistent_notification
+#       data:
+#         title: "🌙 睡眠模式"
+#         message: "晚安！已调整为舒适的睡眠环境。"
+
+# 工作模式脚本
+work_mode:
+  alias: 工作模式
+  description: 工作时的最佳环境设置
+  icon: mdi:laptop
+  sequence:
+    # 开启主照明
+    - service: switch.turn_on
+      target:
+        entity_id: switch.sonoff_10022dede9_1
+    
+    # 设置氛围灯为白光（提高专注度）
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 255
+        color_temp: 250  # 冷白光
+    
+    # 开启插座（电脑设备）
+    - service: switch.turn_on
+      target:
+        entity_id: switch.sonoff_10022dedc7_1
+    
+    # 调整风扇为适中档位
+    - service: fan.turn_on
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+      data:
+        speed: 3
+    
+    # 发送通知
+    - service: notify.persistent_notification
+      data:
+        title: "💼 工作模式"
+        message: "工作环境已就绪，专注工作吧！"
+
+# 娱乐模式脚本
+entertainment_mode:
+  alias: 娱乐模式
+  description: 观影或娱乐时的环境设置
+  icon: mdi:movie-open
+  sequence:
+    # 关闭主照明
+    - service: switch.turn_off
+      target:
+        entity_id: switch.sonoff_10022dede9_1
+    
+    # 设置氛围灯为彩色模式
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 120
+        rgb_color: [138, 43, 226]  # 紫色
+        effect: "colorloop"
+    
+    # 调整风扇为静音模式
+    - service: fan.turn_on
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+      data:
+        speed: 1
+    
+    # 发送通知
+    - service: notify.persistent_notification
+      data:
+        title: "🎬 娱乐模式"
+        message: "享受您的娱乐时光！"
+
+# 清洁模式脚本
+cleaning_mode:
+  alias: 清洁模式
+  description: 打扫时的环境设置
+  icon: mdi:broom
+  sequence:
+    # 开启所有照明
+    - service: switch.turn_on
+      target:
+        entity_id: switch.sonoff_10022dede9_1
+    
+    # 设置氛围灯为明亮白光
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 255
+        color_temp: 200  # 非常冷的白光
+    
+    # 开启风扇最大档位（通风）
+    - service: fan.turn_on
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+      data:
+        speed: 4
+    
+    # 发送通知
+    - service: notify.persistent_notification
+      data:
+        title: "🧹 清洁模式"
+        message: "清洁环境已设置，开始打扫吧！"
+
+# 紧急模式脚本
+emergency_mode:
+  alias: 紧急模式
+  description: 紧急情况下的设置
+  icon: mdi:alert
+  sequence:
+    # 开启所有照明
+    - service: switch.turn_on
+      target:
+        entity_id: 
+          - switch.sonoff_10022dede9_1
+          - switch.sonoff_10022dedc7_1
+    
+    # 设置氛围灯为红色闪烁
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 255
+        rgb_color: [255, 0, 0]  # 红色
+        effect: "colorloop"
+    
+    # 关闭风扇
+    - service: fan.turn_off
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+    
+    # 发送紧急通知
+    - service: notify.persistent_notification
+      data:
+        title: "🚨 紧急模式"
+        message: "紧急模式已激活！"
+
+# 节能模式脚本
+energy_saving_mode:
+  alias: 节能模式
+  description: 最大化节能的设置
+  icon: mdi:leaf
+  sequence:
+    # 关闭不必要的照明
+    - service: switch.turn_off
+      target:
+        entity_id: switch.sonoff_10022dede9_1
+    
+    # 设置氛围灯为最低亮度
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 50
+        color_temp: 400  # 暖光更节能
+    
+    # 关闭插座
+    - service: switch.turn_off
+      target:
+        entity_id: switch.sonoff_10022dedc7_1
+    
+    # 关闭风扇
+    - service: fan.turn_off
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+    
+    # 发送通知
+    - service: notify.persistent_notification
+      data:
+        title: "🌱 节能模式"
+        message: "已启用节能模式，为环保贡献力量！"
+
+# 早餐模式脚本
+breakfast_mode:
+  alias: 早餐模式
+  description: 早餐时间的舒适环境
+  icon: mdi:coffee
+  sequence:
+    # 开启主照明（明亮）
+    - service: switch.turn_on
+      target:
+        entity_id: switch.sonoff_10022dede9_1
+    
+    # 设置氛围灯为暖白光
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 200
+        color_temp: 350
+    
+    # 开启风扇（轻柔）
+    - service: fan.turn_on
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+      data:
+        speed: 1
+    
+    # 发送通知
+    - service: notify.persistent_notification
+      data:
+        title: "☕ 早餐模式"
+        message: "早安！舒适的早餐环境已准备好"
+
+# 午休模式脚本
+lunch_break_mode:
+  alias: 午休模式
+  description: 午休时间的放松环境
+  icon: mdi:weather-sunny
+  sequence:
+    # 调暗主照明
+    - service: switch.turn_off
+      target:
+        entity_id: switch.sonoff_10022dede9_1
+    
+    # 设置氛围灯为柔和光
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 100
+        rgb_color: [255, 200, 150]
+    
+    # 调整风扇为舒适档
+    - service: fan.turn_on
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+      data:
+        speed: 2
+    
+    # 发送通知
+    - service: notify.persistent_notification
+      data:
+        title: "🌤️ 午休模式"
+        message: "午休时间，放松一下吧！"
+
+# 晚餐模式脚本
+dinner_mode:
+  alias: 晚餐模式
+  description: 晚餐时间的温馨氛围
+  icon: mdi:silverware-fork-knife
+  sequence:
+    # 开启主照明
+    - service: switch.turn_on
+      target:
+        entity_id: switch.sonoff_10022dede9_1
+    
+    # 设置氛围灯为温馨暖光
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 180
+        rgb_color: [255, 180, 100]
+    
+    # 关闭风扇（安静用餐）
+    - service: fan.turn_off
+      target:
+        entity_id: fan.dmaker_p221_5b47_fan
+    
+    # 发送通知
+    - service: notify.persistent_notification
+      data:
+        title: "🍽️ 晚餐模式"
+        message: "晚餐时间到！温馨的用餐环境已就绪"
+
+# 注意：TTS播报脚本(tts_broadcast_all_speakers)已移至packages/speaker_tts.yaml
+
+# 多音响同步播放脚本
+play_music_all_speakers:
+  alias: "多音响同步播放"
+  description: "让所有小米音响同时播放相同的音乐指令"
+  icon: mdi:speaker-multiple
+  fields:
+    text:
+      description: "要播放的音乐指令"
+      example: "播放流行音乐"
+  sequence:
+    # 向小米音箱Pro发送指令
+    - service: xiaomi_miot.intelligent_speaker
+      data:
+        entity_id: media_player.xiaomi_lx06_6dfd_play_control
+        text: "{{ text }}"
+        execute: true
+    
+    # 延迟200毫秒
+    - delay:
+        milliseconds: 200
+    
+    # 向小爱触屏音箱发送指令
+    - service: xiaomi_miot.intelligent_speaker
+      data:
+        entity_id: media_player.xiaomi_lx04_12e4_play_control_2
+        text: "{{ text }}"
+        execute: true
+    
+    # 延迟200毫秒
+    - delay:
+        milliseconds: 200
+    
+    # 向Sound音箱发送指令
+    - service: xiaomi_miot.intelligent_speaker
+      data:
+        entity_id: media_player.xiaomi_l16a_0be7_play_control
+        text: "{{ text }}"
+        execute: true
+    
+    # 延迟200毫秒
+    - delay:
+        milliseconds: 200
+    
+    # 向红米音箱发送指令
+    - service: xiaomi_miot.intelligent_speaker
+      data:
+        entity_id: media_player.xiaomi_x08e_8219_play_control
+        text: "{{ text }}"
+        execute: true
+    
+    # 发送通知
+    - service: persistent_notification.create
+      data:
+        title: "🎵 多音响同步"
+        message: "已向4个音响同时发送指令：{{ text }}"
+  mode: single
+
+# 停止所有音响
+stop_all_speakers:
+  alias: "停止所有音响"
+  description: "同时停止所有小米音响的播放"
+  icon: mdi:stop-circle
+  sequence:
+    - service: media_player.media_stop
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+  mode: single
+
+# 暂停所有音响
+pause_all_speakers:
+  alias: "暂停所有音响"
+  description: "同时暂停所有小米音响的播放"
+  icon: mdi:pause-circle
+  sequence:
+    - service: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+  mode: single
+
+# 继续播放所有音响
+play_all_speakers:
+  alias: "继续播放所有音响"
+  description: "同时继续播放所有小米音响"
+  icon: mdi:play-circle
+  sequence:
+    - service: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+  mode: single
+
+# 统一音量设置
+set_all_speakers_volume:
+  alias: "统一音量设置"
+  description: "将所有音响设置为相同音量"
+  icon: mdi:volume-high
+  fields:
+    volume_level:
+      description: "音量等级 (0.0-1.0)"
+      example: 0.5
+  sequence:
+    - service: media_player.volume_set
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+      data:
+        volume_level: "{{ volume_level }}"
+  mode: single
+
+# ==================== 娱乐页面Scripts (自动添加) ====================
+
+# 发送到4个音箱 - 最简单版本
+send_to_4_speakers:
+  alias: 发送到4个音箱
+  description: 读取输入框内容并同时发送到4个音箱
+  icon: mdi:send-circle
+  sequence:
+    - service: text.set_value
+      target:
+        entity_id:
+          - text.xiaomi_lx06_6dfd_execute_text_directive
+          - text.xiaomi_lx04_12e4_execute_text_directive_2
+          - text.xiaomi_l16a_0be7_execute_text_directive
+          - text.xiaomi_x08e_8219_execute_text_directive
+      data:
+        value: "{{ states('input_text.unified_speaker_command') }}"
+  mode: single
+
+# 统一发送指令到4个音箱
+send_unified_command:
+  alias: 发送统一指令到4个音箱
+  description: 同时向4个小米音箱发送相同的语音命令
+  icon: mdi:send-circle
+  sequence:
+    - service: text.set_value
+      target:
+        entity_id:
+          - text.xiaomi_lx06_6dfd_execute_text_directive
+          - text.xiaomi_lx04_12e4_execute_text_directive_2
+          - text.xiaomi_l16a_0be7_execute_text_directive
+          - text.xiaomi_x08e_8219_execute_text_directive
+      data:
+        value: "{{ states('input_text.unified_speaker_command') }}"
+    - service: persistent_notification.create
+      data:
+        title: "📢 指令已发送"
+        message: "已向4个音箱发送指令: {{ states('input_text.unified_speaker_command') }}"
+        notification_id: unified_speaker_command
+  mode: single
+
+send_command_to_all_speakers:
+  alias: 向所有音箱发送命令
+  description: 同时向5个小米音箱发送相同的语音命令
+  sequence:
+    - variables:
+        cmd_text: >
+          {% if command is defined %}
+            {{ command }}
+          {% else %}
+            {{ states('input_text.unified_speaker_command') }}
+          {% endif %}
+    - service: xiaomi_miot.intelligent_speaker
+      data:
+        entity_id: media_player.xiaomi_lx06_6dfd_play_control
+        text: "{{ cmd_text }}"
+        execute: true
+    - delay:
+        milliseconds: 200
+    - service: xiaomi_miot.intelligent_speaker
+      data:
+        entity_id: media_player.xiaomi_lx04_12e4_play_control_2
+        text: "{{ cmd_text }}"
+        execute: true
+    - delay:
+        milliseconds: 200
+    - service: xiaomi_miot.intelligent_speaker
+      data:
+        entity_id: media_player.xiaomi_l16a_0be7_play_control
+        text: "{{ cmd_text }}"
+        execute: true
+    - delay:
+        milliseconds: 200
+    - service: xiaomi_miot.intelligent_speaker
+      data:
+        entity_id: media_player.xiaomi_x08e_8219_play_control
+        text: "{{ cmd_text }}"
+        execute: true
+    - delay:
+        milliseconds: 200
+    - service: xiaomi_miot.intelligent_speaker
+      data:
+        entity_id: media_player.xiaomi_lx06_72f9_play_control
+        text: "{{ cmd_text }}"
+        execute: true
+    - service: persistent_notification.create
+      data:
+        title: "📢 命令已发送"
+        message: "已向5个音箱发送命令: {{ cmd_text }}"
+        notification_id: speaker_command
+    - service: input_text.set_value
+      data:
+        entity_id: input_text.unified_speaker_command
+        value: ""
+
+# ==================== 同步播放控制脚本（强化版） ====================
+
+# 同步播放所有音箱（优化版）
+sync_play_all_speakers:
+  alias: 同步播放所有音箱
+  description: 快速同步，暂停→短暂等待→连续播放命令
+  icon: mdi:play-circle
+  sequence:
+    # 暂停所有音箱
+    - service: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 短暂等待确保暂停完成
+    - delay:
+        milliseconds: 800
+    # 连续发送3次播放命令（无延迟）
+    - service: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    - service: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    - service: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+  mode: restart
+
+# 同步暂停所有音箱
+sync_pause_all_speakers:
+  alias: 同步暂停所有音箱
+  description: 多次暂停确保所有音箱都停止
+  icon: mdi:pause-circle
+  sequence:
+    # 第1次暂停
+    - service: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 等待0.3秒
+    - delay:
+        milliseconds: 300
+    # 第2次暂停
+    - service: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+  mode: single
+
+# 同步下一首（优化版）
+sync_next_track_all_speakers:
+  alias: 同步下一首
+  description: 快速切歌，暂停→切歌→立即播放
+  icon: mdi:skip-next-circle
+  sequence:
+    # 暂停所有音箱
+    - service: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 短暂等待
+    - delay:
+        milliseconds: 600
+    # 切换到下一首
+    - service: media_player.media_next_track
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 等待切歌完成
+    - delay:
+        milliseconds: 1200
+    # 连续播放命令
+    - service: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    - service: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    - service: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+  mode: restart
+
+# 同步上一首（优化版）
+sync_previous_track_all_speakers:
+  alias: 同步上一首
+  description: 快速切歌，暂停→切歌→立即播放
+  icon: mdi:skip-previous-circle
+  sequence:
+    # 暂停所有音箱
+    - service: media_player.media_pause
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 短暂等待
+    - delay:
+        milliseconds: 600
+    # 切换到上一首
+    - service: media_player.media_previous_track
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    # 等待切歌完成
+    - delay:
+        milliseconds: 1200
+    # 连续播放命令
+    - service: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    - service: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+    - service: media_player.media_play
+      target:
+        entity_id:
+          - media_player.xiaomi_lx06_6dfd_play_control
+          - media_player.xiaomi_lx04_12e4_play_control_2
+          - media_player.xiaomi_l16a_0be7_play_control
+          - media_player.xiaomi_x08e_8219_play_control
+          - media_player.xiaomi_lx06_72f9_play_control
+  mode: restart
+
+# ==================== LED动态灯光效果脚本 ====================
+# 灯带呼吸模式（LED自动跟随）
+led_breathing_mode:
+  alias: 灯带呼吸模式
+  icon: mdi:lungs
+  mode: restart
+  sequence:
+    - repeat:
+        count: 40
+        sequence:
+          # 渐亮（平滑过渡1.5秒）
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [0, 188, 212]
+              transition: 1.5
+          - delay:
+              seconds: 1.5
+          # 渐暗（平滑过渡1.5秒）
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 40
+              rgb_color: [0, 188, 212]
+              transition: 1.5
+          - delay:
+              seconds: 1.5
+
+led_rainbow_cycle:
+  alias: 灯带彩虹循环
+  icon: mdi:palette
+  mode: restart
+  sequence:
+    - repeat:
+        count: 20
+        sequence:
+          # 红色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 0, 0]
+              transition: 2
+          - delay:
+              seconds: 2
+          # 橙色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 127, 0]
+              transition: 2
+          - delay:
+              seconds: 2
+          # 黄色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 255, 0]
+              transition: 2
+          - delay:
+              seconds: 2
+          # 绿色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [0, 255, 0]
+              transition: 2
+          - delay:
+              seconds: 2
+          # 青色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [0, 255, 255]
+              transition: 2
+          - delay:
+              seconds: 2
+          # 蓝色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [0, 0, 255]
+              transition: 2
+          - delay:
+              seconds: 2
+          # 紫色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [138, 43, 226]
+              transition: 2
+          - delay:
+              seconds: 2
+
+led_blink_mode:
+  alias: 灯带闪烁模式
+  icon: mdi:flash
+  mode: restart
+  sequence:
+    - repeat:
+        count: 50
+        sequence:
+          # 快速亮起
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 87, 34]
+              transition: 0.1
+          - delay:
+              milliseconds: 300
+          # 快速变暗
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 20
+              rgb_color: [255, 87, 34]
+              transition: 0.1
+          - delay:
+              milliseconds: 300
+
+led_gradient_mode:
+  alias: 灯带渐变模式
+  icon: mdi:gradient-horizontal
+  mode: restart
+  sequence:
+    - repeat:
+        count: 20
+        sequence:
+          # 紫色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [156, 39, 176]
+              transition: 2
+          - delay:
+              seconds: 2
+          # 粉色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 20, 147]
+              transition: 2
+          - delay:
+              seconds: 2
+          # 橙色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 140, 0]
+              transition: 2
+          - delay:
+              seconds: 2
+          # 蓝色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [0, 191, 255]
+              transition: 2
+          - delay:
+              seconds: 2
+
+# 流水灯效果（新增）
+led_water_flow:
+  alias: 流水灯效果
+  icon: mdi:water-outline
+  mode: restart
+  sequence:
+    - repeat:
+        count: 30
+        sequence:
+          # 蓝色高亮
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [33, 150, 243]
+              transition: 0.7
+          - delay:
+              milliseconds: 700
+          # 青色中亮
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 150
+              rgb_color: [0, 188, 212]
+              transition: 0.7
+          - delay:
+              milliseconds: 700
+          # 深蓝低亮
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 80
+              rgb_color: [30, 100, 180]
+              transition: 0.6
+          - delay:
+              milliseconds: 600
+
+# 跳跃闪烁模式（新增）
+led_jump_mode:
+  alias: 跳跃闪烁模式
+  icon: mdi:dot-net
+  mode: restart
+  sequence:
+    - repeat:
+        count: 40
+        sequence:
+          # 快速跳起（绿色）
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [0, 255, 127]
+              transition: 0.15
+          - delay:
+              milliseconds: 200
+          # 快速落下
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 60
+              rgb_color: [0, 150, 80]
+              transition: 0.15
+          - delay:
+              milliseconds: 150
+          # 跳到金色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 215, 0]
+              transition: 0.15
+          - delay:
+              milliseconds: 200
+          # 落下
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 60
+              rgb_color: [180, 130, 0]
+              transition: 0.15
+          - delay:
+              milliseconds: 150
+
+# 极光流动模式（新增）
+led_aurora_mode:
+  alias: 极光流动模式
+  icon: mdi:weather-night-partly-cloudy
+  mode: restart
+  sequence:
+    - repeat:
+        count: 20
+        sequence:
+          # 绿色极光
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 200
+              rgb_color: [0, 255, 127]
+              transition: 3
+          - delay:
+              seconds: 3
+          # 蓝绿色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 220
+              rgb_color: [64, 224, 208]
+              transition: 3
+          - delay:
+              seconds: 3
+          # 紫色极光
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 180
+              rgb_color: [138, 43, 226]
+              transition: 3
+          - delay:
+              seconds: 3
+          # 粉紫色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 200
+              rgb_color: [218, 112, 214]
+              transition: 3
+          - delay:
+              seconds: 3
+
+# 扫描循环模式（新增）
+led_scan_mode:
+  alias: 扫描循环模式
+  icon: mdi:radar
+  mode: restart
+  sequence:
+    - repeat:
+        count: 30
+        sequence:
+          # 从暗到亮快速扫描
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 30
+              rgb_color: [76, 175, 80]
+              transition: 0.5
+          - delay:
+              milliseconds: 500
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 150
+              rgb_color: [100, 200, 100]
+              transition: 0.5
+          - delay:
+              milliseconds: 500
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [139, 195, 74]
+              transition: 0.5
+          - delay:
+              milliseconds: 500
+          # 从亮到暗快速回扫
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 150
+              rgb_color: [100, 200, 100]
+              transition: 0.5
+          - delay:
+              milliseconds: 500
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 30
+              rgb_color: [76, 175, 80]
+              transition: 0.5
+          - delay:
+              milliseconds: 500
+
+# 星光闪烁模式（新增）
+led_starlight_mode:
+  alias: 星光闪烁模式
+  icon: mdi:star-outline
+  mode: restart
+  sequence:
+    - repeat:
+        count: 40
+        sequence:
+          # 突然亮起
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 235, 59]
+              transition: 0.2
+          - delay:
+              milliseconds: 200
+          # 快速变暗
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 50
+              rgb_color: [255, 220, 40]
+              transition: 0.2
+          - delay:
+              milliseconds: 300
+          # 再次亮起
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 220
+              rgb_color: [255, 255, 220]
+              transition: 0.4
+          - delay:
+              milliseconds: 700
+          # 变暗
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 60
+              rgb_color: [200, 200, 150]
+              transition: 0.5
+          - delay:
+              milliseconds: 900
+
+# 停止灯带效果
+led_stop_strip_effects:
+  alias: 停止灯带效果
+  icon: mdi:stop-circle
+  mode: restart
+  sequence:
+    - service: script.turn_off
+      target:
+        entity_id:
+          - script.led_breathing_mode
+          - script.led_rainbow_cycle
+          - script.led_blink_mode
+          - script.led_gradient_mode
+          - script.led_water_flow
+          - script.led_jump_mode
+          - script.led_aurora_mode
+          - script.led_scan_mode
+          - script.led_starlight_mode
+          - script.led_follow_strip
+          - script.led_follow_strip_wave
+          - script.led_follow_strip_gradient
+          - script.led_follow_strip_rainbow
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 200
+        rgb_color: [255, 255, 255]
+
+# LED同步跟随灯带（无错位）
+led_follow_strip:
+  alias: LED同步跟随
+  icon: mdi:link-variant
+  mode: restart
+  sequence:
+    - repeat:
+        count: 200
+        sequence:
+          # 获取灯带颜色并应用到所有LED（同步）
+          - service: light.turn_on
+            target:
+              entity_id:
+                - light.b650m_aorus_elite_ax_0_led_2
+                - light.b650m_aorus_elite_ax_0_led_3
+                - light.b650m_aorus_elite_ax_0_led_4
+                - light.b650m_aorus_elite_ax_0_led_5
+                - light.b650m_aorus_elite_ax_0_led_6
+                - light.b650m_aorus_elite_ax_0_led_7
+            data:
+              brightness: "{{ state_attr('light.philips_strip3_12ad_light', 'brightness') | int(200) }}"
+              rgb_color: "{{ state_attr('light.philips_strip3_12ad_light', 'rgb_color') | default([255,255,255]) }}"
+              transition: 0.5
+          - delay:
+              milliseconds: 500
+
+# LED错位跟随灯带（波浪效果）
+led_follow_strip_wave:
+  alias: LED波浪跟随
+  icon: mdi:waves-arrow-right
+  mode: restart
+  sequence:
+    - repeat:
+        count: 300
+        sequence:
+          # LED依次跟随灯带颜色（时间错位，更快）
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_2
+            data:
+              brightness: "{{ state_attr('light.philips_strip3_12ad_light', 'brightness') | int(200) }}"
+              rgb_color: "{{ state_attr('light.philips_strip3_12ad_light', 'rgb_color') | default([255,255,255]) }}"
+              transition: 0.3
+          - delay:
+              milliseconds: 100
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_3
+            data:
+              brightness: "{{ state_attr('light.philips_strip3_12ad_light', 'brightness') | int(200) }}"
+              rgb_color: "{{ state_attr('light.philips_strip3_12ad_light', 'rgb_color') | default([255,255,255]) }}"
+              transition: 0.3
+          - delay:
+              milliseconds: 100
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_4
+            data:
+              brightness: "{{ state_attr('light.philips_strip3_12ad_light', 'brightness') | int(200) }}"
+              rgb_color: "{{ state_attr('light.philips_strip3_12ad_light', 'rgb_color') | default([255,255,255]) }}"
+              transition: 0.3
+          - delay:
+              milliseconds: 100
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_5
+            data:
+              brightness: "{{ state_attr('light.philips_strip3_12ad_light', 'brightness') | int(200) }}"
+              rgb_color: "{{ state_attr('light.philips_strip3_12ad_light', 'rgb_color') | default([255,255,255]) }}"
+              transition: 0.3
+          - delay:
+              milliseconds: 100
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_6
+            data:
+              brightness: "{{ state_attr('light.philips_strip3_12ad_light', 'brightness') | int(200) }}"
+              rgb_color: "{{ state_attr('light.philips_strip3_12ad_light', 'rgb_color') | default([255,255,255]) }}"
+              transition: 0.3
+          - delay:
+              milliseconds: 100
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_7
+            data:
+              brightness: "{{ state_attr('light.philips_strip3_12ad_light', 'brightness') | int(200) }}"
+              rgb_color: "{{ state_attr('light.philips_strip3_12ad_light', 'rgb_color') | default([255,255,255]) }}"
+              transition: 0.3
+          - delay:
+              milliseconds: 500
+
+# LED亮度渐变跟随灯带（亮度错位+颜色偏移）
+led_follow_strip_gradient:
+  alias: LED渐变跟随
+  icon: mdi:gradient-vertical
+  mode: restart
+  sequence:
+    - repeat:
+        count: 200
+        sequence:
+          # 获取灯带状态
+          - variables:
+              strip_brightness: "{{ state_attr('light.philips_strip3_12ad_light', 'brightness') | int(200) }}"
+              strip_r: "{{ state_attr('light.philips_strip3_12ad_light', 'rgb_color')[0] | int }}"
+              strip_g: "{{ state_attr('light.philips_strip3_12ad_light', 'rgb_color')[1] | int }}"
+              strip_b: "{{ state_attr('light.philips_strip3_12ad_light', 'rgb_color')[2] | int }}"
+          # LED 2: 100%亮度，原色
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_2
+            data:
+              brightness: "{{ strip_brightness }}"
+              rgb_color: ["{{ strip_r }}", "{{ strip_g }}", "{{ strip_b }}"]
+              transition: 1
+          # LED 3: 85%亮度，偏暖
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_3
+            data:
+              brightness: "{{ (strip_brightness * 0.90) | int }}"
+              rgb_color: ["{{ ([strip_r + 20, 255] | min) }}", "{{ ([strip_g + 10, 255] | min) }}", "{{ strip_b }}"]
+              transition: 1
+          # LED 4: 70%亮度，偏冷
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_4
+            data:
+              brightness: "{{ (strip_brightness * 0.75) | int }}"
+              rgb_color: ["{{ strip_r }}", "{{ ([strip_g + 15, 255] | min) }}", "{{ ([strip_b + 20, 255] | min) }}"]
+              transition: 1
+          # LED 5: 55%亮度，偏绿
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_5
+            data:
+              brightness: "{{ (strip_brightness * 0.60) | int }}"
+              rgb_color: ["{{ ([strip_r - 10, 0] | max) }}", "{{ ([strip_g + 25, 255] | min) }}", "{{ strip_b }}"]
+              transition: 1
+          # LED 6: 40%亮度，偏紫
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_6
+            data:
+              brightness: "{{ (strip_brightness * 0.45) | int }}"
+              rgb_color: ["{{ ([strip_r + 15, 255] | min) }}", "{{ strip_g }}", "{{ ([strip_b + 25, 255] | min) }}"]
+              transition: 1
+          # LED 7: 25%亮度，偏蓝
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_7
+            data:
+              brightness: "{{ (strip_brightness * 0.30) | int }}"
+              rgb_color: ["{{ ([strip_r - 20, 0] | max) }}", "{{ strip_g }}", "{{ ([strip_b + 30, 255] | min) }}"]
+              transition: 1
+          - delay:
+              milliseconds: 1000
+
+# LED颜色偏移跟随灯带（彩虹错位）- 6个LED显示完全不同颜色
+led_follow_strip_rainbow:
+  alias: LED彩虹跟随
+  icon: mdi:palette-advanced
+  mode: restart
+  sequence:
+    - repeat:
+        count: 200
+        sequence:
+          # 获取灯带亮度，但每个LED显示完全不同的颜色
+          - variables:
+              strip_brightness: "{{ state_attr('light.philips_strip3_12ad_light', 'brightness') | int(200) }}"
+          # LED 2: 红色
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_2
+            data:
+              brightness: "{{ strip_brightness }}"
+              rgb_color: [255, 0, 0]
+              transition: 0.5
+          # LED 3: 橙色
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_3
+            data:
+              brightness: "{{ strip_brightness }}"
+              rgb_color: [255, 127, 0]
+              transition: 0.5
+          # LED 4: 黄色
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_4
+            data:
+              brightness: "{{ strip_brightness }}"
+              rgb_color: [255, 255, 0]
+              transition: 0.5
+          # LED 5: 绿色
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_5
+            data:
+              brightness: "{{ strip_brightness }}"
+              rgb_color: [0, 255, 0]
+              transition: 0.5
+          # LED 6: 青色
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_6
+            data:
+              brightness: "{{ strip_brightness }}"
+              rgb_color: [0, 255, 255]
+              transition: 0.5
+          # LED 7: 蓝色
+          - service: light.turn_on
+            target:
+              entity_id: light.b650m_aorus_elite_ax_0_led_7
+            data:
+              brightness: "{{ strip_brightness }}"
+              rgb_color: [0, 0, 255]
+              transition: 0.5
+          - delay:
+              milliseconds: 500
+
+# ==================== 实用灯光场景模式 ====================
+
+# 日落模式（暖色调渐变）
+led_sunset_mode:
+  alias: 日落模式
+  icon: mdi:weather-sunset
+  mode: restart
+  sequence:
+    - repeat:
+        count: 15
+        sequence:
+          # 橙红色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 100, 0]
+              transition: 6
+          - delay:
+              seconds: 6
+          # 深橙色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 200
+              rgb_color: [255, 69, 0]
+              transition: 6
+          - delay:
+              seconds: 6
+          # 金黄色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 220
+              rgb_color: [255, 200, 50]
+              transition: 6
+          - delay:
+              seconds: 6
+
+# 海洋模式（蓝绿色波动）
+led_ocean_mode:
+  alias: 海洋模式
+  icon: mdi:waves
+  mode: restart
+  sequence:
+    - repeat:
+        count: 20
+        sequence:
+          # 深海蓝
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 180
+              rgb_color: [0, 105, 148]
+              transition: 4
+          - delay:
+              seconds: 4
+          # 浅海蓝
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [0, 191, 255]
+              transition: 4
+          - delay:
+              seconds: 4
+          # 青绿色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 220
+              rgb_color: [64, 224, 208]
+              transition: 4
+          - delay:
+              seconds: 4
+
+# 森林模式（绿色系渐变）
+led_forest_mode:
+  alias: 森林模式
+  icon: mdi:tree
+  mode: restart
+  sequence:
+    - repeat:
+        count: 20
+        sequence:
+          # 深绿色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 200
+              rgb_color: [34, 139, 34]
+              transition: 5
+          - delay:
+              seconds: 5
+          # 青绿色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [144, 238, 144]
+              transition: 5
+          - delay:
+              seconds: 5
+          # 黄绿色
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 220
+              rgb_color: [173, 255, 47]
+              transition: 5
+          - delay:
+              seconds: 5
+
+# 火焰模式（红橙黄快速变化）
+led_fire_mode:
+  alias: 火焰模式
+  icon: mdi:fire
+  mode: restart
+  sequence:
+    - repeat:
+        count: 30
+        sequence:
+          # 深红
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 200
+              rgb_color: [139, 0, 0]
+              transition: 1
+          - delay:
+              seconds: 1
+          # 橙红
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 69, 0]
+              transition: 1
+          - delay:
+              seconds: 1
+          # 橙黄
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 240
+              rgb_color: [255, 140, 0]
+              transition: 1
+          - delay:
+              seconds: 1
+          # 金黄
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 220
+              rgb_color: [255, 215, 0]
+              transition: 1
+          - delay:
+              seconds: 1
+
+# 派对模式（快速多色变换）
+led_party_mode:
+  alias: 派对模式
+  icon: mdi:party-popper
+  mode: restart
+  sequence:
+    - repeat:
+        count: 40
+        sequence:
+          # 随机色1 - 红
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 0, 0]
+              transition: 0.5
+          - delay:
+              milliseconds: 800
+          # 随机色2 - 绿
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [0, 255, 0]
+              transition: 0.5
+          - delay:
+              milliseconds: 800
+          # 随机色3 - 蓝
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [0, 0, 255]
+              transition: 0.5
+          - delay:
+              milliseconds: 800
+          # 随机色4 - 紫
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              rgb_color: [255, 0, 255]
+              transition: 0.5
+          - delay:
+              milliseconds: 800
+
+# 阅读模式（暖白光）
+led_reading_mode:
+  alias: 阅读模式
+  icon: mdi:book-open-page-variant
+  mode: single
+  sequence:
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 255
+        rgb_color: [255, 230, 200]
+        transition: 2
+
+# 专注模式（冷白光）
+led_focus_mode:
+  alias: 专注模式
+  icon: mdi:brain
+  mode: single
+  sequence:
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 255
+        rgb_color: [200, 220, 255]
+        transition: 2
+
+# 电影模式（低亮度蓝紫色）
+led_movie_mode:
+  alias: 电影模式
+  icon: mdi:movie-open
+  mode: single
+  sequence:
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 80
+        rgb_color: [75, 0, 130]
+        transition: 3
+
+# 夜灯模式（极低亮度暖色）
+led_nightlight_mode:
+  alias: 夜灯模式
+  icon: mdi:weather-night
+  mode: single
+  sequence:
+    - service: light.turn_on
+      target:
+        entity_id: light.philips_strip3_12ad_light
+      data:
+        brightness: 30
+        rgb_color: [255, 100, 50]
+        transition: 5
+
+# ==================== LED灯光脚本配置完成 ====================
+# 灯带模式：led_breathing_mode, led_rainbow_cycle, led_blink_mode, led_gradient_mode
+# LED跟随：led_follow_strip（LED自动跟随灯带颜色）
+# 停止效果：led_stop_strip_effects（停止所有灯带效果并恢复默认）
+# 状态刷新：led_refresh_status（同步外部软件的修改）
+# 🎵 灯光律动控制脚本
+# 8个灯光的节奏闪烁效果
+
+# 律动模式1：波浪效果
+light_rhythm_wave:
+  alias: "灯光律动 - 波浪"
+  icon: mdi:waves
+  mode: restart
+  sequence:
+    - repeat:
+        count: 6
+        sequence:
+          # 第1波：1号、2号、3号
+          - service: switch.turn_on
+            target:
+              entity_id:
+                - switch.giot_cn_1116363322_v6oodm_on_p_2_1  # 房间1号灯
+                - switch.giot_cn_1116357483_v6oodm_on_p_2_1  # 房间2号灯
+                - switch.giot_cn_1116363360_v6oodm_on_p_2_1  # 房间3号灯
+          - delay:
+              milliseconds: 600
+          
+          - service: switch.turn_off
+            target:
+              entity_id:
+                - switch.giot_cn_1116363322_v6oodm_on_p_2_1
+                - switch.giot_cn_1116357483_v6oodm_on_p_2_1
+                - switch.giot_cn_1116363360_v6oodm_on_p_2_1
+          
+          # 第2波：4号、5号、0.1号
+          - service: switch.turn_on
+            target:
+              entity_id:
+                - switch.sonoff_10022dede9_1  # 房间4号灯
+                - switch.sonoff_10022dedc7_1  # 房间5号灯
+                - switch.giot_cn_1116373212_v6oodm_on_p_2_1  # 0.1号灯(WiFi插座4)
+          - delay:
+              milliseconds: 600
+          
+          - service: switch.turn_off
+            target:
+              entity_id:
+                - switch.sonoff_10022dede9_1
+                - switch.sonoff_10022dedc7_1
+                - switch.giot_cn_1116373212_v6oodm_on_p_2_1
+          
+          # 第3波：顶灯、床底灯
+          - service: switch.turn_on
+            target:
+              entity_id:
+                - switch.sonoff_10022ddc35_1  # 顶灯1号
+                - switch.sonoff_10022de63b_1  # 顶灯2号
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light  # 床底灯(氛围灯)
+            data:
+              brightness: 255
+          - delay:
+              milliseconds: 450
+          
+          - service: switch.turn_off
+            target:
+              entity_id:
+                - switch.sonoff_10022ddc35_1
+                - switch.sonoff_10022de63b_1
+          - service: light.turn_off
+            target:
+              entity_id: light.philips_strip3_12ad_light
+          
+          - delay:
+              milliseconds: 300
+
+# 律动模式2：闪烁效果
+light_rhythm_flash:
+  alias: "灯光律动 - 闪烁"
+  icon: mdi:flash
+  mode: restart
+  sequence:
+    - repeat:
+        count: 12
+        sequence:
+          # 所有灯同时开
+          - service: switch.turn_on
+            target:
+              entity_id:
+                - switch.giot_cn_1116363322_v6oodm_on_p_2_1  # 1号
+                - switch.giot_cn_1116357483_v6oodm_on_p_2_1  # 2号
+                - switch.giot_cn_1116363360_v6oodm_on_p_2_1  # 3号
+                - switch.sonoff_10022dede9_1                 # 4号
+                - switch.sonoff_10022dedc7_1                 # 5号
+                - switch.giot_cn_1116373212_v6oodm_on_p_2_1  # 0.1号
+                - switch.sonoff_10022ddc35_1                 # 顶灯1
+                - switch.sonoff_10022de63b_1                 # 顶灯2
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+          
+          - delay:
+              milliseconds: 400
+          
+          # 所有灯同时关
+          - service: switch.turn_off
+            target:
+              entity_id:
+                - switch.giot_cn_1116363322_v6oodm_on_p_2_1
+                - switch.giot_cn_1116357483_v6oodm_on_p_2_1
+                - switch.giot_cn_1116363360_v6oodm_on_p_2_1
+                - switch.sonoff_10022dede9_1
+                - switch.sonoff_10022dedc7_1
+                - switch.giot_cn_1116373212_v6oodm_on_p_2_1
+                - switch.sonoff_10022ddc35_1
+                - switch.sonoff_10022de63b_1
+          - service: light.turn_off
+            target:
+              entity_id: light.philips_strip3_12ad_light
+          
+          - delay:
+              milliseconds: 400
+
+# 律动模式3：呼吸效果（适用于可调光的灯）
+light_rhythm_breathe:
+  alias: "灯光律动 - 呼吸"
+  icon: mdi:weather-windy
+  mode: restart
+  sequence:
+    - repeat:
+        count: 5
+        sequence:
+          # 慢慢亮起
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 10
+              transition: 0
+          - service: switch.turn_on
+            target:
+              entity_id:
+                - switch.giot_cn_1116363322_v6oodm_on_p_2_1
+                - switch.giot_cn_1116357483_v6oodm_on_p_2_1
+                - switch.giot_cn_1116363360_v6oodm_on_p_2_1
+                - switch.sonoff_10022dede9_1
+                - switch.sonoff_10022dedc7_1
+                - switch.giot_cn_1116373212_v6oodm_on_p_2_1
+                - switch.sonoff_10022ddc35_1
+                - switch.sonoff_10022de63b_1
+          
+          - delay:
+              milliseconds: 500
+          
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+              transition: 2
+          
+          - delay:
+              seconds: 2
+          
+          # 慢慢熄灭
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 10
+              transition: 2
+          
+          - delay:
+              seconds: 2
+          
+          - service: switch.turn_off
+            target:
+              entity_id:
+                - switch.giot_cn_1116363322_v6oodm_on_p_2_1
+                - switch.giot_cn_1116357483_v6oodm_on_p_2_1
+                - switch.giot_cn_1116363360_v6oodm_on_p_2_1
+                - switch.sonoff_10022dede9_1
+                - switch.sonoff_10022dedc7_1
+                - switch.giot_cn_1116373212_v6oodm_on_p_2_1
+                - switch.sonoff_10022ddc35_1
+                - switch.sonoff_10022de63b_1
+          - service: light.turn_off
+            target:
+              entity_id: light.philips_strip3_12ad_light
+
+# 律动模式4：交替闪烁
+light_rhythm_alternate:
+  alias: "灯光律动 - 交替"
+  icon: mdi:swap-horizontal
+  mode: restart
+  sequence:
+    - repeat:
+        count: 8
+        sequence:
+          # 第1组：1、3、5号 + 顶灯1
+          - service: switch.turn_on
+            target:
+              entity_id:
+                - switch.giot_cn_1116363322_v6oodm_on_p_2_1  # 1号
+                - switch.giot_cn_1116363360_v6oodm_on_p_2_1  # 3号
+                - switch.giot_cn_1116373212_v6oodm_on_p_2_1  # 0.1号
+                - switch.sonoff_10022ddc35_1                 # 顶灯1
+          - delay:
+              milliseconds: 600
+          
+          - service: switch.turn_off
+            target:
+              entity_id:
+                - switch.giot_cn_1116363322_v6oodm_on_p_2_1
+                - switch.giot_cn_1116363360_v6oodm_on_p_2_1
+                - switch.giot_cn_1116373212_v6oodm_on_p_2_1
+                - switch.sonoff_10022ddc35_1
+          
+          # 第2组：2、4、5号 + 顶灯2 + 床底灯
+          - service: switch.turn_on
+            target:
+              entity_id:
+                - switch.giot_cn_1116357483_v6oodm_on_p_2_1  # 2号
+                - switch.sonoff_10022dede9_1                 # 4号
+                - switch.sonoff_10022dedc7_1                 # 5号
+                - switch.sonoff_10022de63b_1                 # 顶灯2
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+          - delay:
+              milliseconds: 400
+          
+          - service: switch.turn_off
+            target:
+              entity_id:
+                - switch.giot_cn_1116357483_v6oodm_on_p_2_1
+                - switch.sonoff_10022dede9_1
+                - switch.sonoff_10022dedc7_1
+                - switch.sonoff_10022de63b_1
+          - service: light.turn_off
+            target:
+              entity_id: light.philips_strip3_12ad_light
+
+# 律动模式5：彩虹追逐（逐个亮起）
+light_rhythm_chase:
+  alias: "灯光律动 - 追逐"
+  icon: mdi:run-fast
+  mode: restart
+  sequence:
+    - repeat:
+        count: 4
+        sequence:
+          # 1号 → 2号 → 3号 → 4号 → 5号 → 0.1号 → 顶灯1 → 顶灯2 → 床底灯
+          - service: switch.turn_on
+            target:
+              entity_id: switch.giot_cn_1116363322_v6oodm_on_p_2_1
+          - delay:
+              milliseconds: 250
+          
+          - service: switch.turn_on
+            target:
+              entity_id: switch.giot_cn_1116357483_v6oodm_on_p_2_1
+          - service: switch.turn_off
+            target:
+              entity_id: switch.giot_cn_1116363322_v6oodm_on_p_2_1
+          - delay:
+              milliseconds: 150
+          
+          - service: switch.turn_on
+            target:
+              entity_id: switch.giot_cn_1116363360_v6oodm_on_p_2_1
+          - service: switch.turn_off
+            target:
+              entity_id: switch.giot_cn_1116357483_v6oodm_on_p_2_1
+          - delay:
+              milliseconds: 150
+          
+          - service: switch.turn_on
+            target:
+              entity_id: switch.sonoff_10022dede9_1
+          - service: switch.turn_off
+            target:
+              entity_id: switch.giot_cn_1116363360_v6oodm_on_p_2_1
+          - delay:
+              milliseconds: 150
+          
+          - service: switch.turn_on
+            target:
+              entity_id: switch.sonoff_10022dedc7_1
+          - service: switch.turn_off
+            target:
+              entity_id: switch.sonoff_10022dede9_1
+          - delay:
+              milliseconds: 150
+          
+          - service: switch.turn_on
+            target:
+              entity_id: switch.giot_cn_1116373212_v6oodm_on_p_2_1
+          - service: switch.turn_off
+            target:
+              entity_id: switch.sonoff_10022dedc7_1
+          - delay:
+              milliseconds: 150
+          
+          - service: switch.turn_on
+            target:
+              entity_id: switch.sonoff_10022ddc35_1
+          - service: switch.turn_off
+            target:
+              entity_id: switch.giot_cn_1116373212_v6oodm_on_p_2_1
+          - delay:
+              milliseconds: 150
+          
+          - service: switch.turn_on
+            target:
+              entity_id: switch.sonoff_10022de63b_1
+          - service: switch.turn_off
+            target:
+              entity_id: switch.sonoff_10022ddc35_1
+          - delay:
+              milliseconds: 150
+          
+          - service: light.turn_on
+            target:
+              entity_id: light.philips_strip3_12ad_light
+            data:
+              brightness: 255
+          - service: switch.turn_off
+            target:
+              entity_id: switch.sonoff_10022de63b_1
+          - delay:
+              milliseconds: 150
+          
+          - service: light.turn_off
+            target:
+              entity_id: light.philips_strip3_12ad_light
+          
+          - delay:
+              milliseconds: 200
+
+# 停止律动（立即强制停止所有律动脚本）
+light_rhythm_stop:
+  alias: "停止灯光律动"
+  icon: mdi:stop
+  mode: restart  # 关键：允许强制终止其他脚本
+  sequence:
+    # 先停止所有可能运行的律动脚本
+    - service: script.turn_off
+      target:
+        entity_id:
+          - script.light_rhythm_wave
+          - script.light_rhythm_flash
+          - script.light_rhythm_breathe
+          - script.light_rhythm_alternate
+          - script.light_rhythm_chase
+          - script.light_rhythm_random
+    
+    # 延迟一下确保脚本停止
+    - delay:
+        milliseconds: 200
+    
+    # 关闭所有灯光
+    - service: switch.turn_off
+      target:
+        entity_id:
+          - switch.giot_cn_1116363322_v6oodm_on_p_2_1
+          - switch.giot_cn_1116357483_v6oodm_on_p_2_1
+          - switch.giot_cn_1116363360_v6oodm_on_p_2_1
+          - switch.sonoff_10022dede9_1
+          - switch.sonoff_10022dedc7_1
+          - switch.giot_cn_1116373212_v6oodm_on_p_2_1
+          - switch.sonoff_10022ddc35_1
+          - switch.sonoff_10022de63b_1
+    - service: light.turn_off
+      target:
+        entity_id: light.philips_strip3_12ad_light
+
+# 律动模式6：随机闪烁
+light_rhythm_random:
+  alias: "灯光律动 - 随机"
+  icon: mdi:dice-multiple
+  sequence:
+    - repeat:
+        count: 30
+        sequence:
+          - choose:
+              # 随机选择一个或几个灯
+              - conditions:
+                  - condition: template
+                    value_template: "{{ range(1, 9) | random == 1 }}"
+                sequence:
+                  - service: switch.toggle
+                    target:
+                      entity_id: switch.giot_cn_1116363322_v6oodm_on_p_2_1
+              - conditions:
+                  - condition: template
+                    value_template: "{{ range(1, 9) | random == 2 }}"
+                sequence:
+                  - service: switch.toggle
+                    target:
+                      entity_id: switch.giot_cn_1116357483_v6oodm_on_p_2_1
+              - conditions:
+                  - condition: template
+                    value_template: "{{ range(1, 9) | random == 3 }}"
+                sequence:
+                  - service: switch.toggle
+                    target:
+                      entity_id: switch.giot_cn_1116363360_v6oodm_on_p_2_1
+              - conditions:
+                  - condition: template
+                    value_template: "{{ range(1, 9) | random == 4 }}"
+                sequence:
+                  - service: switch.toggle
+                    target:
+                      entity_id: switch.sonoff_10022dede9_1
+              - conditions:
+                  - condition: template
+                    value_template: "{{ range(1, 9) | random == 5 }}"
+                sequence:
+                  - service: switch.toggle
+                    target:
+                      entity_id: switch.sonoff_10022dedc7_1
+              - conditions:
+                  - condition: template
+                    value_template: "{{ range(1, 9) | random == 6 }}"
+                sequence:
+                  - service: switch.toggle
+                    target:
+                      entity_id: switch.giot_cn_1116373212_v6oodm_on_p_2_1
+              - conditions:
+                  - condition: template
+                    value_template: "{{ range(1, 9) | random == 7 }}"
+                sequence:
+                  - service: switch.toggle
+                    target:
+                      entity_id: switch.sonoff_10022ddc35_1
+              - conditions:
+                  - condition: template
+                    value_template: "{{ range(1, 9) | random == 8 }}"
+                sequence:
+                  - service: switch.toggle
+                    target:
+                      entity_id: switch.sonoff_10022de63b_1
+          
+          - delay:
+              milliseconds: 200
+
+# ==================== MacroDroid 手机本地命令测试 ====================
+
+# 测试 command_webview - 让手机访问自己的 localhost
+test_macrodroid_webview:
+  alias: "测试MacroDroid-WebView"
+  description: "通过 command_webview 让手机访问自己的 localhost MacroDroid"
+  icon: mdi:cellphone-link
+  fields:
+    cmd:
+      description: "要执行的命令"
+      example: "open_wechat"
+  sequence:
+    - service: notify.mobile_app_one_plus
+      data:
+        message: "command_webview"
+        data:
+          url: "http://127.0.0.1:8080/{ha}?cmd={{ cmd | default('open_wechat') }}"
+  mode: single
+
+# 测试 command_broadcast_intent - 直接触发 MacroDroid
+test_macrodroid_broadcast:
+  alias: "测试MacroDroid-Broadcast"
+  description: "通过 Broadcast Intent 直接触发 MacroDroid"
+  icon: mdi:broadcast
+  fields:
+    trigger_name:
+      description: "MacroDroid 触发器名称"
+      example: "open_wechat"
+  sequence:
+    - service: notify.mobile_app_one_plus
+      data:
+        message: "command_broadcast_intent"
+        data:
+          intent_action: "com.arlosoft.macrodroid.action.FIRE_TRIGGER"
+          intent_extras:
+            trigger_name: "{{ trigger_name | default('open_wechat') }}"
+  mode: single
+
+# 直接打开微信（不需要 MacroDroid）
+test_open_wechat_direct:
+  alias: "直接打开微信"
+  description: "通过 command_activity 直接启动微信"
+  icon: mdi:wechat
+  sequence:
+    - service: notify.mobile_app_one_plus
+      data:
+        message: "command_activity"
+        data:
+          intent_action: "android.intent.action.MAIN"
+          intent_package_name: "com.tencent.mm"
+  mode: single
+

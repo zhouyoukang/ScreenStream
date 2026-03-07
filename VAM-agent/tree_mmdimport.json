@@ -1,0 +1,31 @@
+{
+  "sha": "bf5f8b7d6a259bff8bc3d7197a20973fe2af3590",
+  "url": "https://api.github.com/repos/CraftyMoment/mmd_vam_import/git/trees/bf5f8b7d6a259bff8bc3d7197a20973fe2af3590",
+  "tree": [
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d547bcb4edae3e0d8a143d76bd1974c324bfa29c",
+      "size": 12885,
+      "url": "https://api.github.com/repos/CraftyMoment/mmd_vam_import/git/blobs/d547bcb4edae3e0d8a143d76bd1974c324bfa29c"
+    },
+    {
+      "path": "base.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5afaed0ccba9ebdf262abd8196d6f2130225af72",
+      "size": 82815,
+      "url": "https://api.github.com/repos/CraftyMoment/mmd_vam_import/git/blobs/5afaed0ccba9ebdf262abd8196d6f2130225af72"
+    },
+    {
+      "path": "vmd.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bb07eb35ff867d9ccd427b776f1ed1119aa059e1",
+      "size": 28885,
+      "url": "https://api.github.com/repos/CraftyMoment/mmd_vam_import/git/blobs/bb07eb35ff867d9ccd427b776f1ed1119aa059e1"
+    }
+  ],
+  "truncated": false
+}

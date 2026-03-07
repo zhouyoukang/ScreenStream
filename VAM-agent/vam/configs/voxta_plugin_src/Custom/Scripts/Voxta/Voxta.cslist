@@ -1,0 +1,16 @@
+src\Client\SignalRClient.cs
+src\Client\VoxtaClient.cs
+src\Client\VoxtaVersion.cs
+src\Client\WebSocketClient.cs
+src\Components\AudioAtomTarget.cs
+src\Components\SubtitlesAtomTarget.cs
+src\VaM\SimpleTrigger.cs
+src\VaM\TriggerInvoker.cs
+src\VaM\VamAssets.cs
+src\ActionsParser.cs
+src\SpeechPlayback.cs
+src\ThreadSafeLogger.cs
+src\ThreadSafeScheduler.cs
+src\UI.cs
+src\Voxta.cs
+src\VoxtaCredentials.cs

@@ -1,0 +1,42 @@
+# Database Optimization - Cycle #5 Round #10
+database:
+  
+  # Indexing
+  indexes:
+    - table: states
+      columns: [entity_id, last_changed]
+    - table: events
+      columns: [event_type, time_fired]
+    - table: statistics
+      columns: [statistic_id, start]
+  
+  # Query optimization
+  query_optimization:
+    use_prepared_statements: true
+    connection_pooling: true
+    query_caching: true
+    
+    # Slow query log
+    slow_query_log:
+      enabled: true
+      threshold: 1000  # ms
+  
+  # Purge settings
+  purge:
+    enabled: true
+    schedule: daily
+    keep_days: 30
+    exclude_entities:
+      - sensor.uptime
+      - sensor.date_time
+  
+  # Partitioning
+  partitioning:
+    enabled: false
+    strategy: monthly
+  
+  # Vacuuming
+  vacuum:
+    enabled: true
+    schedule: weekly
+    analyze: true

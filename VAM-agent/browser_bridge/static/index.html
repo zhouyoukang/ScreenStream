@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desktop Browser Bridge — 桌面浏览器化</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0f; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; height: 100vh; }
+
+/* ── Header ── */
+#header {
+  position: fixed; top: 0; left: 0; right: 0; height: 36px; z-index: 100;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  display: flex; align-items: center; padding: 0 12px; gap: 12px;
+  border-bottom: 1px solid #2a2a4a; font-size: 13px;
+}
+#header .logo { color: #7c83ff; font-weight: 700; letter-spacing: 1px; }
+#header .status { display: flex; align-items: center; gap: 6px; }
+#header .dot { width: 8px; height: 8px; border-radius: 50%; }
+#header .dot.on { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+#header .dot.off { background: #f87171; }
+#header .info { color: #888; font-size: 12px; }
+#header .controls { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.btn { background: #2a2a4a; border: 1px solid #3a3a5a; color: #ccc; padding: 3px 10px;
+       border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+.btn:hover { background: #3a3a6a; color: #fff; }
+.btn.active { background: #4a4aff; border-color: #6a6aff; color: #fff; }
+select.ctrl { background: #1a1a2e; border: 1px solid #3a3a5a; color: #ccc;
+              padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+
+/* ── Canvas Container ── */
+#canvas-container {
+  position: fixed; top: 36px; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: center; align-items: center;
+  background: #050510;
+}
+#stream-canvas {
+  max-width: 100%; max-height: 100%;
+  image-rendering: auto;
+  cursor: crosshair;
+}
+
+/* ── HUD Overlay ── */
+#hud {
+  position: fixed; bottom: 8px; right: 8px; z-index: 100;
+  background: rgba(10,10,20,0.85); border: 1px solid #2a2a4a;
+  border-radius: 6px; padding: 6px 10px; font-size: 11px;
+  font-family: 'Consolas', monospace; color: #888;
+  pointer-events: none;
+}
+#hud .val { color: #7c83ff; }
+
+/* ── Settings Panel ── */
+#settings {
+  position: fixed; top: 36px; right: 0; width: 280px; bottom: 0; z-index: 90;
+  background: #12121f; border-left: 1px solid #2a2a4a;
+  padding: 12px; overflow-y: auto; display: none;
+}
+#settings.show { display: block; }
+#settings h3 { color: #7c83ff; font-size: 13px; margin: 8px 0 6px; }
+#settings label { display: block; font-size: 12px; color: #999; margin: 4px 0 2px; }
+#settings input[type=range] { width: 100%; }
+#settings .win-list { max-height: 200px; overflow-y: auto; }
+#settings .win-item {
+  padding: 4px 8px; cursor: pointer; border-radius: 3px;
+  font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#settings .win-item:hover { background: #2a2a4a; }
+#settings .win-item.active { background: #3a3a6a; color: #fff; }
+
+/* ── Toast ── */
+#toast {
+  position: fixed; top: 44px; left: 50%; transform: translateX(-50%); z-index: 200;
+  background: #2a2a5a; border: 1px solid #4a4aff; border-radius: 6px;
+  padding: 6px 16px; font-size: 13px; color: #fff; display: none;
+  transition: opacity 0.3s;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div id="header">
+  <span class="logo">☰ Bridge</span>
+  <span class="status">
+    <span id="dot" class="dot off"></span>
+    <span id="status-text">Disconnected</span>
+  </span>
+  <span id="target-info" class="info"></span>
+  <div class="controls">
+    <button id="btn-input" class="btn active" title="Toggle input relay">🖱️ Input</button>
+    <button id="btn-keys" class="btn active" title="Toggle keyboard relay">⌨️ Keys</button>
+    <select id="sel-quality" class="ctrl" title="JPEG Quality">
+      <option value="50">Q:50</option>
+      <option value="60">Q:60</option>
+      <option value="70" selected>Q:70</option>
+      <option value="80">Q:80</option>
+      <option value="90">Q:90</option>
+    </select>
+    <select id="sel-fps" class="ctrl" title="Target FPS">
+      <option value="5">5fps</option>
+      <option value="10">10fps</option>
+      <option value="15" selected>15fps</option>
+      <option value="24">24fps</option>
+      <option value="30">30fps</option>
+    </select>
+    <button id="btn-fullscreen" class="btn" title="Fullscreen">⛶</button>
+    <button id="btn-settings" class="btn" title="Settings">⚙</button>
+  </div>
+</div>
+
+<!-- Stream Canvas -->
+<div id="canvas-container">
+  <canvas id="stream-canvas" tabindex="0"></canvas>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <span id="hud-fps">FPS: <span class="val">0</span></span> |
+  <span id="hud-size">Size: <span class="val">-</span></span> |
+  <span id="hud-latency">Lat: <span class="val">-</span></span> |
+  <span id="hud-frames">Frames: <span class="val">0</span></span>
+</div>
+
+<!-- Settings Panel -->
+<div id="settings">
+  <h3>☶ Target Window</h3>
+  <button id="btn-refresh-windows" class="btn" style="width:100%;margin-bottom:8px;">Refresh Window List</button>
+  <div id="win-list" class="win-list"></div>
+
+  <h3>☲ Stream Settings</h3>
+  <label>FPS: <span id="lbl-fps">15</span></label>
+  <input type="range" id="rng-fps" min="1" max="60" value="15">
+  <label>Quality: <span id="lbl-quality">70</span></label>
+  <input type="range" id="rng-quality" min="10" max="100" value="70">
+
+  <h3>☴ Hotkeys</h3>
+  <div style="font-size:12px;color:#777;line-height:1.6;">
+    <b>F11</b> — Fullscreen<br>
+    <b>Ctrl+Shift+I</b> — Toggle Input<br>
+    <b>Ctrl+Shift+K</b> — Toggle Keyboard<br>
+    <b>Ctrl+Shift+S</b> — Toggle Settings<br>
+  </div>
+
+  <h3>☵ Connection</h3>
+  <div id="conn-info" style="font-size:12px;color:#777;"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════
+//  ☵ 坎 · WebSocket Connection
+// ════════════════════════════════════════════════════
+const WS_URL = `ws://${location.host}/ws`;
+let ws = null;
+let connected = false;
+let inputEnabled = true;
+let keysEnabled = true;
+
+function connect() {
+  ws = new WebSocket(WS_URL);
+  ws.binaryType = 'arraybuffer';
+
+  ws.onopen = () => {
+    connected = true;
+    document.getElementById('dot').className = 'dot on';
+    document.getElementById('status-text').textContent = 'Connected';
+    toast('Connected to bridge server');
+    fetchStatus();
+  };
+
+  ws.onclose = () => {
+    connected = false;
+    document.getElementById('dot').className = 'dot off';
+    document.getElementById('status-text').textContent = 'Disconnected';
+    setTimeout(connect, 2000);
+  };
+
+  ws.onerror = () => { ws.close(); };
+
+  ws.onmessage = (evt) => {
+    if (evt.data instanceof ArrayBuffer) {
+      renderFrame(evt.data);
+    }
+  };
+}
+
+// ════════════════════════════════════════════════════
+//  ☳ 震 · Canvas Rendering
+// ════════════════════════════════════════════════════
+const canvas = document.getElementById('stream-canvas');
+const ctx = canvas.getContext('2d');
+let frameCount = 0;
+let lastFpsTime = performance.now();
+let fpsCounter = 0;
+let currentFps = 0;
+let streamWidth = 0, streamHeight = 0;
+
+function renderFrame(jpegData) {
+  const blob = new Blob([jpegData], { type: 'image/jpeg' });
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    if (canvas.width !== img.width || canvas.height !== img.height) {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      streamWidth = img.width;
+      streamHeight = img.height;
+    }
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+
+    frameCount++;
+    fpsCounter++;
+    const now = performance.now();
+    if (now - lastFpsTime >= 1000) {
+      currentFps = fpsCounter;
+      fpsCounter = 0;
+      lastFpsTime = now;
+      updateHUD();
+    }
+  };
+  img.src = url;
+}
+
+function updateHUD() {
+  document.querySelector('#hud-fps .val').textContent = currentFps;
+  document.querySelector('#hud-size .val').textContent = streamWidth ? `${streamWidth}×${streamHeight}` : '-';
+  document.querySelector('#hud-frames .val').textContent = frameCount;
+}
+
+// ════════════════════════════════════════════════════
+//  ☷ 坤 · Input Capture & Relay
+// ════════════════════════════════════════════════════
+function getRelativePos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: ((e.clientX - rect.left) * scaleX) / canvas.width,
+    y: ((e.clientY - rect.top) * scaleY) / canvas.height,
+  };
+}
+
+function sendEvent(obj) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(obj));
+  }
+}
+
+const BUTTON_MAP = { 0: 'left', 1: 'middle', 2: 'right' };
+
+// Mouse events
+canvas.addEventListener('mousedown', (e) => {
+  if (!inputEnabled) return;
+  e.preventDefault();
+  const pos = getRelativePos(e);
+  sendEvent({ type: 'mousedown', ...pos, button: BUTTON_MAP[e.button] || 'left' });
+});
+
+canvas.addEventListener('mouseup', (e) => {
+  if (!inputEnabled) return;
+  e.preventDefault();
+  const pos = getRelativePos(e);
+  sendEvent({ type: 'mouseup', ...pos, button: BUTTON_MAP[e.button] || 'left' });
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (!inputEnabled) return;
+  const pos = getRelativePos(e);
+  // Throttle mousemove to avoid flooding
+  if (!canvas._lastMove || performance.now() - canvas._lastMove > 16) {
+    sendEvent({ type: 'mousemove', ...pos });
+    canvas._lastMove = performance.now();
+  }
+});
+
+canvas.addEventListener('dblclick', (e) => {
+  if (!inputEnabled) return;
+  e.preventDefault();
+  const pos = getRelativePos(e);
+  sendEvent({ type: 'dblclick', ...pos });
+});
+
+canvas.addEventListener('wheel', (e) => {
+  if (!inputEnabled) return;
+  e.preventDefault();
+  const pos = getRelativePos(e);
+  const delta = e.deltaY > 0 ? -3 : 3;
+  sendEvent({ type: 'wheel', ...pos, delta });
+}, { passive: false });
+
+canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); });
+
+// Keyboard events
+const IGNORE_KEYS = new Set(['F12', 'F5']); // Don't relay browser dev tools
+
+function mapKey(e) {
+  const key = e.key;
+  // Map browser key names to our VK names
+  if (key.length === 1) return key.toLowerCase();
+  const map = {
+    'Enter': 'enter', 'Escape': 'escape', 'Tab': 'tab', 'Backspace': 'backspace',
+    ' ': 'space', 'Delete': 'delete', 'Home': 'home', 'End': 'end',
+    'PageUp': 'pageup', 'PageDown': 'pagedown', 'Insert': 'insert',
+    'ArrowLeft': 'left', 'ArrowUp': 'up', 'ArrowRight': 'right', 'ArrowDown': 'down',
+    'Control': 'ctrl', 'Shift': 'shift', 'Alt': 'alt', 'Meta': 'meta',
+    'CapsLock': 'capslock', 'NumLock': 'numlock',
+  };
+  if (map[key]) return map[key];
+  if (key.startsWith('F') && key.length <= 3) return key.toLowerCase();
+  return key.toLowerCase();
+}
+
+document.addEventListener('keydown', (e) => {
+  // Global hotkeys (always active)
+  if (e.key === 'F11') { e.preventDefault(); toggleFullscreen(); return; }
+  if (e.ctrlKey && e.shiftKey && e.key === 'I') { e.preventDefault(); toggleInput(); return; }
+  if (e.ctrlKey && e.shiftKey && e.key === 'K') { e.preventDefault(); toggleKeys(); return; }
+  if (e.ctrlKey && e.shiftKey && e.key === 'S') { e.preventDefault(); toggleSettings(); return; }
+
+  if (!keysEnabled || IGNORE_KEYS.has(e.key)) return;
+  if (document.activeElement !== canvas) return;
+
+  e.preventDefault();
+  sendEvent({ type: 'keydown', key: mapKey(e), ctrl: e.ctrlKey, shift: e.shiftKey, alt: e.altKey });
+});
+
+document.addEventListener('keyup', (e) => {
+  if (!keysEnabled || IGNORE_KEYS.has(e.key)) return;
+  if (document.activeElement !== canvas) return;
+  e.preventDefault();
+  sendEvent({ type: 'keyup', key: mapKey(e), ctrl: e.ctrlKey, shift: e.shiftKey, alt: e.altKey });
+});
+
+// ════════════════════════════════════════════════════
+//  ☶ 艮 · UI Controls
+// ════════════════════════════════════════════════════
+function toggleInput() {
+  inputEnabled = !inputEnabled;
+  document.getElementById('btn-input').classList.toggle('active', inputEnabled);
+  toast(inputEnabled ? 'Mouse input ON' : 'Mouse input OFF');
+}
+
+function toggleKeys() {
+  keysEnabled = !keysEnabled;
+  document.getElementById('btn-keys').classList.toggle('active', keysEnabled);
+  toast(keysEnabled ? 'Keyboard relay ON' : 'Keyboard relay OFF');
+}
+
+function toggleFullscreen() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    document.documentElement.requestFullscreen();
+  }
+}
+
+function toggleSettings() {
+  document.getElementById('settings').classList.toggle('show');
+}
+
+function toast(msg, duration = 2000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.opacity = '1';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }, duration);
+}
+
+// Button handlers
+document.getElementById('btn-input').onclick = toggleInput;
+document.getElementById('btn-keys').onclick = toggleKeys;
+document.getElementById('btn-fullscreen').onclick = toggleFullscreen;
+document.getElementById('btn-settings').onclick = toggleSettings;
+
+document.getElementById('sel-quality').onchange = (e) => {
+  fetch('/api/config', { method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ quality: parseInt(e.target.value) }) });
+};
+
+document.getElementById('sel-fps').onchange = (e) => {
+  fetch('/api/config', { method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ fps: parseInt(e.target.value) }) });
+};
+
+document.getElementById('rng-fps').oninput = (e) => {
+  document.getElementById('lbl-fps').textContent = e.target.value;
+  fetch('/api/config', { method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ fps: parseInt(e.target.value) }) });
+};
+
+document.getElementById('rng-quality').oninput = (e) => {
+  document.getElementById('lbl-quality').textContent = e.target.value;
+  fetch('/api/config', { method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ quality: parseInt(e.target.value) }) });
+};
+
+// Window list
+document.getElementById('btn-refresh-windows').onclick = loadWindows;
+
+async function loadWindows() {
+  const res = await fetch('/api/windows');
+  const wins = await res.json();
+  const list = document.getElementById('win-list');
+  list.innerHTML = '';
+  for (const w of wins) {
+    const div = document.createElement('div');
+    div.className = 'win-item';
+    div.textContent = `[${w.hwnd}] ${w.title}`;
+    div.onclick = async () => {
+      const r = await fetch('/api/target', { method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ hwnd: w.hwnd }) });
+      const d = await r.json();
+      if (d.ok) {
+        toast(`Target: ${d.title}`);
+        document.getElementById('target-info').textContent = d.title;
+        list.querySelectorAll('.win-item').forEach(el => el.classList.remove('active'));
+        div.classList.add('active');
+      }
+    };
+    list.appendChild(div);
+  }
+}
+
+async function fetchStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const s = await res.json();
+    if (s.target_title) {
+      document.getElementById('target-info').textContent = s.target_title;
+    }
+    document.getElementById('conn-info').innerHTML =
+      `Mode: ${s.capture_mode}<br>Target: ${s.target_title || 'none'}<br>` +
+      `HWND: ${s.target_hwnd}<br>Frames: ${s.frame_count}`;
+  } catch (e) {}
+}
+
+// Auto-focus canvas for keyboard input
+canvas.addEventListener('click', () => canvas.focus());
+
+// Start
+connect();
+canvas.focus();
+setInterval(fetchStatus, 5000);
+</script>
+</body>
+</html>

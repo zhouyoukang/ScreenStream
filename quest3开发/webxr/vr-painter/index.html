@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quest 3 WebXR VR画笔 — 用手部追踪或手柄在3D空间中自由绘画">
+    <title>VR Painter</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: system-ui, sans-serif; background: #0a0a1a; }
+        #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 10;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+            padding: 1rem 1.5rem; color: white;
+        }
+        h2 { margin: 0 0 0.3rem; font-size: 1.3rem; }
+        .info { font-size: 0.85rem; opacity: 0.8; margin: 0; }
+        #status { font-size: 0.8rem; margin-top: 0.5rem; color: #4ade80; }
+        #enter-vr {
+            position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            z-index: 10; padding: 0.8rem 2rem; border: 2px solid #a78bfa;
+            border-radius: 0.8rem; background: rgba(100,60,200,0.5); color: white;
+            cursor: pointer; font-size: 1rem; transition: all 0.3s;
+        }
+        #enter-vr:hover { background: rgba(100,60,200,0.8); }
+        #enter-vr:disabled { opacity: 0.4; cursor: not-allowed; }
+        #palette {
+            position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%);
+            z-index: 10; display: flex; gap: 0.4rem;
+        }
+        .color-btn {
+            width: 36px; height: 36px; border-radius: 50%; border: 2px solid transparent;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .color-btn.active { border-color: white; transform: scale(1.2); }
+        #toolbar {
+            position: fixed; bottom: 5rem; right: 1rem; z-index: 10;
+            display: flex; flex-direction: column; gap: 0.4rem;
+        }
+        #toolbar button {
+            padding: 0.5rem 0.8rem; border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 0.4rem; background: rgba(0,0,0,0.6); color: white;
+            cursor: pointer; font-size: 0.8rem;
+        }
+        #toolbar button:hover { background: rgba(100,100,255,0.4); }
+        #stroke-count {
+            position: fixed; top: 4rem; right: 1rem; z-index: 10;
+            color: rgba(255,255,255,0.5); font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <h2>🎨 VR Painter</h2>
+        <p class="info">VR: 扣扳机/捏合绘画 | 桌面: 鼠标左键绘画 | 支持手部追踪</p>
+        <div id="status">⏳ 初始化...</div>
+    </div>
+
+    <div id="palette"></div>
+    <div id="toolbar">
+        <button onclick="undoStroke()">↩ 撤销</button>
+        <button onclick="clearAll()">🗑 清空</button>
+        <button onclick="toggleSize()">📏 笔刷</button>
+    </div>
+    <div id="stroke-count">笔画: 0</div>
+    <button id="enter-vr" disabled>进入 VR 绘画</button>
+
+    <canvas id="canvas"></canvas>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
+        import { XRHandModelFactory } from 'three/addons/webxr/XRHandModelFactory.js';
+
+        const statusEl = document.getElementById('status');
+        const enterBtn = document.getElementById('enter-vr');
+        const strokeCountEl = document.getElementById('stroke-count');
+
+        // Colors
+        const colors = [
+            '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff',
+            '#a855f7', '#ec4899', '#14b8a6', '#f97316', '#ffffff'
+        ];
+        let currentColor = colors[0];
+        let brushSize = 0.01;
+        const brushSizes = [0.005, 0.01, 0.02, 0.04];
+        let brushSizeIdx = 1;
+
+        // Build palette
+        const paletteEl = document.getElementById('palette');
+        colors.forEach((c, i) => {
+            const btn = document.createElement('div');
+            btn.className = `color-btn${i === 0 ? ' active' : ''}`;
+            btn.style.background = c;
+            btn.onclick = () => {
+                currentColor = c;
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            };
+            paletteEl.appendChild(btn);
+        });
+
+        // Scene setup
+        const canvas = document.getElementById('canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.xr.enabled = true;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a1a);
+        scene.fog = new THREE.Fog(0x0a0a1a, 8, 20);
+
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+        camera.position.set(0, 1.6, 2);
+
+        // Lighting
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(3, 5, 3);
+        scene.add(dirLight);
+
+        // Floor grid
+        const grid = new THREE.GridHelper(10, 20, 0x333366, 0x222244);
+        scene.add(grid);
+
+        // Drawing state
+        const strokes = [];
+        let isDrawing = false;
+        let currentPoints = [];
+        let currentMesh = null;
+
+        function startStroke() {
+            isDrawing = true;
+            currentPoints = [];
+        }
+
+        function addPoint(pos) {
+            if (!isDrawing) return;
+            if (currentPoints.length > 0) {
+                const last = currentPoints[currentPoints.length - 1];
+                if (pos.distanceTo(last) < brushSize * 0.3) return;
+            }
+            currentPoints.push(pos.clone());
+            updateStrokeMesh();
+        }
+
+        function endStroke() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            if (currentPoints.length > 1 && currentMesh) {
+                strokes.push({ mesh: currentMesh, points: currentPoints.slice() });
+                strokeCountEl.textContent = `笔画: ${strokes.length}`;
+            } else if (currentMesh) {
+                scene.remove(currentMesh);
+                currentMesh.geometry.dispose();
+                currentMesh.material.dispose();
+            }
+            currentMesh = null;
+            currentPoints = [];
+        }
+
+        function updateStrokeMesh() {
+            if (currentPoints.length < 2) return;
+
+            if (currentMesh) {
+                scene.remove(currentMesh);
+                currentMesh.geometry.dispose();
+                currentMesh.material.dispose();
+            }
+
+            const curve = new THREE.CatmullRomCurve3(currentPoints);
+            const tubeGeo = new THREE.TubeGeometry(curve, Math.max(currentPoints.length * 2, 8), brushSize, 8, false);
+            const tubeMat = new THREE.MeshStandardMaterial({
+                color: currentColor, roughness: 0.3, metalness: 0.1,
+                emissive: currentColor, emissiveIntensity: 0.2
+            });
+            currentMesh = new THREE.Mesh(tubeGeo, tubeMat);
+            scene.add(currentMesh);
+        }
+
+        window.undoStroke = function() {
+            if (strokes.length === 0) return;
+            const s = strokes.pop();
+            scene.remove(s.mesh);
+            s.mesh.geometry.dispose();
+            s.mesh.material.dispose();
+            strokeCountEl.textContent = `笔画: ${strokes.length}`;
+        };
+
+        window.clearAll = function() {
+            while (strokes.length > 0) {
+                const s = strokes.pop();
+                scene.remove(s.mesh);
+                s.mesh.geometry.dispose();
+                s.mesh.material.dispose();
+            }
+            strokeCountEl.textContent = `笔画: 0`;
+        };
+
+        window.toggleSize = function() {
+            brushSizeIdx = (brushSizeIdx + 1) % brushSizes.length;
+            brushSize = brushSizes[brushSizeIdx];
+            statusEl.textContent = `🖌 笔刷大小: ${(brushSize * 1000).toFixed(0)}mm`;
+        };
+
+        // XR Controllers
+        const controllerModelFactory = new XRControllerModelFactory();
+        const handModelFactory = new XRHandModelFactory();
+        const tmpVec = new THREE.Vector3();
+
+        for (let i = 0; i < 2; i++) {
+            const controller = renderer.xr.getController(i);
+            controller.addEventListener('selectstart', () => startStroke());
+            controller.addEventListener('selectend', () => endStroke());
+            scene.add(controller);
+
+            // Visual pointer
+            const pointer = new THREE.Mesh(
+                new THREE.SphereGeometry(0.008, 8, 8),
+                new THREE.MeshStandardMaterial({ color: 0x4ade80, emissive: 0x4ade80, emissiveIntensity: 0.5 })
+            );
+            controller.add(pointer);
+
+            const grip = renderer.xr.getControllerGrip(i);
+            grip.add(controllerModelFactory.createControllerModel(grip));
+            scene.add(grip);
+
+            // Hand tracking
+            const hand = renderer.xr.getHand(i);
+            hand.add(handModelFactory.createHandModel(hand, 'mesh'));
+            scene.add(hand);
+
+            // Hand pinch detection
+            hand.addEventListener('pinchstart', () => startStroke());
+            hand.addEventListener('pinchend', () => endStroke());
+        }
+
+        // Mouse drawing (desktop fallback)
+        let mouseDown = false;
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const drawPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -1);
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            mouseDown = true;
+            startStroke();
+        });
+        canvas.addEventListener('mouseup', () => { mouseDown = false; endStroke(); });
+        canvas.addEventListener('mousemove', (e) => {
+            if (!mouseDown) return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const target = new THREE.Vector3();
+            raycaster.ray.intersectPlane(drawPlane, target);
+            if (target) addPoint(target);
+        });
+
+        // WebXR check
+        async function checkXR() {
+            if (!navigator.xr) {
+                statusEl.textContent = '⚠️ WebXR不可用 — 使用鼠标在桌面绘画';
+                statusEl.style.color = '#fbbf24';
+                return;
+            }
+            const supported = await navigator.xr.isSessionSupported('immersive-vr');
+            if (supported) {
+                enterBtn.disabled = false;
+                statusEl.textContent = '✅ 就绪 — 点击进入VR或用鼠标桌面绘画';
+                statusEl.style.color = '#4ade80';
+            } else {
+                statusEl.textContent = '⚠️ immersive-vr不支持 — 使用鼠标绘画';
+                statusEl.style.color = '#fbbf24';
+            }
+        }
+
+        enterBtn.addEventListener('click', async () => {
+            const session = await navigator.xr.requestSession('immersive-vr', {
+                requiredFeatures: ['local-floor'],
+                optionalFeatures: ['hand-tracking', 'bounded-floor']
+            });
+            renderer.xr.setSession(session);
+            enterBtn.style.display = 'none';
+            statusEl.textContent = '🎨 VR绘画中 — 扣扳机/捏合开始画';
+        });
+
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Render loop
+        function render(time, frame) {
+            // Update controller drawing positions in XR
+            if (frame) {
+                for (let i = 0; i < 2; i++) {
+                    const controller = renderer.xr.getController(i);
+                    if (isDrawing && controller.visible) {
+                        controller.getWorldPosition(tmpVec);
+                        addPoint(tmpVec);
+                    }
+                    // Hand tracking draw position (index finger tip)
+                    const hand = renderer.xr.getHand(i);
+                    if (isDrawing && hand.joints && hand.joints['index-finger-tip']) {
+                        hand.joints['index-finger-tip'].getWorldPosition(tmpVec);
+                        addPoint(tmpVec);
+                    }
+                }
+            }
+            renderer.render(scene, camera);
+        }
+
+        // Inline preview
+        function inlinePreview() {
+            const t = performance.now() * 0.001;
+            camera.position.x = Math.sin(t * 0.1) * 0.3;
+            camera.position.z = 2 + Math.cos(t * 0.1) * 0.3;
+            camera.lookAt(0, 1.5, 0);
+        }
+
+        // Bootstrap
+        checkXR();
+        renderer.setAnimationLoop((time, frame) => {
+            if (!frame && !mouseDown) inlinePreview();
+            render(time || performance.now(), frame);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+restart:
+  name: Restart
+  description: Restart the OpenAI API compatible server.
+  fields: {}
+
+clear_rate_limits:
+  name: Clear Rate Limits
+  description: Clear rate limits for one or all clients.
+  fields:
+    client_id:
+      name: Client ID
+      description: ID of the client to clear rate limits for. If not specified, clears for all clients.
+      example: "192.168.1.100"
+      required: false
+      selector:
+        text:
+
+test_api:
+  name: Test API
+  description: Test the OpenAI API functionality by sending a message to a conversation agent.
+  fields:
+    message:
+      name: Message
+      description: Message to send to the API.
+      example: "What's the weather like today?"
+      required: true
+      selector:
+        text:
+    agent_id:
+      name: Agent ID
+      description: ID of the conversation agent to use. If not specified, uses the default agent.
+      example: "homeassistant"
+      required: false
+      selector:
+        text: 

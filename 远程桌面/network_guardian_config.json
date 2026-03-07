@@ -1,0 +1,57 @@
+{
+  "ping_targets": [
+    "8.8.8.8",
+    "1.1.1.1",
+    "223.5.5.5",
+    "119.29.29.29"
+  ],
+  "ping_consensus": 2,
+  "ping_timeout_ms": 2000,
+  "check_interval_sec": 5,
+  "fail_threshold": 3,
+  "recovery_check_sec": 30,
+  "cooldown_sec": 60,
+  "adb_path": "E:\\道\\道生一\\一生二\\构建部署\\android-sdk\\platform-tools\\adb.exe",
+  "phones": [
+    {
+      "name": "NE2210",
+      "serial": "158377ff",
+      "wifi_ip": "",
+      "ss_port": 8084,
+      "tether_method": "usb",
+      "carrier": "中国联通,CMCC",
+      "priority": 1,
+      "enabled": true
+    },
+    {
+      "name": "PGEM10",
+      "serial": "ba3819d7",
+      "wifi_ip": "",
+      "ss_port": 8084,
+      "tether_method": "usb",
+      "carrier": "中国移动,CHN-UNICOM",
+      "priority": 2,
+      "enabled": true
+    }
+  ],
+  "adapters": {
+    "primary": "WLAN",
+    "usb_tether": ""
+  },
+  "tunnel": {
+    "enabled": false,
+    "command": "cloudflared tunnel --url http://localhost:8080",
+    "restart_on_failover": true
+  },
+  "heartbeat": {
+    "enabled": true,
+    "port": 9800,
+    "interval_sec": 10,
+    "dead_threshold": 3
+  },
+  "notify": {
+    "toast": true,
+    "sound": true,
+    "log_file": "network_guardian.log"
+  }
+}

@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RayNeo V3 App Center — 八卦应用生态</title>
+<style>
+:root {
+  --bg: #0a0e1a; --panel: #111827; --card: #1a2235; --border: #2d3748;
+  --text: #e2e8f0; --dim: #94a3b8; --accent: #00d4ff; --green: #22c55e;
+  --yellow: #eab308; --red: #ef4444; --orange: #f97316; --purple: #a855f7;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+header {
+  background: linear-gradient(135deg, #111827 0%, #1e293b 100%);
+  padding: 10px 20px; display: flex; align-items: center; gap: 16px;
+  border-bottom: 1px solid var(--border);
+}
+header h1 { font-size: 18px; white-space: nowrap; }
+header h1 span { color: var(--accent); }
+.stats { display: flex; gap: 12px; margin-left: auto; }
+.stat { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; }
+.stat .n { color: var(--accent); font-weight: bold; }
+.nav-links { display: flex; gap: 8px; }
+.nav-links a { color: var(--dim); text-decoration: none; font-size: 12px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; }
+.nav-links a:hover { color: var(--accent); border-color: var(--accent); }
+
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* Left: Categories */
+.sidebar { width: 180px; background: var(--panel); border-right: 1px solid var(--border); padding: 12px 0; overflow-y: auto; flex-shrink: 0; }
+.cat-item { padding: 10px 16px; cursor: pointer; font-size: 13px; border-left: 3px solid transparent; transition: all .15s; }
+.cat-item:hover { background: rgba(0,212,255,.05); }
+.cat-item.active { background: rgba(0,212,255,.1); border-left-color: var(--accent); color: var(--accent); }
+.cat-item .count { float: right; color: var(--dim); font-size: 11px; }
+
+/* Center: App Grid */
+.content { flex: 1; overflow-y: auto; padding: 16px; }
+.content-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.content-header h2 { font-size: 16px; }
+.search-box { flex: 1; max-width: 300px; }
+.search-box input { width: 100%; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 13px; }
+.search-box input:focus { outline: none; border-color: var(--accent); }
+.batch-btns { display: flex; gap: 6px; }
+.batch-btns button { background: var(--card); border: 1px solid var(--border); color: var(--dim); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+.batch-btns button:hover { color: var(--accent); border-color: var(--accent); }
+
+.app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+
+.app-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px; cursor: pointer; transition: all .2s; position: relative;
+}
+.app-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,212,255,.1); }
+.app-card.installed { border-left: 3px solid var(--green); }
+.app-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.app-icon { font-size: 28px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.05); border-radius: 10px; }
+.app-info { flex: 1; }
+.app-name { font-size: 14px; font-weight: 600; }
+.app-ver { font-size: 11px; color: var(--dim); }
+.app-cat { font-size: 10px; color: var(--accent); }
+.app-desc { font-size: 12px; color: var(--dim); margin-bottom: 8px; line-height: 1.4; }
+
+.compat-bar { display: flex; gap: 4px; margin-bottom: 8px; }
+.compat-seg { height: 4px; border-radius: 2px; flex: 1; }
+.compat-seg.high { background: var(--green); }
+.compat-seg.med { background: var(--yellow); }
+.compat-seg.low { background: var(--red); }
+
+.app-meta { display: flex; justify-content: space-between; align-items: center; }
+.app-score { font-size: 13px; font-weight: bold; }
+.app-score.good { color: var(--green); }
+.app-score.ok { color: var(--yellow); }
+.app-score.bad { color: var(--red); }
+.app-badges { display: flex; gap: 4px; }
+.badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+.badge.native { background: rgba(34,197,94,.15); color: var(--green); }
+.badge.adapted { background: rgba(234,179,8,.15); color: var(--yellow); }
+.badge.inst { background: rgba(0,212,255,.15); color: var(--accent); }
+
+.app-actions { display: flex; gap: 6px; margin-top: 8px; }
+.app-actions button { flex: 1; padding: 5px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; font-size: 11px; transition: all .15s; }
+.app-actions button:hover { border-color: var(--accent); color: var(--accent); }
+.app-actions button.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+.app-actions button.primary:hover { background: #00b8d9; }
+.app-actions button.danger { color: var(--red); }
+.app-actions button.danger:hover { border-color: var(--red); }
+
+/* Right: Detail/Test Panel */
+.detail-panel { width: 340px; background: var(--panel); border-left: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; padding: 16px; display: none; }
+.detail-panel.open { display: block; }
+.detail-panel h3 { font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.detail-panel .close-btn { margin-left: auto; cursor: pointer; color: var(--dim); font-size: 18px; }
+.detail-panel .close-btn:hover { color: var(--red); }
+
+.detail-header { text-align: center; margin-bottom: 16px; }
+.detail-header .icon { font-size: 48px; }
+.detail-header .name { font-size: 18px; font-weight: bold; margin-top: 8px; }
+.detail-header .pkg { font-size: 11px; color: var(--dim); }
+
+.compat-detail { margin-bottom: 16px; }
+.compat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+.compat-row .label { width: 50px; color: var(--dim); }
+.compat-row .bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,.1); border-radius: 3px; }
+.compat-row .bar-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+.compat-row .val { width: 30px; text-align: right; font-weight: bold; }
+
+.test-results { margin-bottom: 16px; }
+.test-item { padding: 8px; margin-bottom: 4px; border-radius: 6px; font-size: 12px; line-height: 1.4; }
+.test-item.pass { background: rgba(34,197,94,.1); border-left: 3px solid var(--green); }
+.test-item.warn { background: rgba(234,179,8,.1); border-left: 3px solid var(--yellow); }
+.test-item.error { background: rgba(239,68,68,.1); border-left: 3px solid var(--red); }
+.test-item.info { background: rgba(0,212,255,.1); border-left: 3px solid var(--accent); }
+.test-item .fix { color: var(--accent); font-style: italic; display: block; margin-top: 4px; }
+
+.issues-list { margin-bottom: 16px; }
+.issue { padding: 6px 8px; margin-bottom: 3px; font-size: 12px; color: var(--orange); background: rgba(249,115,22,.08); border-radius: 4px; }
+
+.detail-actions { display: flex; flex-direction: column; gap: 6px; }
+.detail-actions button { padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; font-size: 13px; }
+.detail-actions button:hover { border-color: var(--accent); }
+.detail-actions button.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+
+/* Toast */
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid var(--accent); color: var(--text); padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+
+/* Summary bar */
+.summary-bar { background: var(--panel); border-top: 1px solid var(--border); padding: 8px 20px; display: flex; gap: 20px; font-size: 12px; color: var(--dim); }
+.summary-bar .item { display: flex; align-items: center; gap: 4px; }
+.summary-bar .dot { width: 8px; height: 8px; border-radius: 50%; }
+.summary-bar .dot.g { background: var(--green); }
+.summary-bar .dot.y { background: var(--yellow); }
+.summary-bar .dot.r { background: var(--red); }
+/* ─── V3 Device Simulator ─── */
+.v3-overlay { position:fixed;inset:0;background:#050810;z-index:100;display:none;flex-direction:column; }
+.v3-overlay.active { display:flex; }
+.v3-top { display:flex;align-items:center;padding:8px 16px;background:linear-gradient(135deg,#0f1629,#1a2744);border-bottom:1px solid var(--border);gap:12px; }
+.v3-top .title { font-size:14px;display:flex;align-items:center;gap:8px; }
+.v3-top .hw { font-size:10px;color:var(--dim);margin-left:auto; }
+.v3-top .exit-btn { background:rgba(239,68,68,.2);border:1px solid var(--red);color:var(--red);padding:4px 12px;border-radius:4px;cursor:pointer;font-size:11px; }
+.v3-top .exit-btn:hover { background:var(--red);color:#fff; }
+.v3-top .nav-btns { display:flex;gap:4px; }
+.v3-top .nav-btns button { background:var(--card);border:1px solid var(--border);color:var(--dim);padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px; }
+.v3-top .nav-btns button:hover { color:var(--accent);border-color:var(--accent); }
+.v3-main { display:flex;flex:1;overflow:hidden; }
+.v3-viewport { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:12px; }
+.v3-glasses { position:relative;border:2px solid #2a3550;border-radius:20px;background:linear-gradient(145deg,#0a0f1a,#111827);padding:12px;box-shadow:0 0 60px rgba(0,212,255,.08),0 8px 32px rgba(0,0,0,.5); }
+.v3-glasses::before { content:'';position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:60px;height:3px;background:var(--accent);border-radius:0 0 3px 3px; }
+.v3-screen { width:640px;height:360px;background:#000;border-radius:8px;overflow:hidden;position:relative;font-size:13px; }
+.v3-screen * { user-select:none; }
+.v3-screen .sb { position:absolute;top:0;left:0;right:0;height:22px;background:rgba(0,0,0,.8);display:flex;align-items:center;padding:0 10px;font-size:10px;color:#666;z-index:10; }
+.v3-screen .sb .l { flex:1; }
+.v3-screen .sb .r { display:flex;gap:8px; }
+.v3-screen .app-ui { position:absolute;top:22px;left:0;right:0;bottom:0;overflow:hidden;color:#e0e0e0; }
+.v3-label { text-align:center;font-size:10px;color:#444;margin-top:4px; }
+.v3-input-bar { display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:8px 16px; }
+.v3-input-bar .tp { display:flex;gap:4px;background:#1a2235;border-radius:8px;padding:4px; }
+.v3-ib { border:1px solid var(--border);background:var(--card);color:var(--text);padding:8px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s;min-width:60px;text-align:center; }
+.v3-ib:hover { border-color:var(--accent);color:var(--accent); }
+.v3-ib:active { background:var(--accent);color:#000;transform:scale(.95); }
+.v3-ib.act { border-color:var(--purple); }
+.v3-ib.act:hover { color:var(--purple); }
+.v3-ib.mic { border-color:var(--green); }
+.v3-ib.mic:hover { color:var(--green); }
+.v3-sep { width:1px;height:24px;background:var(--border); }
+.v3-panel { width:300px;background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:12px; }
+.v3-panel h4 { font-size:12px;color:var(--accent);margin-bottom:6px; }
+.v3-mg { display:grid;grid-template-columns:1fr 1fr;gap:6px; }
+.v3-m { background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center; }
+.v3-m .v { font-size:18px;font-weight:bold; }
+.v3-m .l { font-size:10px;color:var(--dim); }
+.v3-m.w .v { color:var(--yellow); }
+.v3-m.d .v { color:var(--red); }
+.v3-il { display:flex;flex-direction:column;gap:4px; }
+.v3-ii { padding:6px 8px;border-radius:4px;font-size:11px;line-height:1.3; }
+.v3-ii.error { background:rgba(239,68,68,.1);border-left:3px solid var(--red);color:#fca5a5; }
+.v3-ii.warn { background:rgba(234,179,8,.1);border-left:3px solid var(--yellow);color:#fde68a; }
+.v3-ii.info { background:rgba(0,212,255,.1);border-left:3px solid var(--accent);color:#7dd3fc; }
+.v3-ii.pass { background:rgba(34,197,94,.1);border-left:3px solid var(--green);color:#86efac; }
+.v3-log { font-family:'Cascadia Code',monospace;font-size:10px;color:var(--dim);max-height:180px;overflow-y:auto;background:var(--bg);border-radius:4px;padding:6px; }
+.v3-log .e { padding:2px 0;border-bottom:1px solid rgba(255,255,255,.03); }
+.v3-log .t { color:#555; }
+/* App UI helpers */
+.v3-screen .hud { position:absolute;inset:0;padding:10px;display:flex;flex-direction:column; }
+.v3-screen .ht { font-size:14px;font-weight:600;color:var(--accent);margin-bottom:6px; }
+.v3-screen .hb { font-size:48px;font-weight:bold;color:#fff;text-align:center; }
+.v3-screen .hs { font-size:11px;color:#666;text-align:center;margin-top:2px; }
+.v3-screen .hl { display:flex;flex-direction:column;gap:3px;flex:1;overflow-y:auto; }
+.v3-screen .hi { background:rgba(255,255,255,.05);border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:6px;font-size:12px; }
+.v3-screen .hi.sel { border:1px solid var(--accent);background:rgba(0,212,255,.1); }
+.v3-screen .hi .ic { font-size:18px;width:24px;text-align:center; }
+.v3-screen .hi .tx { flex:1; }
+.v3-screen .hi .tx .tt { font-size:11px; }
+.v3-screen .hi .tx .st { font-size:9px;color:#555; }
+.v3-screen .cam { position:absolute;inset:0;background:linear-gradient(135deg,#1a1a2e,#16213e 50%,#0f3460); }
+.v3-screen .arb { position:absolute;border:2px solid var(--green);border-radius:4px;font-size:10px;color:var(--green);padding:2px 6px;background:rgba(34,197,94,.15); }
+.v3-screen .ci { border:2px dashed var(--red) !important; }
+.v3-screen .ci::after { content:'⚠️ 不适配';position:absolute;top:-12px;right:2px;font-size:8px;color:var(--red);background:rgba(239,68,68,.3);padding:0 3px;border-radius:2px; }
+.v3-bg { display:grid;grid-template-columns:repeat(4,1fr);gap:4px; }
+.v3-bi { background:var(--card);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:center;font-size:10px; }
+.v3-bi .tr { font-size:16px; }
+.v3-bi .cn { font-weight:bold; }
+.v3-bi.hi { border-color:var(--red); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🕶️ RayNeo V3 <span>App Center</span></h1>
+  <div class="nav-links">
+    <a href="/rayneo_simulator.html">🎮 Simulator</a>
+    <a href="/rayneo_dashboard.html">📊 Dashboard</a>
+  </div>
+  <div class="stats">
+    <div class="stat">Apps: <span class="n" id="statTotal">0</span></div>
+    <div class="stat">Installed: <span class="n" id="statInstalled">0</span></div>
+    <div class="stat">Avg Score: <span class="n" id="statAvg">0</span></div>
+  </div>
+</header>
+
+<div class="main">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="cat-item active" onclick="filterCat(null, this)">📦 All Apps <span class="count" id="countAll">0</span></div>
+    <div class="cat-item" onclick="filterCat('☰AI', this)">☰ AI智能 <span class="count" id="count_ai">0</span></div>
+    <div class="cat-item" onclick="filterCat('☵导航', this)">☵ 导航交通 <span class="count" id="count_nav">0</span></div>
+    <div class="cat-item" onclick="filterCat('☲视觉', this)">☲ 视觉媒体 <span class="count" id="count_vis">0</span></div>
+    <div class="cat-item" onclick="filterCat('☳健康', this)">☳ 健康运动 <span class="count" id="count_health">0</span></div>
+    <div class="cat-item" onclick="filterCat('☴通讯', this)">☴ 通讯社交 <span class="count" id="count_comm">0</span></div>
+    <div class="cat-item" onclick="filterCat('☶效率', this)">☶ 效率办公 <span class="count" id="count_eff">0</span></div>
+    <div class="cat-item" onclick="filterCat('☱娱乐', this)">☱ 娱乐生活 <span class="count" id="count_fun">0</span></div>
+    <div class="cat-item" onclick="filterCat('☷系统', this)">☷ 系统工具 <span class="count" id="count_sys">0</span></div>
+    <hr style="border-color:var(--border);margin:8px 16px">
+    <div class="cat-item" onclick="filterInstalled()">✅ 已安装 <span class="count" id="countInst">0</span></div>
+    <div class="cat-item" onclick="filterIssues()">⚠️ 有问题 <span class="count" id="countIssues">0</span></div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="content-header">
+      <h2 id="contentTitle">📦 All Apps</h2>
+      <div class="search-box"><input type="text" placeholder="🔍 Search apps..." oninput="searchApps(this.value)"></div>
+      <div class="batch-btns">
+        <button onclick="batchInstallAll()">📥 Install All</button>
+        <button onclick="batchTestAll()">🧪 Test All</button>
+        <button onclick="exportReport()">📋 Export Report</button>
+      </div>
+    </div>
+    <div class="app-grid" id="appGrid"></div>
+  </div>
+
+  <!-- Detail Panel -->
+  <div class="detail-panel" id="detailPanel">
+    <h3>📱 App Detail <span class="close-btn" onclick="closeDetail()">✕</span></h3>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<div class="summary-bar">
+  <div class="item"><span class="dot g"></span> Compatible ≥85</div>
+  <div class="item"><span class="dot y"></span> Partial 65-84</div>
+  <div class="item"><span class="dot r"></span> Needs Work &lt;65</div>
+  <div class="item" style="margin-left:auto">伏羲八卦·八类应用 | 老子·道法自然·适配无为 | XRGF50 Android 12</div>
+</div>
+
+<!-- V3 Device Simulator Overlay -->
+<div class="v3-overlay" id="v3Sim">
+  <div class="v3-top">
+    <div class="title">🕶️ <span id="simIcon"></span> <span id="simName">V3 Virtual Device</span></div>
+    <div class="nav-btns">
+      <button onclick="simPrevApp()">◄ 上一个</button>
+      <button onclick="simNextApp()">下一个 ►</button>
+      <button onclick="simAutoTest()">🧪 自动全量测试</button>
+    </div>
+    <div class="hw">XRGF50 · Snapdragon AR1 · Android 12 · <span id="simTime">00:00</span></div>
+    <button class="exit-btn" onclick="stopSim()">✕ 退出仿真</button>
+  </div>
+  <div class="v3-main">
+    <div class="v3-viewport">
+      <div class="v3-glasses">
+        <div class="v3-screen" id="v3Screen">
+          <div class="sb"><div class="l"><span id="sbApp">—</span></div><div class="r"><span>📶</span><span id="sbBat">🔋85%</span><span id="sbTime">16:20</span></div></div>
+          <div class="app-ui" id="v3AppUI"></div>
+        </div>
+      </div>
+      <div class="v3-label">RayNeo V3 · Micro OLED 1920×1080 · 159mAh · 1D Touchpad + Voice</div>
+      <div class="v3-input-bar">
+        <div class="tp">
+          <button class="v3-ib" onclick="v3Input('slide_back')">◄ 后滑</button>
+          <button class="v3-ib" onclick="v3Input('tap')" style="min-width:80px;font-weight:bold">● 轻触</button>
+          <button class="v3-ib" onclick="v3Input('slide_fwd')">前滑 ►</button>
+        </div>
+        <div class="v3-sep"></div>
+        <button class="v3-ib act" onclick="v3Input('action')">⊙ 功能键</button>
+        <button class="v3-ib mic" onclick="v3Input('voice')">🎤 语音</button>
+        <button class="v3-ib" onclick="v3Input('triple')">⊙⊙⊙ 三击</button>
+      </div>
+    </div>
+    <div class="v3-panel">
+      <div><h4>📊 运行时指标</h4>
+        <div class="v3-mg">
+          <div class="v3-m" id="mBat"><div class="v">85%</div><div class="l">🔋 电量</div></div>
+          <div class="v3-m" id="mTmp"><div class="v">32°C</div><div class="l">🌡️ 温度</div></div>
+          <div class="v3-m" id="mMem"><div class="v">45%</div><div class="l">💾 内存</div></div>
+          <div class="v3-m" id="mCpu"><div class="v">12%</div><div class="l">⚡ CPU</div></div>
+          <div class="v3-m" id="mDrn"><div class="v">0</div><div class="l">📉 %/min</div></div>
+          <div class="v3-m" id="mEta"><div class="v">—</div><div class="l">⏱ 续航</div></div>
+        </div>
+      </div>
+      <div><h4>🔍 八卦·问题发现 (<span id="issueN">0</span>)</h4><div class="v3-il" id="simIss"></div></div>
+      <div><h4>☰ 八卦分析</h4><div class="v3-bg" id="bgGrid"></div></div>
+      <div><h4>📝 事件日志</h4><div class="v3-log" id="simLog"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let allApps = [];
+let currentFilter = null;
+let selectedApp = null;
+
+async function api(method, path, body) {
+  const opts = {method, headers: {'Content-Type': 'application/json'}};
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  return r.json();
+}
+
+function toast(msg, dur = 2000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+
+async function loadApps() {
+  const data = await api('GET', '/api/apps');
+  allApps = data.apps;
+  document.getElementById('statTotal').textContent = data.total;
+  document.getElementById('statInstalled').textContent = data.installed;
+  const avg = allApps.length ? Math.round(allApps.reduce((s, a) => s + a.score, 0) / allApps.length) : 0;
+  document.getElementById('statAvg').textContent = avg;
+  document.getElementById('countAll').textContent = data.total;
+  document.getElementById('countInst').textContent = data.installed;
+  document.getElementById('countIssues').textContent = allApps.filter(a => a.issues && a.issues.length > 0).length;
+
+  const catMap = {'☰AI': 'count_ai', '☵导航': 'count_nav', '☲视觉': 'count_vis', '☳健康': 'count_health', '☴通讯': 'count_comm', '☶效率': 'count_eff', '☱娱乐': 'count_fun', '☷系统': 'count_sys'};
+  for (const [prefix, id] of Object.entries(catMap)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = allApps.filter(a => a.cat.startsWith(prefix)).length;
+  }
+  renderApps(allApps);
+}
+
+function renderApps(apps) {
+  const grid = document.getElementById('appGrid');
+  grid.innerHTML = apps.map(a => {
+    const scoreClass = a.score >= 85 ? 'good' : a.score >= 65 ? 'ok' : 'bad';
+    const cs = a.compat;
+    const segs = [cs.gesture, cs.voice, cs.display, cs.camera, cs.battery].map(v =>
+      `<div class="compat-seg ${v >= 80 ? 'high' : v >= 60 ? 'med' : 'low'}"></div>`
+    ).join('');
+    const badges = [];
+    if (a.native) badges.push('<span class="badge native">V3原生</span>');
+    else if (a.adapted) badges.push('<span class="badge adapted">适配版</span>');
+    if (a.installed) badges.push('<span class="badge inst">已安装</span>');
+    const installBtn = a.installed
+      ? `<button class="danger" onclick="event.stopPropagation();uninstallApp('${a.id}')">卸载</button>
+         <button onclick="event.stopPropagation();launchApp('${a.id}')">▶ 启动</button>`
+      : `<button class="primary" onclick="event.stopPropagation();installApp('${a.id}')">📥 安装</button>`;
+    return `
+      <div class="app-card ${a.installed ? 'installed' : ''}" onclick="showDetail('${a.id}')">
+        <div class="app-top">
+          <div class="app-icon">${a.icon}</div>
+          <div class="app-info">
+            <div class="app-name">${a.name}</div>
+            <div class="app-ver">v${a.ver} · ${a.size}</div>
+            <div class="app-cat">${a.cat}</div>
+          </div>
+        </div>
+        <div class="app-desc">${a.desc}</div>
+        <div class="compat-bar">${segs}</div>
+        <div class="app-meta">
+          <span class="app-score ${scoreClass}">${a.score}/100</span>
+          <div class="app-badges">${badges.join('')}</div>
+        </div>
+        <div class="app-actions">
+          ${installBtn}
+          <button onclick="event.stopPropagation();testApp('${a.id}')">🧪 测试</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function filterCat(cat, el) {
+  document.querySelectorAll('.cat-item').forEach(e => e.classList.remove('active'));
+  if (el) el.classList.add('active');
+  currentFilter = cat;
+  const filtered = cat ? allApps.filter(a => a.cat.includes(cat)) : allApps;
+  document.getElementById('contentTitle').textContent = el ? el.textContent.trim().split(' ').slice(0, 2).join(' ') : '📦 All Apps';
+  renderApps(filtered);
+}
+
+function filterInstalled() {
+  document.querySelectorAll('.cat-item').forEach(e => e.classList.remove('active'));
+  event.target.closest('.cat-item').classList.add('active');
+  renderApps(allApps.filter(a => a.installed));
+  document.getElementById('contentTitle').textContent = '✅ 已安装';
+}
+
+function filterIssues() {
+  document.querySelectorAll('.cat-item').forEach(e => e.classList.remove('active'));
+  event.target.closest('.cat-item').classList.add('active');
+  renderApps(allApps.filter(a => a.issues && a.issues.length > 0));
+  document.getElementById('contentTitle').textContent = '⚠️ 有问题的App';
+}
+
+function searchApps(q) {
+  q = q.toLowerCase();
+  const filtered = allApps.filter(a =>
+    a.name.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q) || a.pkg.toLowerCase().includes(q) || a.cat.toLowerCase().includes(q)
+  );
+  renderApps(filtered);
+}
+
+async function installApp(id) {
+  const r = await api('POST', '/api/apps/install', {id});
+  if (r.ok) {
+    toast(`✅ ${r.app} 安装成功 (兼容性 ${r.score}/100)`);
+    await loadApps();
+    if (selectedApp === id) showDetail(id);
+  }
+}
+
+async function uninstallApp(id) {
+  await api('POST', '/api/apps/uninstall', {id});
+  toast('🗑️ 已卸载');
+  await loadApps();
+  if (selectedApp === id) showDetail(id);
+}
+
+async function launchApp(id) {
+  const app = allApps.find(a => a.id === id);
+  if (!app || !app.installed) { toast('❌ 请先安装应用'); return; }
+  startSim(id);
+}
+
+async function testApp(id) {
+  const r = await api('POST', '/api/apps/test', {id});
+  toast(`🧪 测试完成: ${r.score}/100`);
+  showDetail(id);
+}
+
+async function showDetail(id) {
+  selectedApp = id;
+  const data = await api('GET', `/api/apps/${id}`);
+  const panel = document.getElementById('detailPanel');
+  const content = document.getElementById('detailContent');
+  panel.classList.add('open');
+
+  const scoreClass = data.score >= 85 ? 'good' : data.score >= 65 ? 'ok' : 'bad';
+  const barColor = v => v >= 80 ? 'var(--green)' : v >= 60 ? 'var(--yellow)' : 'var(--red)';
+  const c = data.compat;
+
+  const compatRows = [
+    {label: '手势', val: c.gesture},
+    {label: '语音', val: c.voice},
+    {label: '显示', val: c.display},
+    {label: '相机', val: c.camera},
+    {label: '电池', val: c.battery},
+  ].map(r => `
+    <div class="compat-row">
+      <span class="label">${r.label}</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:${r.val}%;background:${barColor(r.val)}"></div></div>
+      <span class="val" style="color:${barColor(r.val)}">${r.val}</span>
+    </div>
+  `).join('');
+
+  const testHtml = data.test_results ? data.test_results.results.map(t => `
+    <div class="test-item ${t.level}">
+      <strong>${t.test}</strong>: ${t.msg}
+      ${t.fix ? `<span class="fix">💡 ${t.fix}</span>` : ''}
+    </div>
+  `).join('') : '<div style="color:var(--dim);font-size:12px">点击"测试"按钮运行兼容性检查</div>';
+
+  const issuesHtml = (data.issues || []).length > 0
+    ? data.issues.map(i => `<div class="issue">⚠️ ${i}</div>`).join('')
+    : '<div style="color:var(--green);font-size:12px">✅ 无已知问题</div>';
+
+  content.innerHTML = `
+    <div class="detail-header">
+      <div class="icon">${data.icon}</div>
+      <div class="name">${data.name}</div>
+      <div class="pkg">${data.pkg} · v${data.ver} · ${data.size}</div>
+      <div style="margin-top:8px"><span class="app-score ${scoreClass}" style="font-size:24px">${data.score}/100</span></div>
+      <div style="margin-top:4px">
+        ${data.native ? '<span class="badge native">V3原生应用</span>' : ''}
+        ${data.adapted ? '<span class="badge adapted">第三方适配</span>' : ''}
+        ${data.installed ? '<span class="badge inst">已安装</span>' : ''}
+      </div>
+    </div>
+    <div class="app-desc" style="margin-bottom:12px;text-align:center">${data.desc}</div>
+
+    <h4 style="font-size:13px;margin-bottom:8px">📊 兼容性矩阵</h4>
+    <div class="compat-detail">${compatRows}</div>
+
+    <h4 style="font-size:13px;margin-bottom:8px">🧪 测试结果</h4>
+    <div class="test-results">${testHtml}</div>
+
+    <h4 style="font-size:13px;margin-bottom:8px">⚠️ 已知问题</h4>
+    <div class="issues-list">${issuesHtml}</div>
+
+    <div class="detail-actions">
+      ${data.installed
+        ? `<button onclick="launchApp('${data.id}')">▶ 启动应用</button>
+           <button class="danger" onclick="uninstallApp('${data.id}')" style="color:var(--red)">🗑️ 卸载</button>`
+        : `<button class="primary" onclick="installApp('${data.id}')">📥 安装到V3</button>`
+      }
+      <button onclick="testApp('${data.id}')">🧪 运行兼容性测试</button>
+    </div>
+  `;
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+  selectedApp = null;
+}
+
+async function batchInstallAll() {
+  const uninstalled = allApps.filter(a => !a.installed);
+  for (const a of uninstalled) {
+    await api('POST', '/api/apps/install', {id: a.id});
+  }
+  toast(`✅ 批量安装 ${uninstalled.length} 个应用`);
+  await loadApps();
+}
+
+async function batchTestAll() {
+  let total = 0, pass = 0, warn = 0, fail = 0;
+  for (const a of allApps) {
+    const r = await api('POST', '/api/apps/test', {id: a.id});
+    total++;
+    if (r.score >= 85) pass++;
+    else if (r.score >= 65) warn++;
+    else fail++;
+  }
+  toast(`🧪 测试完成: ${pass}✅ ${warn}⚠️ ${fail}❌ / ${total}`, 4000);
+  await loadApps();
+}
+
+function exportReport() {
+  let md = `# RayNeo V3 App 兼容性报告\n\n`;
+  md += `> 生成时间: ${new Date().toLocaleString()}\n`;
+  md += `> 设备: XRGF50 · Android 12 · Snapdragon AR1\n\n`;
+  md += `| App | 分类 | 评分 | 手势 | 语音 | 显示 | 相机 | 电池 | 状态 | 问题 |\n`;
+  md += `|-----|------|------|------|------|------|------|------|------|------|\n`;
+  for (const a of allApps) {
+    const st = a.installed ? '✅' : '—';
+    const issues = (a.issues || []).length;
+    md += `| ${a.icon} ${a.name} | ${a.cat} | **${a.score}** | ${a.compat.gesture} | ${a.compat.voice} | ${a.compat.display} | ${a.compat.camera} | ${a.compat.battery} | ${st} | ${issues} |\n`;
+  }
+  md += `\n## 八卦分类统计\n\n`;
+  const cats = {};
+  allApps.forEach(a => { cats[a.cat] = (cats[a.cat] || 0) + 1; });
+  for (const [cat, n] of Object.entries(cats)) md += `- **${cat}**: ${n}个\n`;
+
+  const blob = new Blob([md], {type: 'text/markdown'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'v3_app_compat_report.md'; a.click();
+  URL.revokeObjectURL(url);
+  toast('📋 报告已导出');
+}
+
+// ─── V3 Device Simulator Engine ──────────────────────────
+const V3={running:null,battery:85,temp:32,mem:45,cpu:12,uptime:0,timer:null,issues:[],log:[],sel:0,st:{},autoIdx:-1};
+const DRAIN={ai_scene:3.8,ai_translate:3.5,ai_assistant:2.0,nav_ar:4.2,nav_bike:2.5,teleprompter:1.0,photo_viewer:1.2,step_counter:0.8,workout:4.0,notify_hub:0.5,wechat_lite:2.8,calendar:0.4,notes:1.5,music:1.0,podcast:0.8,weather:0.3,settings:0.2,ota:2.0,amap:4.5,bilibili:5.0};
+
+function startSim(id){
+  const app=allApps.find(a=>a.id===id);if(!app)return;
+  V3.running=id;V3.uptime=0;V3.issues=[];V3.log=[];V3.sel=0;V3.st={};
+  V3.battery=85;V3.temp=32;V3.mem=45+Math.random()*20;V3.cpu=10+Math.random()*15;
+  document.getElementById('simIcon').textContent=app.icon;
+  document.getElementById('simName').textContent=app.name;
+  document.getElementById('sbApp').textContent=app.name;
+  document.getElementById('v3Sim').classList.add('active');
+  sLog('系统',`启动 ${app.name} v${app.ver} (${app.pkg})`);
+  sLog('系统',`兼容性评分: ${app.score}/100 | 功耗: ${DRAIN[id]||1}%/min`);
+  detectIssues(app);renderApp(id);
+  V3.timer=setInterval(()=>simTick(app),1000);
+  updateMet();updateBG();
+  api('POST','/api/apps/launch',{id});
+}
+function stopSim(){if(V3.timer)clearInterval(V3.timer);V3.timer=null;V3.running=null;document.getElementById('v3Sim').classList.remove('active');}
+function simTick(app){
+  V3.uptime++;const r=DRAIN[app.id]||1;
+  V3.battery=Math.max(0,V3.battery-r/60);
+  V3.temp=Math.min(45,V3.temp+(r>3?.05:.02));
+  V3.cpu=Math.min(95,10+r*8+Math.random()*5);
+  V3.mem=Math.min(90,V3.mem+.01);
+  if(V3.battery<=15&&V3.battery>14.9){addIss('warn','☳震·电量','电量低于15%');sLog('电源','⚠️ 低电量');}
+  if(V3.battery<=5&&V3.battery>4.9){addIss('error','☳震·电量','电量极低，即将关机');}
+  if(V3.battery<=0){sLog('电源','💀 电量耗尽');stopSim();toast('🪫 V3电量耗尽');return;}
+  if(V3.temp>40&&V3.uptime%30===0)addIss('warn','☲离·温控',`温度${V3.temp.toFixed(1)}°C偏高`);
+  const m=Math.floor(V3.uptime/60),s=V3.uptime%60;
+  document.getElementById('simTime').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const now=new Date();
+  document.getElementById('sbTime').textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  document.getElementById('sbBat').textContent=`🔋${Math.round(V3.battery)}%`;
+  updateMet();
+  // Auto-update dynamic apps
+  if(['step_counter','workout','music','podcast'].includes(app.id)&&V3.uptime%3===0)renderApp(app.id);
+}
+function updateMet(){
+  const r=DRAIN[V3.running]||0,eta=V3.battery>0?Math.round(V3.battery/r):0;
+  sM('mBat',Math.round(V3.battery)+'%',V3.battery<15?'d':V3.battery<30?'w':'');
+  sM('mTmp',V3.temp.toFixed(1)+'°C',V3.temp>40?'d':V3.temp>38?'w':'');
+  sM('mMem',Math.round(V3.mem)+'%',V3.mem>80?'w':'');
+  sM('mCpu',Math.round(V3.cpu)+'%',V3.cpu>80?'w':'');
+  sM('mDrn',r.toFixed(1),r>3?'d':r>2?'w':'');
+  sM('mEta',eta>0?eta+'min':'—',eta<10?'d':eta<20?'w':'');
+}
+function sM(id,v,c){const e=document.getElementById(id);e.querySelector('.v').textContent=v;e.className='v3-m'+(c?' '+c:'');}
+function detectIssues(app){
+  const c=app.compat;
+  if(c.gesture<60)addIss('error','☰乾·手势',`1D触控板无法替代触屏(${c.gesture}分)`);
+  else if(c.gesture<80)addIss('warn','☰乾·手势',`部分操作需触屏(${c.gesture}分)`);
+  else addIss('pass','☰乾·手势',`手势兼容良好(${c.gesture}分)`);
+  if(c.voice<60)addIss('warn','☱兑·语音',`语音集成不完整(${c.voice}分)`);
+  else addIss('pass','☱兑·语音',`语音兼容良好(${c.voice}分)`);
+  if(c.display<60)addIss('error','☲离·显示',`UI未适配微OLED(${c.display}分)，元素不可读`);
+  else if(c.display<80)addIss('warn','☲离·显示',`部分UI偏小(${c.display}分)`);
+  else addIss('pass','☲离·显示',`显示适配良好(${c.display}分)`);
+  if(c.battery<40)addIss('error','☳震·电池',`功耗过高(${c.battery}分)，续航<30min`);
+  else if(c.battery<60)addIss('warn','☳震·电池',`功耗偏高(${c.battery}分)，续航40-60min`);
+  else addIss('pass','☳震·电池',`功耗正常(${c.battery}分)`);
+  if(c.camera>70)addIss('pass','☵坎·相机',`相机集成良好(${c.camera}分)`);
+  (app.issues||[]).forEach(i=>addIss('info','☴巽·已知',i));
+  if(!app.native)addIss('warn','☷坤·适配','第三方应用，需额外适配验证');
+}
+function addIss(lv,tag,msg){if(V3.issues.find(i=>i.msg===msg))return;V3.issues.push({lv,tag,msg});renderIss();}
+function renderIss(){
+  document.getElementById('simIss').innerHTML=V3.issues.map(i=>`<div class="v3-ii ${i.lv}"><strong>${i.tag}</strong>: ${i.msg}</div>`).join('');
+  document.getElementById('issueN').textContent=V3.issues.filter(i=>i.lv==='error'||i.lv==='warn').length;
+}
+function sLog(src,msg){
+  const t=V3.uptime,ts=`${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+  V3.log.unshift({ts,src,msg});if(V3.log.length>50)V3.log.pop();
+  document.getElementById('simLog').innerHTML=V3.log.map(e=>`<div class="e"><span class="t">[${e.ts}]</span> <b>${e.src}</b>: ${e.msg}</div>`).join('');
+}
+function v3Input(type){if(!V3.running)return;sLog('输入',type);const u=AU[V3.running];if(u&&u.onInput)u.onInput(type);renderApp(V3.running);}
+function updateBG(){
+  const tg=['☰乾','☱兑','☲离','☳震','☴巽','☵坎','☶艮','☷坤'],ct={};
+  tg.forEach(t=>ct[t]=0);
+  V3.issues.forEach(i=>{tg.forEach(t=>{if(i.tag.startsWith(t.substring(0,2)))ct[t]++;});});
+  document.getElementById('bgGrid').innerHTML=tg.map(t=>`<div class="v3-bi${ct[t]>0?' hi':''}"><div class="tr">${t[0]}</div><div class="cn">${ct[t]}</div><div>${t.substring(1)}</div></div>`).join('');
+}
+function simPrevApp(){
+  const ids=allApps.filter(a=>a.installed).map(a=>a.id);if(ids.length<2)return;
+  const i=ids.indexOf(V3.running);stopSim();startSim(ids[(i-1+ids.length)%ids.length]);
+}
+function simNextApp(){
+  const ids=allApps.filter(a=>a.installed).map(a=>a.id);if(ids.length<2)return;
+  const i=ids.indexOf(V3.running);stopSim();startSim(ids[(i+1)%ids.length]);
+}
+async function simAutoTest(){
+  const installed=allApps.filter(a=>a.installed);
+  for(let i=0;i<installed.length;i++){
+    stopSim();await new Promise(r=>setTimeout(r,300));
+    startSim(installed[i].id);
+    await new Promise(r=>setTimeout(r,3000));
+    sLog('自动测试',`[${i+1}/${installed.length}] ${installed[i].name} 完成`);
+  }
+  toast(`🧪 全量仿真测试完成: ${installed.length}个App`);
+}
+function renderApp(id){const u=AU[id];if(u)document.getElementById('v3AppUI').innerHTML=u.render();}
+
+// ─── 20 App UI Renderers ─────────────────────────────────
+const AU={};
+// 1. AI场景识别
+AU.ai_scene={render:()=>{
+  const obs=[{n:'椅子',c:94,x:80,y:90,w:120,h:100},{n:'桌子',c:91,x:300,y:80,w:180,h:120},{n:'电脑',c:88,x:340,y:50,w:80,h:60},{n:'杯子',c:85,x:500,y:130,w:50,h:50},{n:'人',c:97,x:160,y:30,w:100,h:200}];
+  const s=V3.st.o||0;
+  return `<div class="cam"></div>${obs.map((o,i)=>`<div class="arb" style="left:${o.x}px;top:${o.y}px;width:${o.w}px;height:${o.h}px;${i===s?'border-width:3px;box-shadow:0 0 10px rgba(34,197,94,.5)':''}">${o.n} ${o.c}%</div>`).join('')}<div style="position:absolute;bottom:6px;left:8px;right:8px;display:flex;justify-content:space-between;font-size:10px;color:#888"><span>🤖 AI Scene v2.1 · ${obs.length} objects</span><span>◄●► 切换目标</span></div>`;
+},onInput:t=>{if(!V3.st.o)V3.st.o=0;if(t==='slide_fwd')V3.st.o=(V3.st.o+1)%5;if(t==='slide_back')V3.st.o=(V3.st.o+4)%5;if(t==='tap')sLog('AI',`选中: ${['椅子','桌子','电脑','杯子','人'][V3.st.o]}`);if(t==='voice')sLog('AI','语音识别: 分析中...');}};
+// 2. 实时翻译
+AU.ai_translate={render:()=>`<div class="cam"></div>
+  <div style="position:absolute;top:50px;left:30px;padding:8px;background:rgba(0,0,0,.8);border:1px solid var(--accent);border-radius:6px;max-width:280px">
+    <div style="font-size:10px;color:#888">EN detected:</div><div style="font-size:13px;color:#fff;margin:3px 0">"Welcome to AR"</div>
+    <div style="font-size:10px;color:var(--accent)">→ 中文:</div><div style="font-size:13px;color:var(--green)">"欢迎来到AR"</div></div>
+  <div style="position:absolute;top:170px;left:250px;padding:8px;background:rgba(0,0,0,.8);border:1px solid var(--yellow);border-radius:6px">
+    <div style="font-size:10px;color:#888">JP:</div><div style="font-size:13px;color:#fff">"未来へようこそ"</div>
+    <div style="font-size:10px;color:var(--accent)">→</div><div style="font-size:13px;color:var(--green)">"欢迎来到未来"</div></div>
+  <div style="position:absolute;bottom:6px;left:8px;font-size:10px;color:#888">🌐 实时翻译 · EN/JP/KR/FR → 中文</div>`,
+onInput:t=>{if(t==='voice')sLog('翻译','语音查词中...');if(t==='tap')sLog('翻译','手动选区翻译');}};
+// 3. 小雷助手
+AU.ai_assistant={render:()=>{
+  const ms=V3.st.ms||[{f:'ai',t:'你好！我是小雷助手，有什么可以帮你？'},{f:'u',t:'今天天气怎么样？'},{f:'ai',t:'今天晴天，28°C，适合户外活动。'}];
+  V3.st.ms=ms;
+  return `<div class="hud" style="padding:8px"><div class="ht">🧠 小雷助手 v3.0</div>
+    <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px">${ms.map(m=>`<div style="align-self:${m.f==='u'?'flex-end':'flex-start'};max-width:75%;padding:5px 8px;border-radius:8px;font-size:11px;background:${m.f==='u'?'rgba(0,212,255,.2)':'rgba(255,255,255,.08)'}">${m.t}</div>`).join('')}</div>
+    <div style="margin-top:6px;padding:5px 8px;background:rgba(255,255,255,.05);border-radius:6px;font-size:10px;color:#555">🎤 按语音键说话...</div></div>`;
+},onInput:t=>{if(t==='voice'){const ms=V3.st.ms||[];const qs=['查明天天气','帮我设闹钟','翻译hello'];const as=['明天多云转晴，25°C。','好的，请说时间。','hello = 你好'];const i=ms.filter(m=>m.f==='u').length;ms.push({f:'u',t:qs[i%3]},{f:'ai',t:as[i%3]});V3.st.ms=ms;sLog('助手','对话完成');}}};
+// 4. AR步行导航
+AU.nav_ar={render:()=>`<div class="cam"></div>
+  <div style="position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);font-size:80px;color:var(--green);text-shadow:0 0 20px rgba(34,197,94,.5);filter:drop-shadow(0 0 8px rgba(34,197,94,.3))">⬆</div>
+  <div style="position:absolute;top:15px;right:15px;background:rgba(0,0,0,.8);padding:8px;border-radius:8px;text-align:right">
+    <div style="font-size:18px;font-weight:bold;color:var(--green)">350m</div><div style="font-size:10px;color:#888">预计 5 分钟</div></div>
+  <div style="position:absolute;bottom:40px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);padding:6px 16px;border-radius:20px;font-size:12px;color:var(--accent)">📍 前方200m右转 → 中山路</div>
+  <div style="position:absolute;bottom:6px;left:8px;font-size:10px;color:#888">🧭 AR导航 · GPS via 手机中继</div>`,
+onInput:t=>{if(t==='voice')sLog('导航','语音: "到最近的地铁站" → 正在规划路线...');if(t==='tap')sLog('导航','切换视图');}};
+// 5. 骑行HUD
+AU.nav_bike={render:()=>{
+  const spd=V3.st.spd||(18+Math.random()*10);V3.st.spd=spd;
+  return `<div class="hud" style="justify-content:center;align-items:center;background:rgba(0,20,40,.9)">
+    <div style="font-size:64px;font-weight:bold;color:var(--green)">${spd.toFixed(1)}</div><div style="font-size:14px;color:#888;margin-top:-4px">km/h</div>
+    <div style="display:flex;gap:40px;margin-top:20px;font-size:12px;color:#aaa">
+      <div style="text-align:center"><div style="font-size:20px;font-weight:bold;color:var(--accent)">${(V3.uptime*0.3).toFixed(1)}</div>km</div>
+      <div style="text-align:center"><div style="font-size:20px;font-weight:bold;color:var(--yellow)">${Math.floor(V3.uptime/60)}:${String(V3.uptime%60).padStart(2,'0')}</div>时间</div>
+      <div style="text-align:center"><div style="font-size:20px;font-weight:bold;color:var(--orange)">128</div>bpm</div>
+    </div></div>`;
+},onInput:t=>{if(t==='tap')sLog('骑行','切换显示模式');V3.st.spd=15+Math.random()*15;}};
+// 6. 提词器
+AU.teleprompter={render:()=>{
+  const lines=['各位领导、各位来宾：','大家好！今天非常荣幸','能在这里与大家分享','RayNeo V3的最新进展。','作为新一代AR眼镜，','V3采用了Snapdragon AR1芯片，','配备12MP摄像头和','高分辨率Micro OLED显示屏。','接下来，让我为大家','详细介绍各项功能...'];
+  const cur=V3.st.line||3;V3.st.line=cur;
+  return `<div class="hud" style="background:rgba(0,0,10,.95);justify-content:center;padding:20px 40px">
+    ${lines.map((l,i)=>`<div style="font-size:${i===cur?'22px':'14px'};color:${i===cur?'#fff':i===cur-1||i===cur+1?'#666':'#333'};text-align:center;padding:4px 0;transition:all .3s;${i===cur?'text-shadow:0 0 10px rgba(0,212,255,.3)':''}">${l}</div>`).join('')}
+    <div style="position:absolute;bottom:8px;right:12px;font-size:10px;color:#555">${cur+1}/${lines.length} · ◄●► 翻页</div></div>`;
+},onInput:t=>{const n=V3.st.line||3;if(t==='slide_fwd')V3.st.line=Math.min(9,n+1);if(t==='slide_back')V3.st.line=Math.max(0,n-1);if(t==='voice')sLog('提词器','语音: 暂停滚动');}};
+// 7. 照片查看
+AU.photo_viewer={render:()=>{
+  const photos=['🏔️','🌅','🏙️','🌸','🐱','🎆','🏖️','🍜','🎭','🌌','🦋','🎪'];
+  const s=V3.st.pi||0;V3.st.pi=s;
+  return `<div class="hud" style="padding:8px"><div class="ht">🖼️ 照片 (${photos.length})</div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:120px;background:rgba(255,255,255,.03);border-radius:8px">${photos[s]}</div>
+    <div style="display:flex;justify-content:center;gap:4px;margin-top:6px">${photos.map((_,i)=>`<div style="width:6px;height:6px;border-radius:50%;background:${i===s?'var(--accent)':'#333'}"></div>`).join('')}</div>
+    <div style="text-align:center;font-size:10px;color:#555;margin-top:4px">${s+1}/${photos.length} · ◄► 翻页 · ● 全屏</div></div>`;
+},onInput:t=>{const n=V3.st.pi||0;if(t==='slide_fwd')V3.st.pi=(n+1)%12;if(t==='slide_back')V3.st.pi=(n+11)%12;if(t==='tap')sLog('相册','全屏查看');}};
+// 8. 计步器
+AU.step_counter={render:()=>{
+  const steps=V3.st.stp||(2000+V3.uptime*3);V3.st.stp=2000+V3.uptime*3;const cal=Math.round(steps*0.04);const pct=Math.min(100,Math.round(steps/10000*100));
+  return `<div class="hud" style="justify-content:center;align-items:center;background:rgba(0,10,20,.95)">
+    <svg width="160" height="160" viewBox="0 0 160 160"><circle cx="80" cy="80" r="70" fill="none" stroke="#222" stroke-width="8"/>
+    <circle cx="80" cy="80" r="70" fill="none" stroke="${pct>=100?'var(--green)':'var(--accent)'}" stroke-width="8" stroke-dasharray="${pct*4.4} 440" stroke-linecap="round" transform="rotate(-90 80 80)"/></svg>
+    <div style="position:absolute;text-align:center"><div style="font-size:36px;font-weight:bold">${steps.toLocaleString()}</div><div style="font-size:11px;color:#888">步 / 10,000目标</div></div>
+    <div style="display:flex;gap:30px;margin-top:12px;font-size:12px;color:#aaa"><div>🔥 ${cal} kcal</div><div>📏 ${(steps*0.7/1000).toFixed(1)} km</div><div>⏱ ${Math.floor(V3.uptime/60)}min</div></div></div>`;
+},onInput:t=>{if(t==='tap')sLog('计步','重置今日步数');if(t==='voice')sLog('计步','语音: "今天走了多少步?"');}};
+// 9. 运动教练
+AU.workout={render:()=>{
+  const ex=['深蹲','俯卧撑','开合跳','平板支撑'][V3.st.ex||0];const reps=V3.st.reps||(Math.floor(V3.uptime/4));V3.st.reps=Math.floor(V3.uptime/4);
+  return `<div class="cam"></div>
+    <div style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,.8);padding:6px 10px;border-radius:6px"><span style="font-size:14px;font-weight:bold;color:var(--accent)">${ex}</span></div>
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:72px">🏋️</div>
+    <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.8);padding:6px 10px;border-radius:6px;text-align:center">
+      <div style="font-size:28px;font-weight:bold;color:var(--green)">${reps}</div><div style="font-size:10px;color:#888">次数</div></div>
+    <div style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,.2);border:1px solid var(--red);padding:4px 12px;border-radius:4px;font-size:11px;color:var(--red)">⚠️ AI推理功耗高 · 运动中触控不灵敏</div>`;
+},onInput:t=>{if(t==='slide_fwd'){V3.st.ex=((V3.st.ex||0)+1)%4;V3.st.reps=0;sLog('教练',`切换到: ${['深蹲','俯卧撑','开合跳','平板支撑'][V3.st.ex]}`);}if(t==='voice')sLog('教练','语音: "下一个动作"');}};
+// 10. 通知中心
+AU.notify_hub={render:()=>{
+  const ns=[{ic:'💬',t:'微信',s:'小明: 晚上一起吃饭吗？',tm:'2分钟前'},{ic:'📧',t:'邮件',s:'项目周报 - 请查收',tm:'15分钟前'},{ic:'📞',t:'未接来电',s:'妈妈 (2次)',tm:'30分钟前'},{ic:'📅',t:'日程提醒',s:'14:00 产品评审会议',tm:'即将开始'},{ic:'🔔',t:'系统',s:'V3固件更新可用 v3.1.0',tm:'1小时前'}];
+  const s=V3.st.ni||0;V3.st.ni=s;
+  return `<div class="hud" style="padding:8px"><div class="ht">🔔 通知中心 (${ns.length})</div>
+    <div class="hl">${ns.map((n,i)=>`<div class="hi${i===s?' sel':''}"><div class="ic">${n.ic}</div><div class="tx"><div class="tt">${n.t}</div><div class="st">${n.s}</div></div><div style="font-size:9px;color:#555">${n.tm}</div></div>`).join('')}</div></div>`;
+},onInput:t=>{const n=V3.st.ni||0;if(t==='slide_fwd')V3.st.ni=Math.min(4,n+1);if(t==='slide_back')V3.st.ni=Math.max(0,n-1);if(t==='tap')sLog('通知',`打开: ${['微信','邮件','来电','日程','系统'][V3.st.ni||0]}`);if(t==='voice')sLog('通知','语音: "回复: 好的"');}};
+// 11. 微信精简 (低兼容性 - 显示问题)
+AU.wechat_lite={render:()=>{
+  const chats=[{n:'小明',m:'晚上吃啥？',t:'16:15'},{n:'工作群',m:'[图片]',t:'16:10'},{n:'妈妈',m:'记得吃药',t:'15:30'},{n:'小红',m:'好的👍',t:'14:20'}];
+  const s=V3.st.wi||0;V3.st.wi=s;
+  return `<div class="hud" style="padding:6px"><div class="ht">💬 微信精简</div>
+    <div class="hl">${chats.map((c,i)=>`<div class="hi ci${i===s?' sel':''}" style="position:relative"><div class="ic" style="font-size:24px;background:rgba(34,197,94,.2);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center">👤</div><div class="tx"><div class="tt" style="font-size:9px !important">${c.n}</div><div class="st" style="font-size:7px !important">${c.m}</div></div><div style="font-size:7px;color:#555">${c.t}</div></div>`).join('')}</div>
+    <div style="margin-top:4px;padding:4px 8px;background:rgba(239,68,68,.15);border:1px dashed var(--red);border-radius:4px;font-size:9px;color:var(--red);text-align:center">⚠️ 触摸屏UI不适配1D触控板 | 字体过小(7-9px) | 需2x缩放</div></div>`;
+},onInput:t=>{const n=V3.st.wi||0;if(t==='slide_fwd')V3.st.wi=Math.min(3,n+1);if(t==='slide_back')V3.st.wi=Math.max(0,n-1);if(t==='tap'){sLog('微信','⚠️ 触控板无法精确选中聊天项(需触屏)');addIss('error','☰乾·交互','微信聊天列表无法用1D触控板精确操作');}}};
+// 12. 日程提醒
+AU.calendar={render:()=>{
+  const evts=[{t:'09:00',n:'晨会',d:'线上会议室A',c:'var(--accent)'},{t:'11:00',n:'代码评审',d:'GitHub PR #42',c:'var(--green)'},{t:'14:00',n:'产品评审',d:'会议室3F-01',c:'var(--yellow)'},{t:'16:30',n:'客户演示',d:'V3新功能展示',c:'var(--purple)'}];
+  const s=V3.st.ci2||0;V3.st.ci2=s;
+  return `<div class="hud" style="padding:8px"><div class="ht">📅 今日日程 (${evts.length})</div>
+    <div class="hl">${evts.map((e,i)=>`<div class="hi${i===s?' sel':''}" style="border-left:3px solid ${e.c}"><div style="font-size:12px;font-weight:bold;color:${e.c};min-width:40px">${e.t}</div><div class="tx"><div class="tt">${e.n}</div><div class="st">${e.d}</div></div></div>`).join('')}</div></div>`;
+},onInput:t=>{const n=V3.st.ci2||0;if(t==='slide_fwd')V3.st.ci2=Math.min(3,n+1);if(t==='slide_back')V3.st.ci2=Math.max(0,n-1);if(t==='voice')sLog('日程','语音: "添加明天10点会议"');}};
+// 13. 语音笔记
+AU.notes={render:()=>{
+  const recs=V3.st.recs||['会议纪要：Q3目标确认，需要跟进...','想法：AR眼镜可以集成实时字幕功能'];V3.st.recs=recs;
+  const rec=V3.st.recording||false;
+  return `<div class="hud" style="padding:8px"><div class="ht">📝 语音笔记 (${recs.length}条)</div>
+    <div class="hl">${recs.map((r,i)=>`<div class="hi"><div class="ic">📄</div><div class="tx"><div class="tt">${r.substring(0,20)}...</div><div class="st">${r}</div></div></div>`).join('')}</div>
+    <div style="margin-top:6px;text-align:center;padding:8px;background:${rec?'rgba(239,68,68,.2)':'rgba(34,197,94,.1)'};border-radius:8px;font-size:12px;color:${rec?'var(--red)':'var(--green)'}">
+      ${rec?'🔴 录音中... 按语音键停止':'🎤 按语音键开始录音'}</div></div>`;
+},onInput:t=>{if(t==='voice'){V3.st.recording=!V3.st.recording;if(!V3.st.recording){V3.st.recs.push('新录音：'+new Date().toLocaleTimeString());sLog('笔记','录音保存');}else sLog('笔记','开始录音');}}};
+// 14. 音乐播放
+AU.music={render:()=>{
+  const songs=[{n:'晴天',a:'周杰伦'},{n:'稻香',a:'周杰伦'},{n:'七里香',a:'周杰伦'}];
+  const si=V3.st.si||0;const playing=V3.st.playing!==false;const pct=V3.uptime%180/180*100;
+  return `<div class="hud" style="justify-content:center;align-items:center;background:rgba(0,5,15,.95)">
+    <div style="font-size:64px;margin-bottom:8px">🎵</div>
+    <div style="font-size:16px;font-weight:bold">${songs[si].n}</div><div style="font-size:11px;color:#888">${songs[si].a}</div>
+    <div style="width:80%;height:3px;background:#222;border-radius:2px;margin:12px 0"><div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px"></div></div>
+    <div style="display:flex;gap:20px;font-size:20px;color:#aaa"><span>⏮</span><span style="font-size:28px;color:var(--accent)">${playing?'⏸':'▶'}</span><span>⏭</span></div>
+    <div style="margin-top:12px;font-size:12px;color:#555;font-style:italic">"故事的小黄花..."</div></div>`;
+},onInput:t=>{if(t==='tap'){V3.st.playing=V3.st.playing===false?true:false;sLog('音乐',V3.st.playing?'播放':'暂停');}if(t==='slide_fwd'){V3.st.si=((V3.st.si||0)+1)%3;sLog('音乐','下一首');}if(t==='slide_back'){V3.st.si=((V3.st.si||0)+2)%3;sLog('音乐','上一首');}}};
+// 15. 播客
+AU.podcast={render:()=>{
+  const ep={n:'科技早知道',e:'#256: AR眼镜的未来',dur:'45:00'};
+  return `<div class="hud" style="justify-content:center;align-items:center;background:rgba(5,0,15,.95)">
+    <div style="font-size:56px">🎙️</div>
+    <div style="font-size:15px;font-weight:bold;margin-top:8px">${ep.n}</div><div style="font-size:11px;color:var(--accent)">${ep.e}</div>
+    <div style="width:80%;height:3px;background:#222;border-radius:2px;margin:12px 0"><div style="height:100%;width:${V3.uptime%2700/27}%;background:var(--purple);border-radius:2px"></div></div>
+    <div style="font-size:11px;color:#888">${Math.floor(V3.uptime/60)}:${String(V3.uptime%60).padStart(2,'0')} / ${ep.dur}</div>
+    <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:#aaa"><span>⏪15s</span><span style="font-size:18px;color:var(--purple)">⏸</span><span>15s⏩</span></div></div>`;
+},onInput:t=>{if(t==='tap')sLog('播客','暂停/播放');if(t==='slide_fwd')sLog('播客','快进15秒');if(t==='slide_back')sLog('播客','后退15秒');}};
+// 16. 天气
+AU.weather={render:()=>`<div class="hud" style="justify-content:center;align-items:center;background:linear-gradient(180deg,rgba(0,30,60,.95),rgba(0,10,30,.95))">
+  <div style="font-size:56px">☀️</div>
+  <div style="font-size:48px;font-weight:bold;margin-top:4px">28°</div><div style="font-size:13px;color:#aaa">晴天 · 湿度 45%</div>
+  <div style="display:flex;gap:12px;margin-top:16px;font-size:11px;color:#aaa">
+    ${['Mon☁️22°','Tue🌤️25°','Wed☀️28°','Thu⛅27°','Fri🌧️20°'].map(d=>`<div style="text-align:center;padding:4px 6px;background:rgba(255,255,255,.05);border-radius:4px">${d}</div>`).join('')}
+  </div></div>`,
+onInput:t=>{if(t==='voice')sLog('天气','语音: "明天天气怎么样?" → 明天多云转晴 25°C');}};
+// 17. V3设置
+AU.settings={render:()=>{
+  const items=[{ic:'🔆',n:'亮度',v:'128'},{ic:'🔊',n:'音量',v:'80%'},{ic:'📶',n:'WiFi',v:'HomeWiFi'},{ic:'🔵',n:'蓝牙',v:'已连接手机'},{ic:'🌐',n:'语言',v:'中文'},{ic:'ℹ️',n:'关于',v:'XRGF50 v3.0'}];
+  const s=V3.st.si2||0;V3.st.si2=s;
+  return `<div class="hud" style="padding:8px"><div class="ht">⚙️ V3 设置</div>
+    <div class="hl">${items.map((it,i)=>`<div class="hi${i===s?' sel':''}"><div class="ic">${it.ic}</div><div class="tx"><div class="tt">${it.n}</div><div class="st">${it.v}</div></div><div style="font-size:14px;color:#555">›</div></div>`).join('')}</div></div>`;
+},onInput:t=>{const n=V3.st.si2||0;if(t==='slide_fwd')V3.st.si2=Math.min(5,n+1);if(t==='slide_back')V3.st.si2=Math.max(0,n-1);if(t==='tap')sLog('设置',`打开: ${['亮度','音量','WiFi','蓝牙','语言','关于'][V3.st.si2||0]}`);}};
+// 18. 系统更新
+AU.ota={render:()=>{
+  const pct=V3.st.otaPct||0;
+  return `<div class="hud" style="justify-content:center;align-items:center;background:rgba(0,5,20,.95)">
+    <div style="font-size:48px">🔄</div>
+    <div style="font-size:16px;font-weight:bold;margin-top:8px">系统更新</div>
+    <div style="font-size:11px;color:#888;margin-top:4px">当前: v3.0.0 → 可用: v3.1.0</div>
+    ${pct>0?`<div style="width:80%;margin-top:16px"><div style="height:4px;background:#222;border-radius:2px"><div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px;transition:width .3s"></div></div><div style="text-align:center;font-size:11px;color:var(--accent);margin-top:4px">${pct}% · ${pct<100?'下载中...':'准备安装'}</div></div>`
+    :`<div style="margin-top:16px;padding:8px 20px;background:rgba(0,212,255,.15);border:1px solid var(--accent);border-radius:6px;font-size:12px;color:var(--accent)">● 轻触开始更新</div>`}
+    <div style="margin-top:12px;padding:4px 8px;background:rgba(234,179,8,.15);border-radius:4px;font-size:10px;color:var(--yellow)">⚠️ 更新过程需保持充电 (当前 ${Math.round(V3.battery)}%)</div></div>`;
+},onInput:t=>{if(t==='tap'){const p=V3.st.otaPct||0;V3.st.otaPct=Math.min(100,p+25);sLog('OTA',p>=75?'准备安装...':'下载中 '+(p+25)+'%');if(V3.battery<30)addIss('error','☷坤·更新','电量不足30%，更新可能失败');}}};
+// 19. 高德地图 (低兼容性)
+AU.amap={render:()=>`<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a2a1a,#0a1a0a);display:flex;align-items:center;justify-content:center">
+  <div style="width:90%;height:85%;border:1px solid #333;border-radius:4px;position:relative;background:rgba(0,20,0,.5)">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column">
+      <div style="font-size:40px">🗺️</div>
+      <div style="font-size:7px;color:#666;margin-top:8px" class="ci" style="padding:8px;position:relative">
+        [地图渲染区域 - UI元素过小]<br>缩放/平移需要触屏手势<br>1D触控板无法操作地图</div>
+    </div>
+    <div class="ci" style="position:absolute;top:4px;left:4px;font-size:6px;color:#555;padding:4px;background:rgba(0,0,0,.5);border-radius:2px">搜索地点...</div>
+    <div class="ci" style="position:absolute;bottom:4px;right:4px;display:flex;gap:2px">
+      <div style="width:14px;height:14px;background:rgba(255,255,255,.1);border-radius:2px;font-size:8px;text-align:center;color:#555">+</div>
+      <div style="width:14px;height:14px;background:rgba(255,255,255,.1);border-radius:2px;font-size:8px;text-align:center;color:#555">−</div>
+    </div>
+  </div></div>
+  <div style="position:absolute;bottom:4px;left:0;right:0;padding:3px 8px;background:rgba(239,68,68,.2);border-top:1px solid var(--red);font-size:9px;color:var(--red);text-align:center">⚠️ GPU负载过高 | 触控板无法缩放地图 | UI元素6-8px不可读 | 需手机GPS中继</div>`,
+onInput:t=>{if(t==='tap'){sLog('高德','⚠️ 触控板tap无法替代地图点击');addIss('error','☰乾·交互','地图操作依赖触屏，1D触控板无法完成缩放/拖拽');}if(t==='voice')sLog('高德','语音搜索: "附近的餐厅" → 需手机GPS');}};
+// 20. 哔哩哔哩 (低兼容性)
+AU.bilibili={render:()=>{
+  const pct=V3.uptime%150/150*100;
+  return `<div style="position:absolute;inset:0;background:#000;display:flex;flex-direction:column">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a0a2e,#0a1a3e)">
+      <div style="font-size:48px">📺</div>
+      <div style="position:absolute;top:8px;right:8px;font-size:7px;color:#555" class="ci" style="padding:4px">720P · ${Math.round(V3.battery)}%</div>
+    </div>
+    <div style="padding:4px 8px;background:rgba(0,0,0,.9)">
+      <div style="height:2px;background:#222;border-radius:1px"><div style="height:100%;width:${pct}%;background:#fb7299;border-radius:1px"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:7px;color:#555;margin-top:2px" class="ci">
+        <span>${Math.floor(V3.uptime/60)}:${String(V3.uptime%60).padStart(2,'0')}</span>
+        <span style="font-size:6px">弹幕区域(过小不可读)</span>
+        <span>2:30</span>
+      </div>
+    </div>
+    <div style="padding:3px 8px;background:rgba(239,68,68,.15);font-size:9px;color:var(--red);text-align:center;border-top:1px solid rgba(239,68,68,.3)">⚠️ 功耗极高(5%/min) · 续航约${Math.round(V3.battery/5)}min · 触控板精度不足 · 弹幕不可读</div></div>`;
+},onInput:t=>{if(t==='tap'){sLog('B站','暂停/播放');addIss('warn','☳震·功耗','视频播放功耗5%/min，159mAh仅约25分钟');}if(t==='slide_fwd')sLog('B站','⚠️ 触控板无法精确拖动进度条');}};
+
+// Init
+loadApps();
+</script>
+</body>
+</html>

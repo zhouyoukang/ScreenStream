@@ -1,0 +1,31 @@
+{
+  "interactions": [],
+  "places": {
+    "lab": {
+      "x": -0.01,
+      "y": 0.0,
+      "t": 1772710432.1381052
+    },
+    "here": {
+      "x": -0.27,
+      "y": 0.66,
+      "t": 1772728230.4912055
+    },
+    "测试记忆": {
+      "x": -0.01,
+      "y": 0.0,
+      "t": 1772820210.0416622
+    }
+  },
+  "preferences": {
+    "favorite_gait": "trot",
+    "energy_policy": "balanced"
+  },
+  "stats": {
+    "total_runs": 402,
+    "total_falls": 37,
+    "total_interactions": 0,
+    "total_distance": 0.012062109342197074
+  },
+  "last_save": 1772826262.4993913
+}

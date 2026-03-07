@@ -1,0 +1,83 @@
+{
+  "presets": [
+    {
+      "name": "中文对话基础场景",
+      "description": "一个Person + Voxta AI对话的最简场景",
+      "components": {
+        "person": {
+          "type": "Person",
+          "plugins": ["Scripter", "Voxta"]
+        },
+        "environment": "默认室内",
+        "lighting": "柔和自然光"
+      },
+      "voxta": {
+        "character": "小雅",
+        "tts": "EdgeTTS/zh-CN-XiaoxiaoNeural",
+        "stt": "Vosk/zh-CN",
+        "llm": "local-or-cloud"
+      }
+    },
+    {
+      "name": "VR沉浸对话",
+      "description": "VR第一人称视角 + AI对话",
+      "components": {
+        "person": {
+          "type": "Person",
+          "plugins": ["Scripter", "Voxta", "Embody"]
+        },
+        "camera": "Embody第一人称",
+        "environment": "咖啡厅",
+        "lighting": "暖色调"
+      },
+      "voxta": {
+        "character": "自定义",
+        "tts": "火山引擎",
+        "stt": "Whisper",
+        "llm": "cloud-api"
+      }
+    },
+    {
+      "name": "动画展示场景",
+      "description": "Timeline动画 + 多角色",
+      "components": {
+        "persons": [
+          {"type": "Person", "plugins": ["Timeline", "AutoExpressions"]},
+          {"type": "Person", "plugins": ["Timeline", "BodyLanguage"]}
+        ],
+        "environment": "舞台",
+        "lighting": "舞台灯光",
+        "music": "BGM播放器"
+      }
+    },
+    {
+      "name": "开发测试场景",
+      "description": "Scripter脚本开发和调试用",
+      "components": {
+        "person": {
+          "type": "Person",
+          "plugins": ["Scripter"]
+        },
+        "environment": "空白",
+        "debug": {
+          "showLogs": true,
+          "showFPS": true
+        }
+      }
+    }
+  ],
+  "tips": {
+    "performance": [
+      "关闭不用的镜子和反射",
+      "降低阴影质量",
+      "限制可见Atom数量",
+      "使用SSD加载场景"
+    ],
+    "vr": [
+      "使用Embody插件获得最佳沉浸感",
+      "调整IPD匹配你的眼距",
+      "开启ASW/Motion Smoothing",
+      "降低超采样到1.2x以保帧率"
+    ]
+  }
+}

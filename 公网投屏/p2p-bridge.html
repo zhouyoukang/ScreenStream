@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>P2P桥接端 — 零服务器公网投屏</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0e8;font-family:-apple-system,system-ui,"Microsoft YaHei",sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px}
+h1{font-size:24px;margin-bottom:4px}
+h1 span{color:#6c8cff}
+.subtitle{color:#8888a0;font-size:14px;margin-bottom:20px}
+
+.config{background:#14141f;border:1px solid #2a2a3a;border-radius:12px;padding:20px;width:100%;max-width:480px;margin-bottom:16px}
+.config label{display:block;font-size:13px;color:#8888a0;margin-bottom:4px}
+.config input{width:100%;padding:10px 12px;background:#0a0a0f;border:1px solid #2a2a3a;border-radius:8px;color:#fff;font-size:14px;outline:none;margin-bottom:12px}
+.config input:focus{border-color:#6c8cff}
+
+.big-btn{display:block;width:100%;max-width:480px;padding:16px;font-size:18px;font-weight:700;border:none;border-radius:12px;cursor:pointer;transition:all .15s;color:#fff;margin-bottom:12px}
+.big-btn:active{transform:scale(.97)}
+.big-btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-blue{background:#6c8cff}
+.btn-red{background:#f87171}
+
+.room-display{background:#14141f;border:2px solid #22c55e;border-radius:16px;padding:24px;text-align:center;width:100%;max-width:480px;margin:16px 0;display:none}
+.room-display .code{font-size:48px;font-weight:700;letter-spacing:12px;color:#22c55e;font-family:'Courier New',monospace}
+.room-display .hint{color:#8888a0;font-size:14px;margin-top:8px}
+
+.stats{background:#14141f;border:1px solid #2a2a3a;border-radius:12px;padding:16px;width:100%;max-width:480px;font-size:13px;color:#8888a0;margin-bottom:12px}
+.stats .row{display:flex;justify-content:space-between;margin-bottom:4px}
+.stats .val{color:#e0e0e8;font-weight:600}
+
+#log{background:#0a0a0f;border:1px solid #2a2a3a;border-radius:8px;width:100%;max-width:480px;height:200px;overflow-y:auto;padding:8px;font-family:'Cascadia Code',monospace;font-size:11px;line-height:1.5;color:#8888a0}
+.log-ok{color:#4ade80}
+.log-warn{color:#fbbf24}
+.log-err{color:#f87171}
+.log-info{color:#8888a0}
+
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(108,140,255,0.1);border:1px solid #6c8cff40;border-radius:20px;padding:5px 12px;font-size:12px;color:#6c8cff;margin-top:12px}
+</style>
+</head>
+<body>
+
+<h1>🔗 <span>P2P</span> 桥接端</h1>
+<p class="subtitle">在老人家中电脑上运行，连接手机和远程家人</p>
+
+<div class="config" id="config-panel">
+<label>手机ScreenStream地址</label>
+<input id="inp-phone" type="text" value="localhost:8086" placeholder="如 192.168.31.40:8086">
+<label>房间码（6位数字，告诉家人）</label>
+<input id="inp-room" type="text" maxlength="6" inputmode="numeric" placeholder="留空自动生成">
+</div>
+
+<button class="big-btn btn-blue" id="btn-start" onclick="startBridge()">启动桥接</button>
+<button class="big-btn btn-red" id="btn-stop" onclick="stopBridge()" style="display:none">停止桥接</button>
+
+<div class="room-display" id="room-box">
+<div>告诉家人这个房间码：</div>
+<div class="code" id="room-code">------</div>
+<div class="hint">家人打开 p2p-viewer.html 输入此码即可远程操作</div>
+</div>
+
+<div class="stats" id="stats-box" style="display:none">
+<div class="row"><span>状态</span><span class="val" id="st-status">-</span></div>
+<div class="row"><span>PeerJS信令</span><span class="val" id="st-peer">-</span></div>
+<div class="row"><span>ScreenStream</span><span class="val" id="st-ss">-</span></div>
+<div class="row"><span>观看人数</span><span class="val" id="st-viewers">0</span></div>
+<div class="row"><span>帧数</span><span class="val" id="st-frames">0</span></div>
+<div class="row"><span>流量</span><span class="val" id="st-bytes">0 KB</span></div>
+</div>
+
+<div id="log"></div>
+<span class="badge">🔒 零服务器 · PeerJS信令 · WebRTC P2P · 端到端加密</span>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════
+//  P2P Bridge — 浏览器端运行
+//  ScreenStream H264 WS → PeerJS DataChannel → Viewer
+//  零服务器依赖
+// ═══════════════════════════════════════════════════
+
+let peer = null;
+let ssWs = null;
+let viewers = new Map();
+let lastConfig = null;
+let lastKeyFrame = null;
+let frameCount = 0;
+let totalBytes = 0;
+let running = false;
+
+function genRoom() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function startBridge() {
+    const phone = document.getElementById('inp-phone').value.trim() || 'localhost:8086';
+    const room = document.getElementById('inp-room').value.trim() || genRoom();
+    const peerId = 'ss-bridge-' + room;
+
+    document.getElementById('btn-start').disabled = true;
+    running = true;
+    addLog('启动P2P桥接...', 'info');
+
+    // 1. 连接PeerJS信令
+    addLog('[1/3] 连接PeerJS信令服务器...', 'info');
+    document.getElementById('st-peer').textContent = '连接中...';
+
+    try {
+        peer = new Peer(peerId, {
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'turn:a.relay.metered.ca:80', username: 'e8dd65b92f6dfe65e84a0e73', credential: '4F5qRhMPjmG/jKXF' },
+                    { urls: 'turn:a.relay.metered.ca:443', username: 'e8dd65b92f6dfe65e84a0e73', credential: '4F5qRhMPjmG/jKXF' }
+                ]
+            },
+            debug: 0
+        });
+
+        await new Promise((resolve, reject) => {
+            peer.on('open', resolve);
+            peer.on('error', (err) => {
+                if (err.type === 'unavailable-id') {
+                    addLog('房间码已被占用，请换一个', 'err');
+                } else {
+                    addLog('PeerJS错误: ' + err.type + ' ' + err.message, 'err');
+                }
+                reject(err);
+            });
+            setTimeout(() => reject(new Error('PeerJS连接超时(15秒)')), 15000);
+        });
+
+        addLog('[1/3] PeerJS就绪: ' + peerId, 'ok');
+        document.getElementById('st-peer').textContent = '已连接';
+    } catch (e) {
+        addLog('PeerJS连接失败: ' + e.message, 'err');
+        document.getElementById('btn-start').disabled = false;
+        document.getElementById('st-peer').textContent = '失败';
+        running = false;
+        return;
+    }
+
+    // 2. 连接ScreenStream
+    addLog('[2/3] 连接ScreenStream H264...', 'info');
+    document.getElementById('st-ss').textContent = '连接中...';
+
+    try {
+        await connectSS(phone);
+        addLog('[2/3] ScreenStream已连接', 'ok');
+        document.getElementById('st-ss').textContent = '已连接';
+    } catch (e) {
+        addLog('ScreenStream连接失败: ' + e.message, 'err');
+        addLog('请确认手机已开始投屏 (端口' + phone.split(':')[1] + ')', 'warn');
+        document.getElementById('st-ss').textContent = '失败';
+        // 不中断，继续等待Viewer（SS可能稍后连接）
+    }
+
+    // 3. 监听Viewer连接
+    addLog('[3/3] 等待家人连接...', 'info');
+
+    peer.on('connection', (conn) => {
+        addLog('Viewer连接请求: ' + conn.peer, 'info');
+
+        conn.on('open', () => {
+            viewers.set(conn.peer, conn);
+            addLog('Viewer已就绪: ' + conn.peer + ' (共' + viewers.size + '人)', 'ok');
+            document.getElementById('st-viewers').textContent = viewers.size;
+
+            // 发送缓存帧
+            if (lastConfig) try { conn.send(lastConfig); } catch(e){}
+            if (lastKeyFrame) try { conn.send(lastKeyFrame); } catch(e){}
+        });
+
+        conn.on('data', (data) => {
+            // Viewer控制指令 → 转为ADB命令
+            // 此处可扩展：通过ScreenStream API或ADB转发
+            try {
+                const msg = typeof data === 'string' ? JSON.parse(data) : JSON.parse(new TextDecoder().decode(data));
+                addLog('控制: ' + msg.type + ' ' + JSON.stringify(msg.data || {}).substring(0, 50), 'info');
+            } catch(e) {}
+        });
+
+        conn.on('close', () => {
+            viewers.delete(conn.peer);
+            addLog('Viewer断开: ' + conn.peer + ' (剩' + viewers.size + '人)', 'warn');
+            document.getElementById('st-viewers').textContent = viewers.size;
+        });
+    });
+
+    // UI更新
+    document.getElementById('config-panel').style.opacity = '0.5';
+    document.getElementById('btn-start').style.display = 'none';
+    document.getElementById('btn-stop').style.display = 'block';
+    document.getElementById('room-box').style.display = 'block';
+    document.getElementById('room-code').textContent = room;
+    document.getElementById('stats-box').style.display = 'block';
+    document.getElementById('st-status').textContent = '运行中';
+    document.getElementById('inp-room').value = room;
+}
+
+function connectSS(phone) {
+    return new Promise((resolve, reject) => {
+        const url = 'ws://' + phone + '/stream/h264';
+        ssWs = new WebSocket(url);
+        ssWs.binaryType = 'arraybuffer';
+
+        ssWs.onopen = () => resolve();
+        ssWs.onerror = () => reject(new Error('WebSocket连接失败'));
+
+        ssWs.onmessage = (event) => {
+            if (!(event.data instanceof ArrayBuffer) || event.data.byteLength < 10) return;
+
+            const data = new Uint8Array(event.data);
+            const frameType = data[0];
+            frameCount++;
+            totalBytes += data.byteLength;
+
+            // 缓存
+            if (frameType === 0) lastConfig = data;
+            if (frameType === 1) lastKeyFrame = data;
+
+            // 转发给所有Viewer
+            for (const [id, conn] of viewers) {
+                if (conn.open) {
+                    // 背压控制
+                    if (frameType === 2 && conn.bufferSize > 524288) continue;
+                    try { conn.send(data); } catch(e) { viewers.delete(id); }
+                }
+            }
+
+            // 更新统计
+            if (frameCount % 30 === 0) {
+                document.getElementById('st-frames').textContent = frameCount;
+                const mb = (totalBytes / 1048576).toFixed(1);
+                document.getElementById('st-bytes').textContent = totalBytes > 1048576 ? mb + ' MB' : (totalBytes / 1024).toFixed(0) + ' KB';
+            }
+        };
+
+        ssWs.onclose = () => {
+            document.getElementById('st-ss').textContent = '断开';
+            if (running) {
+                addLog('ScreenStream断开，5秒后重连...', 'warn');
+                setTimeout(() => { if (running) connectSS(phone).catch(() => {}); }, 5000);
+            }
+        };
+    });
+}
+
+function stopBridge() {
+    running = false;
+    if (ssWs) { try { ssWs.close(); } catch(e){} ssWs = null; }
+    for (const [, conn] of viewers) { try { conn.close(); } catch(e){} }
+    viewers.clear();
+    if (peer) { try { peer.destroy(); } catch(e){} peer = null; }
+
+    document.getElementById('config-panel').style.opacity = '1';
+    document.getElementById('btn-start').style.display = 'block';
+    document.getElementById('btn-start').disabled = false;
+    document.getElementById('btn-stop').style.display = 'none';
+    document.getElementById('room-box').style.display = 'none';
+    document.getElementById('stats-box').style.display = 'none';
+    document.getElementById('st-status').textContent = '已停止';
+    addLog('桥接已停止', 'warn');
+}
+
+function addLog(msg, type) {
+    const el = document.getElementById('log');
+    const time = new Date().toLocaleTimeString('en', { hour12: false });
+    el.innerHTML += '<div class="log-' + (type || 'info') + '">[' + time + '] ' + msg + '</div>';
+    el.scrollTop = el.scrollHeight;
+    while (el.children.length > 200) el.removeChild(el.firstChild);
+}
+</script>
+</body>
+</html>

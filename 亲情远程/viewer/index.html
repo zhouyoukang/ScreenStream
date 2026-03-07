@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>亲情远程 — 帮爸妈看手机</title>
+<meta name="description" content="远程查看和操控家人手机，零安装，浏览器即用">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--accent:#22c55e;--accent2:#16a34a;--text:#f1f5f9;--dim:#94a3b8;--danger:#ef4444;--warn:#f59e0b;--r:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+
+/* ═══ 连接页 ═══ */
+#joinScreen{position:fixed;inset:0;background:linear-gradient(170deg,#0a0e1a 0%,#0f1628 50%,#0d1520 100%);z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:24px}
+#joinScreen.hide{display:none}
+.logo{font-size:52px;margin-bottom:-8px}
+.title{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),#6ee7b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{color:var(--dim);font-size:16px;text-align:center;line-height:1.7}
+.join-form{display:flex;flex-direction:column;gap:14px;width:min(360px,88vw)}
+#roomInput{padding:20px;background:rgba(20,22,36,0.8);border:2px solid rgba(255,255,255,0.1);border-radius:var(--r);color:#fff;font-size:36px;text-align:center;letter-spacing:12px;outline:none;font-family:'Courier New',monospace;font-weight:700;transition:border .2s}
+#roomInput:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+#roomInput::placeholder{font-size:15px;letter-spacing:3px;color:#444;font-weight:400}
+#joinBtn{padding:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--r);font-size:20px;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 4px 20px rgba(34,197,94,.3)}
+#joinBtn:active{transform:scale(.97);box-shadow:0 2px 10px rgba(34,197,94,.2)}
+#joinBtn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+#joinError{color:var(--danger);font-size:14px;text-align:center;min-height:22px}
+.join-hint{color:#4b5563;font-size:13px;text-align:center;line-height:1.8;max-width:300px}
+
+/* ═══ 主界面 ═══ */
+#mainScreen{display:none;flex-direction:column;height:100%}
+#mainScreen.show{display:flex}
+
+/* 状态栏 */
+.status-bar{height:30px;background:rgba(15,15,20,0.95);border-bottom:1px solid #1a1a2a;display:flex;align-items:center;padding:0 12px;gap:8px;font-size:12px;flex-shrink:0;backdrop-filter:blur(8px)}
+.s-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:all .3s}
+.s-dot.ok{background:#4ade80;box-shadow:0 0 6px #4ade80}
+.s-dot.wait{background:#fbbf24;box-shadow:0 0 4px #fbbf24;animation:pulse 1.5s infinite}
+.s-dot.off{background:#f87171;box-shadow:none}
+@keyframes pulse{50%{opacity:.5}}
+.s-fill{flex:1}
+.s-info{color:#64748b;font-size:11px}
+
+/* 视频区 */
+#videoArea{flex:1;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#111827 0%,#000 70%);position:relative;overflow:hidden}
+#remoteVideo,#relayCanvas{filter:drop-shadow(0 0 20px rgba(34,197,94,.08))}
+#remoteVideo{width:100%;height:100%;object-fit:contain;image-rendering:-webkit-optimize-contrast;background:#000}
+#relayCanvas{width:100%;height:100%;object-fit:contain;display:none;image-rendering:crisp-edges;background:#000}
+#touchLayer{position:absolute;inset:0;z-index:10}
+#loadingOverlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.92);color:var(--dim);font-size:16px;flex-direction:column;gap:12px;z-index:5}
+#loadingOverlay.hide{display:none}
+.spinner{width:36px;height:36px;border:3px solid #1e1e2a;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 触控涟漪 */
+.ripple{position:absolute;width:30px;height:30px;border-radius:50%;background:rgba(34,197,94,.4);transform:translate(-50%,-50%);pointer-events:none;animation:rp .5s ease-out forwards;z-index:11}
+@keyframes rp{to{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
+
+/* 控制栏 */
+.ctrl-bar{height:56px;background:rgba(15,15,20,0.95);border-top:1px solid #1a1a2a;display:flex;align-items:center;justify-content:center;gap:3px;padding:0 4px;padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;backdrop-filter:blur(8px)}
+.cb{padding:8px 10px;background:rgba(30,30,42,0.8);border:1px solid rgba(255,255,255,0.06);border-radius:10px;color:var(--text);font-size:18px;cursor:pointer;transition:all .1s;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:44px;-webkit-tap-highlight-color:transparent}
+.cb:active{background:rgba(34,197,94,.25);border-color:rgba(34,197,94,.4);transform:scale(.92)}
+.cb .lbl{font-size:9px;color:#64748b;font-weight:500}
+
+/* 键盘面板 */
+.kb-panel{position:fixed;bottom:56px;left:0;right:0;padding:10px 12px;background:var(--card);border-top:1px solid #334155;display:none;z-index:20;gap:8px}
+.kb-panel.show{display:flex}
+.kb-panel input{flex:1;padding:12px;background:var(--bg);border:1px solid #334155;border-radius:8px;color:var(--text);font-size:16px;outline:none}
+.kb-panel input:focus{border-color:var(--accent)}
+.kb-panel button{padding:12px 20px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer}
+.kb-panel button:active{background:var(--accent2)}
+
+/* 更多菜单 */
+.menu-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:30;display:none;align-items:flex-end;justify-content:center}
+.menu-bg.show{display:flex}
+.menu-sheet{width:100%;max-width:420px;background:var(--card);border-radius:16px 16px 0 0;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.menu-sheet .mh{text-align:center;color:var(--dim);font-size:13px;margin-bottom:12px;font-weight:500}
+.menu-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.mg-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 4px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);cursor:pointer;font-size:22px;color:var(--text);transition:all .1s}
+.mg-btn:active{background:rgba(34,197,94,.2);transform:scale(.95)}
+.mg-btn .ml{font-size:11px;color:var(--dim)}
+.menu-danger{padding:14px;border-radius:12px;text-align:center;font-size:16px;color:var(--danger);cursor:pointer;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15)}
+.menu-danger:active{background:rgba(239,68,68,.15)}
+
+/* 重连横幅 */
+#reconnBar{position:fixed;top:0;left:0;right:0;z-index:50;background:linear-gradient(90deg,#dc2626,#ef4444);color:#fff;text-align:center;padding:10px;font-size:14px;font-weight:600;display:none;backdrop-filter:blur(4px)}
+
+@media(max-width:480px){
+  .cb{padding:8px 8px;font-size:16px;min-width:40px}
+  .cb .lbl{font-size:8px}
+  .status-bar{font-size:11px;height:26px;gap:5px}
+  .ctrl-bar{height:52px}
+  .s-device,#bitrateText{display:none}
+}
+@media(max-width:360px){
+  .cb{padding:7px 6px;min-width:36px;font-size:15px}
+  .mg-btn{padding:10px 2px;font-size:20px}
+  #latText{display:none}
+}
+
+/* 横屏viewer适配 */
+@media(orientation:landscape) and (max-height:500px){
+  .ctrl-bar{height:40px;gap:2px}
+  .cb{padding:5px 7px;font-size:15px;min-width:34px}
+  .cb .lbl{display:none}
+  .status-bar{height:22px;font-size:10px}
+  .kb-panel{bottom:40px}
+}
+
+/* 全屏自动隐藏UI */
+.fs-hide .status-bar,.fs-hide .ctrl-bar{opacity:0;pointer-events:none;transition:opacity .3s}
+.fs-show .status-bar,.fs-show .ctrl-bar{opacity:1;pointer-events:auto;transition:opacity .3s}
+
+/* 画质徽章 */
+.s-badge{padding:1px 5px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.5px}
+.s-badge.hd{background:rgba(34,197,94,.15);color:#4ade80}
+.s-badge.sd{background:rgba(251,191,36,.15);color:#fbbf24}
+.s-badge.ld{background:rgba(248,113,113,.15);color:#f87171}
+
+/* 设备信息 */
+.s-device{color:#64748b;font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* 连接质量指示条 */
+.q-bar{position:absolute;top:30px;left:0;right:0;height:2px;z-index:6;transition:background .5s}
+.q-bar.good{background:linear-gradient(90deg,transparent,#4ade80,transparent)}
+.q-bar.fair{background:linear-gradient(90deg,transparent,#fbbf24,transparent)}
+.q-bar.poor{background:linear-gradient(90deg,transparent,#f87171,transparent)}
+
+/* 画面冻结提示 */
+.freeze-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.7);color:#fbbf24;padding:8px 16px;border-radius:8px;font-size:14px;z-index:8;pointer-events:none;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- ═══ 连接页 ═══ -->
+<div id="joinScreen">
+  <div class="logo">📱</div>
+  <div class="title">亲情远程</div>
+  <p class="subtitle">输入爸妈手机上显示的数字<br>就能看到并操控ta的手机</p>
+  <div class="join-form">
+    <input id="roomInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="6位连接码" autocomplete="off">
+    <button id="joinBtn" onclick="joinRoom()">📺 开始远程操作</button>
+  </div>
+  <div id="joinError"></div>
+  <div class="join-hint">连接码在老人手机APP上显示<br>P2P直连·数据不经服务器</div>
+  <a href="setup.html" style="display:inline-block;margin-top:12px;color:#94a3b8;font-size:12px;text-decoration:none;opacity:.7" target="_blank">🔧 首次使用？查看配置指南</a>
+</div>
+
+<!-- 重连横幅 -->
+<div id="reconnBar"></div>
+
+<!-- ═══ 主界面 ═══ -->
+<div id="mainScreen">
+  <div class="status-bar">
+    <span class="s-dot off" id="sDot"></span>
+    <span id="sText" style="font-weight:600">连接中...</span>
+    <span class="s-fill"></span>
+    <span class="s-info" id="fpsText"></span>
+    <span class="s-info" id="latText"></span>
+    <span class="s-info" id="bitrateText"></span>
+    <span class="s-badge" id="resBadge"></span>
+    <span class="s-info" id="modeText"></span>
+    <span class="s-device" id="deviceText"></span>
+  </div>
+
+  <div id="videoArea">
+    <div class="q-bar" id="qBar"></div>
+    <video id="remoteVideo" autoplay playsinline muted></video>
+    <canvas id="relayCanvas" width="360" height="640"></canvas>
+    <div id="touchLayer"></div>
+    <div id="loadingOverlay">
+      <div class="spinner"></div>
+      <span id="loadingText">正在连接...</span>
+    </div>
+  </div>
+
+  <div class="ctrl-bar">
+    <button class="cb" onclick="sendCtl('back')">◀<span class="lbl">返回</span></button>
+    <button class="cb" onclick="sendCtl('home')">●<span class="lbl">主页</span></button>
+    <button class="cb" onclick="sendCtl('recents')">▣<span class="lbl">最近</span></button>
+    <button class="cb" onclick="sendCtl('volume/up')">🔊<span class="lbl">音量+</span></button>
+    <button class="cb" onclick="sendCtl('volume/down')">🔉<span class="lbl">音量-</span></button>
+    <button class="cb" onclick="sendCtl('notifications')">🔔<span class="lbl">通知</span></button>
+    <button class="cb" onclick="toggleKB()">⌨<span class="lbl">键盘</span></button>
+    <button class="cb" onclick="toggleMenu()">⋮<span class="lbl">更多</span></button>
+  </div>
+</div>
+
+<!-- 键盘面板 -->
+<div class="kb-panel" id="kbPanel">
+  <input type="text" id="textInput" placeholder="输入文字发送到手机..." enterkeyhint="send">
+  <button onclick="sendText()">发送</button>
+</div>
+
+<!-- 更多菜单 -->
+<div class="menu-bg" id="menuBg" onclick="closeMenu(event)">
+  <div class="menu-sheet">
+    <div class="mh">更多操作</div>
+    <div class="menu-grid">
+      <div class="mg-btn" onclick="sendCtl('lock');closeMenuNow()">🔒<span class="ml">锁屏</span></div>
+      <div class="mg-btn" onclick="sendCtl('wake');closeMenuNow()">💡<span class="ml">唤醒</span></div>
+      <div class="mg-btn" onclick="sendCtl('screenshot');closeMenuNow()">📸<span class="ml">截图</span></div>
+      <div class="mg-btn" onclick="toggleFS();closeMenuNow()">⛶<span class="ml">全屏</span></div>
+      <div class="mg-btn" onclick="sendCtl('quicksettings');closeMenuNow()">⚙<span class="ml">快设</span></div>
+      <div class="mg-btn" onclick="sendCtl('power');closeMenuNow()">⏻<span class="ml">电源</span></div>
+      <div class="mg-btn" onclick="sendCtl('splitscreen');closeMenuNow()">◫<span class="ml">分屏</span></div>
+      <div class="mg-btn" onclick="toggleFindPhone()">📢<span class="ml" id="fpLabel">找手机</span></div>
+    </div>
+    <div class="menu-danger" onclick="disconnectAll()">✕ 断开连接</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  亲情远程 终极版 — P2P优先 + CloudRelay自动降级
+//  P2P: 手机WebRTC → 信令交换 → 浏览器直连（零带宽消耗）
+//  Relay: 手机→中继服务器→浏览器（P2P失败时自动切换）
+// ═══════════════════════════════════════════════════════
+
+const SIGNALING_URL = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  ? `ws://${location.host}/signal/`
+  : `wss://${location.host}/signal/`;
+const RELAY_URL = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  ? `ws://${location.hostname}:9800/`
+  : (location.protocol==='https:'?'wss://':'ws://') + location.host + '/relay/';
+const RELAY_TOKEN = new URLSearchParams(location.search).get('token') || 'screenstream_2026';
+const ICE_SERVERS = [
+  {urls:'stun:stun.l.google.com:19302'},
+  {urls:'stun:stun.miwifi.com:3478'},
+  {urls:'stun:stun.chat.bilibili.com:3478'},
+  {urls:'turn:a.relay.metered.ca:80',username:'e8dd65b92f6dfe65e84a0e73',credential:'4F5qRhMPjmG/jKXF'},
+  {urls:'turn:a.relay.metered.ca:443?transport=tcp',username:'e8dd65b92f6dfe65e84a0e73',credential:'4F5qRhMPjmG/jKXF'}
+];
+
+let roomId='', currentMode='none'; // 'p2p'|'relay'|'none'
+let ws=null, pc=null, dataChannel=null, isConnected=false;
+let relayWs=null, decoder=null, canvasCtx=null;
+let fpsCount=0, iceFailCount=0, reconnAttempt=0;
+let latencyInterval=null, configData=null, hasConfig=false, lastCodec=null;
+let p2pTimeout=null, disconnTimer=null, fallingBack=false;
+
+// ─── 触觉反馈 ───
+function haptic(ms){try{navigator.vibrate&&navigator.vibrate(ms||15)}catch(e){}}
+
+// ─── 加入房间 ───
+function joinRoom(){
+  const room=document.getElementById('roomInput').value.trim().replace(/\D/g,'');
+  document.getElementById('roomInput').value=room;
+  if(!room||room.length<4||room.length>6){document.getElementById('joinError').textContent='请输入4-6位数字连接码';return}
+  roomId=room;
+  document.getElementById('joinError').textContent='连接中...';
+  document.getElementById('joinBtn').disabled=true;
+  iceFailCount=0;reconnAttempt=0;currentMode='none';
+  document.getElementById('joinScreen').classList.add('hide');
+  document.getElementById('mainScreen').classList.add('show');
+  updateStatus('wait','P2P连接中...');
+  startP2P();
+}
+
+// ═══ P2P WebRTC ═══
+function startP2P(){
+  document.getElementById('loadingText').textContent='正在建立P2P直连...';
+  ws=new WebSocket(SIGNALING_URL+'?role=viewer&room='+roomId);
+
+  ws.onopen=()=>{
+    // 30秒P2P超时→降级CloudRelay（TURN中继建立可能较慢）
+    p2pTimeout=setTimeout(()=>{
+      if(currentMode==='none'){
+        console.log('[Strategy] P2P timeout (30s), fallback to CloudRelay');
+        closePeer();
+        fallbackRelay();
+      }
+    },30000);
+  };
+
+  ws.onmessage=(ev)=>{
+    try{
+      const msg=JSON.parse(ev.data);
+      handleSignaling(msg);
+    }catch(e){console.warn('[Signal] parse error',e)}
+  };
+
+  ws.onclose=()=>{
+    if(currentMode==='none'){
+      clearTimeout(p2pTimeout);
+      fallbackRelay();
+    }
+  };
+
+  ws.onerror=()=>{
+    if(currentMode==='none') fallbackRelay();
+  };
+}
+
+async function handleSignaling(msg){
+  switch(msg.type){
+    case 'joined':
+      console.log('[Signal] Joined room',roomId,'viewerId:',msg.data?.viewerId);
+      if(msg.data?.device) showDeviceInfo(msg.data.device);
+      break;
+    case 'room_not_found':case 'error':
+      if(ws){ws.onclose=null;try{ws.close()}catch(_){};ws=null}
+      document.getElementById('joinError').textContent=msg.data?.message||'房间不存在，请确认手机已开始投屏';
+      document.getElementById('joinBtn').disabled=false;
+      showJoin();
+      break;
+    case 'offer':
+      await handleOffer(msg.data);
+      break;
+    case 'candidate':
+      if(pc&&msg.data){
+        try{await pc.addIceCandidate(new RTCIceCandidate(msg.data))}catch(e){}
+      }
+      break;
+  }
+}
+
+async function handleOffer(offerData){
+  clearTimeout(p2pTimeout);
+  updateStatus('wait','正在建立P2P...');
+
+  pc=new RTCPeerConnection({iceServers:ICE_SERVERS});
+
+  pc.onicecandidate=(e)=>{
+    if(e.candidate&&ws?.readyState===1){
+      ws.send(JSON.stringify({type:'candidate',data:e.candidate.toJSON()}));
+    }
+  };
+
+  pc.ontrack=(ev)=>{
+    if(ev.track.kind==='video'){
+      currentMode='p2p';
+      const v=document.getElementById('remoteVideo');
+      v.style.display='block';
+      document.getElementById('relayCanvas').style.display='none';
+      v.srcObject=ev.streams[0];
+      v.play().catch(()=>{});
+      v.addEventListener('resize',()=>updateResolution(v.videoWidth,v.videoHeight),{once:false});
+      document.getElementById('loadingOverlay').classList.add('hide');
+      updateStatus('ok','已连接');
+      document.getElementById('modeText').textContent='P2P直连';
+      startLatencyMonitor();
+      playTone(800,120);
+    }
+  };
+
+  pc.ondatachannel=(ev)=>{
+    setupDC(ev.channel);
+  };
+
+  pc.oniceconnectionstatechange=()=>{
+    switch(pc.iceConnectionState){
+      case 'connected':case 'completed':
+        isConnected=true;
+        if(disconnTimer){clearTimeout(disconnTimer);disconnTimer=null}
+        updateStatus('ok','已连接');
+        detectConnType();
+        break;
+      case 'disconnected':
+        updateStatus('wait','连接不稳定...');
+        if(!disconnTimer) disconnTimer=setTimeout(()=>{
+          if(pc&&pc.iceConnectionState==='disconnected'&&currentMode!=='relay'){
+            console.log('[ICE] Disconnected 15s, fallback to CloudRelay');
+            closePeer();fallbackRelay();
+          }
+        },15000);
+        break;
+      case 'failed':
+        iceFailCount++;
+        console.log('[ICE] Failed, attempt',iceFailCount);
+        if(iceFailCount>=3&&currentMode!=='relay'){
+          closePeer();fallbackRelay();
+        }else if(pc){
+          pc.restartIce();
+          updateStatus('wait','P2P重连中('+iceFailCount+')...');
+        }
+        break;
+    }
+  };
+
+  try{
+    await pc.setRemoteDescription(new RTCSessionDescription({type:'offer',sdp:offerData.sdp}));
+    const answer=await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    ws.send(JSON.stringify({type:'answer',data:{sdp:answer.sdp,type:'answer'}}));
+  }catch(e){
+    fallbackRelay();
+  }
+}
+
+let waitingForKeyFrame=false, keyFrameTimer=null;
+function setupDC(dc){
+  dataChannel=dc;
+  dc.onopen=()=>{
+    console.log('[DC] Open');
+    // Don't switch to canvas here — wait for first binary frame
+    // (bitmap mode uses VideoTrack for video, DC only for control commands)
+    // Request key frame proactively after DC opens (retry up to 3 times)
+    waitingForKeyFrame=true;
+    let kfRetries=0;
+    const requestKF=()=>{
+      if(!waitingForKeyFrame||dc.readyState!=='open'||kfRetries>=3)return;
+      kfRetries++;
+      console.log(`[DC] Requesting key frame from phone (attempt ${kfRetries}/3)`);
+      dc.send(JSON.stringify({type:'request_keyframe'}));
+      keyFrameTimer=setTimeout(requestKF,3000);
+    };
+    keyFrameTimer=setTimeout(requestKF,2000);
+  };
+  dc.onclose=()=>{dataChannel=null};
+  dc.onmessage=(ev)=>{
+    if(ev.data instanceof ArrayBuffer){
+      const arr=new Uint8Array(ev.data);
+      const ft=arr.length>=1?arr[0]:-1;
+      // Only switch to canvas on actual video frames (key=1,delta=2,mjpeg=3), NOT config (0)
+      if(ft>0&&(!canvasCtx||document.getElementById('relayCanvas').style.display==='none')){
+        console.log('[DC] First H264 video frame, switching to canvas mode');
+        const cv=document.getElementById('relayCanvas');
+        cv.style.display='block';
+        document.getElementById('remoteVideo').style.display='none';
+        canvasCtx=cv.getContext('2d',{alpha:false,desynchronized:true});
+        canvasCtx.imageSmoothingQuality='high';
+        initDecoder(cv);
+      }
+      dcBytesReceived+=ev.data.byteLength;
+      handleRelayFrame(arr);
+      if(currentMode!=='p2p'){
+        currentMode='p2p';
+        document.getElementById('loadingOverlay').classList.add('hide');
+        updateStatus('ok','已连接');
+        document.getElementById('modeText').textContent='P2P直连';
+        startLatencyMonitor();
+        playTone(800,120);
+      }
+    }
+  };
+}
+
+function closePeer(){
+  clearTimeout(p2pTimeout);
+  if(disconnTimer){clearTimeout(disconnTimer);disconnTimer=null}
+  if(pc){pc.close();pc=null}
+  dataChannel=null;isConnected=false;
+  if(latencyInterval){clearInterval(latencyInterval);latencyInterval=null}
+}
+
+// ═══ CloudRelay降级 ═══
+function fallbackRelay(){
+  if(currentMode==='relay'||fallingBack)return;
+  fallingBack=true;
+  if(recoveryActive){p2pRecoveryFails++;recoveryActive=false;console.log('[Strategy] P2P recovery failed ('+p2pRecoveryFails+'/2)')}
+  updateStatus('wait','切换到云中继...');
+  document.getElementById('loadingText').textContent='正在连接云中继...';
+
+  const url=RELAY_URL+'?role=viewer&token='+RELAY_TOKEN+'&room='+roomId;
+  relayWs=new WebSocket(url);
+  relayWs.binaryType='arraybuffer';
+
+  relayWs.onopen=()=>{
+    currentMode='relay';fallingBack=false;
+    startP2PRecovery();
+    document.getElementById('remoteVideo').style.display='none';
+    const cv=document.getElementById('relayCanvas');
+    cv.style.display='block';
+    canvasCtx=cv.getContext('2d',{alpha:false,desynchronized:true});
+    canvasCtx.imageSmoothingQuality='high';
+    initDecoder(cv);
+    document.getElementById('loadingOverlay').classList.add('hide');
+    updateStatus('ok','已连接');
+    document.getElementById('modeText').textContent='云中继';
+    playTone(600,120);
+    document.getElementById('reconnBar').style.display='none';
+    reconnAttempt=0;
+  };
+
+  relayWs.onmessage=(ev)=>{
+    if(ev.data instanceof ArrayBuffer){
+      handleRelayFrame(new Uint8Array(ev.data));
+    }else{
+      try{handleRelayMsg(JSON.parse(ev.data))}catch(e){}
+    }
+  };
+
+  relayWs.onclose=(e)=>{
+    if(e.code===4004){
+      document.getElementById('joinError').textContent='连接码无效';
+      document.getElementById('joinBtn').disabled=false;
+      showJoin();return;
+    }
+    if(currentMode==='relay'){
+      updateStatus('off','云中继断开');
+      scheduleReconn();
+    }
+  };
+
+  relayWs.onerror=()=>{
+    fallingBack=false;
+    if(currentMode==='none'){
+      updateStatus('off','无法连接');
+      document.getElementById('loadingText').textContent='连接失败，请检查网络';
+    }
+  };
+}
+
+function scheduleReconn(){
+  if(!roomId)return;
+  reconnAttempt++;
+  const delay=Math.min(2000*Math.pow(1.5,reconnAttempt-1),30000);
+  document.getElementById('reconnBar').style.display='block';
+  document.getElementById('reconnBar').textContent='连接断开，'+Math.round(delay/1000)+'秒后重连...';
+  setTimeout(()=>{
+    if(currentMode==='relay'||currentMode==='none'){
+      currentMode='none';fallbackRelay();
+    }
+  },delay);
+}
+
+// ═══ P2P Recovery — 在CloudRelay模式下定期尝试恢复P2P直连 ═══
+let p2pRecoveryTimer=null, p2pRecoveryFails=0, recoveryActive=false;
+function startP2PRecovery(){
+  if(p2pRecoveryTimer||p2pRecoveryFails>=2)return;
+  p2pRecoveryTimer=setInterval(()=>{
+    if(currentMode==='relay'&&roomId){
+      console.log('[Strategy] Attempting P2P recovery from CloudRelay (fail:'+p2pRecoveryFails+')');
+      tryP2PRecovery();
+    }
+  },90000);
+}
+function tryP2PRecovery(){
+  const rWs=new WebSocket(SIGNALING_URL+'?role=viewer&room='+roomId);
+  const rTimeout=setTimeout(()=>{try{rWs.close()}catch(_){}},15000);
+  rWs.onmessage=(ev)=>{
+    try{
+      const msg=JSON.parse(ev.data);
+      if(msg.type==='offer'){
+        clearTimeout(rTimeout);
+        console.log('[Strategy] P2P recovery got offer, keeping relay alive until P2P confirmed...');
+        recoveryActive=true;
+        // Don't close relay yet — keep it as fallback until P2P ICE connects
+        // Store old relay for cleanup after P2P success
+        const oldRelay=relayWs;
+        // Close old signaling WS to prevent leak
+        if(ws&&ws!==rWs){try{ws.close()}catch(_){}}
+        currentMode='none';ws=rWs;
+        handleOffer(msg.data);
+        clearInterval(p2pRecoveryTimer);p2pRecoveryTimer=null;
+        // Close relay only after P2P ICE connected (checked in oniceconnectionstatechange)
+        const checkPc=setInterval(()=>{
+          if(pc&&(pc.iceConnectionState==='connected'||pc.iceConnectionState==='completed')){
+            clearInterval(checkPc);
+            if(oldRelay){try{oldRelay.close()}catch(_){}}
+            console.log('[Strategy] P2P recovered, relay closed');
+          }else if(!pc||pc.iceConnectionState==='failed'||pc.iceConnectionState==='closed'){
+            clearInterval(checkPc);
+            // P2P failed, restore relay
+            if(oldRelay&&oldRelay.readyState===WebSocket.OPEN){
+              relayWs=oldRelay;currentMode='relay';
+              console.log('[Strategy] P2P recovery failed, restored relay');
+            }
+          }
+        },1000);
+      }
+    }catch(_){}
+  };
+  rWs.onclose=()=>clearTimeout(rTimeout);
+  rWs.onerror=()=>{clearTimeout(rTimeout);try{rWs.close()}catch(_){}};
+}
+function stopP2PRecovery(){
+  if(p2pRecoveryTimer){clearInterval(p2pRecoveryTimer);p2pRecoveryTimer=null}
+}
+
+function handleRelayMsg(msg){
+  switch(msg.type){
+    case 'provider_disconnected':
+      document.getElementById('loadingOverlay').classList.remove('hide');
+      document.getElementById('loadingText').textContent='手机已断开投屏';break;
+    case 'provider_reconnected':
+      document.getElementById('loadingOverlay').classList.add('hide');break;
+    case 'device_info':
+      document.title='亲情远程 — '+(msg.data?.model||'手机');
+      document.getElementById('deviceText').textContent=msg.data?.model||'';
+      break;
+  }
+}
+
+// ═══ WebCodecs H264解码 ═══
+function initDecoder(canvas){
+  if(typeof VideoDecoder==='undefined'){
+    document.getElementById('loadingText').textContent='浏览器不支持H264，请用Chrome';return;
+  }
+  if(decoder&&decoder.state!=='closed')try{decoder.close()}catch(_){}
+  hasConfig=false;configData=null;lastCodec=null;
+  decoder=new VideoDecoder({
+    output:frame=>{
+      if(canvas.width!==frame.displayWidth||canvas.height!==frame.displayHeight){
+        canvas.width=frame.displayWidth;canvas.height=frame.displayHeight;
+      }
+      canvasCtx.drawImage(frame,0,0,canvas.width,canvas.height);
+      frame.close();fpsCount++;
+      document.getElementById('loadingOverlay').classList.add('hide');
+      updateResolution(canvas.width,canvas.height);
+    },
+    error:e=>{console.warn('[Decoder]',e);setTimeout(()=>initDecoder(canvas),2000)}
+  });
+}
+
+function handleRelayFrame(data){
+  if(data.length<10||!decoder)return;
+  let ft=data[0];
+
+  if(ft===3){// MJPEG
+    const payload=data.subarray(9);
+    const blob=new Blob([payload],{type:'image/jpeg'});
+    const cv=document.getElementById('relayCanvas');
+    createImageBitmap(blob).then(bmp=>{
+      if(cv.width!==bmp.width||cv.height!==bmp.height){cv.width=bmp.width;cv.height=bmp.height}
+      canvasCtx.drawImage(bmp,0,0);bmp.close();fpsCount++;
+      document.getElementById('loadingOverlay').classList.add('hide');
+      updateResolution(cv.width,cv.height);
+    }).catch(()=>{});
+    return;
+  }
+
+  const payload=data.subarray(9);
+
+  if(ft===0){// Config
+    configData=payload;hasConfig=true;
+    const sps=findSPS(payload);
+    if(sps&&sps.length>=4){
+      const codec='avc1.'+[sps[1],sps[2],sps[3]].map(v=>v.toString(16).padStart(2,'0')).join('');
+      if(decoder&&decoder.state!=='closed'&&codec!==lastCodec){
+        try{decoder.configure({codec,optimizeForLatency:true});lastCodec=codec}catch(e){}
+      }
+    }
+    // After config, start waiting for key frame
+    waitingForKeyFrame=true;
+    return;
+  }
+
+  // NAL-level IDR detection: override frame type if payload contains IDR NAL (type 5)
+  // Fixes emulator encoders that don't set BUFFER_FLAG_KEY_FRAME properly
+  if(ft===2&&containsIDR(payload)){
+    console.log('[Decoder] IDR detected in delta frame via NAL inspection, promoting to key');
+    ft=1;
+  }
+
+  // Key frame received — stop waiting
+  if(ft===1){waitingForKeyFrame=false;if(keyFrameTimer){clearTimeout(keyFrameTimer);keyFrameTimer=null}}
+
+  if(!hasConfig||!decoder||decoder.state!=='configured')return;
+  if(decoder.decodeQueueSize>5&&ft===2)return;
+  if(decoder.decodeQueueSize>8)return;
+
+  try{
+    let full;
+    if(ft===1&&configData){
+      full=new Uint8Array(configData.length+payload.length);
+      full.set(configData,0);full.set(payload,configData.length);
+    }else{full=payload}
+    decoder.decode(new EncodedVideoChunk({
+      type:ft===1?'key':'delta',
+      timestamp:performance.now()*1000,
+      data:full
+    }));
+  }catch(e){}
+}
+
+// Check if H264 payload contains IDR NAL unit (type 5) — robust key frame detection
+// regardless of the frame type byte from Android (emulator encoders may not set BUFFER_FLAG_KEY_FRAME)
+function containsIDR(d){
+  let i=0;
+  while(i<d.length-4){
+    if(d[i]===0&&d[i+1]===0){
+      let sc;
+      if(d[i+2]===1)sc=3;
+      else if(d[i+2]===0&&i+3<d.length&&d[i+3]===1)sc=4;
+      else{i++;continue}
+      const t=d[i+sc]&0x1F;
+      if(t===5)return true;
+      i+=sc+1;
+    }else i++;
+  }
+  return false;
+}
+
+function findSPS(d){
+  let i=0;
+  while(i<d.length-4){
+    if(d[i]===0&&d[i+1]===0){
+      let sc;
+      if(d[i+2]===1)sc=3;
+      else if(d[i+2]===0&&i+3<d.length&&d[i+3]===1)sc=4;
+      else{i++;continue}
+      const t=d[i+sc]&0x1F;
+      if(t===7){
+        let e=d.length;
+        for(let j=i+sc+1;j<d.length-2;j++){
+          if(d[j]===0&&d[j+1]===0&&(d[j+2]===1||(d[j+2]===0&&j+3<d.length&&d[j+3]===1))){e=j;break}
+        }
+        return d.slice(i+sc,e);
+      }
+      i+=sc+1;
+    }else i++;
+  }
+  return null;
+}
+
+// ═══ 触控处理 ═══
+function initTouch(){
+  const overlay=document.getElementById('touchLayer');
+  let ts=null,tTime=0,lpTimer=null,swiping=false;
+
+  function coords(cx,cy){
+    const cv=document.getElementById('relayCanvas');
+    const v=document.getElementById('remoteVideo');
+    const useCanvas=(cv.style.display!=='none');
+    const el=useCanvas?cv:v;
+    const rect=el.getBoundingClientRect();
+    let vw,vh,vx,vy;
+    if(useCanvas){
+      const vr=el.width/el.height;const rr=rect.width/rect.height;
+      if(vr>rr){vw=rect.width;vh=rect.width/vr;vx=rect.left;vy=rect.top+(rect.height-vh)/2}
+      else{vh=rect.height;vw=rect.height*vr;vx=rect.left+(rect.width-vw)/2;vy=rect.top}
+    }else{
+      const vr=v.videoWidth/v.videoHeight||9/16;const rr=rect.width/rect.height;
+      if(vr>rr){vw=rect.width;vh=rect.width/vr;vx=rect.left;vy=rect.top+(rect.height-vh)/2}
+      else{vh=rect.height;vw=rect.height*vr;vx=rect.left+(rect.width-vw)/2;vy=rect.top}
+    }
+    return{nx:Math.max(0,Math.min(1,(cx-vx)/vw)),ny:Math.max(0,Math.min(1,(cy-vy)/vh))};
+  }
+
+  overlay.addEventListener('pointerdown',(e)=>{
+    e.preventDefault();
+    overlay.setPointerCapture(e.pointerId);
+    const c=coords(e.clientX,e.clientY);
+    ts={x:e.clientX,y:e.clientY,nx:c.nx,ny:c.ny};
+    tTime=Date.now();swiping=false;
+    lpTimer=setTimeout(()=>{
+      if(!swiping){
+        sendTouch('longpress',{x:c.nx,y:c.ny,duration:800});
+        showRipple(e.clientX,e.clientY);ts=null;haptic(30);
+      }
+    },800);
+  });
+
+  overlay.addEventListener('pointermove',(e)=>{
+    if(!ts)return;
+    if(Math.abs(e.clientX-ts.x)>10||Math.abs(e.clientY-ts.y)>10){
+      swiping=true;clearTimeout(lpTimer);
+    }
+  });
+
+  overlay.addEventListener('pointerup',(e)=>{
+    clearTimeout(lpTimer);if(!ts)return;
+    const c=coords(e.clientX,e.clientY);
+    const dur=Date.now()-tTime;
+    const dx=e.clientX-ts.x,dy=e.clientY-ts.y,dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<10&&dur<800){
+      sendTouch('tap',{x:c.nx,y:c.ny});
+      showRipple(e.clientX,e.clientY);haptic();
+    }else if(dist>=10){
+      sendTouch('swipe',{fromX:ts.nx,fromY:ts.ny,toX:c.nx,toY:c.ny,duration:Math.max(100,Math.min(dur,1000))});
+      haptic(10);
+    }
+    ts=null;
+  });
+
+  overlay.addEventListener('pointercancel',()=>{clearTimeout(lpTimer);ts=null});
+
+  overlay.addEventListener('wheel',(e)=>{
+    e.preventDefault();
+    const dy=Math.max(-120,Math.min(120,e.deltaY));sendCmd({type:'scroll',data:{deltaY:dy,direction:dy>0?'down':'up'}});
+  },{passive:false});
+}
+
+function showRipple(x,y){
+  const r=document.createElement('div');
+  r.className='ripple';r.style.left=x+'px';r.style.top=y+'px';
+  document.getElementById('videoArea').appendChild(r);
+  setTimeout(()=>r.remove(),500);
+}
+
+// ═══ 命令发送（P2P和Relay统一） ═══
+function sendTouch(action,data){sendCmd({type:'touch',data:{action,...data}})}
+function sendCtl(action){haptic();sendCmd({type:'control',data:{action}})}
+function sendText(){
+  const inp=document.getElementById('textInput');
+  if(!inp.value)return;
+  sendCmd({type:'text',data:{text:inp.value}});
+  inp.value='';haptic();
+}
+
+function sendCmd(msg){
+  if(currentMode==='p2p'&&dataChannel&&dataChannel.readyState==='open'){
+    dataChannel.send(JSON.stringify(msg));
+  }else if(currentMode==='relay'&&relayWs?.readyState===WebSocket.OPEN){
+    relayWs.send(JSON.stringify(msg));
+  }else if(ws?.readyState===WebSocket.OPEN){
+    ws.send(JSON.stringify({type:'control_relay',data:msg}));
+  }else{
+    console.warn('[Cmd] No send channel available, mode='+currentMode);
+    updateStatus('off','无控制通道');
+  }
+}
+
+// ═══ UI工具 ═══
+function showJoin(){
+  document.getElementById('joinScreen').classList.remove('hide');
+  document.getElementById('mainScreen').classList.remove('show');
+}
+
+function updateStatus(state,text){
+  const dot=document.getElementById('sDot');
+  dot.className='s-dot '+(state==='ok'?'ok':state==='wait'?'wait':'off');
+  document.getElementById('sText').textContent=text;
+}
+
+function toggleKB(){
+  const p=document.getElementById('kbPanel');
+  p.classList.toggle('show');
+  if(p.classList.contains('show'))document.getElementById('textInput').focus();
+}
+
+function toggleMenu(){document.getElementById('menuBg').classList.toggle('show')}
+function closeMenu(e){if(e&&e.target!==document.getElementById('menuBg'))return;closeMenuNow()}
+function closeMenuNow(){document.getElementById('menuBg').classList.remove('show')}
+
+function disconnectAll(){
+  closeMenuNow();closePeer();stopP2PRecovery();
+  if(relayWs){relayWs.close();relayWs=null}
+  if(ws){ws.close();ws=null}
+  if(decoder&&decoder.state!=='closed')try{decoder.close()}catch(_){}
+  currentMode='none';roomId='';
+  document.getElementById('reconnBar').style.display='none';
+  document.getElementById('joinBtn').disabled=false;
+  showJoin();
+}
+
+function toggleFS(){
+  if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen();
+}
+
+let fpRinging=false;
+function toggleFindPhone(){
+  fpRinging=!fpRinging;
+  sendCmd({type:'control',data:{action:'findphone/'+(fpRinging?'true':'false')}});
+  document.getElementById('fpLabel').textContent=fpRinging?'停止响铃':'找手机';
+  if(!fpRinging)closeMenuNow();
+}
+
+// ═══ 增强延迟监控（含码率/丢包/画质指示） ═══
+let prevRtpBytes=0,prevRtpTime=0,prevFramesDecoded=0,freezeTimer=null;
+let dcBytesReceived=0,prevDcBytes=0,prevDcTime=0,prevFpsSnapshot=0,freezeZeroCycles=0;
+function startLatencyMonitor(){
+  if(latencyInterval)clearInterval(latencyInterval);
+  prevRtpBytes=0;prevRtpTime=0;prevFramesDecoded=0;
+  prevDcBytes=0;prevDcTime=0;prevFpsSnapshot=0;
+  latencyInterval=setInterval(()=>{
+    if(!pc)return;
+    pc.getStats().then(stats=>{
+      let rtt=-1,jitter=-1,hasVideoRtp=false;
+      stats.forEach(r=>{
+        if(r.type==='candidate-pair'&&r.state==='succeeded'){
+          if(r.currentRoundTripTime!==undefined) rtt=Math.round(r.currentRoundTripTime*1000);
+        }
+        if(r.type==='inbound-rtp'&&r.kind==='video'){
+          hasVideoRtp=true;
+          // 码率计算
+          const now=r.timestamp,bytes=r.bytesReceived||0;
+          if(prevRtpTime>0){
+            const dt=(now-prevRtpTime)/1000;
+            if(dt>0){
+              const kbps=Math.round((bytes-prevRtpBytes)*8/dt/1000);
+              document.getElementById('bitrateText').textContent=kbps>1000?(kbps/1000).toFixed(1)+'Mb':kbps+'kb';
+            }
+          }
+          prevRtpBytes=bytes;prevRtpTime=now;
+          // 分辨率
+          if(r.frameWidth&&r.frameHeight) updateResolution(r.frameWidth,r.frameHeight);
+          // 卡顿检测
+          const fd=r.framesDecoded||0;
+          if(prevFramesDecoded>0&&fd===prevFramesDecoded){
+            showFreezeHint();
+          }else{
+            hideFreezeHint();
+          }
+          prevFramesDecoded=fd;
+          if(r.jitter) jitter=Math.round(r.jitter*1000);
+        }
+      });
+      // H264-DC模式: 用DataChannel字节数计算码率, 用fpsCount检测卡顿
+      if(!hasVideoRtp&&dataChannel){
+        const now=performance.now();
+        if(prevDcTime>0){
+          const dt=(now-prevDcTime)/1000;
+          if(dt>0){
+            const kbps=Math.round((dcBytesReceived-prevDcBytes)*8/dt/1000);
+            document.getElementById('bitrateText').textContent=kbps>0?(kbps>1000?(kbps/1000).toFixed(1)+'Mb':kbps+'kb'):'0kb';
+          }
+        }
+        prevDcBytes=dcBytesReceived;prevDcTime=now;
+        // 卡顿检测: 连续2个周期(4s)fpsCount=0才报冻结,防低帧率误报
+        if(fpsCount===0){
+          freezeZeroCycles=(freezeZeroCycles||0)+1;
+          if(freezeZeroCycles>=2) showFreezeHint();
+        }else{
+          freezeZeroCycles=0;
+          hideFreezeHint();
+        }
+      }
+      // 显示RTT
+      if(rtt>=0) document.getElementById('latText').textContent=rtt+'ms';
+      // 质量指示条
+      const qb=document.getElementById('qBar');
+      if(rtt>=0){
+        if(rtt<50) qb.className='q-bar good';
+        else if(rtt<150) qb.className='q-bar fair';
+        else qb.className='q-bar poor';
+      }
+    });
+  },2000);
+}
+
+function detectConnType(){
+  if(!pc)return;
+  pc.getStats().then(stats=>{
+    let lt='';
+    stats.forEach(r=>{
+      if(r.type==='candidate-pair'&&r.state==='succeeded'){
+        stats.forEach(s=>{if(s.id===r.localCandidateId)lt=s.candidateType});
+      }
+    });
+    const m=document.getElementById('modeText');
+    if(lt==='host'||lt==='srflx'||lt==='prflx')m.textContent='P2P直连';
+    else if(lt==='relay')m.textContent='TURN中继';
+  });
+}
+
+// FPS计数器
+setInterval(()=>{
+  // H264-DC and Relay modes: fpsCount incremented by decoder output
+  if(fpsCount>0||currentMode==='relay'){
+    document.getElementById('fpsText').textContent=fpsCount+'fps';fpsCount=0;
+  }else if(currentMode==='p2p'&&pc){
+    // VideoTrack P2P: use getStats for fps
+    pc.getStats().then(stats=>{
+      stats.forEach(r=>{
+        if(r.type==='inbound-rtp'&&r.kind==='video'&&r.framesPerSecond){
+          document.getElementById('fpsText').textContent=Math.round(r.framesPerSecond)+'fps';
+        }
+      });
+    });
+  }
+},1000);
+
+// ═══ 键盘快捷键 ═══
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Enter'&&e.target.id==='textInput'){sendText();return}
+  if(e.key==='Enter'&&e.target.id==='roomInput'){joinRoom();return}
+  if(e.target.tagName==='INPUT')return;
+  switch(e.key){
+    case 'Escape':sendCtl('back');e.preventDefault();break;
+    case 'Backspace':if(e.altKey){sendCtl('back');e.preventDefault()}break;
+    case 'Home':sendCtl('home');e.preventDefault();break;
+    case 'ArrowUp':if(e.ctrlKey)sendCtl('volume/up');break;
+    case 'ArrowDown':if(e.ctrlKey)sendCtl('volume/down');break;
+  }
+});
+
+// ═══ 音效反馈 ═══
+let _audioCtx=null;
+function playTone(freq=800,dur=120,vol=0.08){
+  try{
+    if(!_audioCtx) _audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(_audioCtx.state==='suspended') _audioCtx.resume();
+    const o=_audioCtx.createOscillator(),g=_audioCtx.createGain();
+    o.connect(g);g.connect(_audioCtx.destination);
+    o.frequency.value=freq;g.gain.value=vol;
+    o.start();g.gain.exponentialRampToValueAtTime(0.001,_audioCtx.currentTime+dur/1000);
+    o.stop(_audioCtx.currentTime+dur/1000+0.05);
+  }catch(e){}
+}
+
+// ═══ 分辨率显示 ═══
+function updateResolution(w,h){
+  if(!w||!h)return;
+  const badge=document.getElementById('resBadge');
+  const short=Math.min(w,h);
+  const label=short>=1080?'FHD':short>=720?'HD':short>=480?'SD':'LD';
+  const cls=short>=720?'hd':short>=480?'sd':'ld';
+  badge.textContent=w+'×'+h;
+  badge.className='s-badge '+cls;
+}
+
+// ═══ 画面冻结提示 ═══
+let freezeEl=null;
+function showFreezeHint(){
+  if(freezeEl)return;
+  freezeEl=document.createElement('div');
+  freezeEl.className='freeze-hint';
+  freezeEl.textContent='❄ 画面暂停';
+  document.getElementById('videoArea').appendChild(freezeEl);
+}
+function hideFreezeHint(){
+  if(freezeEl){freezeEl.remove();freezeEl=null}
+}
+
+// ═══ 全屏自动隐藏UI ═══
+let fsHideTimer=null;
+function resetFsHide(){
+  const el=document.documentElement;
+  el.classList.remove('fs-hide');el.classList.add('fs-show');
+  clearTimeout(fsHideTimer);
+  if(document.fullscreenElement){
+    fsHideTimer=setTimeout(()=>{el.classList.remove('fs-show');el.classList.add('fs-hide')},3000);
+  }
+}
+document.addEventListener('fullscreenchange',()=>{
+  if(!document.fullscreenElement){
+    document.documentElement.classList.remove('fs-hide','fs-show');
+    clearTimeout(fsHideTimer);
+  }else resetFsHide();
+});
+document.addEventListener('mousemove',()=>{if(document.fullscreenElement)resetFsHide()});
+document.addEventListener('touchstart',()=>{if(document.fullscreenElement)resetFsHide()},{passive:true});
+
+// ═══ 后台标签页恢复 ═══
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&currentMode==='p2p'&&pc){
+    // 请求关键帧恢复视频
+    pc.getReceivers().forEach(r=>{
+      if(r.track&&r.track.kind==='video'){
+        try{r.track.enabled=false;setTimeout(()=>{r.track.enabled=true},50)}catch(e){}
+      }
+    });
+  }
+  if(!document.hidden&&currentMode==='relay'&&relayWs&&relayWs.readyState!==WebSocket.OPEN){
+    currentMode='none';fallbackRelay();
+  }
+});
+
+// ═══ 信令设备信息显示 ═══
+function showDeviceInfo(data){
+  if(!data)return;
+  const model=data.model||'';
+  const mfr=data.manufacturer||'';
+  document.getElementById('deviceText').textContent=mfr?mfr+' '+model:model;
+  document.title='亲情远程 — '+(model||'手机');
+}
+
+// ═══ 启动 ═══
+window.addEventListener('load',()=>{
+  // WebRTC能力检查
+  if(typeof RTCPeerConnection==='undefined'){
+    document.getElementById('joinError').textContent='您的浏览器不支持P2P视频，请使用Chrome或Edge';
+    document.getElementById('joinBtn').disabled=true;
+    return;
+  }
+  initTouch();
+  const p=new URLSearchParams(location.search);
+  const room=p.get('room');
+  if(room){
+    document.getElementById('roomInput').value=room;
+    joinRoom();
+  }else{
+    document.getElementById('roomInput').focus();
+  }
+});
+</script>
+</body>
+</html>

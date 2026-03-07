@@ -1,0 +1,26 @@
+# User Onboarding Tutorial - Cycle #5 Round #8
+onboarding:
+  enabled: true
+  steps:
+    - id: welcome
+      title: "Welcome!"
+      description: "Let's get you started"
+      actions: [next]
+    
+    - id: dashboard
+      title: "Dashboard Tour"
+      description: "Navigate your smart home"
+      highlight: "#dashboard"
+      actions: [skip, next]
+    
+    - id: scenes
+      title: "Scene Modes"
+      description: "One-tap home control"
+      demo: activate_scene
+      actions: [back, next]
+    
+    - id: voice
+      title: "Voice Commands"
+      description: "Control with your voice"
+      demo: voice_example
+      actions: [back, finish]

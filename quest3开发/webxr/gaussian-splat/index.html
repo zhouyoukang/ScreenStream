@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quest 3 WebXR 3D高斯溅射查看器 — 沉浸式查看photorealistic 3D场景">
+    <title>3D Gaussian Splatting VR</title>
+    <script src="/quest/libs/aframe.min.js"></script>
+    <script src="/quest/libs/aframe-gaussian-splatting.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: system-ui, sans-serif; }
+        #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 10;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+            padding: 1rem 1.5rem; color: white;
+        }
+        h2 { margin: 0 0 0.3rem; font-size: 1.3rem; }
+        .info { font-size: 0.85rem; opacity: 0.8; margin: 0; }
+        #status { font-size: 0.8rem; margin-top: 0.5rem; color: #4ade80; }
+        #controls {
+            position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+            z-index: 10; display: flex; gap: 0.5rem;
+        }
+        #controls button {
+            padding: 0.6rem 1.2rem; border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 0.5rem; background: rgba(0,0,0,0.6); color: white;
+            cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+        }
+        #controls button:hover { background: rgba(100,100,255,0.4); }
+        #controls button.active { background: rgba(100,200,100,0.4); border-color: #4ade80; }
+        #loading {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 20; text-align: center; color: white;
+            background: rgba(0,0,0,0.8); padding: 2rem 3rem; border-radius: 1rem;
+        }
+        #loading .spinner {
+            width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: #4ade80; border-radius: 50%; margin: 0 auto 1rem;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <h2>🔮 3D Gaussian Splatting VR</h2>
+        <p class="info">沉浸式查看 photorealistic 3D 高斯溅射场景 | 手柄移动/手部追踪</p>
+        <div id="status">⏳ 加载中...</div>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <div>加载高斯溅射场景...</div>
+    </div>
+
+    <div id="controls">
+        <button id="btn-scene1" class="active" onclick="loadScene(0)">🏛️ 花园</button>
+        <button id="btn-scene2" onclick="loadScene(1)">🚂 火车</button>
+        <button id="btn-scene3" onclick="loadScene(2)">🪑 房间</button>
+        <button id="btn-reset" onclick="resetView()">🔄 重置视角</button>
+    </div>
+
+    <a-scene
+        vr-mode-ui="enabled: true"
+        webxr="requiredFeatures: local-floor; optionalFeatures: hand-tracking, bounded-floor"
+        renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
+        background="color: #1a1a2e"
+    >
+        <!-- Gaussian Splat entity -->
+        <a-entity id="splat-holder" position="0 1.2 -2" rotation="0 0 0" scale="1 1 1">
+            <a-entity
+                id="gaussian-splat"
+                gaussian_splatting="src: https://huggingface.co/cakewalk/splat-data/resolve/main/garden.splat; cutoutEntity: #cutout"
+                position="0 0 0"
+                rotation="0 0 0"
+            ></a-entity>
+        </a-entity>
+
+        <!-- Cutout sphere (optional, for clipping) -->
+        <a-entity id="cutout"></a-entity>
+
+        <!-- Environment -->
+        <a-plane position="0 0 0" rotation="-90 0 0" width="20" height="20"
+            material="color: #1a1a2e; opacity: 0.5; transparent: true"></a-plane>
+
+        <!-- Info text in VR -->
+        <a-text value="3D Gaussian Splatting VR\n移动头部查看不同角度"
+            position="0 2.5 -3" align="center" color="#ffffff" width="4"
+            opacity="0.7"></a-text>
+
+        <!-- Lighting -->
+        <a-light type="ambient" color="#ffffff" intensity="0.4"></a-light>
+        <a-light type="directional" position="2 4 3" intensity="0.6" color="#ffeedd"></a-light>
+
+        <!-- Camera with hand tracking -->
+        <a-entity id="rig" position="0 0 0">
+            <a-camera id="cam" position="0 1.6 0" look-controls wasd-controls>
+                <a-cursor color="#4ade80" fuse="false" raycaster="far: 10"></a-cursor>
+            </a-camera>
+        </a-entity>
+
+        <!-- Hand tracking -->
+        <a-entity id="left-hand" hand-tracking-controls="hand: left; modelColor: #4ade80"></a-entity>
+        <a-entity id="right-hand" hand-tracking-controls="hand: right; modelColor: #60a5fa"></a-entity>
+    </a-scene>
+
+    <script>
+        const scenes = [
+            { name: '花园', src: 'https://huggingface.co/cakewalk/splat-data/resolve/main/garden.splat', pos: '0 1.2 -2' },
+            { name: '火车', src: 'https://huggingface.co/cakewalk/splat-data/resolve/main/train.splat', pos: '0 1.2 -3' },
+            { name: '房间', src: 'https://huggingface.co/cakewalk/splat-data/resolve/main/room.splat', pos: '0 1.2 -2' }
+        ];
+        let currentScene = 0;
+        const statusEl = document.getElementById('status');
+        const loadingEl = document.getElementById('loading');
+        const splatEl = document.getElementById('gaussian-splat');
+        const holderEl = document.getElementById('splat-holder');
+
+        // Scene loaded handler
+        if (splatEl) {
+            splatEl.addEventListener('model-loaded', () => {
+                loadingEl.style.display = 'none';
+                statusEl.textContent = `✅ ${scenes[currentScene].name} 已加载 | WebXR: ${navigator.xr ? '可用' : '不可用'}`;
+                statusEl.style.color = '#4ade80';
+            });
+            splatEl.addEventListener('model-error', (e) => {
+                loadingEl.style.display = 'none';
+                statusEl.textContent = `❌ 加载失败: ${e.detail || '网络错误'}`;
+                statusEl.style.color = '#f87171';
+            });
+        }
+
+        // Detect HuggingFace blocked (China region) after timeout
+        setTimeout(() => {
+            if (loadingEl.style.display !== 'none') {
+                loadingEl.innerHTML = '<div style="color:#fbbf24;font-size:1.1rem">⚠️ 数据源不可用</div><div style="margin-top:0.5rem;font-size:0.85rem;opacity:0.8">HuggingFace (splat数据托管) 在中国大陆无法访问<br>请使用VPN或从境外网络访问此Demo</div>';
+                statusEl.textContent = '⚠️ HuggingFace CDN 在中国大陆不可达 — 需要国际网络';
+                statusEl.style.color = '#fbbf24';
+            }
+        }, 12000);
+
+        function loadScene(idx) {
+            currentScene = idx;
+            const scene = scenes[idx];
+            loadingEl.style.display = 'block';
+            statusEl.textContent = `⏳ 加载 ${scene.name}...`;
+            statusEl.style.color = '#fbbf24';
+
+            // Update button states
+            document.querySelectorAll('#controls button').forEach((btn, i) => {
+                if (i < scenes.length) btn.classList.toggle('active', i === idx);
+            });
+
+            // Update splat source
+            splatEl.setAttribute('gaussian_splatting', 'src', scene.src);
+            holderEl.setAttribute('position', scene.pos);
+
+            setTimeout(() => {
+                if (loadingEl.style.display !== 'none') {
+                    loadingEl.style.display = 'none';
+                    statusEl.textContent = `✅ ${scene.name} 已加载`;
+                    statusEl.style.color = '#4ade80';
+                }
+            }, 10000);
+        }
+
+        function resetView() {
+            const rig = document.getElementById('rig');
+            rig.setAttribute('position', '0 0 0');
+            const cam = document.getElementById('cam');
+            cam.setAttribute('rotation', '0 0 0');
+        }
+    </script>
+</body>
+</html>

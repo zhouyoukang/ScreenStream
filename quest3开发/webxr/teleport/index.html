@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest 3 VR Teleportation</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #111; color: #fff; font-family: system-ui, sans-serif; overflow: hidden; }
+#overlay {
+  position: fixed; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 10;
+  background: linear-gradient(135deg, #0a0a2e 0%, #1a0a3e 50%, #0a2a3e 100%);
+  transition: opacity 0.5s;
+}
+#overlay.hidden { opacity: 0; pointer-events: none; }
+#overlay h1 { font-size: 2.5em; margin-bottom: 12px; }
+#overlay p { color: #aaa; margin-bottom: 24px; max-width: 500px; text-align: center; line-height: 1.6; }
+#enterVR {
+  padding: 16px 48px; font-size: 1.2em; border: none; border-radius: 12px;
+  background: linear-gradient(135deg, #00d4ff, #7b2fef); color: #fff;
+  cursor: pointer; font-weight: 600; transition: transform 0.2s;
+}
+#enterVR:hover { transform: scale(1.05); }
+#enterVR:disabled { opacity: 0.4; cursor: not-allowed; }
+.badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; margin: 4px; }
+.badge.vr { background: #7b2fef33; border: 1px solid #7b2fef; }
+.badge.hand { background: #00d4ff33; border: 1px solid #00d4ff; }
+.badge.ctrl { background: #ff6b3533; border: 1px solid #ff6b35; }
+#status { margin-top: 16px; font-size: 0.9em; color: #0f0; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+
+<div id="overlay">
+  <h1>🚀 VR Teleportation</h1>
+  <p>探索虚拟空间 — 使用摇杆瞄准抛物线传送点，松开即传送。<br>
+  支持手部追踪：捏合食指瞄准，松开传送。</p>
+  <div>
+    <span class="badge vr">WebXR VR</span>
+    <span class="badge hand">手部追踪</span>
+    <span class="badge ctrl">控制器</span>
+  </div>
+  <button id="enterVR" disabled>加载中...</button>
+  <div id="status"></div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
+import { XRHandModelFactory } from 'three/addons/webxr/XRHandModelFactory.js';
+
+// ── Scene Setup ──
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1a2e);
+scene.fog = new THREE.FogExp2(0x1a1a2e, 0.015);
+
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+camera.position.set(0, 1.6, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.xr.enabled = true;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+// ── Player Rig (for teleportation) ──
+const playerRig = new THREE.Group();
+playerRig.position.set(0, 0, 0);
+scene.add(playerRig);
+playerRig.add(camera);
+
+// ── Lighting ──
+const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffeedd, 2);
+dirLight.position.set(5, 10, 5);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+dirLight.shadow.camera.near = 0.5;
+dirLight.shadow.camera.far = 50;
+dirLight.shadow.camera.left = -20;
+dirLight.shadow.camera.right = 20;
+dirLight.shadow.camera.top = 20;
+dirLight.shadow.camera.bottom = -20;
+scene.add(dirLight);
+
+const hemiLight = new THREE.HemisphereLight(0x88aaff, 0x224422, 0.6);
+scene.add(hemiLight);
+
+// ── Floor (teleportable surface) ──
+const floorGeo = new THREE.PlaneGeometry(60, 60);
+const floorMat = new THREE.MeshStandardMaterial({
+  color: 0x2a2a3e,
+  roughness: 0.8,
+  metalness: 0.1
+});
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+floor.userData.teleportable = true;
+scene.add(floor);
+
+// Grid helper on floor
+const grid = new THREE.GridHelper(60, 60, 0x444466, 0x333355);
+grid.position.y = 0.01;
+scene.add(grid);
+
+// ── Environment Objects ──
+function createPillar(x, z, height, color) {
+  const geo = new THREE.CylinderGeometry(0.3, 0.35, height, 8);
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.6 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, height / 2, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+
+  // Glowing top
+  const topGeo = new THREE.SphereGeometry(0.35, 16, 16);
+  const topMat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.5 });
+  const top = new THREE.Mesh(topGeo, topMat);
+  top.position.set(x, height + 0.15, z);
+  scene.add(top);
+
+  const light = new THREE.PointLight(color, 2, 8);
+  light.position.set(x, height + 0.5, z);
+  scene.add(light);
+}
+
+// Create pillars in a pattern
+const pillarPositions = [
+  [-5, -5, 3, 0x7b2fef], [5, -5, 4, 0x00d4ff], [-5, 5, 2.5, 0xff6b35],
+  [5, 5, 3.5, 0x00ff88], [0, -8, 5, 0xff3366], [-8, 0, 2, 0xffaa00],
+  [8, 0, 4.5, 0x33ccff], [0, 8, 3, 0xff00ff],
+  [-12, -12, 3, 0x4488ff], [12, -12, 4, 0xff4488],
+  [-12, 12, 2.5, 0x88ff44], [12, 12, 3.5, 0x44ffcc],
+];
+pillarPositions.forEach(([x, z, h, c]) => createPillar(x, z, h, c));
+
+// Floating platforms (also teleportable)
+function createPlatform(x, y, z, size, color) {
+  const geo = new THREE.BoxGeometry(size, 0.2, size);
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.5 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.userData.teleportable = true;
+  scene.add(mesh);
+
+  // Edge glow
+  const edgeGeo = new THREE.BoxGeometry(size + 0.05, 0.05, size + 0.05);
+  const edgeMat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.8, transparent: true, opacity: 0.6 });
+  const edge = new THREE.Mesh(edgeGeo, edgeMat);
+  edge.position.set(x, y + 0.12, z);
+  scene.add(edge);
+}
+
+createPlatform(-3, 1.5, -6, 3, 0x7b2fef);
+createPlatform(4, 2.5, -8, 2.5, 0x00d4ff);
+createPlatform(-6, 3.5, 3, 2, 0xff6b35);
+createPlatform(7, 1, 5, 3.5, 0x00ff88);
+
+// ── Teleport Arc System ──
+const ARC_SEGMENTS = 40;
+const GRAVITY = -9.8;
+const LAUNCH_SPEED = 8;
+
+const arcGeo = new THREE.BufferGeometry();
+const arcPositions = new Float32Array((ARC_SEGMENTS + 1) * 3);
+arcGeo.setAttribute('position', new THREE.BufferAttribute(arcPositions, 3));
+const arcMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.8, linewidth: 2 });
+const arcLine = new THREE.Line(arcGeo, arcMat);
+arcLine.visible = false;
+arcLine.frustumCulled = false;
+scene.add(arcLine);
+
+// Landing reticle
+const reticleGeo = new THREE.RingGeometry(0.15, 0.25, 32);
+reticleGeo.rotateX(-Math.PI / 2);
+const reticleMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.8, side: THREE.DoubleSide });
+const reticle = new THREE.Mesh(reticleGeo, reticleMat);
+reticle.visible = false;
+scene.add(reticle);
+
+// Inner dot
+const dotGeo = new THREE.CircleGeometry(0.08, 16);
+dotGeo.rotateX(-Math.PI / 2);
+const dotMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.6 });
+const dot = new THREE.Mesh(dotGeo, dotMat);
+reticle.add(dot);
+
+// ── Raycaster for teleport ──
+const raycaster = new THREE.Raycaster();
+const tempMatrix = new THREE.Matrix4();
+const teleportables = [];
+
+function collectTeleportables() {
+  teleportables.length = 0;
+  scene.traverse(obj => {
+    if (obj.userData.teleportable) teleportables.push(obj);
+  });
+}
+
+function computeArc(origin, direction) {
+  const points = [];
+  const vel = direction.clone().multiplyScalar(LAUNCH_SPEED);
+  const pos = origin.clone();
+  const dt = 0.05;
+  let hitPoint = null;
+
+  for (let i = 0; i <= ARC_SEGMENTS; i++) {
+    points.push(pos.clone());
+    vel.y += GRAVITY * dt;
+    pos.add(vel.clone().multiplyScalar(dt));
+
+    // Check for ground/platform hit
+    if (pos.y <= 0 || i > 5) {
+      raycaster.set(points[points.length - 1], new THREE.Vector3(0, -1, 0));
+      const hits = raycaster.intersectObjects(teleportables);
+      if (hits.length > 0 && hits[0].distance < 2) {
+        hitPoint = hits[0].point;
+        points.push(hitPoint);
+        break;
+      }
+    }
+
+    if (pos.y < -5) break;
+  }
+
+  return { points, hitPoint };
+}
+
+function updateArc(origin, direction) {
+  const { points, hitPoint } = computeArc(origin, direction);
+
+  const positions = arcLine.geometry.attributes.position.array;
+  for (let i = 0; i < (ARC_SEGMENTS + 1); i++) {
+    const p = points[Math.min(i, points.length - 1)];
+    positions[i * 3] = p.x;
+    positions[i * 3 + 1] = p.y;
+    positions[i * 3 + 2] = p.z;
+  }
+  arcLine.geometry.attributes.position.needsUpdate = true;
+  arcLine.geometry.setDrawRange(0, points.length);
+  arcLine.visible = true;
+
+  if (hitPoint) {
+    reticle.position.copy(hitPoint);
+    reticle.position.y += 0.02;
+    reticle.visible = true;
+    arcMat.color.setHex(0x00ff88);
+    reticleMat.color.setHex(0x00ff88);
+  } else {
+    reticle.visible = false;
+    arcMat.color.setHex(0xff3333);
+  }
+
+  return hitPoint;
+}
+
+function doTeleport(target) {
+  if (!target) return;
+  playerRig.position.x = target.x;
+  playerRig.position.y = target.y;
+  playerRig.position.z = target.z;
+}
+
+function hideArc() {
+  arcLine.visible = false;
+  reticle.visible = false;
+}
+
+// ── Controllers ──
+const controllerModelFactory = new XRControllerModelFactory();
+const handModelFactory = new XRHandModelFactory();
+
+const controllers = [];
+const hands = [];
+
+for (let i = 0; i < 2; i++) {
+  const controller = renderer.xr.getController(i);
+  playerRig.add(controller);
+
+  const grip = renderer.xr.getControllerGrip(i);
+  grip.add(controllerModelFactory.createControllerModel(grip));
+  playerRig.add(grip);
+
+  const hand = renderer.xr.getHand(i);
+  hand.add(handModelFactory.createHandModel(hand, 'mesh'));
+  playerRig.add(hand);
+
+  // Laser pointer line
+  const lineGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, -5)
+  ]);
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.5 });
+  const line = new THREE.Line(lineGeo, lineMat);
+  line.visible = false;
+  controller.add(line);
+
+  controllers.push({ controller, grip, line, teleporting: false, lastTarget: null });
+  hands.push({ hand, pinching: false, lastTarget: null });
+}
+
+// ── Teleport State ──
+let activeTeleportHand = -1;
+
+// ── Animation Loop ──
+const clock = new THREE.Clock();
+
+function animate() {
+  const delta = clock.getDelta();
+  const time = clock.getElapsedTime();
+
+  // Animate reticle
+  if (reticle.visible) {
+    reticle.rotation.y = time * 2;
+    const scale = 1 + Math.sin(time * 5) * 0.15;
+    reticle.scale.set(scale, scale, scale);
+  }
+
+  // Animate pillar tops
+  scene.traverse(obj => {
+    if (obj.type === 'PointLight') {
+      obj.intensity = 2 + Math.sin(time * 2 + obj.position.x) * 0.5;
+    }
+  });
+
+  const session = renderer.xr.getSession();
+  if (session) {
+    // Process controllers
+    for (let i = 0; i < controllers.length; i++) {
+      const { controller, line } = controllers[i];
+      const source = session.inputSources[i];
+      if (!source || !source.gamepad) {
+        line.visible = false;
+        continue;
+      }
+
+      const gp = source.gamepad;
+      // Thumbstick Y axis (index 3 = right stick Y, index 1 = left stick Y)
+      const thumbY = gp.axes[3] !== undefined ? gp.axes[3] : gp.axes[1] || 0;
+
+      if (thumbY < -0.5) {
+        // Thumbstick pushed forward → show teleport arc
+        controllers[i].teleporting = true;
+        line.visible = false;
+
+        // Get controller world position and direction
+        const pos = new THREE.Vector3();
+        const dir = new THREE.Vector3(0, 0, -1);
+        controller.getWorldPosition(pos);
+        controller.getWorldQuaternion(new THREE.Quaternion());
+        tempMatrix.identity().extractRotation(controller.matrixWorld);
+        dir.applyMatrix4(tempMatrix);
+
+        // Tilt direction upward for parabolic arc
+        dir.y = Math.max(dir.y, 0.3);
+        dir.normalize();
+
+        controllers[i].lastTarget = updateArc(pos, dir);
+        activeTeleportHand = i;
+      } else if (controllers[i].teleporting) {
+        // Thumbstick released → teleport
+        controllers[i].teleporting = false;
+        if (controllers[i].lastTarget) {
+          doTeleport(controllers[i].lastTarget);
+        }
+        hideArc();
+        activeTeleportHand = -1;
+      } else {
+        line.visible = true;
+      }
+    }
+
+    // Process hand tracking teleport (pinch gesture)
+    for (let i = 0; i < hands.length; i++) {
+      const { hand } = hands[i];
+      const indexTip = hand.joints?.['index-finger-tip'];
+      const thumbTip = hand.joints?.['thumb-tip'];
+
+      if (indexTip && thumbTip) {
+        const indexPos = new THREE.Vector3();
+        const thumbPos = new THREE.Vector3();
+        indexTip.getWorldPosition(indexPos);
+        thumbTip.getWorldPosition(thumbPos);
+        const dist = indexPos.distanceTo(thumbPos);
+        const isPinching = dist < 0.03;
+
+        if (isPinching && !hands[i].pinching) {
+          hands[i].pinching = true;
+        }
+
+        if (isPinching) {
+          // Use index finger direction for arc
+          const wristJoint = hand.joints?.['wrist'];
+          if (wristJoint) {
+            const wristPos = new THREE.Vector3();
+            wristJoint.getWorldPosition(wristPos);
+            const dir = indexPos.clone().sub(wristPos).normalize();
+            dir.y = Math.max(dir.y, 0.3);
+            dir.normalize();
+            hands[i].lastTarget = updateArc(indexPos, dir);
+            activeTeleportHand = 10 + i;
+          }
+        }
+
+        if (!isPinching && hands[i].pinching) {
+          hands[i].pinching = false;
+          if (hands[i].lastTarget) {
+            doTeleport(hands[i].lastTarget);
+          }
+          hideArc();
+          activeTeleportHand = -1;
+        }
+      }
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ── XR Session ──
+const statusEl = document.getElementById('status');
+const enterBtn = document.getElementById('enterVR');
+const overlay = document.getElementById('overlay');
+
+async function checkXR() {
+  if (!navigator.xr) {
+    statusEl.textContent = '❌ WebXR不可用';
+    return;
+  }
+  const supported = await navigator.xr.isSessionSupported('immersive-vr');
+  if (supported) {
+    statusEl.textContent = 'WebXR就绪 ✓';
+    statusEl.style.color = '#0f0';
+    enterBtn.disabled = false;
+    enterBtn.textContent = '进入VR';
+  } else {
+    statusEl.textContent = '❌ immersive-vr不支持';
+  }
+}
+
+enterBtn.addEventListener('click', async () => {
+  try {
+    const session = await navigator.xr.requestSession('immersive-vr', {
+      requiredFeatures: ['local-floor'],
+      optionalFeatures: ['hand-tracking', 'bounded-floor']
+    });
+    renderer.xr.setSession(session);
+    overlay.classList.add('hidden');
+    collectTeleportables();
+
+    session.addEventListener('end', () => {
+      overlay.classList.remove('hidden');
+    });
+  } catch (e) {
+    statusEl.textContent = '❌ ' + e.message;
+    statusEl.style.color = '#f33';
+  }
+});
+
+// ── Resize ──
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ── Init ──
+collectTeleportables();
+checkXR();
+
+// Single unified animation loop (inline preview + XR)
+renderer.setAnimationLoop(() => {
+  if (!renderer.xr.isPresenting) {
+    const t = clock.getElapsedTime();
+    camera.position.set(Math.sin(t * 0.1) * 8, 3, Math.cos(t * 0.1) * 8);
+    camera.lookAt(0, 1, 0);
+  }
+  animate();
+});
+</script>
+</body>
+</html>

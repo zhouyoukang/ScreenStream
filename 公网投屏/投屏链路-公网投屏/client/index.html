@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ScreenStream · 公网投屏</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f; --surface: #13131a; --border: #2a2a3a;
+  --text: #e8e8f0; --text-dim: #8888a0; --accent: #6c8cff;
+  --accent-dim: #4a5a8a; --danger: #ff4466; --success: #44cc88;
+  --radius: 12px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100dvh; display: flex; flex-direction: column;
+  overflow: hidden; touch-action: none;
+  -webkit-user-select: none; user-select: none;
+}
+
+/* ─── Header ─── */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px; background: var(--surface);
+  border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 10;
+}
+header h1 { font-size: 16px; font-weight: 600; }
+header h1 span { color: var(--accent); }
+#status {
+  font-size: 12px; display: flex; align-items: center; gap: 6px;
+}
+#status .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-dim); transition: background 0.3s;
+}
+#status .dot.connected { background: var(--success); }
+#status .dot.streaming { background: var(--accent); animation: pulse 1.5s infinite; }
+#status .dot.error { background: var(--danger); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+}
+
+/* ─── Join Panel ─── */
+#join-panel {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 24px; gap: 24px;
+}
+#join-panel.hidden { display: none; }
+
+.join-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 32px; width: 100%; max-width: 400px;
+}
+.join-card h2 {
+  font-size: 20px; margin-bottom: 4px; text-align: center;
+}
+.join-card p {
+  color: var(--text-dim); font-size: 13px; text-align: center; margin-bottom: 24px;
+}
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; }
+.field input {
+  width: 100%; padding: 12px 16px; font-size: 18px;
+  background: var(--bg); color: var(--text); border: 1px solid var(--border);
+  border-radius: 8px; outline: none; text-align: center;
+  letter-spacing: 4px; font-family: 'SF Mono', 'Cascadia Code', monospace;
+}
+.field input:focus { border-color: var(--accent); }
+.field input::placeholder { letter-spacing: 0; color: var(--text-dim); font-size: 14px; }
+
+.btn {
+  width: 100%; padding: 14px; font-size: 16px; font-weight: 600;
+  border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #7d9aff; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.error-msg {
+  color: var(--danger); font-size: 13px; text-align: center;
+  margin-top: 12px; min-height: 20px;
+}
+
+/* ─── Stream View ─── */
+#stream-panel {
+  flex: 1; display: none; flex-direction: column;
+  position: relative; background: #000;
+}
+#stream-panel.active { display: flex; }
+
+#video-container {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+#remote-video {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+  background: #000;
+}
+
+/* Touch overlay */
+#touch-overlay {
+  position: absolute; inset: 0; z-index: 5; cursor: crosshair;
+}
+
+/* Stream info bar */
+#stream-info {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px); font-size: 12px;
+  transition: opacity 0.3s; opacity: 0;
+}
+#stream-panel:hover #stream-info,
+#stream-info.visible { opacity: 1; }
+
+#stream-info .id { color: var(--accent); font-family: monospace; font-size: 14px; }
+#stream-info .stats { color: var(--text-dim); }
+
+/* Controls bar */
+#controls {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  transition: opacity 0.3s; opacity: 0;
+}
+#stream-panel:hover #controls,
+#controls.visible { opacity: 1; }
+
+.ctrl-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--border); background: rgba(255,255,255,0.1);
+  color: var(--text); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.ctrl-btn:hover { background: rgba(255,255,255,0.2); }
+.ctrl-btn.danger { border-color: var(--danger); }
+.ctrl-btn.danger:hover { background: rgba(255,68,102,0.3); }
+
+/* Fullscreen */
+#stream-panel:fullscreen #stream-info,
+#stream-panel:fullscreen #controls { opacity: 0; }
+#stream-panel:fullscreen:hover #stream-info,
+#stream-panel:fullscreen:hover #controls { opacity: 1; }
+
+/* Loading overlay */
+#loading {
+  position: absolute; inset: 0; z-index: 20;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.8); gap: 16px;
+}
+#loading.hidden { display: none; }
+.spinner {
+  width: 40px; height: 40px; border: 3px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading-text { color: var(--text-dim); font-size: 14px; }
+
+/* ─── Responsive ─── */
+@media (max-width: 480px) {
+  header { padding: 6px 12px; }
+  .join-card { padding: 20px; }
+  .ctrl-btn { width: 38px; height: 38px; font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Screen<span>Stream</span></h1>
+  <div id="status">
+    <div class="dot" id="status-dot"></div>
+    <span id="status-text">未连接</span>
+  </div>
+</header>
+
+<!-- Join Panel -->
+<div id="join-panel">
+  <div class="join-card">
+    <h2>📺 加入投屏</h2>
+    <p>输入手机上显示的8位数字ID，即可在此查看并控制手机屏幕</p>
+    <div class="field">
+      <label>投屏 ID</label>
+      <input type="text" id="stream-id" maxlength="8" inputmode="numeric"
+             pattern="[0-9]*" placeholder="输入8位数字" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>密码（可选）</label>
+      <input type="password" id="stream-pwd" placeholder="如果设置了密码" autocomplete="off">
+    </div>
+    <button class="btn btn-primary" id="btn-join" disabled>加入投屏</button>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+</div>
+
+<!-- Stream Panel -->
+<div id="stream-panel">
+  <div id="stream-info">
+    <span>投屏 ID: <span class="id" id="info-id">-</span></span>
+    <span class="stats" id="info-stats">-</span>
+  </div>
+
+  <div id="video-container">
+    <video id="remote-video" autoplay playsinline muted></video>
+    <div id="touch-overlay"></div>
+    <div id="loading">
+      <div class="spinner"></div>
+      <div id="loading-text">正在连接...</div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button class="ctrl-btn" id="btn-fullscreen" title="全屏">⛶</button>
+    <button class="ctrl-btn" id="btn-audio" title="声音">🔇</button>
+    <button class="ctrl-btn" id="btn-back" title="返回键">◀</button>
+    <button class="ctrl-btn" id="btn-home" title="主页键">●</button>
+    <button class="ctrl-btn" id="btn-recents" title="最近任务">■</button>
+    <button class="ctrl-btn danger" id="btn-leave" title="断开">✕</button>
+  </div>
+</div>
+
+<!-- Socket.IO client from CDN -->
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<script>
+'use strict';
+
+// ─── Config ────────────────────────────────────────────────────────────────
+const SIGNALING_PATH = '/app/socket';
+const RECONNECT_DELAY = 2000;
+const MAX_RECONNECT = 5;
+
+// ─── DOM ───────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const joinPanel = $('join-panel');
+const streamPanel = $('stream-panel');
+const inputId = $('stream-id');
+const inputPwd = $('stream-pwd');
+const btnJoin = $('btn-join');
+const errorMsg = $('error-msg');
+const video = $('remote-video');
+const touchOverlay = $('touch-overlay');
+const loading = $('loading');
+const loadingText = $('loading-text');
+const statusDot = $('status-dot');
+const statusText = $('status-text');
+const infoId = $('info-id');
+const infoStats = $('info-stats');
+
+// ─── State ─────────────────────────────────────────────────────────────────
+let socket = null;
+let pc = null;
+let currentStreamId = null;
+let iceServers = [];
+let reconnectAttempt = 0;
+let reconnectTimer = null;
+let statsTimer = null;
+let audioMuted = true;
+
+// ─── URL Params ────────────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+if (params.get('id')) {
+  inputId.value = params.get('id');
+  if (params.get('p')) inputPwd.value = params.get('p');
+}
+
+// ─── Input Validation ──────────────────────────────────────────────────────
+inputId.addEventListener('input', () => {
+  inputId.value = inputId.value.replace(/\D/g, '').slice(0, 8);
+  btnJoin.disabled = inputId.value.length !== 8;
+  errorMsg.textContent = '';
+});
+
+btnJoin.addEventListener('click', () => joinStream());
+inputId.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !btnJoin.disabled) joinStream();
+});
+
+// ─── Socket Connection ─────────────────────────────────────────────────────
+function connectSocket() {
+  return new Promise((resolve, reject) => {
+    socket = io({
+      path: SIGNALING_PATH,
+      transports: ['websocket'],
+      auth: { token: 'web-client-' + Date.now() },
+      reconnection: false,
+    });
+
+    socket.on('connect', () => {
+      setStatus('connected', '已连接');
+      resolve();
+    });
+
+    socket.on('connect_error', (err) => {
+      setStatus('error', '连接失败');
+      reject(err);
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+      setStatus('error', '已断开');
+      if (currentStreamId) attemptReconnect();
+    });
+
+    // Server events
+    socket.on('STREAM:START', (_, cb) => {
+      cb?.({ status: 'OK' });
+      console.log('Host started streaming');
+      startWebRTC();
+    });
+
+    socket.on('STREAM:STOP', () => {
+      console.log('Host stopped streaming');
+      stopWebRTC();
+      showLoading('主机已停止投屏...');
+    });
+
+    socket.on('HOST:OFFER', async (data, cb) => {
+      if (!data?.offer) { cb?.({ status: 'ERROR:EMPTY_OR_BAD_DATA' }); return; }
+      cb?.({ status: 'OK' });
+      await handleOffer(data.offer);
+    });
+
+    socket.on('HOST:CANDIDATE', (data, cb) => {
+      if (!data?.candidates) { cb?.({ status: 'ERROR:EMPTY_OR_BAD_DATA' }); return; }
+      cb?.({ status: 'OK' });
+      for (const c of data.candidates) {
+        pc?.addIceCandidate(new RTCIceCandidate(c)).catch(console.warn);
+      }
+    });
+
+    socket.on('REMOVE:CLIENT', (_, cb) => {
+      cb?.({ status: 'OK' });
+      leaveStream(false);
+    });
+
+    socket.on('REMOVE:STREAM', () => {
+      showError('投屏已结束');
+      leaveStream(false);
+    });
+  });
+}
+
+// ─── Join Stream ───────────────────────────────────────────────────────────
+async function joinStream() {
+  const streamId = inputId.value.trim();
+  if (streamId.length !== 8) return;
+
+  btnJoin.disabled = true;
+  errorMsg.textContent = '';
+
+  try {
+    if (!socket?.connected) {
+      setStatus('', '连接中...');
+      await connectSocket();
+    }
+
+    setStatus('connected', '加入中...');
+
+    const pwd = inputPwd.value;
+    const passwordHash = pwd ? await sha256(pwd + streamId) : '';
+
+    socket.timeout(10000).emit('STREAM:JOIN', { streamId, passwordHash }, (err, resp) => {
+      if (err) {
+        showError('连接超时，请重试');
+        btnJoin.disabled = false;
+        return;
+      }
+
+      if (resp.status !== 'OK') {
+        const errMap = {
+          'ERROR:NO_STREAM_FOUND': '未找到该投屏，请确认ID是否正确',
+          'ERROR:INVALID_STREAM_ID': 'ID格式错误，请输入8位数字',
+          'ERROR:WRONG_PASSWORD': '密码错误',
+          'ERROR:HOST_TIMEOUT': '主机无响应，请稍后重试',
+          'ERROR:HOST_REJECTED': '主机拒绝了连接',
+        };
+        showError(errMap[resp.status] || `连接失败: ${resp.status}`);
+        btnJoin.disabled = false;
+        return;
+      }
+
+      // Success
+      currentStreamId = streamId;
+      iceServers = resp.iceServers || [];
+      reconnectAttempt = 0;
+
+      joinPanel.classList.add('hidden');
+      streamPanel.classList.add('active');
+      infoId.textContent = streamId;
+      setStatus('streaming', '已连接投屏');
+      showLoading('等待画面...');
+
+      // Update URL
+      const url = new URL(location);
+      url.searchParams.set('id', streamId);
+      history.replaceState(null, '', url);
+    });
+  } catch (err) {
+    showError('无法连接到服务器');
+    btnJoin.disabled = false;
+  }
+}
+
+// ─── WebRTC ────────────────────────────────────────────────────────────────
+function startWebRTC() {
+  stopWebRTC();
+
+  const config = { iceServers: iceServers.length ? iceServers : [{ urls: 'stun:stun.l.google.com:19302' }] };
+  pc = new RTCPeerConnection(config);
+
+  pc.ontrack = (e) => {
+    console.log('Got track:', e.track.kind);
+    if (e.streams[0]) {
+      video.srcObject = e.streams[0];
+      video.muted = audioMuted;
+      hideLoading();
+      startStatsMonitor();
+    }
+  };
+
+  pc.onicecandidate = (e) => {
+    if (e.candidate) {
+      socket.timeout(5000).emit('CLIENT:CANDIDATE', { candidate: e.candidate.toJSON() }, (err, resp) => {
+        if (err) console.warn('CLIENT:CANDIDATE timeout');
+      });
+    }
+  };
+
+  pc.onconnectionstatechange = () => {
+    console.log('Connection state:', pc.connectionState);
+    if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+      setStatus('error', '连接中断');
+      if (socket?.connected && currentStreamId) {
+        showLoading('重新连接中...');
+      }
+    }
+    if (pc.connectionState === 'connected') {
+      setStatus('streaming', '投屏中');
+    }
+  };
+
+  pc.oniceconnectionstatechange = () => {
+    console.log('ICE state:', pc.iceConnectionState);
+  };
+}
+
+async function handleOffer(offerSdp) {
+  if (!pc) startWebRTC();
+
+  try {
+    await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: offerSdp }));
+    const answer = await pc.createAnswer({ voiceActivityDetection: false });
+    await pc.setLocalDescription(answer);
+
+    socket.timeout(5000).emit('CLIENT:ANSWER', { answer: answer.sdp }, (err, resp) => {
+      if (err) console.warn('CLIENT:ANSWER timeout');
+    });
+  } catch (err) {
+    console.error('WebRTC negotiation error:', err);
+  }
+}
+
+function stopWebRTC() {
+  if (statsTimer) { clearInterval(statsTimer); statsTimer = null; }
+  if (pc) { pc.close(); pc = null; }
+  video.srcObject = null;
+}
+
+// ─── Leave ─────────────────────────────────────────────────────────────────
+function leaveStream(notify = true) {
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+  stopWebRTC();
+
+  if (notify && socket?.connected) {
+    socket.timeout(3000).emit('STREAM:LEAVE', () => {});
+  }
+
+  currentStreamId = null;
+  joinPanel.classList.remove('hidden');
+  streamPanel.classList.remove('active');
+  btnJoin.disabled = inputId.value.length !== 8;
+  setStatus('connected', socket?.connected ? '已连接' : '未连接');
+
+  // Clean URL
+  const url = new URL(location);
+  url.searchParams.delete('id');
+  url.searchParams.delete('p');
+  history.replaceState(null, '', url);
+}
+
+// ─── Reconnect ─────────────────────────────────────────────────────────────
+function attemptReconnect() {
+  if (reconnectAttempt >= MAX_RECONNECT) {
+    showError('连接已断开，请刷新页面重试');
+    leaveStream(false);
+    return;
+  }
+  reconnectAttempt++;
+  const delay = RECONNECT_DELAY * reconnectAttempt;
+  showLoading(`重新连接中 (${reconnectAttempt}/${MAX_RECONNECT})...`);
+  reconnectTimer = setTimeout(async () => {
+    try {
+      await connectSocket();
+      if (currentStreamId) {
+        const pwd = inputPwd.value;
+        const passwordHash = pwd ? await sha256(pwd + currentStreamId) : '';
+        socket.timeout(10000).emit('STREAM:JOIN', { streamId: currentStreamId, passwordHash }, (err, resp) => {
+          if (!err && resp?.status === 'OK') {
+            iceServers = resp.iceServers || iceServers;
+            setStatus('streaming', '已重新连接');
+            reconnectAttempt = 0;
+          } else {
+            attemptReconnect();
+          }
+        });
+      }
+    } catch {
+      attemptReconnect();
+    }
+  }, delay);
+}
+
+// ─── Touch Control ─────────────────────────────────────────────────────────
+// Translates touch/mouse events on the video to normalized coordinates
+// These would be sent to the phone via DataChannel or API in Phase 2
+
+let touchStartTime = 0;
+let touchStartPos = null;
+
+function getVideoCoords(e) {
+  const rect = video.getBoundingClientRect();
+  const vw = video.videoWidth || 1;
+  const vh = video.videoHeight || 1;
+
+  // Calculate the actual displayed area (considering object-fit: contain)
+  const displayRatio = rect.width / rect.height;
+  const videoRatio = vw / vh;
+  let ox, oy, ow, oh;
+
+  if (displayRatio > videoRatio) {
+    oh = rect.height; ow = oh * videoRatio;
+    ox = rect.left + (rect.width - ow) / 2; oy = rect.top;
+  } else {
+    ow = rect.width; oh = ow / videoRatio;
+    ox = rect.left; oy = rect.top + (rect.height - oh) / 2;
+  }
+
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+  const x = Math.max(0, Math.min(1, (clientX - ox) / ow));
+  const y = Math.max(0, Math.min(1, (clientY - oy) / oh));
+
+  return { x, y, screenX: Math.round(x * vw), screenY: Math.round(y * vh) };
+}
+
+touchOverlay.addEventListener('pointerdown', e => {
+  touchStartTime = Date.now();
+  touchStartPos = getVideoCoords(e);
+  e.preventDefault();
+});
+
+touchOverlay.addEventListener('pointerup', e => {
+  if (!touchStartPos) return;
+  const end = getVideoCoords(e);
+  const dt = Date.now() - touchStartTime;
+  const dx = Math.abs(end.x - touchStartPos.x);
+  const dy = Math.abs(end.y - touchStartPos.y);
+
+  if (dx < 0.02 && dy < 0.02 && dt < 500) {
+    // Tap
+    console.log(`TAP at (${end.screenX}, ${end.screenY})`);
+    sendControl('tap', { x: end.screenX, y: end.screenY });
+  } else if (dx > 0.03 || dy > 0.03) {
+    // Swipe
+    console.log(`SWIPE from (${touchStartPos.screenX},${touchStartPos.screenY}) to (${end.screenX},${end.screenY})`);
+    sendControl('swipe', {
+      x1: touchStartPos.screenX, y1: touchStartPos.screenY,
+      x2: end.screenX, y2: end.screenY, duration: Math.max(dt, 100)
+    });
+  }
+
+  touchStartPos = null;
+  e.preventDefault();
+});
+
+// Long press
+let longPressTimer = null;
+touchOverlay.addEventListener('pointerdown', e => {
+  longPressTimer = setTimeout(() => {
+    const pos = getVideoCoords(e);
+    console.log(`LONG_PRESS at (${pos.screenX}, ${pos.screenY})`);
+    sendControl('longpress', { x: pos.screenX, y: pos.screenY, duration: 1000 });
+    touchStartPos = null; // Cancel tap/swipe
+  }, 500);
+});
+touchOverlay.addEventListener('pointerup', () => clearTimeout(longPressTimer));
+touchOverlay.addEventListener('pointercancel', () => clearTimeout(longPressTimer));
+touchOverlay.addEventListener('pointermove', e => {
+  if (!touchStartPos) return;
+  const pos = getVideoCoords(e);
+  const dx = Math.abs(pos.x - touchStartPos.x);
+  const dy = Math.abs(pos.y - touchStartPos.y);
+  if (dx > 0.02 || dy > 0.02) clearTimeout(longPressTimer);
+});
+
+function sendControl(action, data) {
+  // Phase 1: relay via signaling server (simple, works now)
+  // Phase 2: send via WebRTC DataChannel (lower latency)
+  if (socket?.connected) {
+    socket.emit('CONTROL:INPUT', { action, ...data });
+  }
+}
+
+// ─── Control Buttons ───────────────────────────────────────────────────────
+$('btn-back').addEventListener('click', () => sendControl('key', { keyCode: 'BACK' }));
+$('btn-home').addEventListener('click', () => sendControl('key', { keyCode: 'HOME' }));
+$('btn-recents').addEventListener('click', () => sendControl('key', { keyCode: 'RECENTS' }));
+
+$('btn-fullscreen').addEventListener('click', () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    streamPanel.requestFullscreen().catch(() => {});
+  }
+});
+
+$('btn-audio').addEventListener('click', () => {
+  audioMuted = !audioMuted;
+  video.muted = audioMuted;
+  $('btn-audio').textContent = audioMuted ? '🔇' : '🔊';
+});
+
+$('btn-leave').addEventListener('click', () => leaveStream(true));
+
+// ─── Stats Monitor ─────────────────────────────────────────────────────────
+function startStatsMonitor() {
+  if (statsTimer) clearInterval(statsTimer);
+  statsTimer = setInterval(async () => {
+    if (!pc) return;
+    try {
+      const stats = await pc.getStats();
+      let fps = 0, width = 0, height = 0, bytesReceived = 0;
+
+      stats.forEach(s => {
+        if (s.type === 'inbound-rtp' && s.kind === 'video') {
+          fps = s.framesPerSecond || 0;
+          width = s.frameWidth || 0;
+          height = s.frameHeight || 0;
+          bytesReceived = s.bytesReceived || 0;
+        }
+      });
+
+      const mbps = (bytesReceived / 1024 / 1024).toFixed(1);
+      infoStats.textContent = width ? `${width}×${height} · ${fps}fps · ${mbps}MB` : '-';
+    } catch {}
+  }, 2000);
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+function setStatus(state, text) {
+  statusDot.className = 'dot' + (state ? ' ' + state : '');
+  statusText.textContent = text;
+}
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+}
+
+function showLoading(text) {
+  loading.classList.remove('hidden');
+  loadingText.textContent = text || '加载中...';
+}
+
+function hideLoading() {
+  loading.classList.add('hidden');
+}
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ─── Auto-join from URL ────────────────────────────────────────────────────
+if (inputId.value.length === 8) {
+  btnJoin.disabled = false;
+  // Auto-join if id is in URL
+  if (params.has('id')) {
+    setTimeout(() => joinStream(), 500);
+  }
+}
+</script>
+</body>
+</html>

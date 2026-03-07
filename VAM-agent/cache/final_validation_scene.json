@@ -1,0 +1,425 @@
+{
+   "version": "1.22",
+   "playerHeightAdjust": "0",
+   "atoms": [
+      {
+         "type": "Person",
+         "on": "true",
+         "position": {
+            "x": "0.5",
+            "y": "0",
+            "z": "0"
+         },
+         "rotation": {
+            "x": "0",
+            "y": "-30",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "geometry",
+               "character": "Female",
+               "clothing": [],
+               "hair": [],
+               "morphs": [
+                  {
+                     "uid": "FBMBodyTone",
+                     "value": "0.6"
+                  },
+                  {
+                     "uid": "FBMMuscular",
+                     "value": "0.3"
+                  },
+                  {
+                     "uid": "FBMTall",
+                     "value": "0.1"
+                  },
+                  {
+                     "uid": "GlutesSize",
+                     "value": "0.3"
+                  }
+               ]
+            },
+            {
+               "id": "rescaleObject",
+               "scale": "1.0"
+            },
+            {
+               "id": "expression",
+               "morphs": [
+                  {
+                     "uid": "Smile_Open",
+                     "value": "0.5"
+                  },
+                  {
+                     "uid": "BrowInnerUp",
+                     "value": "0.2"
+                  }
+               ]
+            },
+            {
+               "id": "plugin#1_VamTimeline.AtomPlugin",
+               "pluginPath": "Custom/Scripts/AcidBubbles/Timeline/VamTimeline.AtomPlugin.cs",
+               "animations": [
+                  {
+                     "AnimationName": "Alice_breathing",
+                     "AnimationLength": "3.0",
+                     "Loop": "true",
+                     "Speed": "1.0",
+                     "Layers": [
+                        {
+                           "Controllers": [
+                              {
+                                 "target": "chestControl",
+                                 "param": "position.y",
+                                 "keys": [
+                                    {
+                                       "t": "0.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "0.6000000000000001",
+                                       "v": "0.006999999999999999",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "1.5",
+                                       "v": "0.01",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "2.1",
+                                       "v": "0.003",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "3.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    }
+                                 ]
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  {
+                     "AnimationName": "Alice_idle",
+                     "AnimationLength": "4.0",
+                     "Loop": "true",
+                     "Speed": "1.0",
+                     "Layers": [
+                        {
+                           "Controllers": [
+                              {
+                                 "target": "hipControl",
+                                 "param": "position.x",
+                                 "keys": [
+                                    {
+                                       "t": "0.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "1.0",
+                                       "v": "0.02",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "2.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "3.0",
+                                       "v": "-0.02",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "4.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    }
+                                 ]
+                              }
+                           ]
+                        }
+                     ]
+                  }
+               ]
+            },
+            {
+               "id": "PluginManager",
+               "plugins": {
+                  "plugin#1": "Custom/Scripts/AcidBubbles/Timeline/VamTimeline.AtomPlugin.cs"
+               }
+            }
+         ],
+         "id": "Alice"
+      },
+      {
+         "type": "Person",
+         "on": "true",
+         "position": {
+            "x": "-0.5",
+            "y": "0",
+            "z": "0"
+         },
+         "rotation": {
+            "x": "0",
+            "y": "30",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "geometry",
+               "character": "Male",
+               "clothing": [],
+               "hair": [],
+               "morphs": [
+                  {
+                     "uid": "FBMMuscular",
+                     "value": "0.6"
+                  },
+                  {
+                     "uid": "FBMBodyTone",
+                     "value": "0.5"
+                  },
+                  {
+                     "uid": "FBMTall",
+                     "value": "0.2"
+                  },
+                  {
+                     "uid": "PBMHipsWidth",
+                     "value": "-0.1"
+                  }
+               ]
+            },
+            {
+               "id": "rescaleObject",
+               "scale": "1.0"
+            },
+            {
+               "id": "plugin#1_VamTimeline.AtomPlugin",
+               "pluginPath": "Custom/Scripts/AcidBubbles/Timeline/VamTimeline.AtomPlugin.cs",
+               "animations": [
+                  {
+                     "AnimationName": "Bob_breathing",
+                     "AnimationLength": "3.0",
+                     "Loop": "true",
+                     "Speed": "1.0",
+                     "Layers": [
+                        {
+                           "Controllers": [
+                              {
+                                 "target": "chestControl",
+                                 "param": "position.y",
+                                 "keys": [
+                                    {
+                                       "t": "0.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "0.6000000000000001",
+                                       "v": "0.006999999999999999",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "1.5",
+                                       "v": "0.01",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "2.1",
+                                       "v": "0.003",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "3.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    }
+                                 ]
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  {
+                     "AnimationName": "Bob_idle",
+                     "AnimationLength": "4.0",
+                     "Loop": "true",
+                     "Speed": "1.0",
+                     "Layers": [
+                        {
+                           "Controllers": [
+                              {
+                                 "target": "hipControl",
+                                 "param": "position.x",
+                                 "keys": [
+                                    {
+                                       "t": "0.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "1.0",
+                                       "v": "0.02",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "2.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "3.0",
+                                       "v": "-0.02",
+                                       "c": "SmoothLocal"
+                                    },
+                                    {
+                                       "t": "4.0",
+                                       "v": "0.0",
+                                       "c": "SmoothLocal"
+                                    }
+                                 ]
+                              }
+                           ]
+                        }
+                     ]
+                  }
+               ]
+            },
+            {
+               "id": "PluginManager",
+               "plugins": {
+                  "plugin#1": "Custom/Scripts/AcidBubbles/Timeline/VamTimeline.AtomPlugin.cs"
+               }
+            }
+         ],
+         "id": "Bob"
+      },
+      {
+         "id": "MainLight",
+         "type": "InvisibleLight",
+         "on": "true",
+         "position": {
+            "x": "-1.5",
+            "y": "4",
+            "z": "3"
+         },
+         "rotation": {
+            "x": "45",
+            "y": "20",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "Light",
+               "type": "Directional",
+               "intensity": "1.0",
+               "color": {
+                  "r": "1",
+                  "g": "0.92",
+                  "b": "0.8"
+               },
+               "shadowType": "Soft"
+            }
+         ]
+      },
+      {
+         "id": "AccentLight",
+         "type": "InvisibleLight",
+         "on": "true",
+         "position": {
+            "x": "2",
+            "y": "2",
+            "z": "-1"
+         },
+         "rotation": {
+            "x": "30",
+            "y": "-60",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "Light",
+               "type": "Point",
+               "intensity": "0.4",
+               "color": {
+                  "r": "1",
+                  "g": "0.85",
+                  "b": "0.7"
+               },
+               "shadowType": "Soft",
+               "range": "10.0"
+            }
+         ]
+      },
+      {
+         "id": "FrontCam",
+         "type": "WindowCamera",
+         "on": "true",
+         "position": {
+            "x": "0",
+            "y": "1.5",
+            "z": "-1.5"
+         },
+         "rotation": {
+            "x": "0",
+            "y": "0",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "CameraControl",
+               "FOV": "55"
+            }
+         ]
+      },
+      {
+         "id": "SideCam",
+         "type": "WindowCamera",
+         "on": "true",
+         "position": {
+            "x": "-2",
+            "y": "1.5",
+            "z": "0"
+         },
+         "rotation": {
+            "x": "0",
+            "y": "90",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "CameraControl",
+               "FOV": "55"
+            }
+         ]
+      },
+      {
+         "id": "TopCam",
+         "type": "WindowCamera",
+         "on": "true",
+         "position": {
+            "x": "0",
+            "y": "3",
+            "z": "-0.5"
+         },
+         "rotation": {
+            "x": "45",
+            "y": "0",
+            "z": "0"
+         },
+         "storables": [
+            {
+               "id": "CameraControl",
+               "FOV": "60"
+            }
+         ]
+      }
+   ]
+}

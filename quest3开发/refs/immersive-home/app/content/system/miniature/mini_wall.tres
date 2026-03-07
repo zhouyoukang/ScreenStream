@@ -1,0 +1,12 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://bcfcough6ucvc"]
+
+[ext_resource type="Shader" path="res://content/system/miniature/mini_wall_shader.gdshader" id="1_sbr3e"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_sbr3e")
+shader_parameter/data = null
+shader_parameter/data_size = null
+shader_parameter/alpha = 0.3
+shader_parameter/roughness = 0.85
+shader_parameter/edge_color = Color(0, 0, 0, 1)

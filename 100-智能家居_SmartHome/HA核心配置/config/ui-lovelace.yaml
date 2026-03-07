@@ -1,0 +1,266 @@
+title: 智能家居控制中心
+views:
+  - title: 首页
+    path: default_view
+    icon: mdi:home
+    badges: []
+    cards:
+      - type: custom:mushroom-title-card
+        title: "欢迎回家！🏠"
+        subtitle: "{{ now().strftime('%Y年%m月%d日 %A') }}"
+
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: template
+            icon: mdi:thermometer
+            content: "{{ states('sensor.miaomiaoce_t9_0582_temperature') }}°C"
+            icon_color: "{% if states('sensor.miaomiaoce_t9_0582_temperature')|float > 28 %}red{% elif states('sensor.miaomiaoce_t9_0582_temperature')|float < 18 %}blue{% else %}green{% endif %}"
+          - type: template
+            icon: mdi:water-percent
+            content: "{{ states('sensor.miaomiaoce_t9_0582_relative_humidity') }}%"
+            icon_color: "{% if states('sensor.miaomiaoce_t9_0582_relative_humidity')|float > 70 %}blue{% elif states('sensor.miaomiaoce_t9_0582_relative_humidity')|float < 30 %}orange{% else %}green{% endif %}"
+          - type: template
+            icon: mdi:power-plug
+            content: "{{ states('sensor.sonoff_total_power_usage') }}W"
+            icon_color: "{% if states('sensor.sonoff_total_power_usage')|float > 1000 %}red{% else %}green{% endif %}"
+          - type: template
+            icon: mdi:cellphone
+            content: "{{ states('sensor.unknown_battery_level') }}%"
+            icon_color: "{% if states('sensor.unknown_battery_level')|int < 20 %}red{% elif states('sensor.unknown_battery_level')|int < 50 %}orange{% else %}green{% endif %}"
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.miaomiaoce_t9_0582_temperature
+            name: 室内温度
+            icon: mdi:thermometer
+            primary_info: state
+            secondary_info: last-updated
+            icon_color: deep-orange
+          - type: custom:mushroom-entity-card
+            entity: sensor.miaomiaoce_t9_0582_relative_humidity
+            name: 室内湿度
+            icon: mdi:water-percent
+            primary_info: state
+            secondary_info: last-updated
+            icon_color: blue
+
+      - type: custom:mushroom-title-card
+        title: ⚡ 功率监控
+
+      - type: sensor
+        entity: sensor.sonoff_total_power_usage
+        graph: line
+        name: 总功率趋势
+        hours_to_show: 24
+        detail: 2
+
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.sonoff_10022cf6a2_power
+            name: 有康床
+            icon: mdi:bed
+            primary_info: state
+            icon_color: amber
+          - type: custom:mushroom-entity-card
+            entity: sensor.sonoff_10022cf71d_power
+            name: 中央一号
+            icon: mdi:power-socket-eu
+            primary_info: state
+            icon_color: amber
+          - type: custom:mushroom-entity-card
+            entity: sensor.sonoff_100235142b_power
+            name: 户外电源
+            icon: mdi:solar-power
+            primary_info: state
+            icon_color: amber
+
+      - type: custom:mushroom-title-card
+        title: 💡 灯光控制
+
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.yi_hao_deng
+            name: 一号灯
+            use_light_color: true
+            show_brightness_control: true
+            show_color_control: false
+          - type: custom:mushroom-light-card
+            entity: light.er_hao_deng
+            name: 二号灯
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.san_hao_deng
+            name: 三号灯
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.ding_deng_1
+            name: 顶灯1
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.ding_deng_2
+            name: 顶灯2
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.philips_strip3_12ad_light
+            name: 灯带
+            use_light_color: true
+            show_brightness_control: true
+            show_color_control: true
+
+      - type: custom:mushroom-title-card
+        title: 🔌 开关控制
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022dede9_1
+            tap_action:
+              action: toggle
+            icon_color: "{% if is_state('switch.sonoff_10022dede9_1', 'on') %}green{% else %}grey{% endif %}"
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022dedc7_1
+            tap_action:
+              action: toggle
+            icon_color: "{% if is_state('switch.sonoff_10022dedc7_1', 'on') %}green{% else %}grey{% endif %}"
+          - type: custom:mushroom-entity-card
+            entity: switch.yszn01_ys2102_08c6_dryer
+            name: 晾衣架干燥
+            tap_action:
+              action: toggle
+            icon_color: "{% if is_state('switch.yszn01_ys2102_08c6_dryer', 'on') %}orange{% else %}grey{% endif %}"
+          - type: custom:mushroom-entity-card
+            entity: switch.yszn01_ys2102_08c6_uv
+            name: 晾衣架UV杀菌
+            tap_action:
+              action: toggle
+            icon_color: "{% if is_state('switch.yszn01_ys2102_08c6_uv', 'on') %}purple{% else %}grey{% endif %}"
+
+      - type: custom:mushroom-title-card
+        title: 🔋 设备电量
+
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.unknown_battery_level
+            name: 手机
+            icon: mdi:cellphone
+            primary_info: state
+            icon_color: "{% if states('sensor.unknown_battery_level')|int < 20 %}red{% elif states('sensor.unknown_battery_level')|int < 50 %}orange{% else %}green{% endif %}"
+          - type: custom:mushroom-entity-card
+            entity: sensor.su7_battery_level
+            name: SU7
+            icon: mdi:car-electric
+            primary_info: state
+            icon_color: "{% if states('sensor.su7_battery_level')|int < 20 %}red{% elif states('sensor.su7_battery_level')|int < 50 %}orange{% else %}green{% endif %}"
+          - type: custom:mushroom-entity-card
+            entity: sensor.quest_battery_level
+            name: Quest3
+            icon: mdi:virtual-reality
+            primary_info: state
+            icon_color: "{% if states('sensor.quest_battery_level')|int < 20 %}red{% elif states('sensor.quest_battery_level')|int < 50 %}orange{% else %}green{% endif %}"
+          - type: custom:mushroom-entity-card
+            entity: sensor.river_2_max_total_output_power
+            name: 移动电源
+            icon: mdi:battery-charging
+            primary_info: state
+            icon_color: green
+          - type: custom:mushroom-entity-card
+            entity: sensor.miaomiaoce_t9_0582_battery_level
+            name: 温湿度计
+            icon: mdi:thermometer
+            primary_info: state
+            icon_color: teal
+          - type: custom:mushroom-entity-card
+            entity: sensor.ne2210_battery_level
+            name: OnePlus
+            icon: mdi:cellphone
+            primary_info: state
+            icon_color: "{% if states('sensor.ne2210_battery_level')|int < 20 %}red{% else %}green{% endif %}"
+
+  - title: 设备
+    path: devices
+    icon: mdi:devices
+    badges: []
+    cards:
+      - type: custom:mushroom-title-card
+        title: 所有设备
+        subtitle: 查看和控制你的智能设备
+
+      - type: entities
+        title: 🔌 开关
+        show_header_toggle: true
+        entities:
+          - entity: switch.sonoff_10022dede9_1
+            secondary_info: last-changed
+          - entity: switch.sonoff_10022dedc7_1
+            secondary_info: last-changed
+
+      - type: entities
+        title: 📊 传感器
+        show_header_toggle: false
+        entities:
+          - entity: sensor.sonoff_total_power_usage
+            secondary_info: last-updated
+          - entity: sensor.river_2_max_total_output_power
+            secondary_info: last-updated
+
+  - title: 能源
+    path: energy
+    icon: mdi:lightning-bolt
+    badges: []
+    cards:
+      - type: custom:mushroom-title-card
+        title: ⚡ 能源监控
+        subtitle: 实时功耗统计
+
+      - type: sensor
+        entity: sensor.sonoff_total_power_usage
+        graph: line
+        name: 总功率趋势
+        hours_to_show: 24
+        detail: 2
+
+      - type: sensor
+        entity: sensor.river_2_max_total_output_power
+        graph: line
+        name: 移动电源趋势
+        hours_to_show: 24
+        detail: 2
+
+      - type: grid
+        columns: 2
+        square: true
+        cards:
+          - type: gauge
+            entity: sensor.sonoff_total_power_usage
+            name: 当前功率
+            min: 0
+            max: 3000
+            severity:
+              green: 0
+              yellow: 1500
+              red: 2500
+          - type: gauge
+            entity: sensor.river_2_max_total_output_power
+            name: 移动电源
+            min: 0
+            max: 1000
+
+resources: !include lovelace/resources.yaml

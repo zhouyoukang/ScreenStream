@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ScreenStream - APP下载</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.hero{text-align:center;padding:60px 20px 40px}
+.hero h1{font-size:2.2rem;font-weight:700;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px}
+.hero p{color:#94a3b8;font-size:1.05rem;max-width:500px;margin:0 auto;line-height:1.6}
+.cards{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;padding:0 20px;max-width:900px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:32px 28px;width:260px;text-align:center;transition:transform .2s,border-color .2s}
+.card:hover{transform:translateY(-4px);border-color:#60a5fa}
+.card-icon{font-size:3rem;margin-bottom:16px}
+.card h3{font-size:1.15rem;margin-bottom:8px;color:#f1f5f9}
+.card p{font-size:.85rem;color:#94a3b8;line-height:1.5;margin-bottom:20px;min-height:60px}
+.btn{display:inline-block;padding:10px 28px;border-radius:10px;font-size:.9rem;font-weight:600;text-decoration:none;transition:background .2s}
+.btn-blue{background:#3b82f6;color:#fff}.btn-blue:hover{background:#2563eb}
+.btn-green{background:#22c55e;color:#fff}.btn-green:hover{background:#16a34a}
+.btn-purple{background:#8b5cf6;color:#fff}.btn-purple:hover{background:#7c3aed}
+.btn-disabled{background:#475569;color:#94a3b8;cursor:not-allowed;pointer-events:none}
+.features{max-width:700px;padding:40px 20px;text-align:center}
+.features h2{font-size:1.4rem;margin-bottom:20px;color:#f1f5f9}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;text-align:left}
+.feat{background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155}
+.feat h4{font-size:.95rem;margin-bottom:4px;color:#60a5fa}
+.feat p{font-size:.8rem;color:#94a3b8;line-height:1.4}
+.footer{margin-top:auto;padding:30px 20px;text-align:center;color:#64748b;font-size:.8rem}
+.footer a{color:#60a5fa;text-decoration:none}
+.badge{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:6px;margin-left:6px;vertical-align:middle}
+.badge-stable{background:#16a34a33;color:#4ade80}
+.badge-beta{background:#eab30833;color:#facc15}
+.badge-soon{background:#64748b33;color:#94a3b8}
+@media(max-width:600px){.hero h1{font-size:1.6rem}.cards{flex-direction:column;align-items:center}.card{width:100%;max-width:320px}}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>ScreenStream 下载中心</h1>
+  <p>手机投屏、远程控制、公网访问 — 一站式解决方案</p>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-icon">📱</div>
+    <h3>Android APP <span class="badge badge-stable">稳定版</span></h3>
+    <p>手机端投屏服务，支持MJPEG/WebRTC/RTSP多协议，内置反向控制</p>
+    <a href="#" class="btn btn-blue" onclick="alert('APK构建中，请稍后再来');return false">下载 APK</a>
+  </div>
+
+  <div class="card">
+    <div class="card-icon">🖥️</div>
+    <h3>电脑投屏 <span class="badge badge-stable">稳定版</span></h3>
+    <p>PC屏幕投射到手机浏览器，支持P2P直连和公网中继双模式</p>
+    <a href="/desktop/" class="btn btn-green">在线使用</a>
+  </div>
+
+  <div class="card">
+    <div class="card-icon">🌐</div>
+    <h3>公网观看 <span class="badge badge-stable">稳定版</span></h3>
+    <p>通过浏览器观看手机/电脑画面，无需安装任何软件</p>
+    <a href="/cast/" class="btn btn-purple">打开 Viewer</a>
+  </div>
+</div>
+
+<div class="features">
+  <h2>核心特性</h2>
+  <div class="feat-grid">
+    <div class="feat"><h4>多协议投屏</h4><p>MJPEG / WebRTC / RTSP 三种投屏协议自由切换</p></div>
+    <div class="feat"><h4>反向控制</h4><p>触屏点击、滑动、键盘输入，远程操控手机</p></div>
+    <div class="feat"><h4>公网穿透</h4><p>FRP隧道 + TLS加密，随时随地访问</p></div>
+    <div class="feat"><h4>P2P直连</h4><p>局域网零延迟直连，自动发现设备</p></div>
+    <div class="feat"><h4>Ghost Shell</h4><p>悬浮球+饼状菜单，一键快捷操作</p></div>
+    <div class="feat"><h4>自适应质量</h4><p>根据网络状况自动调节帧率和画质</p></div>
+  </div>
+</div>
+
+<div class="footer">
+  <p>AIOTVR &copy; 2026 &middot; <a href="/">返回主站</a> &middot; <a href="/quest/">Quest3 WebXR</a> &middot; <a href="/agent/">远程中枢</a></p>
+</div>
+</body>
+</html>

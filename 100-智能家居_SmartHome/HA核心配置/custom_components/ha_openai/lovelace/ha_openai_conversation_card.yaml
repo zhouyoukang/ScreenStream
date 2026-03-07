@@ -1,0 +1,37 @@
+type: vertical-stack
+title: HomeAssistant OpenAI API Conversation
+cards:
+  - type: entities
+    entities:
+      - entity: sensor.ha_openai_status
+        name: API Status
+      - entity: conversation.ha_openai
+        name: OpenAI Conversation
+  - type: custom:vertical-stack-in-card
+    cards:
+      - type: markdown
+        content: >
+          ## Chat with HomeAssistant AI
+
+          Use the input box below to send messages. Responses will appear below.
+      - type: history-graph
+        entities:
+          - entity: conversation.ha_openai
+            name: Conversation Status
+        hours_to_show: 1
+      - type: custom:text-input-row
+        entity: conversation.ha_openai
+        icon: mdi:message-processing
+        max: 500
+        name: Send Message
+        placeholder: Type your message here...
+        buttons:
+          send: Send
+      - type: markdown
+        content: >
+          ### Latest Message
+
+          **You:** {{ state_attr('conversation.ha_openai', 'last_message') }}
+
+          **AI:** {{ state_attr('conversation.ha_openai', 'last_response') }}
+        title: Conversation History 

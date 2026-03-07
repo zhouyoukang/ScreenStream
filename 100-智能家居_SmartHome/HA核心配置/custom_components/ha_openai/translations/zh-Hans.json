@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "设置 OpenAI API 兼容服务器",
+        "description": "配置提供 OpenAI API 兼容端点的服务器",
+        "data": {
+          "name": "名称",
+          "host": "主机",
+          "port": "端口",
+          "agent_id": "会话代理",
+          "stream_responses": "流式响应",
+          "rate_limit": "速率限制（每分钟请求数）"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "集成已配置"
+    },
+    "error": {
+      "cannot_connect": "连接失败",
+      "invalid_auth": "身份验证无效",
+      "unknown": "意外错误"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "配置 OpenAI API 兼容服务器",
+        "description": "调整 OpenAI API 兼容服务器的设置",
+        "data": {
+          "agent_id": "会话代理",
+          "stream_responses": "流式响应",
+          "rate_limit": "速率限制（每分钟请求数）",
+          "request_timeout": "请求超时（秒）",
+          "max_retries": "最大重试次数",
+          "retry_delay": "重试延迟（秒）",
+          "max_history_messages": "最大历史消息数",
+          "temperature": "温度（0.0-2.0）",
+          "max_tokens": "最大令牌数",
+          "top_p": "Top P（0.0-1.0）"
+        }
+      }
+    }
+  },
+  "services": {
+    "restart": {
+      "name": "重启",
+      "description": "重启 OpenAI API 兼容服务器"
+    },
+    "clear_rate_limits": {
+      "name": "清除速率限制",
+      "description": "清除一个或所有客户端的速率限制",
+      "fields": {
+        "client_id": {
+          "name": "客户端 ID",
+          "description": "要清除速率限制的客户端 ID。如果未指定，则清除所有客户端的限制"
+        }
+      }
+    },
+    "test_api": {
+      "name": "测试 API",
+      "description": "测试 OpenAI API 功能",
+      "fields": {
+        "message": {
+          "name": "消息",
+          "description": "要发送到 API 的消息"
+        },
+        "agent_id": {
+          "name": "代理 ID",
+          "description": "要使用的会话代理 ID。如果未指定，则使用默认代理"
+        }
+      }
+    }
+  }
+} 

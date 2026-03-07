@@ -1,0 +1,5 @@
+turn_off_outdoor_power:
+  alias: 关闭户外电源插头
+  sequence:
+    - service: switch.turn_off
+      entity_id: switch.sonoff_100235142b_1

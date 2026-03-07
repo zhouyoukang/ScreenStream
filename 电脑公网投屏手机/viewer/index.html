@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Desktop Cast — 电脑投屏</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0e1a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥</text></svg>">
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--bg:#0a0e1a;--card:#1e293b;--accent:#3b82f6;--accent2:#2563eb;--text:#f1f5f9;--dim:#94a3b8;--danger:#ef4444;--warn:#f59e0b;--ok:#4ade80;--r:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+
+/* ═══ Join Screen ═══ */
+#joinScreen{position:fixed;top:0;right:0;bottom:0;left:0;background:linear-gradient(170deg,#0a0e1a 0%,#0f1628 50%,#0d1520 100%);z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:24px}
+#joinScreen.hide{display:none}
+.logo{font-size:56px;margin-bottom:-8px}
+.title{font-size:30px;font-weight:800;background:linear-gradient(135deg,var(--accent),#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{color:var(--dim);font-size:15px;text-align:center;line-height:1.7}
+.join-form{display:flex;flex-direction:column;gap:14px;width:88vw;max-width:380px}
+#roomInput{padding:20px;background:rgba(20,22,36,0.8);border:2px solid rgba(255,255,255,0.1);border-radius:var(--r);color:#fff;font-size:32px;text-align:center;letter-spacing:10px;outline:none;font-family:'Courier New',monospace;font-weight:700;text-transform:uppercase;transition:border .2s}
+#roomInput:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+#roomInput::placeholder{font-size:14px;letter-spacing:3px;color:#444;font-weight:400;text-transform:none}
+#joinBtn{padding:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--r);font-size:20px;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 4px 20px rgba(59,130,246,.3)}
+#joinBtn:active{transform:scale(.97)}
+#joinBtn:disabled{opacity:.4;cursor:not-allowed}
+#joinError{color:var(--danger);font-size:14px;text-align:center;min-height:22px}
+.join-hint{color:#4b5563;font-size:13px;text-align:center;line-height:1.8;max-width:320px}
+
+/* ═══ Main Screen ═══ */
+#mainScreen{display:none;flex-direction:column;height:100%}
+#mainScreen.show{display:flex}
+
+/* Status bar */
+.status-bar{height:28px;background:rgba(10,14,26,0.95);border-bottom:1px solid #1a1a2a;display:flex;align-items:center;padding:0 10px;gap:6px;font-size:11px;flex-shrink:0;backdrop-filter:blur(8px)}
+.s-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:all .3s}
+.s-dot.ok{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+.s-dot.wait{background:var(--warn);animation:pulse 1.5s infinite}
+.s-dot.off{background:var(--danger)}
+@keyframes pulse{50%{opacity:.5}}
+.s-fill{flex:1}
+.s-info{color:#64748b;font-size:10px}
+
+/* Canvas area */
+#videoArea{flex:1;display:flex;align-items:center;justify-content:center;background:#000;position:relative;overflow:hidden}
+#screenCanvas{max-width:100%;max-height:100%;object-fit:contain;image-rendering:-webkit-optimize-contrast;cursor:crosshair;transform-origin:center center;will-change:transform}
+#touchLayer{position:absolute;top:0;right:0;bottom:0;left:0;z-index:10}
+#loadingOverlay{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.92);color:var(--dim);font-size:15px;flex-direction:column;gap:12px;z-index:5}
+#loadingOverlay.hide{display:none}
+.spinner{width:36px;height:36px;border:3px solid #1e1e2a;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Touch ripple */
+.ripple{position:absolute;width:28px;height:28px;border-radius:50%;background:rgba(59,130,246,.5);transform:translate(-50%,-50%);pointer-events:none;animation:rp .4s ease-out forwards;z-index:11}
+@keyframes rp{to{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
+
+/* Cursor ghost — instant visual feedback before server frame confirms */
+.cursor-ghost{position:absolute;width:14px;height:14px;border:2px solid rgba(59,130,246,.7);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;animation:cgFade .6s ease-out forwards;z-index:12}
+@keyframes cgFade{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.5)}}
+
+/* Drag mode indicator */
+.drag-indicator{position:fixed;top:36px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,.85);color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;z-index:25;display:none;pointer-events:none}
+.drag-indicator.show{display:block}
+
+/* Reconnect banner */
+#reconnBar{position:fixed;top:0;left:0;right:0;bottom:auto;z-index:50;background:linear-gradient(90deg,#dc2626,#ef4444);color:#fff;text-align:center;padding:8px;font-size:13px;font-weight:600;display:none}
+
+/* Control bar */
+.ctrl-bar{height:52px;background:rgba(10,14,26,0.95);border-top:1px solid #1a1a2a;display:flex;align-items:center;justify-content:center;gap:2px;padding:0 4px;padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;backdrop-filter:blur(8px)}
+.cb{padding:6px 8px;background:rgba(30,30,42,0.8);border:1px solid rgba(255,255,255,0.06);border-radius:10px;color:var(--text);font-size:17px;cursor:pointer;transition:all .1s;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:42px;-webkit-tap-highlight-color:transparent}
+.cb:active{background:rgba(59,130,246,.25);transform:scale(.92)}
+.cb.active{background:rgba(59,130,246,.3);border-color:rgba(59,130,246,.5)}
+.cb .lbl{font-size:8px;color:#64748b;font-weight:500}
+
+/* Keyboard panel */
+.kb-panel{position:fixed;bottom:52px;left:0;right:0;background:var(--card);border-top:1px solid #334155;display:none;flex-direction:column;z-index:20;padding:8px;gap:6px;padding-bottom:env(safe-area-inset-bottom,8px)}
+.kb-panel.show{display:flex}
+.kb-row{display:flex;gap:4px}
+.kb-row input{flex:1;padding:10px;background:var(--bg);border:1px solid #334155;border-radius:8px;color:var(--text);font-size:16px;outline:none}
+.kb-row input:focus{border-color:var(--accent)}
+.kb-row button{padding:10px 16px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer}
+.kb-keys{display:flex;flex-wrap:wrap;gap:3px}
+.kk{padding:8px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:var(--text);font-size:12px;cursor:pointer;min-width:36px;text-align:center;-webkit-tap-highlight-color:transparent}
+.kk:active{background:rgba(59,130,246,.3)}
+.kk.mod{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.2)}
+.kk.mod.on{background:rgba(59,130,246,.4);color:#fff}
+
+/* Settings panel */
+.settings-bg{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.6);z-index:30;display:none;align-items:flex-end;justify-content:center}
+.settings-bg.show{display:flex}
+.settings-sheet{width:100%;max-width:420px;background:var(--card);border-radius:16px 16px 0 0;padding:16px;padding-bottom:16px}
+.settings-sheet .sh{text-align:center;color:var(--dim);font-size:13px;margin-bottom:14px;font-weight:500}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.setting-row .sl{color:var(--dim);font-size:13px}
+.setting-row .sv{color:var(--text);font-size:14px;font-weight:600}
+.setting-row input[type=range]{width:120px;accent-color:var(--accent)}
+.setting-row select{background:var(--bg);color:var(--text);border:1px solid #334155;border-radius:6px;padding:4px 8px;font-size:13px}
+.disconnect-btn{margin-top:14px;padding:14px;border-radius:12px;text-align:center;font-size:16px;color:var(--danger);cursor:pointer;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15)}
+.disconnect-btn:active{background:rgba(239,68,68,.15)}
+
+/* ═══ Ghost Shell: Floating Ball & Pie Menu ═══ */
+.float-ball{position:fixed;right:0;top:60%;width:40px;height:40px;margin-top:-20px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:50%;z-index:200;touch-action:none;transition:opacity .3s,background .2s;box-shadow:0 2px 8px rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.float-ball:active{background:rgba(59,130,246,.3)}
+.float-ball .dot{width:8px;height:8px;background:rgba(255,255,255,.7);border-radius:50%}
+.float-ball.dragging{opacity:.9;transform:scale(1.15);background:rgba(59,130,246,.3)}
+
+.pie-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:190;display:none;background:rgba(0,0,0,.35);backdrop-filter:blur(2px)}
+.pie-overlay.show{display:block}
+.pie-menu{position:fixed;z-index:195;pointer-events:none;display:none}
+.pie-menu.show{display:block}
+.pie-center{position:absolute;left:-28px;top:-28px;width:56px;height:56px;background:rgba(16,33,60,.9);border:2px solid var(--accent);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 0 15px rgba(59,130,246,.4);pointer-events:auto;z-index:10}
+.pie-cat{position:absolute;width:36px;height:36px;background:rgba(30,41,59,.92);border:1.5px solid rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .12s;pointer-events:auto;cursor:pointer;z-index:5}
+.pie-cat:active,.pie-cat.active{background:rgba(59,130,246,.4);border-color:var(--accent);transform:scale(1.15)}
+.pie-item{position:absolute;width:46px;height:46px;background:rgba(30,41,59,.92);border:1px solid rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#ccc;transition:all .1s;pointer-events:auto;cursor:pointer;text-align:center;padding:2px;animation:pieIn .15s ease-out;z-index:3}
+.pie-item:active{background:rgba(59,130,246,.4);color:#fff;transform:scale(1.1)}
+@keyframes pieIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+
+/* Zoom indicator */
+.zoom-indicator{position:fixed;top:36px;right:10px;background:rgba(59,130,246,.85);color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;z-index:25;display:none;pointer-events:none;transition:opacity .3s}
+.zoom-indicator.show{display:block}
+
+/* Gesture tutorial */
+.tutorial-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:12px;color:#fff;padding:16px 24px;backdrop-filter:blur(4px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tutorial-overlay.hide{display:none}
+.tut-item{display:flex;align-items:center;gap:14px;padding:10px 16px;background:rgba(255,255,255,.06);border-radius:12px;width:100%;max-width:340px}
+.tut-icon{font-size:28px;flex-shrink:0;width:44px;text-align:center}
+.tut-desc{font-size:13px;color:#cbd5e1;line-height:1.5}
+.tut-desc b{color:#fff;font-weight:600}
+.tut-close{margin-top:12px;padding:12px 36px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer}
+
+/* F-key row */
+.fk-row{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative}
+.fk-row::-webkit-scrollbar{display:none}
+.fk-row::after{content:'';position:absolute;right:0;top:0;bottom:0;width:24px;background:linear-gradient(90deg,transparent,rgba(15,22,36,.95));pointer-events:none}
+
+/* Landscape toast */
+.landscape-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.85);color:#fff;padding:14px 24px;border-radius:12px;font-size:14px;z-index:250;pointer-events:none;opacity:0;transition:opacity .3s}
+.landscape-toast.show{opacity:1}
+.fk{padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:5px;color:#94a3b8;font-size:10px;cursor:pointer;white-space:nowrap;min-width:32px;text-align:center;-webkit-tap-highlight-color:transparent}
+.fk:active{background:rgba(59,130,246,.3);color:#fff}
+
+/* Responsive */
+@media(max-width:420px){
+  .cb{padding:6px 6px;font-size:15px;min-width:38px}
+  .ctrl-bar{gap:1px}
+}
+@media(orientation:landscape) and (max-height:500px){
+  .ctrl-bar{height:38px;gap:1px}
+  .cb{padding:4px 6px;font-size:14px;min-width:32px}
+  .cb .lbl{display:none}
+  .status-bar{height:22px;font-size:10px}
+  .kb-panel{bottom:38px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ Join Screen ═══ -->
+<div id="joinScreen">
+  <div class="logo">🖥</div>
+  <div class="title">电脑投屏</div>
+  <p class="subtitle">输入电脑上显示的连接码<br>即可在手机上查看和操控电脑</p>
+  <div class="join-form">
+    <input id="roomInput" type="text" maxlength="8" placeholder="连接码" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    <button id="joinBtn" onclick="joinRoom()">🖥 连接电脑</button>
+  </div>
+  <div id="joinError"></div>
+  <div class="join-hint">
+    在电脑上运行 desktop.py 后会显示连接码<br>
+    手机和电脑需接入互联网
+  </div>
+</div>
+
+<!-- Reconnect banner -->
+<div id="reconnBar"></div>
+
+<!-- ═══ Main Screen ═══ -->
+<div id="mainScreen">
+  <div class="status-bar">
+    <span class="s-dot off" id="sDot"></span>
+    <span id="sText" style="font-weight:600">连接中...</span>
+    <span class="s-fill"></span>
+    <span class="s-info" id="fpsText"></span>
+    <span class="s-info" id="sizeText"></span>
+    <span class="s-info" id="deviceText"></span>
+  </div>
+
+  <div id="videoArea">
+    <canvas id="screenCanvas"></canvas>
+    <div id="touchLayer"></div>
+    <div id="loadingOverlay">
+      <div class="spinner"></div>
+      <span id="loadingText">正在连接...</span>
+    </div>
+  </div>
+
+  <div class="ctrl-bar" id="ctrlBar">
+    <button class="cb" onclick="sendHK(['win'])" title="Win"><span style="font-size:14px">⊞</span><span class="lbl">Win</span></button>
+    <button class="cb" onclick="sendHK(['alt','tab'])" title="Alt+Tab">⇥<span class="lbl">切换</span></button>
+    <button class="cb" onclick="toggleKB()" id="kbBtn" title="Keyboard">⌨<span class="lbl">键盘</span></button>
+    <button class="cb" onclick="toggleRightClick()" id="rcBtn" title="Right Click">🖱<span class="lbl">右键</span></button>
+    <button class="cb" onclick="sendHK(['ctrl','c'])" title="Copy">📋<span class="lbl">复制</span></button>
+    <button class="cb" onclick="sendHK(['ctrl','v'])" title="Paste">📌<span class="lbl">粘贴</span></button>
+    <button class="cb" onclick="sendHK(['ctrl','z'])" title="Undo">↩<span class="lbl">撤销</span></button>
+    <button class="cb" onclick="toggleFS()" title="Fullscreen">⛶<span class="lbl">全屏</span></button>
+    <button class="cb" onclick="toggleSettings()" title="Settings">⚙<span class="lbl">设置</span></button>
+  </div>
+</div>
+
+<!-- Drag mode indicator -->
+<div class="drag-indicator" id="dragInd">拖拽中...</div>
+
+<!-- Zoom indicator -->
+<div class="zoom-indicator" id="zoomInd">100%</div>
+<div class="landscape-toast" id="landscapeToast">📱 横屏使用体验更佳</div>
+
+<!-- Gesture tutorial (first-use) -->
+<div class="tutorial-overlay hide" id="tutOverlay">
+  <div style="font-size:24px;font-weight:800;margin-bottom:4px">操作指南</div>
+  <div class="tut-item"><span class="tut-icon">👆</span><span class="tut-desc"><b>单指点击</b> = 鼠标左键<br><b>双击</b> = 双击</span></div>
+  <div class="tut-item"><span class="tut-icon">👆💨</span><span class="tut-desc"><b>长按0.6秒</b> = 鼠标右键<br>右键模式下长按 = 拖拽</span></div>
+  <div class="tut-item"><span class="tut-icon">👆👆</span><span class="tut-desc"><b>双指上下滑</b> = 滚轮<br><b>双指捏合</b> = 本地缩放画面</span></div>
+  <div class="tut-item"><span class="tut-icon">🔵</span><span class="tut-desc"><b>浮球</b> = 快捷菜单<br>剪贴板·应用·系统·媒体控制</span></div>
+  <div class="tut-item"><span class="tut-icon">🔄</span><span class="tut-desc"><b>三指双击</b> = 重置缩放<br>建议横屏使用获得最佳体验</span></div>
+  <button class="tut-close" onclick="closeTutorial()">知道了</button>
+</div>
+
+<!-- Ghost Shell: Floating Action Ball -->
+<div class="float-ball" id="floatBall"><div class="dot"></div></div>
+<div class="pie-overlay" id="pieOverlay"></div>
+<div class="pie-menu" id="pieMenu">
+  <div class="pie-center" id="pieCenter"></div>
+  <div id="pieSectors"></div>
+</div>
+
+<!-- Keyboard panel -->
+<div class="kb-panel" id="kbPanel">
+  <div class="kb-row">
+    <input type="text" id="textInput" placeholder="输入文字..." enterkeyhint="send">
+    <button onclick="sendText()">发送</button>
+  </div>
+  <div class="fk-row">
+    <span class="fk" onclick="sendK('f1')">F1</span>
+    <span class="fk" onclick="sendK('f2')">F2</span>
+    <span class="fk" onclick="sendK('f3')">F3</span>
+    <span class="fk" onclick="sendK('f4')">F4</span>
+    <span class="fk" onclick="sendK('f5')">F5</span>
+    <span class="fk" onclick="sendK('f6')">F6</span>
+    <span class="fk" onclick="sendK('f7')">F7</span>
+    <span class="fk" onclick="sendK('f8')">F8</span>
+    <span class="fk" onclick="sendK('f9')">F9</span>
+    <span class="fk" onclick="sendK('f10')">F10</span>
+    <span class="fk" onclick="sendK('f11')">F11</span>
+    <span class="fk" onclick="sendK('f12')">F12</span>
+    <span class="fk" onclick="sendK('printscreen')">PrtSc</span>
+    <span class="fk" onclick="sendK('insert')">Ins</span>
+  </div>
+  <div class="kb-keys">
+    <span class="kk" onclick="sendK('enter')">Enter</span>
+    <span class="kk" onclick="sendK('backspace')">⌫</span>
+    <span class="kk" onclick="sendK('tab')">Tab</span>
+    <span class="kk" onclick="sendK('escape')">Esc</span>
+    <span class="kk" onclick="sendK('delete')">Del</span>
+    <span class="kk" onclick="sendK('space')">Space</span>
+    <span class="kk" onclick="sendK('up')">↑</span>
+    <span class="kk" onclick="sendK('down')">↓</span>
+    <span class="kk" onclick="sendK('left')">←</span>
+    <span class="kk" onclick="sendK('right')">→</span>
+    <span class="kk" onclick="sendK('home')">Home</span>
+    <span class="kk" onclick="sendK('end')">End</span>
+    <span class="kk" onclick="sendK('pageup')">PgUp</span>
+    <span class="kk" onclick="sendK('pagedown')">PgDn</span>
+    <span class="kk mod" id="modCtrl" onclick="toggleMod('ctrl')">Ctrl</span>
+    <span class="kk mod" id="modAlt" onclick="toggleMod('alt')">Alt</span>
+    <span class="kk mod" id="modShift" onclick="toggleMod('shift')">Shift</span>
+    <span class="kk" onclick="sendHK(['ctrl','a'])">全选</span>
+    <span class="kk" onclick="sendHK(['ctrl','s'])">保存</span>
+    <span class="kk" onclick="sendHK(['ctrl','shift','escape'])">任务管理器</span>
+    <span class="kk" onclick="sendHK(['alt','f4'])">关窗口</span>
+    <span class="kk" onclick="sendHK(['win','d'])">桌面</span>
+    <span class="kk" onclick="sendHK(['win','e'])">资源管理器</span>
+    <span class="kk" onclick="sendHK(['win','l'])">锁屏</span>
+  </div>
+</div>
+
+<!-- Settings panel -->
+<div class="settings-bg" id="settingsBg" onclick="closeSettings(event)">
+  <div class="settings-sheet" onclick="event.stopPropagation()">
+    <div class="sh">投屏设置</div>
+    <div class="setting-row"><span class="sl">画质</span><span class="sv" id="qualityVal">60</span><input type="range" id="qualitySlider" min="10" max="100" step="5" value="60" oninput="setQuality(this.value)"></div>
+    <div class="setting-row"><span class="sl">帧率</span><span class="sv" id="fpsVal">10</span><input type="range" id="fpsSlider" min="1" max="30" step="1" value="10" oninput="setFps(this.value)"></div>
+    <div class="setting-row"><span class="sl">缩放</span><span class="sv" id="scaleVal">50%</span><input type="range" id="scaleSlider" min="10" max="100" step="5" value="50" oninput="setScale(this.value)"></div>
+    <div class="setting-row"><span class="sl">设备</span><span class="sv" id="settingsDevice">-</span></div>
+    <div class="setting-row"><span class="sl">分辨率</span><span class="sv" id="settingsRes">-</span></div>
+    <div class="setting-row"><span class="sl">连接码</span><span class="sv" id="settingsRoom">-</span></div>
+    <div class="disconnect-btn" onclick="disconnectAll()">断开连接</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  Desktop Cast Viewer — 手机端电脑投屏查看器
+//  WebSocket JPEG streaming + touch/keyboard control
+// ═══════════════════════════════════════════════════════
+
+const TOKEN = 'desktop_cast_2026';
+let ws = null, roomId = '', isConnected = false;
+let canvas, ctx, touchLayer;
+let imgW = 0, imgH = 0, screenW = 0, screenH = 0;
+let fpsCount = 0, frameBytes = 0, reconnAttempt = 0;
+const MAX_RECONN = 10;
+let rightClickMode = false;
+let modifiers = { ctrl: false, alt: false, shift: false };
+let connectionMode = 'relay'; // 'relay' or 'p2p'
+let lastRtt = 0;
+let dragMode = false; // Real-time drag state
+
+// ─── Local Viewport Zoom/Pan (P1 fix) ───
+let viewZoom = 1, viewPanX = 0, viewPanY = 0;
+let _zoomHideTimer = null;
+function applyViewTransform() {
+    if (!canvas) return;
+    if (viewZoom <= 1) { viewZoom = 1; viewPanX = 0; viewPanY = 0; }
+    // Clamp pan so canvas doesn't go out of bounds
+    const rect = document.getElementById('videoArea').getBoundingClientRect();
+    const cw = canvas.width * (rect.height / canvas.height) * viewZoom;
+    const ch = rect.height * viewZoom;
+    const maxPanX = Math.max(0, (cw - rect.width) / 2);
+    const maxPanY = Math.max(0, (ch - rect.height) / 2);
+    viewPanX = Math.max(-maxPanX, Math.min(maxPanX, viewPanX));
+    viewPanY = Math.max(-maxPanY, Math.min(maxPanY, viewPanY));
+    canvas.style.transform = `translate(${viewPanX}px, ${viewPanY}px) scale(${viewZoom})`;
+    canvas.style.transformOrigin = 'center center';
+    // Zoom indicator
+    const ind = document.getElementById('zoomInd');
+    if (viewZoom > 1.05) {
+        ind.textContent = Math.round(viewZoom * 100) + '%';
+        ind.classList.add('show');
+        clearTimeout(_zoomHideTimer);
+        _zoomHideTimer = setTimeout(() => ind.classList.remove('show'), 1500);
+    } else {
+        ind.classList.remove('show');
+    }
+}
+function resetZoom() { viewZoom = 1; viewPanX = 0; viewPanY = 0; applyViewTransform(); haptic([20, 30, 20]); }
+
+// ─── Gesture Tutorial (P4 fix) ───
+function showTutorial() {
+    document.getElementById('tutOverlay').classList.remove('hide');
+}
+function closeTutorial() {
+    document.getElementById('tutOverlay').classList.add('hide');
+    try { localStorage.setItem('dc_tut_seen', '1'); } catch(e) {}
+}
+function maybeTutorial() {
+    try { if (!localStorage.getItem('dc_tut_seen')) showTutorial(); } catch(e) {}
+}
+
+// ─── Portrait Auto-Zoom (E2E fix) ───
+let _portraitAutoZoomed = false;
+function portraitAutoZoom() {
+    if (_portraitAutoZoomed || !canvas || !canvas.width) return;
+    _portraitAutoZoomed = true;
+    // Only auto-zoom in portrait when desktop is landscape
+    if (window.innerHeight <= window.innerWidth) return;
+    var canvasAspect = canvas.width / canvas.height;
+    if (canvasAspect < 1.2) return; // Desktop not landscape enough
+    var videoArea = document.getElementById('videoArea');
+    if (!videoArea) return;
+    var rect = videoArea.getBoundingClientRect();
+    var displayedH = rect.width / canvasAspect;
+    var fillRatio = displayedH / rect.height;
+    if (fillRatio < 0.55) {
+        // Auto-zoom to fill ~80% of viewport height
+        viewZoom = Math.min(rect.height * 0.8 / displayedH, 3);
+        applyViewTransform();
+        // Show landscape toast
+        var toast = document.getElementById('landscapeToast');
+        if (toast) {
+            toast.classList.add('show');
+            setTimeout(function() { toast.classList.remove('show'); }, 3000);
+        }
+    }
+}
+
+// ─── Relay URL detection ───
+function getRelayUrl() {
+    const params = new URLSearchParams(location.search);
+    const custom = params.get('relay');
+    if (custom) return custom;
+    // If served from relay server, use same host + path
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    let base = location.pathname.replace(/\/[^/]*$/, '') || '';
+    if (base && !base.endsWith('/')) base += '/';
+    return `${proto}//${location.host}${base}`;
+}
+
+// ─── Join Room ───
+function joinRoom() {
+    const input = document.getElementById('roomInput');
+    const code = input.value.trim().toUpperCase();
+    input.value = code;
+    if (!code || code.length < 2) {
+        document.getElementById('joinError').textContent = '请输入连接码';
+        return;
+    }
+    roomId = code;
+    document.getElementById('joinError').textContent = '连接中...';
+    document.getElementById('joinBtn').disabled = true;
+    reconnAttempt = 0;
+
+    document.getElementById('joinScreen').classList.add('hide');
+    document.getElementById('mainScreen').classList.add('show');
+    document.getElementById('floatBall').style.display = 'flex';
+    updateStatus('wait', '连接中...');
+    connectRelay();
+}
+
+// ─── WebSocket Connection ───
+function connectRelay() {
+    let url;
+    if (window.DIRECT_MODE) {
+        // P2P direct mode: connect to same host, no room/token needed
+        connectionMode = 'p2p';
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        url = `${proto}//${location.host}`;
+        document.getElementById('loadingText').textContent = '正在P2P直连...';
+    } else {
+        connectionMode = 'relay';
+        url = `${getRelayUrl()}?role=viewer&token=${TOKEN}&room=${roomId}`;
+        document.getElementById('loadingText').textContent = '正在连接服务器...';
+    }
+
+    ws = new WebSocket(url);
+    ws.binaryType = 'arraybuffer';
+
+    ws.onopen = () => {
+        isConnected = true;
+        reconnAttempt = 0;
+        document.getElementById('reconnBar').style.display = 'none';
+    };
+
+    ws.onmessage = (ev) => {
+        if (ev.data instanceof ArrayBuffer) {
+            handleFrame(ev.data);
+        } else {
+            try { handleMsg(JSON.parse(ev.data)); } catch (e) {}
+        }
+    };
+
+    ws.onclose = (e) => {
+        isConnected = false;
+        if (e.code === 4004) {
+            document.getElementById('joinError').textContent = '连接码无效，请确认电脑已运行';
+            document.getElementById('joinBtn').disabled = false;
+            showJoin();
+            return;
+        }
+        if (e.code === 4001) {
+            document.getElementById('joinError').textContent = 'Token错误';
+            document.getElementById('joinBtn').disabled = false;
+            showJoin();
+            return;
+        }
+        updateStatus('off', '连接断开');
+        scheduleReconn();
+    };
+
+    ws.onerror = () => {
+        if (!isConnected) {
+            updateStatus('off', '无法连接');
+            document.getElementById('loadingText').textContent = '连接失败，请检查网络';
+        }
+    };
+}
+
+function showJoin() {
+    document.getElementById('joinScreen').classList.remove('hide');
+    document.getElementById('mainScreen').classList.remove('show');
+    document.getElementById('floatBall').style.display = 'none';
+    closePie();
+}
+
+function scheduleReconn() {
+    if (!roomId) return;
+    reconnAttempt++;
+    if (reconnAttempt > MAX_RECONN) {
+        const bar = document.getElementById('reconnBar');
+        bar.style.display = 'block';
+        bar.innerHTML = '重连失败 <span onclick="reconnAttempt=0;scheduleReconn()" style="text-decoration:underline;cursor:pointer;margin-left:8px;padding:2px 10px;background:rgba(255,255,255,.2);border-radius:6px">重试</span>';
+        return;
+    }
+    // Exponential backoff with jitter for robust reconnection
+    const base = Math.min(2000 * Math.pow(1.5, reconnAttempt - 1), 30000);
+    const jitter = Math.random() * Math.min(base * 0.3, 3000);
+    const delay = base + jitter;
+    document.getElementById('reconnBar').style.display = 'block';
+    document.getElementById('reconnBar').textContent = `连接断开，${Math.round(delay / 1000)}秒后重连 (${reconnAttempt}/${MAX_RECONN})...`;
+    setTimeout(() => { if (!isConnected) connectRelay(); }, delay);
+}
+
+// ─── Frame Handling ───
+function handleFrame(buffer) {
+    // Auto-detect format: WebP starts with RIFF....WEBP, JPEG with FF D8
+    const header = new Uint8Array(buffer.slice(0, 4));
+    const isWebP = header[0]===0x52 && header[1]===0x49 && header[2]===0x46 && header[3]===0x46;
+    const mime = isWebP ? 'image/webp' : 'image/jpeg';
+    const blob = new Blob([buffer], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+        if (!canvas) initCanvas();
+        // Update canvas size if image dimensions changed
+        if (img.width !== imgW || img.height !== imgH) {
+            imgW = img.width;
+            imgH = img.height;
+            canvas.width = imgW;
+            canvas.height = imgH;
+        }
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+
+        // Hide loading on first frame
+        document.getElementById('loadingOverlay').classList.add('hide');
+        const ml = (typeof connectionMode !== 'undefined' && connectionMode === 'p2p') ? 'P2P直连' : '已连接';
+        updateStatus('ok', ml);
+
+        // Auto-zoom for portrait mode on first frame
+        portraitAutoZoom();
+
+        fpsCount++;
+        frameBytes += buffer.byteLength;
+    };
+    img.src = url;
+}
+
+function initCanvas() {
+    canvas = document.getElementById('screenCanvas');
+    ctx = canvas.getContext('2d', { alpha: false });
+    touchLayer = document.getElementById('touchLayer');
+    setupTouch();
+}
+
+// ─── FPS Counter + Ping + Network Quality ───
+setInterval(() => {
+    if (fpsCount > 0) {
+        const fpsEl = document.getElementById('fpsText');
+        const rttStr = lastRtt > 0 ? ' ' + lastRtt + 'ms' : '';
+        fpsEl.textContent = fpsCount + 'fps' + rttStr;
+        // Color code by latency: green <80ms, yellow <200ms, red >=200ms
+        if (lastRtt > 0) {
+            fpsEl.style.color = lastRtt < 80 ? '#4ade80' : lastRtt < 200 ? '#fbbf24' : '#f87171';
+        }
+        document.getElementById('sizeText').textContent = Math.round(frameBytes / fpsCount / 1024) + 'KB';
+        fpsCount = 0;
+        frameBytes = 0;
+    }
+    // Periodic ping for RTT measurement
+    if (isConnected) sendCmd({ type: 'ping', data: { ts: Date.now() } });
+}, 1000);
+
+// ─── Cursor Ghost (instant visual feedback) ───
+function showCursorGhost(x, y) {
+    const g = document.createElement('div');
+    g.className = 'cursor-ghost';
+    g.style.left = x + 'px';
+    g.style.top = y + 'px';
+    document.getElementById('videoArea').appendChild(g);
+    setTimeout(() => g.remove(), 600);
+}
+
+// ─── Message Handling ───
+function handleMsg(msg) {
+    switch (msg.type) {
+        case 'joined':
+            document.getElementById('settingsRoom').textContent = (msg.data && msg.data.roomId) || roomId;
+            if (msg.data && msg.data.deviceInfo) showDeviceInfo(msg.data.deviceInfo);
+            {
+                const modeLabel = connectionMode === 'p2p' ? 'P2P直连' : '中继';
+                const viewers = (msg.data && msg.data.viewerCount) || 1;
+                updateStatus('ok', `已连接 · ${modeLabel} · ${viewers}人`);
+            maybeTutorial();
+            }
+            break;
+        case 'device_info':
+            showDeviceInfo(msg.data);
+            break;
+        case 'provider_disconnected':
+            document.getElementById('loadingOverlay').classList.remove('hide');
+            document.getElementById('loadingText').textContent = '电脑已断开';
+            updateStatus('off', '电脑离线');
+            break;
+        case 'provider_reconnected':
+            document.getElementById('loadingOverlay').classList.add('hide');
+            updateStatus('ok', '已重连');
+            break;
+        case 'pong':
+            if (msg.data && msg.data.ts) {
+                lastRtt = Date.now() - msg.data.ts;
+            }
+            break;
+        case 'clipboard':
+            if (msg.data && msg.data.content) {
+                navigator.clipboard.writeText(msg.data.content).then(() => {
+                    haptic([50, 50]);
+                }).catch(() => {});
+            }
+            break;
+        case 'error':
+            document.getElementById('joinError').textContent = (msg.data && msg.data.message) || '错误';
+            break;
+    }
+}
+
+function showDeviceInfo(info) {
+    if (!info) return;
+    screenW = info.screen_w || 1920;
+    screenH = info.screen_h || 1080;
+    const name = info.hostname || info.os || '';
+    document.getElementById('deviceText').textContent = name;
+    document.getElementById('settingsDevice').textContent = `${name} (${info.os || ''})`;
+    document.getElementById('settingsRes').textContent = `${screenW}x${screenH}`;
+    document.title = 'Desktop Cast — ' + name;
+    // Sync settings sliders from provider's actual values
+    if (info.scale) {
+        document.getElementById('scaleSlider').value = info.scale;
+        document.getElementById('scaleVal').textContent = info.scale + '%';
+    }
+    if (info.quality) {
+        document.getElementById('qualitySlider').value = info.quality;
+        document.getElementById('qualityVal').textContent = info.quality;
+    }
+    if (info.fps) {
+        document.getElementById('fpsSlider').value = info.fps;
+        document.getElementById('fpsVal').textContent = info.fps;
+    }
+}
+
+// ─── Touch Handling ───
+let touchState = { startX: 0, startY: 0, startTime: 0, moved: false, longTimer: null, lastTap: 0 };
+let pinchState = { active: false, initDist: 0, lastZoom: 0, cx: 0, cy: 0, lastPanX: 0, lastPanY: 0 };
+let threeFingerState = { lastTap: 0 };
+function getPinchDist(touches) { return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY); }
+function getPinchCenter(touches) { return { x: (touches[0].clientX + touches[1].clientX) / 2, y: (touches[0].clientY + touches[1].clientY) / 2 }; }
+
+function setupTouch() {
+    const el = document.getElementById('touchLayer');
+
+    el.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        // Three-finger double-tap → reset zoom
+        if (e.touches.length === 3) {
+            const now = Date.now();
+            if (now - threeFingerState.lastTap < 400) { resetZoom(); threeFingerState.lastTap = 0; }
+            else threeFingerState.lastTap = now;
+            clearTimeout(touchState.longTimer);
+            return;
+        }
+        // Pinch zoom detection → LOCAL canvas zoom (not desktop Ctrl+/-)
+        if (e.touches.length === 2) {
+            pinchState.active = true;
+            pinchState.initDist = getPinchDist(e.touches);
+            const c = getPinchCenter(e.touches);
+            pinchState.cx = c.x; pinchState.cy = c.y;
+            pinchState.lastPanX = c.x; pinchState.lastPanY = c.y;
+            clearTimeout(touchState.longTimer);
+            return;
+        }
+        pinchState.active = false;
+        const t = e.touches[0];
+        touchState.startX = t.clientX;
+        touchState.startY = t.clientY;
+        touchState.startTime = Date.now();
+        touchState.moved = false;
+
+        // Long press: right-click (default) or enter real-time drag mode
+        touchState.longTimer = setTimeout(() => {
+            if (!touchState.moved) {
+                const pos = touchToNorm(t.clientX, t.clientY);
+                if (pos) {
+                    if (rightClickMode) {
+                        // In right-click mode, long-press enters drag mode
+                        dragMode = true;
+                        sendCmd({ type: 'mousedown', data: pos });
+                        document.getElementById('dragInd').classList.add('show');
+                        showRipple(t.clientX, t.clientY, '#f59e0b');
+                        haptic([30, 30, 30]);
+                    } else {
+                        sendCmd({ type: 'rightclick', data: pos });
+                        showRipple(t.clientX, t.clientY, '#ef4444');
+                        haptic(50);
+                    }
+                }
+            }
+        }, 600);
+    }, { passive: false });
+
+    el.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const t = e.touches[0];
+        const dx = t.clientX - touchState.startX;
+        const dy = t.clientY - touchState.startY;
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+            touchState.moved = true;
+            clearTimeout(touchState.longTimer);
+        }
+
+        // Real-time drag: send throttled mousemove commands (~30Hz max)
+        if (dragMode && e.touches.length === 1) {
+            const now = Date.now();
+            if (!touchState._lastMoveTs || now - touchState._lastMoveTs > 33) {
+                const pos = touchToNorm(t.clientX, t.clientY);
+                if (pos) sendCmd({ type: 'mousemove', data: pos });
+                touchState._lastMoveTs = now;
+            }
+            return;
+        }
+
+        // Pinch zoom → LOCAL canvas zoom + pan
+        if (pinchState.active && e.touches.length === 2) {
+            const dist = getPinchDist(e.touches);
+            const c = getPinchCenter(e.touches);
+            // Zoom
+            const ratio = dist / pinchState.initDist;
+            viewZoom = Math.max(1, Math.min(8, viewZoom * ratio));
+            pinchState.initDist = dist;
+            // Pan while pinching
+            viewPanX += c.x - pinchState.lastPanX;
+            viewPanY += c.y - pinchState.lastPanY;
+            pinchState.lastPanX = c.x; pinchState.lastPanY = c.y;
+            applyViewTransform();
+            return;
+        }
+
+        // Two-finger scroll (only when not zoomed)
+        if (e.touches.length === 2 && viewZoom <= 1.05) {
+            const pos = touchToNorm(t.clientX, t.clientY);
+            if (pos && Math.abs(dy) > 10) {
+                const delta = dy > 0 ? -3 : 3;
+                sendCmd({ type: 'scroll', data: { ...pos, delta } });
+                touchState.startY = t.clientY;
+            }
+        }
+
+        // Single-finger pan when zoomed
+        if (viewZoom > 1.05 && e.touches.length === 1 && touchState.moved && !dragMode) {
+            viewPanX += t.clientX - touchState.startX;
+            viewPanY += t.clientY - touchState.startY;
+            touchState.startX = t.clientX;
+            touchState.startY = t.clientY;
+            applyViewTransform();
+            return;
+        }
+    }, { passive: false });
+
+    el.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        clearTimeout(touchState.longTimer);
+
+        if (pinchState.active) { pinchState.active = false; return; }
+
+        // Real-time drag end: send mouseup
+        if (dragMode) {
+            dragMode = false;
+            document.getElementById('dragInd').classList.remove('show');
+            const t = e.changedTouches[0];
+            const pos = touchToNorm(t.clientX, t.clientY);
+            if (pos) sendCmd({ type: 'mouseup', data: pos });
+            haptic(20);
+            return;
+        }
+
+        if (e.touches.length > 0) return; // Multi-touch still active
+
+        // When zoomed and finger moved, it was a pan gesture — don't send commands
+        if (viewZoom > 1.05 && touchState.moved) return;
+
+        const elapsed = Date.now() - touchState.startTime;
+        const now = Date.now();
+
+        if (!touchState.moved && elapsed < 500) {
+            const pos = touchToNorm(touchState.startX, touchState.startY);
+            if (!pos) return;
+
+            // Double tap detection
+            if (now - touchState.lastTap < 300) {
+                sendCmd({ type: 'dblclick', data: pos });
+                showRipple(touchState.startX, touchState.startY, '#f59e0b');
+                haptic(30);
+                touchState.lastTap = 0;
+            } else {
+                touchState.lastTap = now;
+                // Right click mode or normal click
+                if (rightClickMode) {
+                    sendCmd({ type: 'rightclick', data: pos });
+                    showRipple(touchState.startX, touchState.startY, '#ef4444');
+                    haptic(25);
+                } else {
+                    // Check for modifier keys
+                    const mods = getActiveMods();
+                    if (mods.length > 0) {
+                        sendCmd({ type: 'click', data: { ...pos, modifiers: mods } });
+                    } else {
+                        sendCmd({ type: 'click', data: pos });
+                    }
+                    showRipple(touchState.startX, touchState.startY);
+                    showCursorGhost(touchState.startX, touchState.startY);
+                    haptic(15);
+                }
+            }
+        } else if (touchState.moved && elapsed < 2000 && e.changedTouches.length === 1) {
+            // Drag gesture
+            const endPos = touchToNorm(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+            const startPos = touchToNorm(touchState.startX, touchState.startY);
+            if (startPos && endPos) {
+                // If short swipe, treat as scroll; if long swipe, treat as drag
+                const dist = Math.sqrt(
+                    Math.pow(endPos.x - startPos.x, 2) + Math.pow(endPos.y - startPos.y, 2)
+                );
+                if (dist < 0.1) {
+                    // Short swipe → scroll
+                    const dy = e.changedTouches[0].clientY - touchState.startY;
+                    const delta = dy > 0 ? -3 : 3;
+                    sendCmd({ type: 'scroll', data: { ...startPos, delta } });
+                } else {
+                    // Long swipe → drag
+                    sendCmd({ type: 'drag', data: {
+                        x1: startPos.x, y1: startPos.y,
+                        x2: endPos.x, y2: endPos.y,
+                        duration: Math.min(elapsed / 1000, 2)
+                    }});
+                }
+            }
+        }
+    }, { passive: false });
+
+    // Mouse events (for desktop browser testing)
+    el.addEventListener('click', (e) => {
+        const pos = touchToNorm(e.clientX, e.clientY);
+        if (!pos) return;
+        if (rightClickMode) {
+            sendCmd({ type: 'rightclick', data: pos });
+        } else {
+            sendCmd({ type: 'click', data: pos });
+        }
+        showRipple(e.clientX, e.clientY);
+    });
+
+    el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const pos = touchToNorm(e.clientX, e.clientY);
+        if (pos) sendCmd({ type: 'rightclick', data: pos });
+    });
+
+    el.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const pos = touchToNorm(e.clientX, e.clientY);
+        if (pos) {
+            const delta = e.deltaY > 0 ? -3 : 3;
+            sendCmd({ type: 'scroll', data: { ...pos, delta } });
+        }
+    }, { passive: false });
+}
+
+function touchToNorm(clientX, clientY) {
+    if (!canvas) return null;
+    // getBoundingClientRect accounts for CSS transform (zoom/pan) automatically
+    const rect = canvas.getBoundingClientRect();
+    // Allow touches slightly outside canvas when zoomed (edge tolerance)
+    const tol = viewZoom > 1.05 ? 20 : 0;
+    if (clientX < rect.left - tol || clientX > rect.right + tol ||
+        clientY < rect.top - tol || clientY > rect.bottom + tol) return null;
+
+    // Map to canvas coordinates (accounting for CSS scaling + zoom)
+    const cx = (clientX - rect.left) / rect.width;
+    const cy = (clientY - rect.top) / rect.height;
+
+    // Clamp to 0-1
+    return {
+        x: Math.max(0, Math.min(1, cx)),
+        y: Math.max(0, Math.min(1, cy))
+    };
+}
+
+function showRipple(x, y, color) {
+    const r = document.createElement('div');
+    r.className = 'ripple';
+    r.style.left = x + 'px';
+    r.style.top = y + 'px';
+    if (color) r.style.background = color.startsWith('#') ? color + '80' : color.replace(')', ',.5)').replace('rgb', 'rgba');
+    document.getElementById('videoArea').appendChild(r);
+    setTimeout(() => r.remove(), 400);
+}
+
+function haptic(ms) { try { navigator.vibrate && navigator.vibrate(ms || 15); } catch (e) {} }
+
+// ─── Control Commands ───
+function sendCmd(msg) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(msg));
+    }
+}
+
+function sendK(key) {
+    const mods = getActiveMods();
+    if (mods.length > 0) {
+        sendCmd({ type: 'hotkey', data: { keys: [...mods, key] } });
+        clearMods();
+    } else {
+        sendCmd({ type: 'key', data: { key } });
+    }
+    haptic(10);
+}
+
+function sendHK(keys) {
+    sendCmd({ type: 'hotkey', data: { keys } });
+    haptic(15);
+}
+
+function sendText() {
+    const input = document.getElementById('textInput');
+    const text = input.value;
+    if (!text) return;
+    sendCmd({ type: 'type', data: { text } });
+    input.value = '';
+    haptic(20);
+}
+
+function getActiveMods() {
+    const mods = [];
+    if (modifiers.ctrl) mods.push('ctrl');
+    if (modifiers.alt) mods.push('alt');
+    if (modifiers.shift) mods.push('shift');
+    return mods;
+}
+
+function clearMods() {
+    modifiers.ctrl = false;
+    modifiers.alt = false;
+    modifiers.shift = false;
+    document.getElementById('modCtrl').classList.remove('on');
+    document.getElementById('modAlt').classList.remove('on');
+    document.getElementById('modShift').classList.remove('on');
+}
+
+function toggleMod(mod) {
+    modifiers[mod] = !modifiers[mod];
+    document.getElementById('mod' + mod.charAt(0).toUpperCase() + mod.slice(1))
+        .classList.toggle('on', modifiers[mod]);
+    haptic(10);
+}
+
+// ─── UI Toggles ───
+function toggleKB() {
+    const panel = document.getElementById('kbPanel');
+    const isShow = panel.classList.toggle('show');
+    document.getElementById('kbBtn').classList.toggle('active', isShow);
+    if (isShow) document.getElementById('textInput').focus();
+}
+
+function toggleRightClick() {
+    rightClickMode = !rightClickMode;
+    document.getElementById('rcBtn').classList.toggle('active', rightClickMode);
+    haptic(15);
+}
+
+function toggleFS() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+        document.exitFullscreen().catch(() => {});
+    }
+}
+
+function toggleSettings() {
+    document.getElementById('settingsBg').classList.toggle('show');
+}
+
+function closeSettings(e) {
+    if (e.target === document.getElementById('settingsBg')) {
+        document.getElementById('settingsBg').classList.remove('show');
+    }
+}
+
+function disconnectAll() {
+    if (ws) ws.close();
+    ws = null;
+    isConnected = false;
+    roomId = '';
+    document.getElementById('settingsBg').classList.remove('show');
+    document.getElementById('reconnBar').style.display = 'none';
+    document.getElementById('kbPanel').classList.remove('show');
+    document.getElementById('kbBtn').classList.remove('active');
+    if (rightClickMode) { rightClickMode = false; document.getElementById('rcBtn').classList.remove('active'); }
+    clearMods();
+    showJoin();
+    document.getElementById('joinBtn').disabled = false;
+    document.getElementById('joinError').textContent = '';
+}
+
+// ─── Remote Settings ───
+function setQuality(v) {
+    document.getElementById('qualityVal').textContent = v;
+    sendCmd({ type: 'set_quality', data: { value: parseInt(v) } });
+}
+
+function setFps(v) {
+    document.getElementById('fpsVal').textContent = v;
+    sendCmd({ type: 'set_fps', data: { value: parseInt(v) } });
+}
+
+function setScale(v) {
+    document.getElementById('scaleVal').textContent = v + '%';
+    sendCmd({ type: 'set_scale', data: { value: parseInt(v) } });
+}
+
+// ─── Status Updates ───
+function updateStatus(state, text) {
+    const dot = document.getElementById('sDot');
+    dot.className = 's-dot ' + state;
+    document.getElementById('sText').textContent = text;
+}
+
+// ─── Keyboard Shortcuts (desktop testing) ───
+document.addEventListener('keydown', (e) => {
+    // Enter in text input sends text
+    if (e.key === 'Enter' && document.activeElement === document.getElementById('textInput')) {
+        sendText();
+        e.preventDefault();
+    }
+});
+
+// ─── Auto-join from URL ───
+(function() {
+    // P2P Direct Mode: skip join screen, auto-connect
+    if (window.DIRECT_MODE) {
+        connectionMode = 'p2p';
+        roomId = 'P2P-DIRECT';
+        document.getElementById('joinScreen').classList.add('hide');
+        document.getElementById('mainScreen').classList.add('show');
+        document.getElementById('floatBall').style.display = 'flex';
+        updateStatus('wait', 'P2P直连中...');
+        setTimeout(() => connectRelay(), 200);
+        return;
+    }
+
+    const params = new URLSearchParams(location.search);
+    const room = params.get('room');
+    if (room) {
+        document.getElementById('roomInput').value = room;
+        // Auto-join after a short delay
+        setTimeout(() => joinRoom(), 300);
+    }
+    // Focus room input
+    document.getElementById('roomInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') joinRoom();
+    });
+})();
+
+// ═══════════════════════════════════════════════════════
+//  Ghost Shell Integration: Floating Ball + Pie Menu
+// ═══════════════════════════════════════════════════════
+
+// ─── Clipboard Sync (Ghost Shell) ───
+async function clipboardToPhone() {
+    // Send Ctrl+C on PC, then request clipboard content
+    sendCmd({ type: 'hotkey', data: { keys: ['ctrl', 'c'] } });
+    setTimeout(() => sendCmd({ type: 'get_clipboard', data: {} }), 400);
+    haptic([50, 50]);
+}
+
+async function clipboardToPC() {
+    try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+            sendCmd({ type: 'type', data: { text } });
+            haptic(50);
+        } else {
+            sendCmd({ type: 'hotkey', data: { keys: ['ctrl', 'v'] } });
+        }
+    } catch (e) {
+        sendCmd({ type: 'hotkey', data: { keys: ['ctrl', 'v'] } });
+    }
+}
+
+// ─── Open App (Ghost Shell) ───
+function openApp(name) {
+    if (!name) {
+        const n = prompt('输入软件名 (如: chrome, notepad, wechat)');
+        if (!n) return;
+        name = n;
+    }
+    sendCmd({ type: 'open_app', data: { name } });
+    haptic(30);
+}
+
+// ─── Pie Menu Categories (Ghost Shell adapted) ───
+const pieCategories = [
+    {
+        icon: '📋', name: '剪贴板',
+        items: [
+            { label: '复制→手机', fn: clipboardToPhone },
+            { label: '粘贴→电脑', fn: clipboardToPC },
+            { label: '剪切', keys: ['ctrl', 'x'] },
+            { label: '全选', keys: ['ctrl', 'a'] },
+            { label: '撤销', keys: ['ctrl', 'z'] },
+            { label: '重做', keys: ['ctrl', 'y'] }
+        ]
+    },
+    {
+        icon: '⚡', name: '快捷键',
+        items: [
+            { label: 'ESC', key: 'escape' },
+            { label: 'Tab', key: 'tab' },
+            { label: 'Enter', key: 'enter' },
+            { label: 'Del', key: 'delete' },
+            { label: '保存', keys: ['ctrl', 's'] },
+            { label: '查找', keys: ['ctrl', 'f'] }
+        ]
+    },
+    {
+        icon: '🔀', name: '导航',
+        items: [
+            { label: 'Home', key: 'home' },
+            { label: 'End', key: 'end' },
+            { label: 'PgUp', key: 'pageup' },
+            { label: 'PgDn', key: 'pagedown' },
+            { label: '←', key: 'left' },
+            { label: '→', key: 'right' }
+        ]
+    },
+    {
+        icon: '🪟', name: '窗口',
+        items: [
+            { label: '切换', keys: ['alt', 'tab'] },
+            { label: '桌面', keys: ['win', 'd'] },
+            { label: '关窗', keys: ['alt', 'f4'] },
+            { label: '最大', keys: ['win', 'up'] },
+            { label: '最小', keys: ['win', 'down'] }
+        ]
+    },
+    {
+        icon: '🔧', name: '系统',
+        items: [
+            { label: '任务管理', keys: ['ctrl', 'shift', 'escape'] },
+            { label: '运行', keys: ['win', 'r'] },
+            { label: '设置', keys: ['win', 'i'] },
+            { label: '截图', keys: ['win', 'shift', 's'] },
+            { label: '资管', keys: ['win', 'e'] },
+            { label: '打开App', fn: () => openApp() }
+        ]
+    },
+    {
+        icon: '⌨️', name: '修饰键',
+        items: [
+            { label: 'Ctrl', mod: 'ctrl' },
+            { label: 'Alt', mod: 'alt' },
+            { label: 'Shift', mod: 'shift' },
+            { label: '键盘', fn: () => toggleKB() },
+            { label: '中键', fn: () => { const pos = touchToNorm(window.innerWidth/2, window.innerHeight/2); if(pos) sendCmd({type:'middleclick',data:pos}); haptic(15); } },
+            { label: '右键', fn: () => toggleRightClick() },
+            { label: '全屏', fn: () => toggleFS() },
+            { label: '重置缩放', fn: resetZoom },
+            { label: '操作指南', fn: showTutorial }
+        ]
+    }
+];
+
+// ─── Pie Menu State ───
+const PIE_INNER = 55, PIE_OUTER = 110;
+let pieActive = false, activeCat = -1, dockSide = 'right';
+const floatBall = document.getElementById('floatBall');
+const pieMenu = document.getElementById('pieMenu');
+const pieOverlay = document.getElementById('pieOverlay');
+const pieCenter = document.getElementById('pieCenter');
+const pieSectors = document.getElementById('pieSectors');
+
+function getHalfBounds() {
+    return dockSide === 'right' ? { min: 90, max: 270 } : { min: -90, max: 90 };
+}
+
+function buildCategories() {
+    pieSectors.innerHTML = '';
+    const b = getHalfBounds();
+    const pad = 20, start = b.min + pad, end = b.max - pad;
+    const step = pieCategories.length > 1 ? (end - start) / (pieCategories.length - 1) : 0;
+    pieCategories.forEach((cat, i) => {
+        const ang = start + i * step;
+        const rad = ang * Math.PI / 180;
+        const x = Math.cos(rad) * PIE_INNER;
+        const y = Math.sin(rad) * PIE_INNER;
+        const el = document.createElement('div');
+        el.className = 'pie-cat';
+        el.textContent = cat.icon;
+        el.style.left = (x - 18) + 'px';
+        el.style.top = (y - 18) + 'px';
+        el.dataset.idx = i;
+        el.dataset.ang = ang;
+        el.addEventListener('pointerdown', (e) => { e.stopPropagation(); expandCat(i); });
+        pieSectors.appendChild(el);
+    });
+}
+
+function expandCat(idx) {
+    // Remove old items
+    pieSectors.querySelectorAll('.pie-item').forEach(el => el.remove());
+    pieSectors.querySelectorAll('.pie-cat').forEach(el => el.classList.remove('active'));
+    if (idx < 0 || idx >= pieCategories.length) return;
+    activeCat = idx;
+
+    // Highlight selected category
+    const catEl = pieSectors.querySelector(`[data-idx="${idx}"]`);
+    if (catEl) catEl.classList.add('active');
+
+    const cat = pieCategories[idx];
+    pieCenter.textContent = cat.name;
+
+    const b = getHalfBounds();
+    const pad = 20, innerStart = b.min + pad, innerEnd = b.max - pad;
+    const innerStep = pieCategories.length > 1 ? (innerEnd - innerStart) / (pieCategories.length - 1) : 0;
+    const catAng = innerStart + idx * innerStep;
+
+    const n = cat.items.length;
+    const spacing = 28;
+    const spread = (n - 1) * spacing;
+    let oStart = catAng - spread / 2;
+    let oEnd = catAng + spread / 2;
+    if (oStart < b.min) { const off = b.min - oStart; oStart = b.min; oEnd = Math.min(b.max, oEnd + off); }
+    if (oEnd > b.max) { const off = oEnd - b.max; oEnd = b.max; oStart = Math.max(b.min, oStart - off); }
+    const itemStep = n > 1 ? (oEnd - oStart) / (n - 1) : 0;
+
+    cat.items.forEach((item, i) => {
+        const ang = oStart + i * itemStep;
+        const rad = ang * Math.PI / 180;
+        const x = Math.cos(rad) * PIE_OUTER;
+        const y = Math.sin(rad) * PIE_OUTER;
+        const el = document.createElement('div');
+        el.className = 'pie-item';
+        el.textContent = item.label;
+        el.style.left = (x - 23) + 'px';
+        el.style.top = (y - 23) + 'px';
+        el.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            execPieItem(item);
+            closePie();
+        });
+        pieSectors.appendChild(el);
+    });
+}
+
+function execPieItem(item) {
+    if (item.fn) { item.fn(); return; }
+    if (item.keys) { sendHK(item.keys); return; }
+    if (item.key) { sendK(item.key); return; }
+    if (item.mod) { toggleMod(item.mod); return; }
+}
+
+function openPie(x, y) {
+    pieActive = true;
+    activeCat = -1;
+    pieCenter.textContent = '';
+    pieMenu.style.left = x + 'px';
+    pieMenu.style.top = y + 'px';
+    pieMenu.classList.add('show');
+    pieOverlay.classList.add('show');
+    buildCategories();
+}
+
+function closePie() {
+    pieActive = false;
+    activeCat = -1;
+    pieMenu.classList.remove('show');
+    pieOverlay.classList.remove('show');
+}
+
+pieOverlay.addEventListener('pointerdown', () => closePie());
+
+// ─── Floating Ball Logic (Ghost Shell) ───
+let fbDragging = false, fbTimer = null;
+let fbStartX = 0, fbStartY = 0, fbElStartX = 0, fbElStartY = 0;
+
+floatBall.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const t = e.touches[0];
+    fbStartX = t.clientX;
+    fbStartY = t.clientY;
+    const rect = floatBall.getBoundingClientRect();
+    fbElStartX = rect.left;
+    fbElStartY = rect.top;
+    fbDragging = false;
+
+    fbTimer = setTimeout(() => {
+        fbDragging = true;
+        floatBall.classList.add('dragging');
+        haptic(20);
+    }, 300);
+}, { passive: false });
+
+floatBall.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const t = e.touches[0];
+    const dx = t.clientX - fbStartX;
+    const dy = t.clientY - fbStartY;
+
+    if (!fbDragging && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+        fbDragging = true;
+        clearTimeout(fbTimer);
+        floatBall.classList.add('dragging');
+    }
+
+    if (fbDragging) {
+        const nx = fbElStartX + dx;
+        const ny = fbElStartY + dy;
+        floatBall.style.left = nx + 'px';
+        floatBall.style.top = ny + 'px';
+        floatBall.style.right = 'auto';
+        floatBall.style.marginTop = '0';
+    }
+}, { passive: false });
+
+floatBall.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    clearTimeout(fbTimer);
+
+    if (fbDragging) {
+        fbDragging = false;
+        floatBall.classList.remove('dragging');
+        // Snap to nearest edge
+        const rect = floatBall.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const w = window.innerWidth;
+        if (cx < w / 2) {
+            dockSide = 'left';
+            floatBall.style.left = '0px';
+            floatBall.style.right = 'auto';
+        } else {
+            dockSide = 'right';
+            floatBall.style.left = 'auto';
+            floatBall.style.right = '0px';
+        }
+        // Clamp vertical
+        let top = rect.top;
+        top = Math.max(30, Math.min(window.innerHeight - 80, top));
+        floatBall.style.top = top + 'px';
+        floatBall.style.marginTop = '0';
+    } else {
+        // Tap → open pie menu
+        const rect = floatBall.getBoundingClientRect();
+        const px = dockSide === 'right' ? rect.left - 10 : rect.right + 10;
+        const py = rect.top + rect.height / 2;
+        if (pieActive) closePie(); else openPie(px, py);
+        haptic(15);
+    }
+}, { passive: false });
+
+// Mouse support for floating ball (desktop testing)
+floatBall.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const rect = floatBall.getBoundingClientRect();
+    const px = dockSide === 'right' ? rect.left - 10 : rect.right + 10;
+    const py = rect.top + rect.height / 2;
+    if (pieActive) closePie(); else openPie(px, py);
+});
+</script>
+</body>
+</html>

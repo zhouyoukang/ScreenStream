@@ -1,0 +1,56 @@
+# Accessibility Features - Cycle #5 Round #9
+accessibility:
+  
+  # Screen reader
+  screen_reader:
+    enabled: true
+    aria_labels: true
+    semantic_html: true
+  
+  # High contrast
+  high_contrast:
+    enabled: false
+    themes:
+      - high_contrast_light
+      - high_contrast_dark
+  
+  # Font scaling
+  font_scaling:
+    enabled: true
+    min_size: 12
+    max_size: 24
+    default: 16
+  
+  # Keyboard navigation
+  keyboard_nav:
+    enabled: true
+    focus_indicators: true
+    skip_links: true
+    shortcuts:
+      - key: "/"
+        action: search
+      - key: "h"
+        action: home
+      - key: "s"
+        action: settings
+  
+  # Color blindness
+  color_blind_mode:
+    enabled: false
+    types:
+      - deuteranopia
+      - protanopia
+      - tritanopia
+  
+  # Reduced motion
+  reduced_motion:
+    respect_system_preference: true
+    disable_animations: true
+    simplify_transitions: true
+  
+  # Voice feedback
+  voice_feedback:
+    enabled: false
+    tts_engine: google_translate
+    read_notifications: true
+    read_state_changes: false
