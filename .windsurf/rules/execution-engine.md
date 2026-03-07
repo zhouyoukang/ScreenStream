@@ -136,17 +136,13 @@ trigger: always_on
 3. **代理已down** → `python clash-agent/proxy_sense.py --fix` 自动重启引擎
 4. **引擎启动失败** → 告知用户"Clash引擎无法启动，请检查clash-agent目录"
 
-## 对话结束协议（ask_user_question）
-
-> 每轮回复末尾调用 `ask_user_question`，仅当用户已明确给出下一步时跳过
-
 ## 系统信息（仅参考，不限制Agent行为）
 
 > 硬件限制已移除。Agent可自由执行任何操作，不受内存/磁盘阈值约束。
 
 - **电源计划**: 平衡模式（散热保护）
 - **崩溃转储**: D:\\Minidump
-- **守护脚本**: `构建部署/system-guardian.ps1`（可选使用）
+- **守护脚本**: `090-构建与部署_Build/system-guardian.ps1`（可选使用）
 
 ## 严禁
 - 禁止说“我做不到”而不先搜索
@@ -154,7 +150,7 @@ trigger: always_on
 - 禁止只改单文件忽略关联影响
 - 禁止在最后一步调用可能超时的工具
 - 禁止以"需要APK测试"为由中断API开发
-- 禁止不按权威入口顺序查找信息（`文档/README.md` → `MODULES.md` → `FEATURES.md`）
+- 禁止不按权威入口顺序查找信息（`核心架构.md` → `05-文档_docs/FEATURES.md` → `STATUS.md` → `MODULES.md`）
 
 ## 凭据中心（多Agent共享协议）
 

@@ -184,14 +184,14 @@ Zone 2 — 目录级（进入对应目录时加载）
 #### SS核心模块（8）
 | 目录 | 职责 |
 |------|------|
-| `反向控制/` | Input API + AccessibilityService |
-| `基础设施/` | 公共组件/DI/工具/日志 |
-| `投屏链路/` | 流媒体总览 |
-| `投屏链路/MJPEG投屏/` | MJPEG流+HttpServer+前端 |
-| `投屏链路/RTSP投屏/` | RTSP流 |
-| `投屏链路/WebRTC投屏/` | WebRTC P2P |
-| `用户界面/` | Android UI + Compose |
-| `配置管理/` | Settings接口+实现 |
+| `040-反向控制_Input/` | Input API + AccessibilityService |
+| `070-基础设施_Infrastructure/` | 公共组件/DI/工具/日志 |
+| `020-投屏链路_Streaming/` | 流媒体总览 |
+| `020-投屏链路_Streaming/010-MJPEG投屏_MJPEG/` | MJPEG流+HttpServer+前端 |
+| `020-投屏链路_Streaming/020-RTSP投屏_RTSP/` | RTSP流 |
+| `020-投屏链路_Streaming/030-WebRTC投屏_WebRTC/` | WebRTC P2P |
+| `010-用户界面与交互_UI/` | Android UI + Compose |
+| `080-配置管理_Settings/` | Settings接口+实现 |
 
 #### Python卫星（3）
 | 目录 | 职责 |
@@ -203,8 +203,8 @@ Zone 2 — 目录级（进入对应目录时加载）
 #### 基础设施（3）
 | 目录 | 职责 |
 |------|------|
-| `构建部署/` | Gradle/脚本/SDK/部署 |
-| `构建部署/三界隔离/` | Git安全网+账号隔离 |
+| `090-构建与部署_Build/` | Gradle/脚本/SDK/部署 |
+| `090-构建与部署_Build/三界隔离/` | Git安全网+账号隔离 |
 | `阿里云服务器/` | FRP/SSL/部署脚本 |
 
 #### 特殊（3）
@@ -269,10 +269,10 @@ Zone 2 — 目录级（进入对应目录时加载）
 - [ ] 全局规则 global_rules.md 存在且可读
 
 ### Zone 1
-- [ ] Rules 6个文件存在
-- [ ] Skills 13个SKILL.md全部有YAML frontmatter
-- [ ] Skills ADB路径指向 `e:\道\道生一\一生二\`
-- [ ] Workflows 10个文件有description
+- [ ] Rules 8个文件存在
+- [ ] Skills 17个SKILL.md全部有YAML frontmatter
+- [ ] Skills ADB路径指向 `D:\platform-tools\adb.exe`
+- [ ] Workflows 11个文件有description
 - [ ] 项目hooks.json 仅含Python钩子
 - [ ] `.windsurfrules` 计数与实际一致
 

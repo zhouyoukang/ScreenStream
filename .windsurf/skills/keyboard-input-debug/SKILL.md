@@ -13,18 +13,18 @@ PC keydown → index.html sendInputJson("/key", {keysym, down, shift, ctrl})
 ```
 
 ### 2. 前端检查 (index.html)
-- 文件位置: `投屏链路/MJPEG投屏/assets/index.html`
+- 文件位置: `020-投屏链路_Streaming/010-MJPEG投屏_MJPEG/assets/index.html`
 - 确认 keysym 值正确（参考 X11 keysym 标准）
 - 确认 shift/ctrl 修饰键已附带
 - 确认 Ctrl 组合键在 switch 中正确处理
 
 ### 3. 路由检查 (InputRoutes.kt)
-- 文件位置: `反向控制/输入路由/InputRoutes.kt`
+- 文件位置: `040-反向控制_Input/010-输入路由_Routes/InputRoutes.kt`
 - 确认 JSON 字段解析与前端发送一致
 - 确认 shift/ctrl 参数传递给 onKeyEvent
 
 ### 4. 服务检查 (InputService.kt)
-- 文件位置: `反向控制/输入服务/InputService.kt`
+- 文件位置: `040-反向控制_Input/020-输入服务_Service/InputService.kt`
 - onKeyEvent: 修饰键状态 + keysym 分发
 - 文本操作: getRealText() 过滤 hint text
 - 选择感知: getSelection() 获取光标/选区

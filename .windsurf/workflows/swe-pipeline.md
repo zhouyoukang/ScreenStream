@@ -100,7 +100,7 @@ Feature F1: DONE - Added /new-endpoint + UI toggle
 // turbo
 **Action**: Compile the project.
 `powershell
- = "C:\Program Files\Processing\app\resources\jdk";  = "e:\github\AIOT\ScreenStream_v2\构建部署\android-sdk"; & "e:\github\AIOT\ScreenStream_v2\gradlew.bat" assembleFDroidDebug --no-configuration-cache 2>&1 | Select-Object -Last 20
+ = "C:\Program Files\Android\Android Studio\jbr";  = "090-构建与部署_Build\android-sdk"; & ".\gradlew.bat" assembleFDroidDebug --no-configuration-cache 2>&1 | Select-Object -Last 20
 `
 
 If compile fails: Fix error, recompile (max 2 rounds).
@@ -114,7 +114,7 @@ If compile fails: Fix error, recompile (max 2 rounds).
 // turbo
 **Action**: Deploy and verify.
 `powershell
-& "e:\github\AIOT\ScreenStream_v2\构建部署\dev-deploy.ps1" -SkipBuild
+& "090-构建与部署_Build\dev-deploy.ps1" -SkipBuild
 `
 
 Then verify new endpoints:

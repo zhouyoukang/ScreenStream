@@ -6,12 +6,12 @@ trigger: always_on
 
 ## Gradle 模块映射
 ```
-:app    → 用户界面/
-:common → 基础设施/
-:mjpeg  → 投屏链路/MJPEG投屏/
-:rtsp   → 投屏链路/RTSP投屏/
-:webrtc → 投屏链路/WebRTC投屏/
-:input  → 反向控制/
+:app    → 010-用户界面与交互_UI/
+:common → 070-基础设施_Infrastructure/
+:mjpeg  → 020-投屏链路_Streaming/010-MJPEG投屏_MJPEG/
+:rtsp   → 020-投屏链路_Streaming/020-RTSP投屏_RTSP/
+:webrtc → 020-投屏链路_Streaming/030-WebRTC投屏_WebRTC/
+:input  → 040-反向控制_Input/
 ```
 
 ## API 端口分配（固定，禁止冲突）

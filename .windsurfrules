@@ -2,12 +2,12 @@
 
 > 规则体系在 `.windsurf/`，此文件为唯一真相源。
 
-## Rules (6)
-- **Always On** (3): soul.md | execution-engine.md | project-structure.md
+## Rules (8)
+- **Always On** (5): soul.md | execution-engine.md | project-structure.md | cyclic-thinking.md | public-deploy-guard.md
 - **Glob** (2): kotlin-android.md (`*.kt`) | frontend-html.md (`*.html/*.js/*.css`)
 - **Model** (1): build-deploy.md
 
-## Skills (13) — 全部有YAML frontmatter ✅
+## Skills (17) — 全部有YAML frontmatter ✅
 | 领域 | Skill | 用途 |
 |------|-------|------|
 | 构建 | build-and-deploy | APK构建→推送→安装→启动 |
@@ -23,18 +23,21 @@
 | 前端 | persona-chat-system | 人格对话(概率回复+记忆搜索) |
 | 浏览器 | browser-agent-mastery | 五器辩证·多Agent五感冲突防护 |
 | 控制 | agent-phone-control | Agent远程操控手机 |
+| 3D | 3d-modeling | OpenSCAD 3D建模Agent |
+| 网络 | proxy-sense | 代理感知与自愈 |
+| 远程 | remote-hub | 远程中枢管理 |
+| 智能家居 | smart-home-hub | AI中枢·智能家居感知与控制 |
 
 **全景索引**: `.windsurf/skills/README.md`
 
-## Workflows (10)
-/dev /doc /review /test /refactor /optimize /evolve /health-check /debug-escalation /swe-pipeline
+## Workflows (11)
+/dev /doc /review /test /refactor /optimize /evolve /health-check /debug-escalation /swe-pipeline /cycle
 
-## AGENTS.md (18)
+## AGENTS.md (57)
 目录级指令，操作对应目录时自动加载（含子目录级）
 
-## MCP (5配置, 3活跃)
-✅ chrome-devtools(`--isolated`) | ✅ playwright(`--headless --isolated`) | ✅ context7
-❌ github(需Clash) | ❌ fetch(被IWR替代)
+## MCP (4配置, 4活跃)
+✅ chrome-devtools(`--isolated`) | ✅ playwright(`--headless --isolated`) | ✅ context7 | ✅ github
 
 ## 凭据中心
 - **索引**: `凭据中心.md`（结构+协议，git tracked）

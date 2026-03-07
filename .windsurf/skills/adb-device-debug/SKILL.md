@@ -11,14 +11,14 @@ triggers:
 
 ## ADB 路径
 ```
-$ADB = "e:\道\道生一\一生二\构建部署\android-sdk\platform-tools\adb.exe"
+$ADB = "D:\platform-tools\adb.exe"
 ```
 
 ## 一、诊断流程（按顺序执行到第一个失败点停下）
 
 ### Step 1: 设备连接检查
 ```powershell
-$ADB = "e:\道\道生一\一生二\构建部署\android-sdk\platform-tools\adb.exe"
+$ADB = "D:\platform-tools\adb.exe"
 & $ADB devices
 ```
 **期望**: 至少一个 `device` 状态（非 `offline`/`unauthorized`/空）

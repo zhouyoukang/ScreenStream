@@ -463,7 +463,7 @@ navigate → 填手机号密码 → 勾选协议 → 点击登录 → cookies提
 
 ```powershell
 # 检查所有MCP进程、内存、上下文税、优化建议
-powershell -File 构建部署/mcp-health-check.ps1
+powershell -File 090-构建与部署_Build/mcp-health-check.ps1
 ```
 
 输出：系统资源 → Node/MCP进程详情 → 浏览器占用 → 上下文税估算 → 优化建议 → 快速修复指令。
@@ -474,7 +474,7 @@ powershell -File 构建部署/mcp-health-check.ps1
 
 ```powershell
 # 步骤1: 导出（打开浏览器，你登录，按Enter导出）
-node 构建部署/mcp-auth-export.js https://github.com auth-github.json
+node 090-构建与部署_Build/mcp-auth-export.js https://github.com auth-github.json
 
 # 步骤2: 使用（Playwright MCP加载导出的Cookie）
 # 方法A: 命令行
