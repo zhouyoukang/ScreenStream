@@ -239,3 +239,13 @@ venv/
 # ============================================
 远程桌面/frp/frpc.toml
 远程桌面/guardian.db
+
+# ============================================
+# Quest 3 refs (cloned repos, large)
+# ============================================
+虚拟仿真平台/quest3/refs/
+
+# Extracted APK assets with broken encoding paths
+手机现成app库/_extracted/*/key_assets/
+三电脑服务器/_backups/
+
