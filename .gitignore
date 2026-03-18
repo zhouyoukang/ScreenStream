@@ -41,6 +41,9 @@ keystore.properties
 .env.local
 .env.*.local
 secrets.env
+secrets.env.*
+*.env.bak
+.windsurf/backups/credentials/
 
 # ============================================
 # IDE metadata
@@ -252,4 +255,14 @@ venv/
 
 quest3开发/refs/immersive-home/
 quest3开发/refs/ProjectFlowerbed/
+
+# ============================================
+# 电脑现成项目app (76GB installed software dump)
+# ============================================
+电脑现成项目app/
+
+# ============================================
+# 双电脑互联 噪声资源 (cloned reference repos)
+# ============================================
+双电脑互联/agent操作电脑/网络资源库/
 
