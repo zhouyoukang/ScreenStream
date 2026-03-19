@@ -63,7 +63,7 @@ P2P直连 ──12秒超时──→ TURN中继 ──ICE失败3次──→ Clo
 | 层 | 技术 | 说明 |
 |---|------|------|
 | 采集 | MediaProjection | Android 5.0+, 无root |
-| 控制 | AccessibilityService | 70+ API, 无root |
+| 控制 | AccessibilityService | 118+ API, 无root |
 | P2P传输 | WebRTC | STUN/TURN, DTLS-SRTP端到端加密 |
 | 云中继 | CloudRelay WebSocket | H264帧中继, WebCodecs解码 |
 | 信令 | Node.js WebSocket | 仅交换SDP/ICE, 不碰媒体流 |
@@ -131,7 +131,7 @@ ssh aliyun "cd /www/dk_project/family-remote/relay-server && PORT=9800 nohup nod
 关键文件（已在ScreenStream中实现）：
 - `投屏链路/MJPEG投屏/mjpeg/internal/WebRtcP2PClient.kt` — WebRTC P2P客户端 (626行)
 - `反向控制/输入服务/InputService.kt` — AccessibilityService (3700+行)
-- `反向控制/共享路由/InputRoutes.kt` — 70+ HTTP API路由
+- `反向控制/共享路由/InputRoutes.kt` — 118+ HTTP API路由
 - `反向控制/HTTP服务器/InputHttpServer.kt` — 独立API服务器 (:8084)
 
 ## 安全

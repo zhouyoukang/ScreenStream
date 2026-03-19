@@ -47,7 +47,7 @@
 
 | 集成 | 方向 | 说明 |
 |------|------|------|
-| ScreenStream API | 本项目→SS | Phone 类封装 SS 的 70+ HTTP API |
+| ScreenStream API | 本项目→SS | Phone 类封装 SS 的 118+ HTTP API |
 | ADB forward | 运维 | `adb forward tcp:8086 tcp:8086` 建立 PC→手机通道 |
 | agent-phone-control | Skill | `.windsurf/skills/agent-phone-control/` 使用本库 |
 

@@ -27,7 +27,7 @@
 - **MJPEG Server（主入口）**：
   - 实现：`mjpeg/.../internal/HttpServer.kt`
   - Web UI：`mjpeg/src/main/assets/index.html`
-  - 已内置输入路由（70+ 端点）：
+  - 已内置输入路由（118+ 端点）：
     - 基础控制：`/tap /swipe /pointer /key /text /home /back /recents /status /notifications`
     - 系统控制：`/volume /lock /quicksettings /wake /screenshot /power /brightness /rotate /stayawake /showtouches /media /findphone /vibrate /flashlight /dnd /autorotate`
     - 远程协助：`/splitscreen /longpress /doubletap /scroll /pinch /openapp /openurl /deviceinfo /apps /clipboard /foreground /killapp /upload`

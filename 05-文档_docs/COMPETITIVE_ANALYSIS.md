@@ -6,14 +6,14 @@
 
 ## 一、核心定位
 
-**ScreenStream 独特价值**：唯一同时具备「开源免费 + 纯Web界面 + 70+ API + AI Brain + 宏系统」的手机远程控制方案。
+**ScreenStream 独特价值**：唯一同时具备「开源免费 + 纯Web界面 + 118+ API + AI Brain + 宏系统」的手机远程控制方案。
 
 | 维度 | ScreenStream | 竞品最强者 |
 |------|-------------|-----------|
 | 开源免费 | ✅ MIT | scrcpy (Apache) |
 | 不限品牌 | ✅ 所有Android | Phone Link (限三星) |
 | 纯Web界面 | ✅ 浏览器即可 | AirDroid (需客户端) |
-| API数量 | 70+ | scrcpy: 0 / AirDroid: ~15 |
+| API数量 | 118+ | scrcpy: 0 / AirDroid: ~15 |
 | AI能力 | ✅ View树/语义点击/NLP | 无竞品有AI |
 | 宏系统 | ✅ 远程可编程 | Tasker有但不能远程 |
 | 文件管理 | ✅ 12个API | AirDroid有 |
@@ -233,7 +233,7 @@ ScreenStream API  ←→  Home Assistant  ←→  米家/涂鸦设备
 ├─────────────────────────────────────────────┤
 │                                             │
 │   [投屏层]  scrcpy ← 高性能互补 → SS投屏      │
-│   [控制层]  SS 70+ API = 最强开源控制层        │
+│   [控制层]  SS 118+ API = 最强开源控制层        │
 │   [智能层]  SS AI Brain = 唯一带AI的投屏工具   │
 │   [自动化]  Tasker/n8n ← 事件触发 → SS宏引擎   │
 │   [企业级]  SS多设备 → Total Control替代       │

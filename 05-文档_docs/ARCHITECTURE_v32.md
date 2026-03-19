@@ -10,7 +10,7 @@
 │  Layer 3: AI 决策引擎 (AI Brain)              │  ← 未来：语义化控制、自动化操作
 │  View 树分析 + 节点查找 + 智能关闭弹窗         │
 ├──────────────────────────────────────────────┤
-│  Layer 2: 标准化接口层 (API + WebSocket)       │  ← 现在：70+ REST端点 + WS触控流
+│  Layer 2: 标准化接口层 (API + WebSocket)       │  ← 现在：118+ REST端点 + WS触控流
 │  HTTP API / WebSocket / 前端 UI               │
 ├──────────────────────────────────────────────┤
 │  Layer 1: 系统控制层 (AccessibilityService)    │  ← 现在：免Root合法Hook
@@ -32,7 +32,7 @@
 | `:common` | `基础设施` | - | 公共组件 |
 | Gateway | (MacroDroid) | 8080 | 网关路由 |
 
-## 三、API 端点清单 (70+ 端点)
+## 三、API 端点清单 (118+ 端点)
 
 ### 基础控制 (v30)
 | 端点 | 方法 | 说明 |
