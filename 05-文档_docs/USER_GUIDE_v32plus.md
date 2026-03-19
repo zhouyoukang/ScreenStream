@@ -9,17 +9,17 @@
 
 ### 首次部署（编译+安装+启动）
 ```powershell
-& "e:\github\AIOT\ScreenStream_v2\构建部署\dev-deploy.ps1"
+& "e:\道\道生一\一生二\090-构建与部署_Build\dev-deploy.ps1"
 ```
 
 ### 仅重新部署（跳过编译）
 ```powershell
-& "e:\github\AIOT\ScreenStream_v2\构建部署\dev-deploy.ps1" -SkipBuild
+& "e:\道\道生一\一生二\090-构建与部署_Build\dev-deploy.ps1" -SkipBuild
 ```
 
 ### 仅验证（跳过编译和安装）
 ```powershell
-& "e:\github\AIOT\ScreenStream_v2\构建部署\dev-deploy.ps1" -SkipBuild -SkipInstall
+& "e:\道\道生一\一生二\090-构建与部署_Build\dev-deploy.ps1" -SkipBuild -SkipInstall
 ```
 
 ### 部署后需要做的一件事
@@ -29,7 +29,7 @@
 
 ---
 
-## 二、功能总览（v32+ · 59 个 API 端点 + 8 个前端工具 = 68 功能）
+## 二、功能总览（v32+ · 118+ 个 API 端点 + 8 个前端工具 = 126+ 功能）
 
 | 层级 | 功能 | 数量 | 版本 |
 |------|------|------|------|
@@ -289,12 +289,12 @@ curl -X POST http://127.0.0.1:8081/macro/delete/<macro-id>
 **一键命令：**
 ```powershell
 # 完整流程（编译+部署+验证）
-& "e:\github\AIOT\ScreenStream_v2\构建部署\dev-deploy.ps1"
+& "e:\道\道生一\一生二\090-构建与部署_Build\dev-deploy.ps1"
 
 # 仅编译验证（不推送）
 $env:JAVA_HOME = "C:\Program Files\Processing\app\resources\jdk"
-$env:ANDROID_SDK_ROOT = "e:\github\AIOT\ScreenStream_v2\构建部署\android-sdk"
-& "e:\github\AIOT\ScreenStream_v2\gradlew.bat" assembleFDroidDebug --no-configuration-cache
+$env:ANDROID_SDK_ROOT = "e:\道\道生一\一生二\090-构建与部署_Build\android-sdk"
+& "e:\道\道生一\一生二\gradlew.bat" assembleFDroidDebug --no-configuration-cache
 
 # 仅验证 API
 $ports = @(8080, 8081, 8084); foreach ($p in $ports) { curl.exe -s "http://127.0.0.1:${p}/status" }
@@ -311,7 +311,7 @@ ScreenStream_v2/
 │   ├── RTSP投屏/     ← :rtsp
 │   └── WebRTC投屏/ ← :webrtc
 ├── 反向控制/        ← :input
-│   ├── 输入路由/InputRoutes.kt  ← 59 个 API 端点
+│   ├── 输入路由/InputRoutes.kt  ← 118+ 个 API 端点
 │   ├── 输入服务/InputService.kt ← AccessibilityService
 │   ├── HTTP服务器/           ← 兼容端口 8084
 │   └── 宏系统/MacroEngine.kt     ← 宏引擎
@@ -321,7 +321,7 @@ ScreenStream_v2/
 │   └── android-sdk/            ← SDK + ADB
 └── 文档/
     ├── STATUS.md               ← 项目状态面板
-    ├── FEATURES.md             ← 功能登记表（59条）
+    ├── FEATURES.md             ← 功能登记表（118+条）
     ├── MODULES.md              ← 模块索引
     └── USER_GUIDE_v32plus.md   ← 本文档
 ```
@@ -349,7 +349,7 @@ ScreenStream_v2/
 ### Q: AccessibilityService 断开？
 **A:** 部署脚本会自动通过 Root 重新启用。也可手动：
 ```powershell
-$ADB = "e:\github\AIOT\ScreenStream_v2\构建部署\android-sdk\platform-tools\adb.exe"
+$ADB = "e:\道\道生一\一生二\090-构建与部署_Build\android-sdk\platform-tools\adb.exe"
 & $ADB shell "settings put secure enabled_accessibility_services info.dvkr.screenstream.dev/info.dvkr.screenstream.input.InputService"
 & $ADB shell "settings put secure accessibility_enabled 1"
 ```
