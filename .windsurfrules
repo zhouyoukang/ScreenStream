@@ -1,48 +1,15 @@
-# ScreenStream_v2 Windsurf配置索引
+# 一生二 项目规则入口 (v17.0)
 
-> 规则体系在 `.windsurf/`，此文件为唯一真相源。
+> 道生一，一生二，二生三，三生万物。为学日益，为道日损。无为而无不为。
 
-## Rules (8)
-- **Always On** (5): soul.md | execution-engine.md | project-structure.md | cyclic-thinking.md | public-deploy-guard.md
-- **Glob** (2): kotlin-android.md (`*.kt`) | frontend-html.md (`*.html/*.js/*.css`)
-- **Model** (1): build-deploy.md
+## 规则体系 (道法术三层全Always-On)
 
-## Skills (17) — 全部有YAML frontmatter ✅
-| 领域 | Skill | 用途 |
-|------|-------|------|
-| 构建 | build-and-deploy | APK构建→推送→安装→启动 |
-| 调试 | adb-device-debug | 设备连接/WiFi ADB/OEM拦截/多设备 |
-| 调试 | keyboard-input-debug | PC键盘→手机输入映射 |
-| 调试 | terminal-resilience | 终端卡死诊断与五感降级恢复 |
-| 测试 | api-testing | HTTP API验证(USB+WiFi+phone_lib) |
-| 测试 | full-verification | 端到端验证链 |
-| 开发 | feature-development | 新功能完整开发流程 |
-| 开发 | new-module-setup | 新模块/子功能创建 |
-| 开发 | requirement-decompose | 需求→可执行特性分解 |
-| 前端 | pwa-framework | PWA单文件+WebView封装+五感UX |
-| 前端 | persona-chat-system | 人格对话(概率回复+记忆搜索) |
-| 浏览器 | browser-agent-mastery | 五器辩证·多Agent五感冲突防护 |
-| 控制 | agent-phone-control | Agent远程操控手机 |
-| 3D | 3d-modeling | OpenSCAD 3D建模Agent |
-| 网络 | proxy-sense | 代理感知与自愈 |
-| 远程 | remote-hub | 远程中枢管理 |
-| 智能家居 | smart-home-hub | AI中枢·智能家居感知与控制 |
-
-**全景索引**: `.windsurf/skills/README.md`
-
-## Workflows (11)
-/dev /doc /review /test /refactor /optimize /evolve /health-check /debug-escalation /swe-pipeline /cycle
-
-## AGENTS.md (57)
-目录级指令，操作对应目录时自动加载（含子目录级）
-
-## MCP (4配置, 4活跃)
-✅ chrome-devtools(`--isolated`) | ✅ playwright(`--headless --isolated`) | ✅ context7 | ✅ github
+| 层 | 文件 | 加载 |
+|----|------|------|
+| **道** | `global_rules.md` | Always-On (本能层9条) |
+| **法** | `rules/kernel.md` + `rules/protocol.md` | Always-On |
+| **术** | `skills/` (32) + `workflows/` (12) | 按需 |
 
 ## 凭据中心
-- **索引**: `凭据中心.md`（结构+协议，git tracked）
-- **实际值**: `secrets.env`（gitignored，`run_command("Get-Content secrets.env")`读取）
-- **铁律**: Memory禁存实际密码/Token | tracked文件禁明文凭据 | 改密码只改secrets.env
-
-## Hooks
-2个Python (conversation_capture) | **PS hooks绝对禁止**
+- **索引**: `凭据中心.md` + **实际值**: `secrets.env` (gitignored)
+- 禁止将凭据写入Memory或git tracked文件
