@@ -28,7 +28,7 @@ data = json.loads(urllib.request.urlopen("http://127.0.0.1:9877/api/batch?keys=D
 4. **新增凭据**: secrets.env + 凭据中心.md 同步更新
 5. **使用后不缓存**: 从API读取, 用完即弃
 
-### API端点 (30+)
+### API端点
 
 | 端点 | 用途 |
 |------|------|
@@ -54,6 +54,15 @@ data = json.loads(urllib.request.urlopen("http://127.0.0.1:9877/api/batch?keys=D
 | `/api/immune/heal` | 执行可自动修复的问题 |
 | `/api/immune/history` | 诊断历史 |
 | `/api/immune/status` | 免疫系统状态 |
+| `/api/credit/health` | 积分健康(plan/used/remaining/urgency) |
+| `/api/credit/monitor` | 积分详情(daily_rate/days_left/period) |
+| `/api/credit/models` | 模型成本矩阵(17模型/5免费) |
+| `/api/credit/accounts` | 账户使用列表 |
+| `/api/credit/recommend` | 积分优化建议 |
+| `/api/wisdom/catalog` | 智慧目录(13模板) |
+| `/api/wisdom/scan` | 扫描目标工作区 |
+| `/api/wisdom/diff` | 差异对比 |
+| `/api/wisdom/backups` | 备份列表 |
 
 ### 备份六层
 
@@ -70,15 +79,15 @@ data = json.loads(urllib.request.urlopen("http://127.0.0.1:9877/api/batch?keys=D
 
 ```bash
 python 安全管理/security_hub.py          # 启动Hub :9877
-python 安全管理/_e2e_security_hub.py     # E2E验证 32/32
+python 安全管理/_e2e_security_hub.py     # E2E验证 37/37 (v3.3)
 ```
 
 ### 智慧部署器 (windsurf_wisdom.py, :9876)
 
-核心智慧一键部署到任何Windsurf工作区。2规则+7技能+2工作流 = 11个泛化模板。
+核心智慧一键部署到任何Windsurf工作区。规则+技能+工作流+配置的完整泛化模板。
 
 ```bash
-python 安全管理/windsurf_wisdom.py catalog              # 列出11个可用智慧
+python 安全管理/windsurf_wisdom.py catalog              # 列出16个可用智慧
 python 安全管理/windsurf_wisdom.py scan /path/to/ws     # 扫描目标工作区
 python 安全管理/windsurf_wisdom.py diff /path/to/ws     # 差异对比
 python 安全管理/windsurf_wisdom.py inject /path/to/ws   # 注入(含自动备份)
@@ -99,6 +108,9 @@ python 安全管理/windsurf_wisdom.py serve                 # HTTP API :9876
 | search-and-learn | 技能 | 搜索学习：context7+tavily+github多源策略 |
 | security-check | 技能 | 安全检查：凭据扫描+代码审计+部署安全 |
 | browser-control | 技能 | 浏览器Agent统御：决策树+九律+Token管控 |
+| architecture-design | 技能 | 设计评估软件架构：架构决策+技术选型+模块划分 |
+| performance-optimize | 技能 | 分析优化代码性能：profiling+瓶颈定位+调优 |
+| verify-test | 技能 | 测试验证二合一：HTTP API验证+端到端验证链 |
 | review | 工作流 | 代码审查：9维度深度review |
 | 循环 | 工作流 | 转法轮深度循环：观→行→验→省→改→升→涅槃 |
 
@@ -109,10 +121,10 @@ python 安全管理/windsurf_wisdom.py serve                 # HTTP API :9876
 | 文件 | 用途 | 状态 |
 |------|------|------|
 | `security_hub.py` | **统一中枢** :9877 (凭据+备份+审计+免疫+智慧+Dashboard) | ★核心 |
-| `windsurf_wisdom.py` | **智慧部署器** :9876 (11模板+泛化+备份回退) E2E 60/60 | ★核心 |
+| `windsurf_wisdom.py` | **智慧部署器** :9876 (规则+技能+工作流 泛化模板+备份回退) | ★核心 |
 | `windsurf_immune.py` | **七层免疫引擎** :9879 (26种错误+自愈) | ★核心 |
-| `_e2e_wisdom.py` | 智慧部署器E2E (60项) | ★验证 |
-| `_e2e_security_hub.py` | Hub E2E测试 (32项) | ★验证 |
+| `_e2e_wisdom.py` | 智慧部署器E2E验证 | ★验证 |
+| `_e2e_security_hub.py` | Hub E2E测试 | ★验证 |
 | `pre_commit_hook.py` | Git pre-commit 防泄露 | ★安全 |
 | `_deep_reverse.py` | 全维度逆向引擎 | 工具 |
 | `_deep_reverse_db.json` | 逆向数据库 (206+凭据) | 数据 |

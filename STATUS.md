@@ -1,7 +1,7 @@
 # 一生二 · 状态面板（STATUS）
 
 > 道生一，一生二，二生三，三生万物。
-> 最后更新：2026-03-20
+> 最后更新：2026-03-20（**无感切号 v5.5.0** 82E2E+导入+O(n²)修复 | wisdom v1.1 16模板+72E2E | security v3.3+credit）
 
 ## 0) 权威入口
 
@@ -19,9 +19,9 @@
 | 维度 | 数量 |
 |------|------|
 | 根目录 | 70个真实目录 + 1个Junction |
-| AGENT_GUIDE.md | 54个（覆盖77%目录） |
+| AGENT_GUIDE.md | 60+个（随项目增长） |
 | Gradle模块 | 6个（app/common/mjpeg/rtsp/webrtc/input） |
-| Python Hub服务 | 13个（道生一:8880 + 12卫星Hub） |
+| Python Hub服务 | 14个（道生一:8880 + 13卫星Hub） |
 | Rules | 2 Always-On（kernel.md + protocol.md） |
 | Skills | 32个 |
 | Workflows | 12个 |
@@ -32,12 +32,14 @@
 ## 2) 核心成果
 
 ### ScreenStream核心（6模块 118+ API）
+
 - 端口：Gateway:8080 MJPEG:8081 RTSP:8082 WebRTC:8083 Input:8084
 - 安全加固完成：XSS/路径穿越/资源泄漏/PIN全修复
 
 ### 道生一 DaoOne v2.0（:8880）
+
 - 单文件/零依赖/全设备统一入口，E2E 15/15 PASS
-- 12设备 + 13 Hub自动发现 + Hub API透传
+- 12设备 + 15 Hub自动发现 (security:9877/wisdom:9876新入) + Hub API透传
 
 ### Python卫星Hub矩阵
 
@@ -53,11 +55,13 @@
 | Quest3 Ops | :8864 | ✅ |
 | 拓竹3D打印 | :8870 | ✅ |
 | 亲情远程 | :9860 | ✅ 49/49 E2E |
-| 安全中枢 | :9877 | ✅ 32/32 E2E |
+| 安全中枢 | :9877 | ✅ 37/37 E2E (v3.3+credit+免疫) |
+| Windsurf智慧 | :9876 | ✅ 72/72 E2E (v1.1, 16模板) |
 | 虚拟仿真 | :9500 | ✅ 74+ API |
 | Windsurf管理 | :9999 | ✅ |
 
 ### 规则体系 v17.0
+
 - 道法两层全Always-On（长对话不衰退）
 - 本能层9条 + 铁律6条 + 反模式5个
 - 转法轮：观→行→验→省→改→升→涅槃门
