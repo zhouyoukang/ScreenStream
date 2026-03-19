@@ -50,15 +50,17 @@ python 顶层管理/windsurf_manager.py --no-browser   # 不打开浏览器
 ## 管理范围 (三层八域)
 
 ### Zone 0 — 系统级 (`~/.codeium/windsurf/`)
+
 - `global_rules.md` — 道层元规则(最高权重L1)
 - `mcp_config.json` — 6个MCP服务器配置
 - `hooks.json` — 系统级钩子(当前为空)
-- `memories/` — ~107个Protobuf Memory条目
+- `memories/` — Protobuf Memory条目（随对话增长）
 - `cascade/` — 对话记录
 - `user_settings.pb` — 用户设置(82KB Protobuf)
 
 ### Zone 1 — 项目级 (`.windsurf/`)
-- `.windsurfrules` — 项目根规则入口(v17.0)
+
+- `.windsurfrules` — 项目根规则入口(v17.1)
 - `rules/` — 2个Always-On: kernel.md + protocol.md
 - `skills/` — 32个技能(全中文命名)
 - `workflows/` — 12个工作流(/命令触发)
@@ -66,15 +68,19 @@ python 顶层管理/windsurf_manager.py --no-browser   # 不打开浏览器
 - `DASHBOARD.md` — 仪表盘
 
 ### Zone IDE — 编辑器
+
 - `settings.json` — VS Code设置(proxy/format/augment等)
 
 ## 修改规则
+
 - Zone 0文件修改前必须**备份+用户确认**
 - MCP热修复使用Python写入(禁PowerShell Set-Content加BOM)
 - 禁止直接修改`user_settings.pb`(Protobuf二进制)
 - hooks脚本路径变更需同步两处(Zone 0 + Zone 1)
 
 ## 变更历史
+
 - v1.0 (2026-03-13): 全景概览/Rules/Skills/Workflows/Memory/MCP/Hooks/Settings
 - v2.0: 免疫系统+统一SPA
-- v3.0 (2026-03-20): 数字统一审计(32 Skills/12 Workflows/54 AGENT_GUIDE)
+- v3.0 (2026-03-20): 数字统一审计(32 Skills/12 Workflows)
+- v3.1 (2026-03-20): AGENT_GUIDE实测校验(60+个，随项目增长)、DASHBOARD动态发现替代静态列表
