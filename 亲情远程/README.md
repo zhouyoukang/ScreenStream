@@ -130,7 +130,7 @@ ssh aliyun "cd /www/dk_project/family-remote/relay-server && PORT=9800 nohup nod
 
 关键文件（已在ScreenStream中实现）：
 - `投屏链路/MJPEG投屏/mjpeg/internal/WebRtcP2PClient.kt` — WebRTC P2P客户端 (626行)
-- `反向控制/输入服务/InputService.kt` — AccessibilityService (3700+行)
+- `反向控制/输入服务/InputService.kt` — AccessibilityService (3400+行)
 - `反向控制/共享路由/InputRoutes.kt` — 118+ HTTP API路由
 - `反向控制/HTTP服务器/InputHttpServer.kt` — 独立API服务器 (:8084)
 
