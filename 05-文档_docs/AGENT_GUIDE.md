@@ -14,7 +14,7 @@
 
 | 文件 | 内容 |
 |------|------|
-| `FEATURES.md` | 150+功能 · 70+API · 10面板 |
+| `FEATURES.md` | 150+功能 · 118+API · 10面板 |
 | `ARCHITECTURE_v32.md` | 架构设计文档 |
 | `COMPETITIVE_ANALYSIS.md` | 竞品分析 |
 | `BROWSER_MCP_MULTI_AGENT_RESEARCH.md` | 浏览器MCP多Agent研究 |

@@ -93,7 +93,7 @@
 | **ya-webadb/Tango** | ✅ scrcpy协议 | ✅ | ✅ ADB级全功能 | ✅ | ✅ | ★★★★★ |
 | **web_screen** | ✅ 基础触控 | ❌ | ❌ | ❌ | ❌ | ★☆☆☆ |
 | **piping-adb-web** | ✅ scrcpy协议 | ✅ | ✅ ADB级 | ✅ | ✅ | ★★★★ |
-| **我们(ScreenStream v2)** | ✅ 全手势(7种) | ✅ | ✅ 70+ API | ✅ shell | ✅ 文件管理 | ★★★★★+ |
+| **我们(ScreenStream v2)** | ✅ 全手势(7种) | ✅ | ✅ 118+ API | ✅ shell | ✅ 文件管理 | ★★★★★+ |
 
 ### 3.3 C3 反控PC能力对比
 
@@ -207,7 +207,7 @@
 
 **与我们的关系**：
 - **最接近我们的目标架构**
-- 我们的控制层(70+ API)远超它（它只有基础触控）
+- 我们的控制层(118+ API)远超它（它只有基础触控）
 - 可参考其Android→Janus的WebRTC推流实现
 - 但Janus太重，我们可以用更轻量的信令方案
 
@@ -373,7 +373,7 @@ Demo: https://tangoadb.dev/
 |------|------|--------|---------|
 | **WebRTC DataChannel** | <50ms | UDP语义 | Headwind |
 | **WebSocket** | 50-100ms | TCP可靠 | ws-scrcpy, 我们 |
-| **HTTP REST** | 100-200ms | TCP可靠 | 我们(70+ API), STF |
+| **HTTP REST** | 100-200ms | TCP可靠 | 我们(118+ API), STF |
 | **scrcpy控制协议(over WS)** | <100ms | 可靠 | ws-scrcpy, Tango |
 
 ---
@@ -483,7 +483,7 @@ Demo: https://tangoadb.dev/
 
 | 维度 | 全球竞品最强者 | 我们 | 差距 |
 |------|--------------|------|------|
-| **控制API** | STF/ws-scrcpy (~20 API) | **70+ API** | 我们领先 3.5x |
+| **控制API** | STF/ws-scrcpy (~20 API) | **118+ API** | 我们领先 3.5x |
 | **前端** | ws-scrcpy (基础) | **6400行12面板** | 我们领先 |
 | **AI操控** | 无 | **AI Brain + 语义操控** | 全球独有 |
 | **宏自动化** | 无 | **触发器→条件→动作** | 全球独有 |
@@ -493,7 +493,7 @@ Demo: https://tangoadb.dev/
 | **音频** | scrcpy (v2.0+) | **WebSocket音频流** | 持平 |
 
 **结论**：
-- 我们在**控制层**（70+ API + AI Brain + 宏系统）是全球最强
+- 我们在**控制层**（118+ API + AI Brain + 宏系统）是全球最强
 - 唯一缺的就是**公网传输层**
 - 补上这一块 = 全球唯一的"双端网页+公网+全功能操控+反控+AI+智能家居"平台
 

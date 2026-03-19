@@ -12,7 +12,7 @@
      ├── 画面流 (MJPEG/H264/H265 WebSocket)                │
      ├── 音频流 (/stream/audio WebSocket, 48kHz stereo)     │
      ├── 触控输入 (/ws/touch WebSocket)                      │
-     ├── 70+ REST API (导航/输入/设备控制/文件/宏/AI)         │
+     ├── 118+ REST API (导航/输入/设备控制/文件/宏/AI)         │
      ├── Status Dashboard (顶部实时状态栏)                   │
      ├── Command Center (右侧滑出全功能面板)                 │
      ├── 语音输入 (Speech Recognition → 指令执行)            │
@@ -125,7 +125,7 @@ https://xxxx-xxxx.trycloudflare.com/?auth=aBcDeFgH12345678
 - **宏系统**：录制/回放/触发器/导入导出
 
 ### 🎮 管控 — 设备完整控制
-- 70+ API 端点覆盖手机所有功能
+- 118+ API 端点覆盖手机所有功能
 - 文件管理器（浏览/上传/下载/删除）
 - 应用管理（启动/列表/安装）
 - 系统控制（音量/亮度/WiFi/蓝牙/手电/GPS）
