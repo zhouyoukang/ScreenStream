@@ -74,7 +74,7 @@ internal class BitmapCapture(
     private var currentWidth = 0
     private var currentHeight = 0
 
-    private val imageThread: HandlerThread by lazy { HandlerThread("BitmapCapture", Process.THREAD_PRIORITY_BACKGROUND) }
+    private val imageThread: HandlerThread by lazy { HandlerThread("BitmapCapture", Process.THREAD_PRIORITY_URGENT_DISPLAY) }
     private val imageThreadHandler: Handler by lazy { Handler(imageThread.looper) }
 
     @Volatile

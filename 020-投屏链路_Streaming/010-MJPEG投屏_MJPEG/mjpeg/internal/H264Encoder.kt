@@ -57,6 +57,16 @@ internal class H264Encoder(
             format.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
             format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1) // 1 second between keyframes
 
+            // Force High Profile for best quality per bitrate (Baseline = worst)
+            if (mimeType == MediaFormat.MIMETYPE_VIDEO_AVC) {
+                try {
+                    format.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileHigh)
+                    format.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
+                } catch (e: Exception) {
+                    XLog.w(getLog("initializeCodec", "High Profile not supported, using device default"))
+                }
+            }
+
             // Low-latency encoding optimizations
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 format.setInteger(MediaFormat.KEY_ALLOW_FRAME_DROP, 0) // Don't drop frames
@@ -102,7 +112,9 @@ internal class H264Encoder(
                             }
 
                             callback(H264Frame(data, type, info.presentationTimeUs))
-                            XLog.d(getLog("onOutputBufferAvailable", "type=$type size=${info.size}"))
+                            if (type != H264Frame.TYPE_DELTA_FRAME) {
+                                XLog.d(getLog("onOutputBufferAvailable", "type=$type size=${info.size}"))
+                            }
                         }
                     } catch (e: Exception) {
                         XLog.e(getLog("onOutputBufferAvailable", e.toString()))

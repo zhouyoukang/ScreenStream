@@ -72,7 +72,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
-import java.nio.ByteBuffer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -328,15 +327,22 @@ internal class HttpServer(
         var lastReport = 0L
         try {
             videoFlow?.collect { frame ->
-                val buffer = ByteBuffer.allocate(9 + frame.data.size)
-                buffer.put(frame.type.toByte())
-                buffer.putLong(frame.timestamp)
-                buffer.put(frame.data)
-                buffer.flip()
+                val payload = ByteArray(9 + frame.data.size)
+                payload[0] = frame.type.toByte()
+                val ts = frame.timestamp
+                payload[1] = (ts ushr 56).toByte()
+                payload[2] = (ts ushr 48).toByte()
+                payload[3] = (ts ushr 40).toByte()
+                payload[4] = (ts ushr 32).toByte()
+                payload[5] = (ts ushr 24).toByte()
+                payload[6] = (ts ushr 16).toByte()
+                payload[7] = (ts ushr 8).toByte()
+                payload[8] = ts.toByte()
+                System.arraycopy(frame.data, 0, payload, 9, frame.data.size)
 
                 if (reportLatency) {
                     val start = System.currentTimeMillis()
-                    send(Frame.Binary(true, buffer))
+                    send(Frame.Binary(true, payload))
                     val end = System.currentTimeMillis()
                     val latency = end - start
                     if (latency > 30 || (end - lastReport > 500)) {
@@ -344,7 +350,7 @@ internal class HttpServer(
                         lastReport = end
                     }
                 } else {
-                    send(Frame.Binary(true, buffer))
+                    send(Frame.Binary(true, payload))
                 }
             }
         } catch (e: ClosedReceiveChannelException) {

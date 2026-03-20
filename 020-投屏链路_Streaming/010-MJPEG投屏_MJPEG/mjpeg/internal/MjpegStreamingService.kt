@@ -113,7 +113,7 @@ internal class MjpegStreamingService(
     @Volatile private var lastH264ConfigFrame: H264Frame? = null
     @Volatile private var lastH265ConfigFrame: H264Frame? = null
     private var cloudRelayClient: CloudRelayClient? = null
-    private var webRtcP2PClient: WebRtcP2PClient? = null
+    // private var webRtcP2PClient: WebRtcP2PClient? = null // WIP: needs webrtc dep
     private var currentError: MjpegError? = null
     private var previousError: MjpegError? = null
     // All vars must be read/write on this (WebRTC-HT) thread
@@ -425,7 +425,7 @@ internal class MjpegStreamingService(
                             width = width,
                             height = height,
                             densityDpi = (service.resources.configuration.densityDpi * scaleFactor).toInt(),
-                            bitRate = 1000000, // 1Mbps for public network (aggressive)
+                            bitRate = 6000000, // 6Mbps LAN-optimized; ABR handles congestion for public viewers
                             frameRate = 30
                         ) { frame ->
                             if (frame.type == H264Frame.TYPE_CONFIG) {
@@ -492,21 +492,8 @@ internal class MjpegStreamingService(
                         XLog.e(getLog("CloudRelay", "Failed to start"), e)
                     }
 
-                    // Auto-start WebRTC P2P for direct peer-to-peer screen sharing (no server relay)
-                    try {
-                        webRtcP2PClient = WebRtcP2PClient(
-                            context = service,
-                            bitmapFlow = bitmapStateFlow
-                        ).apply {
-                            setStateListener { connected, url, viewers ->
-                                XLog.i(getLog("WebRTC-P2P", "connected=$connected viewers=$viewers url=$url"))
-                            }
-                            start()
-                        }
-                        XLog.i(getLog("WebRTC-P2P", "Started. Room: ${webRtcP2PClient?.roomCode} URL: ${webRtcP2PClient?.viewerUrl}"))
-                    } catch (e: Exception) {
-                        XLog.e(getLog("WebRTC-P2P", "Failed to start"), e)
-                    }
+                    // WIP: WebRTC P2P disabled (needs webrtc dependency)
+                    // try { webRtcP2PClient = WebRtcP2PClient(...) } catch (e: Exception) { }
                 }
 
             is MjpegEvent.Intentable.StopStream -> {
@@ -597,8 +584,8 @@ internal class MjpegStreamingService(
                 stopStream()
                 cloudRelayClient?.destroy()
                 cloudRelayClient = null
-                webRtcP2PClient?.destroy()
-                webRtcP2PClient = null
+                // webRtcP2PClient?.destroy() // WIP
+                // webRtcP2PClient = null
                 httpServer.destroy()
                 currentError = null
             }
@@ -662,8 +649,8 @@ internal class MjpegStreamingService(
         }
 
         try {
-            webRtcP2PClient?.stop()
-            webRtcP2PClient = null
+            // webRtcP2PClient?.stop() // WIP
+            // webRtcP2PClient = null
         } catch (e: Exception) {
             XLog.e(getLog("stopStream", "WebRTC-P2P Stop Error"), e)
         }
@@ -800,7 +787,7 @@ internal class MjpegStreamingService(
         startBitmap = bitmap
         return bitmap
     }
-    private var currentBitrate = 4000000
+    private var currentBitrate = 6000000 // Must match H264Encoder initial bitrate
     private var lastBitrateUpdate = 0L
 
     private fun handleBitrateUpdate(latency: Long) {
