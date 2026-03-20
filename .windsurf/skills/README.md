@@ -1,6 +1,6 @@
 # 技能库索引（32个）
 
-> v17.1: 目录名英文(Windsurf要求`[a-z0-9-]+`)，YAML description保持中文(用户可感知)。
+> v17.2: 目录名英文(Windsurf要求`[a-z0-9-]+`)，YAML description保持中文(用户可感知)。
 > code-review + refactor-code 已合并入 code-quality（分析+审查+重构 三合一），不再有独立目录。
 
 ## 速查表（我要做X → 用哪个技能）

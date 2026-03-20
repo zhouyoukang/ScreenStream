@@ -89,7 +89,7 @@ python dao_one.py health --json
 
 ### Server
 ```json
-{"device":"Aliyun", "cmd":"ssh", "cmd":"uptime"}
+{"device":"Aliyun", "cmd":"ssh", "command":"uptime"}
 {"device":"Aliyun", "cmd":"deploy", "local":"index.html", "remote":"/var/www/quest/"}
 ```
 
@@ -132,6 +132,8 @@ POST /api/sequence
 | quest3-ops | 8864 | Quest3 Ops |
 | bambu | 8870 | 拓竹3D打印 |
 | family-remote | 9860 | 亲情远程 |
+| security | 9877 | 安全中枢 (凭据+备份+审计+credit) |
+| wisdom | 9876 | Windsurf智慧部署器 |
 | sim-platform | 9500 | 虚拟仿真 |
 | windsurf-mgr | 9999 | Windsurf管理 |
 | openclaw | 18880 | OpenClaw |

@@ -21,10 +21,10 @@
 | 根目录 | 70个真实目录 + 1个Junction |
 | AGENT_GUIDE.md | 60+个（随项目增长） |
 | Gradle模块 | 6个（app/common/mjpeg/rtsp/webrtc/input） |
-| Python Hub服务 | 14个（道生一:8880 + 13卫星Hub） |
+| Python Hub服务 | 16个（道生一:8880 + 15卫星Hub） |
 | Rules | 2 Always-On（kernel.md + protocol.md） |
 | Skills | 32个 |
-| Workflows | 12个 |
+| Workflows | 13个 |
 | Memory | 道法术三层自足，按需AGENT_GUIDE |
 | MCP Server | 6个（context7/github/gitee/playwright/tavily/chrome-devtools） |
 | 设备舰队 | 15台（3手机+2电脑+VR+AR+手表+3D打印机+IoT） |
@@ -59,8 +59,9 @@
 | Windsurf智慧 | :9876 | ✅ 72/72 E2E (v1.1, 16模板) |
 | 虚拟仿真 | :9500 | ✅ 74+ API |
 | Windsurf管理 | :9999 | ✅ |
+| OpenClaw | :18880 | ✅ |
 
-### 规则体系 v17.1
+### 规则体系 v17.2
 
 - 道法两层全Always-On（长对话不衰退）
 - 本能层9条 + 铁律6条 + 反模式5个
