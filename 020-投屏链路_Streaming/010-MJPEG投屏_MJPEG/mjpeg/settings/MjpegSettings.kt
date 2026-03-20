@@ -59,7 +59,7 @@ public interface MjpegSettings {
         public const val STOP_ON_CONFIGURATION_CHANGE: Boolean = false
         public const val NOTIFY_SLOW_CONNECTIONS: Boolean = false
 
-        public const val STREAM_CODEC: Int = Values.STREAM_CODEC_MJPEG
+        public const val STREAM_CODEC: Int = Values.STREAM_CODEC_H264
 
         public const val HTML_ENABLE_BUTTONS: Boolean = true
         public const val HTML_SHOW_PRESS_START: Boolean = true
