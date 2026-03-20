@@ -77,8 +77,8 @@ public interface MjpegSettings {
         public const val IMAGE_CROP_LEFT: Int = 0
         public const val IMAGE_CROP_RIGHT: Int = 0
         public const val IMAGE_GRAYSCALE: Boolean = false
-        public const val JPEG_QUALITY: Int = 80
-        public const val RESIZE_FACTOR: Int = 50
+        public const val JPEG_QUALITY: Int = 92
+        public const val RESIZE_FACTOR: Int = 75 // Default for new installs; existing devices use DataStore value
         public const val RESOLUTION_WIDTH: Int = 0
         public const val RESOLUTION_HEIGHT: Int = 0
         public const val RESOLUTION_STRETCH: Boolean = true

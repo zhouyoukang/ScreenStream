@@ -576,7 +576,7 @@ internal class BitmapCapture(
 
         if (isCropped) tmpBitmap.recycle()
 
-        return outputBitmap!!.copy(outputBitmap!!.config ?: Bitmap.Config.ARGB_8888, false)
+        return outputBitmap!!
     }
 
     private fun getDisplayMetrics(): android.util.DisplayMetrics {

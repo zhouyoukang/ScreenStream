@@ -35,7 +35,7 @@ internal class H264Encoder(
     private val height: Int,
     private val densityDpi: Int,
     private val mimeType: String = MediaFormat.MIMETYPE_VIDEO_AVC,
-    private val bitRate: Int = 3000000, // 3Mbps default
+    private val bitRate: Int = 6000000, // 6Mbps default (LAN optimized)
     private val frameRate: Int = 30,
     private val callback: (H264Frame) -> Unit
 ) {
