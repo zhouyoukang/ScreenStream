@@ -421,11 +421,18 @@ internal class MjpegStreamingService(
                         else
                             MediaFormat.MIMETYPE_VIDEO_AVC
 
+                        // Resolution-adaptive bitrate: ~8 bits/pixel @ target fps for sharp LAN quality
+                        // 1080x2400@30fps → ~12Mbps, 720x1600@30fps → ~6Mbps, 540x1200@30fps → ~3Mbps
+                        val pixels = width.toLong() * height.toLong()
+                        val adaptiveBitRate = (pixels * 8 * 30 / 1000000).toInt().coerceIn(3000000, 20000000)
+                        XLog.i(getLog("H264", "Adaptive bitrate: ${adaptiveBitRate/1000}kbps for ${width}x${height}"))
+
                         val encoder = H264Encoder(
                             width = width,
                             height = height,
                             densityDpi = (service.resources.configuration.densityDpi * scaleFactor).toInt(),
-                            bitRate = 6000000, // 6Mbps LAN-optimized; ABR handles congestion for public viewers
+                            mimeType = mimeType,
+                            bitRate = adaptiveBitRate,
                             frameRate = 30
                         ) { frame ->
                             if (frame.type == H264Frame.TYPE_CONFIG) {
@@ -438,6 +445,8 @@ internal class MjpegStreamingService(
                             val targetFlow = if (streamCodec == MjpegSettings.Values.STREAM_CODEC_H265) h265SharedFlow else h264SharedFlow
                             coroutineScope.launch { targetFlow.emit(frame) }
                         }
+
+                        currentBitrate = adaptiveBitRate // Sync ABR starting point
 
                         val surface = encoder.getInputSurface()
                         if (surface != null) {
@@ -787,25 +796,27 @@ internal class MjpegStreamingService(
         startBitmap = bitmap
         return bitmap
     }
-    private var currentBitrate = 6000000 // Must match H264Encoder initial bitrate
+    private var currentBitrate = 0 // Synced from adaptive calculation at stream start
     private var lastBitrateUpdate = 0L
 
     private fun handleBitrateUpdate(latency: Long) {
         val now = System.currentTimeMillis()
         if (now - lastBitrateUpdate < 500) return // Limit updates to 2x per second
 
+        // Sync initial bitrate from encoder if not yet set
+        if (currentBitrate == 0) return
+
         var newBitrate = currentBitrate
 
-        if (latency > 50) { // Congestion detected (send took > 50ms)
-            // Rapid backoff: Drop 1Mbps or 20%, whichever is larger
-            val drop = max(1000000, (currentBitrate * 0.2).toInt())
-            newBitrate = max(1000000, currentBitrate - drop)
+        if (latency > 100) { // Congestion detected (send took > 100ms; was 50ms, too aggressive for LAN)
+            // Gentle backoff: Drop 15% or 500kbps, whichever is larger
+            val drop = max(500000, (currentBitrate * 0.15).toInt())
+            newBitrate = max(2000000, currentBitrate - drop) // Floor: 2Mbps (was 1Mbps)
             XLog.i(getLog("ABR", "Congestion! Latency=${latency}ms. Drop to ${newBitrate/1000}kbps"))
-        } else if (latency < 10) { // Network is free
-            // Slow start / Linear increase: Add 500kbps
-            if (currentBitrate < 16000000) {
-                 newBitrate = min(16000000, currentBitrate + 500000)
-                 // Quiet log for increase
+        } else if (latency < 15) { // Network is free
+            // Fast recovery: Add 1Mbps (was 500kbps)
+            if (currentBitrate < 20000000) {
+                newBitrate = min(20000000, currentBitrate + 1000000)
             }
         }
 

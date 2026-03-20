@@ -10627,9 +10627,9 @@
             this.jmuxer = new JMuxer({
               node: this.elementId,
               mode: "video",
-              flushingTime: 10, // Aggressive low latency (User req: Fix 1-2s delay)
+              flushingTime: 0, // Immediate flush for lowest latency
               fps: 30,
-              clearBuffer: false, // Don't clear buffer aggressively
+              clearBuffer: false,
               debug: false,
               onError: function (data) {
                 console.error("jMuxer error:", data);
@@ -10718,7 +10718,7 @@
           var self = this;
           var videoEl = document.getElementById(this.elementId);
 
-          // Relaxed Live Sync to prevent black screen issues
+          // Smooth Live Sync: playbackRate acceleration for small lags, hard seek for large lags
           this.liveSyncInterval = setInterval(function () {
             if (!videoEl || videoEl.paused) return;
 
@@ -10728,16 +10728,22 @@
               var currentTime = videoEl.currentTime;
               var lag = bufferEnd - currentTime;
 
-              // Seek if lag > 0.1s (Ultra-Aggressive Sync for LAN)
-              if (lag > 0.1) {
+              if (lag > 0.3) {
+                // Large lag: hard seek to live edge
                 if (lag > 0.5)
                   console.log(
                     "[LiveSync] Lag " + lag.toFixed(3) + "s, seeking",
                   );
                 videoEl.currentTime = bufferEnd;
+                videoEl.playbackRate = 1.0;
+              } else if (lag > 0.08) {
+                // Small lag: accelerate playback to catch up smoothly
+                videoEl.playbackRate = 1.05;
+              } else {
+                videoEl.playbackRate = 1.0;
               }
             }
-          }, 200);
+          }, 150);
         }
 
         stopLiveSync() {
@@ -10782,6 +10788,7 @@
 
           this.jmuxer.feed({
             video: nalData,
+            duration: 33,
           });
         }
 
