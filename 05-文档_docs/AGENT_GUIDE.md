@@ -7,7 +7,7 @@
 1. `../核心架构.md` — 核心架构(顶层)
 2. `FEATURES.md` — 功能清单(150+功能)
 3. `../STATUS.md` — 项目状态
-4. `../MODULES.md` — 模块说明
+4. `MODULES.md` — 模块说明
 5. `ARCHITECTURE_v32.md` — 架构文档v32
 
 ## 重要文档
