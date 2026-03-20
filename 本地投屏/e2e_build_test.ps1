@@ -96,8 +96,8 @@ Test-EP "voice.html" "$base/voice.html" 100 | Out-Null
 Write-Host "`n=== E2E: Auth (Phase 6) ===" -ForegroundColor Magenta
 Test-EP "auth/info" "$base/auth/info" 5 | Out-Null
 
-# ═══ Phase 7: 导航命令(ADB tap验证) ═══
-Write-Host "`n=== E2E: Navigation (Phase 7) ===" -ForegroundColor Magenta
+# ═══ Phase 7: 导航命令(最后执行，避免影响前面的viewtree等) ═══
+Write-Host "`n=== E2E: Navigation (Phase 7 - LAST) ===" -ForegroundColor Magenta
 foreach ($cmd in @("home", "back")) {
     try {
         $r = curl.exe -s --connect-timeout 3 -X POST "$base/$cmd" 2>$null
