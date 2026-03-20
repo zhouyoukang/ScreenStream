@@ -5,7 +5,7 @@
 ## 0) 使用约定
 
 - 只要你在项目里看到“同一能力有多个入口/多个端口/多个页面”，就必须：
-  - 先在 `文档/adr/` 写 ADR
+  - 先在 `adr/` 写 ADR
   - 再在本文件更新权威入口
 
 ## 1) 模块索引（主线）
@@ -42,10 +42,8 @@
 
 ## 3) 交付物与证据入口
 
-- 文档权威入口：`文档/README.md`
-- 状态面板：`文档/STATUS.md`
-- 架构决策：`文档/adr/`
-- 愿景路线：`文档/VISION.md`
-- Windsurf Skills：`.windsurf/skills/`（10个项目技能）
-- Windsurf Rules：`.windsurf/rules/`（6个结构化规则）
-- AGENTS.md：12个目录级指令文件
+- 状态面板：`../STATUS.md`
+- 架构决策：`adr/`
+- 愿景路线：`VISION.md`
+- Windsurf Skills/Rules/Workflows：`.windsurf/` 目录
+- AGENT_GUIDE：各项目目录（Agent按需发现）
