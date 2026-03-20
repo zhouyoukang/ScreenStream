@@ -571,9 +571,9 @@ internal class MjpegStreamingService(
 
             InternalEvent.RequestKeyFrame -> {
                 coroutineScope.launch {
-                    repeat(5) {
+                    repeat(2) {
                         h264Encoder?.forceKeyFrame()
-                        delay(200)
+                        delay(100)
                     }
                 }
             }

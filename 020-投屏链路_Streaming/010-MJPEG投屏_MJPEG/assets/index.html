@@ -3683,6 +3683,26 @@
       }
       connectTouchWs();
 
+      // rAF-based move throttle: coalesce high-freq move events into 1 WS send per frame
+      var _pendingMove = null;
+      var _moveRafId = 0;
+      var _pendingMoveClientXY = null;
+      function throttledTouchMove(nx, ny, clientX, clientY) {
+        _pendingMove = { nx: nx, ny: ny };
+        _pendingMoveClientXY = { x: clientX, y: clientY };
+        if (!_moveRafId) {
+          _moveRafId = requestAnimationFrame(function () {
+            _moveRafId = 0;
+            if (_pendingMove) {
+              sendTouchWs("m", _pendingMove.nx, _pendingMove.ny);
+              if (_pendingMoveClientXY) moveTouchDot(_pendingMoveClientXY.x, _pendingMoveClientXY.y);
+              _pendingMove = null;
+              _pendingMoveClientXY = null;
+            }
+          });
+        }
+      }
+
       // ========== Mobile Viewer Mode ==========
       var mobileNavTimer = null;
       function initMobileMode() {
@@ -3804,8 +3824,7 @@
         }
         if (!isTouching) return;
         var p = getStreamImagePoint(e.clientX, e.clientY);
-        if (p) sendTouchWs("m", p.nx, p.ny);
-        moveTouchDot(e.clientX, e.clientY);
+        if (p) throttledTouchMove(p.nx, p.ny, e.clientX, e.clientY);
       });
 
       window.addEventListener("mouseup", function (e) {
@@ -3913,8 +3932,7 @@
           if (gestureMode === "single" && e.touches.length === 1) {
             var t = e.touches[0];
             var p = getStreamImagePoint(t.clientX, t.clientY);
-            if (p) sendTouchWs("m", p.nx, p.ny);
-            moveTouchDot(t.clientX, t.clientY);
+            if (p) throttledTouchMove(p.nx, p.ny, t.clientX, t.clientY);
             // Cancel long press if finger moved significantly
             if (touchStartClientXY && longPressTimer) {
               var dx = t.clientX - touchStartClientXY.x;

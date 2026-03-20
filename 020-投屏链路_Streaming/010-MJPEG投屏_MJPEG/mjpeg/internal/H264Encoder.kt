@@ -81,6 +81,30 @@ internal class H264Encoder(
                 // KEY_LATENCY not supported on this device
             }
 
+            // Explicitly disable B-frames (High Profile can enable them, adding 1-2 frame latency)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                try {
+                    format.setInteger(MediaFormat.KEY_MAX_B_FRAMES, 0)
+                } catch (e: Exception) {
+                    XLog.d(getLog("initializeCodec", "KEY_MAX_B_FRAMES not supported"))
+                }
+            }
+
+            // Realtime encoding priority (0=realtime, 1=non-realtime)
+            try {
+                format.setInteger(MediaFormat.KEY_PRIORITY, 0)
+            } catch (e: Exception) { }
+
+            // Repeat previous frame for static content (avoids encoder idle → burst on motion)
+            try {
+                format.setInteger(MediaFormat.KEY_REPEAT_PREVIOUS_FRAME_AFTER, 100000) // 100ms in µs
+            } catch (e: Exception) { }
+
+            // Lowest complexity for fastest encoding (0=fastest, less quality per bit)
+            try {
+                format.setInteger(MediaFormat.KEY_COMPLEXITY, 0)
+            } catch (e: Exception) { }
+
             mediaCodec = MediaCodec.createEncoderByType(mimeType)
             mediaCodec?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
             inputSurface = mediaCodec?.createInputSurface()
