@@ -1,0 +1,10 @@
+{
+  "mail_tm": "FAIL",
+  "guerrilla": {
+    "provider": "guerrilla",
+    "address": "tixynalv@guerrillamailblock.com",
+    "sid": "01cp5a3q669rpm5p5t4uamftg0"
+  },
+  "1secmail": "FAIL",
+  "maildrop": "FAIL"
+}

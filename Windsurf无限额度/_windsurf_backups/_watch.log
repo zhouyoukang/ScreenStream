@@ -1,0 +1,24 @@
+[2026-03-17T16:09:31.598218] ✅ Windsurf 1.108.2 — patch有效
+[2026-03-17T17:00:17.058232] ✅ Windsurf 1.108.2 — patch有效
+[2026-03-17T17:25:58.520863] ✅ Windsurf 1.108.2 — patch有效
+[2026-03-18T09:31:31.789925] ✅ Windsurf 1.108.2 — patch有效
+[2026-03-18T19:02:54.521558]   ✅ P5: ParallelRolloutConfig(he) injected — 2 parallel × 50 invocations
+[2026-03-18T20:37:51.270677] ⚠️ Windsurf版本变更: 1.107.0 → 1.108.2 — 自动重新patch
+[2026-03-18T20:37:51.781268]   ✅ P5: ParallelRolloutConfig(he) injected — 2 parallel × 50 invocations
+[2026-03-19T09:48:42.463513] ⚠️ extension.js 文件已变更 (hash: 09fbc30c04bb65ea → 83f42870502cf0bd)
+[2026-03-19T09:48:42.611117] ⚠️ workbench.desktop.main.js 文件已变更 (hash: bc165176bade3c9b → edc555c3fa11bfec)
+[2026-03-19T09:48:42.693195] ⚠️ index.js 文件已变更 (hash: c50ee3ed64b09011 → bfa3c427709dfcae)
+[2026-03-19T09:48:42.835038] Patch已丢失！自动重新patch...
+[2026-03-19T09:48:43.417992]   ✅ P5: ParallelRolloutConfig(he) injected — 2 parallel × 50 invocations
+[2026-03-19T11:13:30.107218] ⚠️ extension.js 文件已变更 (hash: 6983090d0d6e1ea8 → 3e44b83456b8db13)
+[2026-03-19T11:13:30.129807] ⚠️ workbench.desktop.main.js 文件已变更 (hash: 64112b7d85832e58 → bc82b11aacd6010b)
+[2026-03-19T11:13:30.141575] ⚠️ index.js 文件已变更 (hash: 4f2ed887b4057fec → 10492feb321bbef8)
+[2026-03-19T11:13:30.312442] Patch已丢失！自动重新patch...
+[2026-03-19T11:13:30.891560]   ✅ P5: ParallelRolloutConfig(he) injected — 2 parallel × 50 invocations
+[2026-03-19T21:13:56.756708] ⚠️ extension.js 文件已变更 (hash: 6fdb155f41e51573 → 3e44b83456b8db13)
+[2026-03-19T21:13:56.781742] ⚠️ workbench.desktop.main.js 文件已变更 (hash: 14684505459fca45 → bc82b11aacd6010b)
+[2026-03-19T21:13:57.122114] ⚠️ index.js 文件已变更 (hash: 2cf5f7d57dce1a92 → 10492feb321bbef8)
+[2026-03-19T21:13:57.420015] Patch已丢失！自动重新patch...
+[2026-03-19T21:13:58.892661]   ✅ P5: ParallelRolloutConfig(he) injected — 2 parallel × 50 invocations
+[2026-03-20T10:52:49.654343] ⚠️ extension.js 文件已变更 (hash: 6fdb155f41e51573 → 48a6ecdce4fc1368)
+[2026-03-20T10:52:50.042820] ✅ Patch仍有效(可能是无关变更)

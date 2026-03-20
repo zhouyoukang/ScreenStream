@@ -1,0 +1,20 @@
+<Configuration>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>d:\道\道生一\一生二\Windsurf无限额度</HostFolder>
+      <SandboxFolder>C:\CFW</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>D:\Windsurf</HostFolder>
+      <SandboxFolder>C:\WindsurfHost</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>powershell -ExecutionPolicy Bypass -File C:\CFW\vm-sandbox\setup_sandbox.ps1</Command>
+  </LogonCommand>
+  <MemoryInMB>4096</MemoryInMB>
+  <Networking>Enable</Networking>
+  <vGPU>Enable</vGPU>
+</Configuration>

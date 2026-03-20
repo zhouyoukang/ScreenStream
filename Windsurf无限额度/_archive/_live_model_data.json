@@ -1,0 +1,38 @@
+{
+  "planInfo": {
+    "planName": "Trial",
+    "startTimestamp": 1773303889000,
+    "endTimestamp": 1774513489000,
+    "usage": {
+      "duration": 13,
+      "messages": 10000,
+      "flowActions": 20000,
+      "flexCredits": 0,
+      "usedMessages": 4800,
+      "usedFlowActions": 0,
+      "usedFlexCredits": 0,
+      "remainingMessages": 5200,
+      "remainingFlowActions": 20000,
+      "remainingFlexCredits": 0
+    },
+    "hasBillingWritePermissions": true,
+    "gracePeriodStatus": 1
+  },
+  "currentUser": "Vivian Dixon",
+  "windsurf_auth-Vivian Dixon": "[]",
+  "windsurf_auth-Vivian Dixon-usages": "[{\"extensionId\":\"codeium.windsurf\",\"extensionName\":\"Windsurf\",\"scopes\":[],\"lastUsed\":1773372833734}]",
+  "authKeys": [
+    "apiKey",
+    "allowedCommandModelConfigsProtoBinaryBase64",
+    "userStatusProtoBinaryBase64"
+  ],
+  "apiKey_prefix": "sk-ws-01-htdZt_TnHsvvuBng",
+  "protoSize": 34887,
+  "commandModels": [],
+  "vip": "{\"user_identifier\":\"1cf140f1f540f50bce70e11aef3111665870d57597e5943e104448c84a047dcb\",\"currentAuthCode\":\"liE32T9IHS\",\"windsurfAccounts\":[{\"id\":\"1765682830304\",\"email\":\"JohnCooper3443y@outlook.co.nz\",\"token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IjM4MTFiMDdmMjhiODQxZjRiNDllNDgyNTg1ZmQ2NmQ1NWUzOGRiNWQiLCJ0eXAi",
+  "multiplier_values": [
+    "0",
+    "3"
+  ],
+  "_timestamp": "2026-03-13 12:13:01.945350"
+}

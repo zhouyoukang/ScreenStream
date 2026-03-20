@@ -1,0 +1,33 @@
+{
+  "windsurf_version": "1.108.2",
+  "last_backup": "20260319_211357",
+  "last_patch": "2026-03-19T21:13:58.731936",
+  "patched_hashes": {
+    "extension": "48a6ecdce4fc1368",
+    "workbench": "14684505459fca45",
+    "chat_client": "2cf5f7d57dce1a92"
+  },
+  "original_backups": {
+    "extension": {
+      "file": "E:\\道\\道生一\\一生二\\Windsurf无限额度\\_windsurf_backups\\extension.js.20260317_141056.bak",
+      "size": 9315289,
+      "ts": "20260317_141056",
+      "note": "pre-patch original =0:1"
+    },
+    "workbench": {
+      "file": "E:\\道\\道生一\\一生二\\Windsurf无限额度\\_windsurf_backups\\workbench.desktop.main.js.20260317_141056.bak",
+      "size": 34153975,
+      "ts": "20260317_141056",
+      "note": "pre-patch original =0:2"
+    },
+    "chat_client": {
+      "file": "V:\\道\\道生一\\一生二\\Windsurf无限额度\\_windsurf_backups\\index.js.20260318_190221.bak",
+      "hash": "7b8e6af3833032f8",
+      "size": 11771662,
+      "ts": "20260318_190221"
+    }
+  },
+  "missing_originals": [
+    "chat_client: index.js has no pre-patch backup (only patched 154639 version exists)"
+  ]
+}

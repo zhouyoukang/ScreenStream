@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Windsurf Account Hub v3.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--dim:#8b949e;--green:#3fb950;--red:#f85149;--yellow:#d29922;--blue:#58a6ff;--purple:#bc8cff;--cyan:#39d353}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;min-height:100vh}
+.header{background:linear-gradient(135deg,#1a1e2e,#0d1117);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;padding:2px 8px;border-radius:12px;background:var(--green);color:#000;font-weight:600}
+.hdr-info{display:flex;gap:16px;font-size:13px;color:var(--dim);align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.dot-on{background:var(--green)}.dot-off{background:var(--red)}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--card);padding:0 16px;overflow-x:auto}
+.tab{padding:10px 16px;cursor:pointer;font-size:13px;color:var(--dim);border-bottom:2px solid transparent;transition:.2s;white-space:nowrap}
+.tab:hover{color:var(--text)}.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.content{padding:16px 24px;max-width:1400px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px}
+.card .label{font-size:11px;text-transform:uppercase;color:var(--dim);letter-spacing:.5px;margin-bottom:4px}
+.card .value{font-size:28px;font-weight:700}
+.card .sub{font-size:12px;color:var(--dim);margin-top:4px}
+.wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px}
+.wrap h3{padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px;display:flex;align-items:center;justify-content:space-between}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 12px;color:var(--dim);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+td{padding:8px 12px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover{background:#1c2333}
+.st{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.st-active{background:#0d361b;color:var(--green)}.st-untested{background:#1c2333;color:var(--blue)}
+.st-cooling{background:#3d1f00;color:var(--yellow)}.st-terminated,.st-disabled{background:#3d0d0d;color:var(--red)}
+.st-ready{background:#1c2333;color:var(--cyan)}.st-cur{outline:2px solid var(--green);outline-offset:1px}
+.btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:12px;transition:.2s}
+.btn:hover{background:#30363d}.btn-p{background:var(--green);color:#000;border-color:var(--green)}
+.btn-p:hover{background:#2ea043}.btn-d{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-w{background:var(--yellow);color:#000;border-color:var(--yellow)}
+.btn-s{padding:3px 8px;font-size:11px}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.chk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.chk-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px}
+.chk-item .t{font-size:12px;color:var(--dim);margin-bottom:6px}
+.chk-item .v{font-size:14px;font-weight:500}
+.chk-ok{border-left:3px solid var(--green)}.chk-fail{border-left:3px solid var(--red)}
+pre{background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px;overflow-x:auto;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:8px;background:var(--green);color:#000;font-weight:500;font-size:13px;z-index:9999;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1}.toast.err{background:var(--red);color:#fff}
+.hid{display:none}
+input,select{padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:13px}
+.mono{font-family:'Cascadia Code',Consolas,monospace;font-size:12px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>⚡ Windsurf Account Hub <span class="badge">v3.0</span></h1>
+  <div class="hdr-info">
+    <span id="hdrWS"><span class="dot dot-off"></span>WS: --</span>
+    <span id="hdrUser">👤 --</span>
+    <span id="hdrPlan">📊 --</span>
+    <span id="hdrPool">📋 --</span>
+  </div>
+</div>
+
+<div class="tabs" id="tabBar">
+  <div class="tab active" data-t="overview">☰ 全景</div>
+  <div class="tab" data-t="accounts">👥 账号池</div>
+  <div class="tab" data-t="switch">� 切换</div>
+  <div class="tab" data-t="diag">� 诊断</div>
+  <div class="tab" data-t="backups">� 备份</div>
+  <div class="tab" data-t="history">📜 历史</div>
+</div>
+
+<div class="content">
+  <!-- ☰ 全景 -->
+  <div id="p-overview">
+    <div class="grid" id="statsGrid"></div>
+    <div class="wrap">
+      <h3>快速操作</h3>
+      <div style="padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="doVerify()">� 验证认证</button>
+        <button class="btn" onclick="doResetFP()">� 重置指纹</button>
+        <button class="btn" onclick="doBackup()">� 备份认证</button>
+        <button class="btn btn-d" onclick="doClearAuth()">�️ 清除缓存</button>
+        <button class="btn" onclick="doExpireFix()">� 修复冷却</button>
+        <button class="btn" onclick="refreshAll()">♻️ 刷新</button>
+      </div>
+    </div>
+    <div class="wrap">
+      <h3>账号概览 <span style="font-weight:400;font-size:12px;color:var(--dim)" id="poolTime"></span></h3>
+      <table><thead><tr><th>状态</th><th>邮箱</th><th>计划</th><th>冷却</th><th>备注</th><th>操作</th></tr></thead>
+      <tbody id="overviewTb"></tbody></table>
+    </div>
+  </div>
+
+  <!-- 👥 账号池 -->
+  <div id="p-accounts" class="hid">
+    <div class="wrap">
+      <h3>全部账号 <button class="btn btn-s" onclick="toggleAdd()" style="margin-left:auto">+ 添加</button></h3>
+      <div id="addRow" class="hid" style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center">
+        <input id="iEmail" placeholder="邮箱" style="flex:2">
+        <input id="iPwd" placeholder="密码" style="flex:1">
+        <input id="iNotes" placeholder="备注" style="flex:1">
+        <button class="btn btn-p btn-s" onclick="doAdd()">添加</button>
+      </div>
+      <table><thead><tr><th>#</th><th>邮箱</th><th>密码</th><th>状态</th><th>计划</th><th>冷却</th><th>上次使用</th><th>备注</th><th>操作</th></tr></thead>
+      <tbody id="accTb"></tbody></table>
+    </div>
+  </div>
+
+  <!-- � 切换 -->
+  <div id="p-switch" class="hid">
+    <div class="wrap">
+      <h3>账号切换</h3>
+      <div style="padding:16px">
+        <p style="color:var(--dim);margin-bottom:12px">选择目标账号或自动选最优:</p>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="btn btn-w" onclick="doDryRun()">🧪 模拟切换</button>
+          <button class="btn btn-p" onclick="doSmartSwitch()">🔄 智能切换(最优)</button>
+          <select id="selSwitch" style="flex:1;min-width:200px"></select>
+          <button class="btn" onclick="doSwitchTo()">切换到选中</button>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:12px">
+          <p style="font-size:13px;font-weight:600;margin-bottom:8px">切换流程 (5步):</p>
+          <ol style="font-size:12px;color:var(--dim);padding-left:20px;line-height:1.8">
+            <li>备份当前认证状态</li>
+            <li>关闭Windsurf进程</li>
+            <li>重置5维设备指纹(storage.json)</li>
+            <li>清除认证缓存(state.vscdb)</li>
+            <li>更新号池 → 启动Windsurf用新账号登录</li>
+          </ol>
+        </div>
+        <pre id="switchOut">等待操作...</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔍 诊断 -->
+  <div id="p-diag" class="hid">
+    <div style="margin-bottom:12px"><button class="btn btn-p" onclick="doVerify()">� 运行认证验证</button></div>
+    <div class="chk-grid" id="diagGrid"></div>
+    <div class="wrap" style="margin-top:16px">
+      <h3>认证详情</h3>
+      <pre id="authRaw">点击"运行认证验证"</pre>
+    </div>
+  </div>
+
+  <!-- 📂 备份 -->
+  <div id="p-backups" class="hid">
+    <div style="margin-bottom:12px;display:flex;gap:8px">
+      <button class="btn btn-p" onclick="doBackup()">� 创建备份</button>
+      <button class="btn" onclick="loadBackups()">♻️ 刷新列表</button>
+    </div>
+    <div class="wrap">
+      <h3>备份列表</h3>
+      <table><thead><tr><th>文件</th><th>时间</th><th>用户</th><th>大小</th><th>操作</th></tr></thead>
+      <tbody id="bkTb"></tbody></table>
+    </div>
+  </div>
+
+  <!-- 📜 历史 -->
+  <div id="p-history" class="hid">
+    <div class="wrap">
+      <h3>切换历史</h3>
+      <table><thead><tr><th>时间</th><th>操作</th><th>账号</th><th>来源</th></tr></thead>
+      <tbody id="histTb"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let STATUS=null, ACCOUNTS=[];
+
+function toast(m,e=false){const t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(e?' err':'');setTimeout(()=>t.className='toast',3000)}
+async function api(p,method='GET',body=null){
+  try{const o={method,headers:{'Content-Type':'application/json'}};if(body)o.body=JSON.stringify(body);
+  const r=await fetch(p,o);return await r.json()}catch(e){return{ok:false,error:e.message}}
+}
+
+// Tab switching
+document.getElementById('tabBar').addEventListener('click',e=>{
+  const t=e.target.closest('.tab');if(!t)return;
+  const name=t.dataset.t;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===t));
+  ['overview','accounts','switch','diag','backups','history'].forEach(p=>
+    document.getElementById('p-'+p).classList.toggle('hid',p!==name));
+  if(name==='history')loadHistory();
+  if(name==='accounts')loadAccounts();
+  if(name==='backups')loadBackups();
+  if(name==='diag')doVerify();
+});
+
+function stCls(s){return 'st-'+(s||'untested')}
+function fmtDate(d){if(!d)return'-';try{return new Date(d).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}catch{return d}}
+function esc(s){return (s||'').replace(/</g,'&lt;').replace(/'/g,'&#39;').replace(/"/g,'&quot;')}
+
+// ===== Data Loading =====
+async function loadStatus(){
+  STATUS=await api('/api/status');
+  const s=STATUS;const p=s.pool||{};const pl=s.plan||{};
+  // Header
+  document.getElementById('hdrWS').innerHTML=`<span class="dot ${s.windsurf_running?'dot-on':'dot-off'}"></span>WS: ${s.windsurf_running?'Running':'Off'}`;
+  document.getElementById('hdrUser').textContent=`👤 ${s.current_user||'Not logged in'}`;
+  document.getElementById('hdrPlan').textContent=`📊 ${pl?.plan||'?'} ${pl?((pl.messages_remaining||0).toLocaleString()+' msgs'):''}`;
+  document.getElementById('hdrPool').textContent=`📋 ${p.available||0}/${p.total||0} avail`;
+  // Stats grid
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="card"><div class="label">Total Accounts</div><div class="value">${p.total||0}</div><div class="sub">Available ${p.available||0} | Cooling ${p.cooling||0} | Terminated ${p.terminated||0}</div></div>
+    <div class="card"><div class="label">Current User</div><div class="value" style="font-size:16px">${esc(s.current_user||'None')}</div><div class="sub">Plan: ${pl?.plan||'?'}</div></div>
+    <div class="card"><div class="label">Messages</div><div class="value" style="color:var(--green)">${pl?(pl.messages_remaining||0).toLocaleString():'?'}</div><div class="sub">${pl?'Used '+(pl.messages_used||0).toLocaleString()+' / '+(pl.messages_total||0).toLocaleString():''}</div></div>
+    <div class="card"><div class="label">VIP</div><div class="value" style="font-size:16px;color:${s.vip?.active?'var(--green)':'var(--red)'}">${s.vip?.active?'Active':'Inactive'}</div><div class="sub">${s.vip?.id?esc(s.vip.id):''}</div></div>
+  `;
+}
+
+async function loadAccountsList(){
+  ACCOUNTS=await api('/api/accounts');
+  // Overview table
+  const tb=document.getElementById('overviewTb');
+  tb.innerHTML=ACCOUNTS.map(a=>`<tr>
+    <td><span class="st ${stCls(a.status)} ${a.is_current?'st-cur':''}">${a.is_current?'⚡ ':''}${a.status}</span></td>
+    <td class="mono">${esc(a.email.substring(0,38))}</td>
+    <td>${esc(a.plan)}</td>
+    <td>${a.cooldown_min>0?a.cooldown_min+'m':'-'}</td>
+    <td style="font-size:11px;color:var(--dim)">${esc(a.notes)}</td>
+    <td class="acts">
+      <button class="btn btn-s btn-p" onclick="doSwitchEmail('${esc(a.email)}')">切换</button>
+      <button class="btn btn-s" onclick="doCooldown('${esc(a.email)}')">冷却</button>
+    </td></tr>`).join('');
+  // Switch dropdown
+  const sel=document.getElementById('selSwitch');
+  sel.innerHTML=ACCOUNTS.filter(a=>a.status!=='terminated'&&a.status!=='disabled'&&a.status!=='cooling').map(a=>
+    `<option value="${esc(a.email)}">${esc(a.email)}</option>`).join('');
+  document.getElementById('poolTime').textContent=new Date().toLocaleTimeString();
+}
+
+async function loadAccounts(){
+  const accs=await api('/api/accounts');
+  document.getElementById('accTb').innerHTML=accs.map((a,i)=>`<tr>
+    <td>${i+1}</td>
+    <td class="mono">${esc(a.email)}</td>
+    <td class="mono" style="color:var(--dim)">${esc(a.password)}</td>
+    <td><span class="st ${stCls(a.status)} ${a.is_current?'st-cur':''}">${a.status}</span></td>
+    <td>${esc(a.plan)}</td>
+    <td>${a.cooldown_min>0?a.cooldown_min+'m':'-'}</td>
+    <td style="font-size:11px;color:var(--dim)">${fmtDate(a.last_used)}</td>
+    <td style="font-size:11px;color:var(--dim)">${esc(a.notes)}</td>
+    <td class="acts">
+      <button class="btn btn-s btn-p" onclick="doSwitchEmail('${esc(a.email)}')">切换</button>
+      <button class="btn btn-s" onclick="doCooldown('${esc(a.email)}')">冷却</button>
+      <button class="btn btn-s" onclick="doUpdateStatus('${esc(a.email)}')">状态</button>
+      <button class="btn btn-s btn-d" onclick="doRemove('${esc(a.email)}')">删除</button>
+    </td></tr>`).join('');
+}
+
+async function loadHistory(){
+  const h=await api('/api/history');
+  document.getElementById('histTb').innerHTML=(h||[]).reverse().map(e=>`<tr>
+    <td style="font-size:12px;color:var(--dim)">${fmtDate(e.timestamp)}</td>
+    <td>${esc(e.action)}</td>
+    <td class="mono">${esc(e.email||'')}</td>
+    <td class="mono" style="color:var(--dim)">${esc(e.from||'')}</td></tr>`).join('');
+}
+
+async function loadBackups(){
+  const bks=await api('/api/backups');
+  document.getElementById('bkTb').innerHTML=(bks||[]).map(b=>`<tr>
+    <td class="mono" style="font-size:11px">${esc(b.file)}</td>
+    <td style="font-size:11px;color:var(--dim)">${fmtDate(b.timestamp)}</td>
+    <td>${esc(b.user||b.label)}</td>
+    <td>${b.size?Math.round(b.size/1024)+'KB':'-'}</td>
+    <td><button class="btn btn-s" onclick="doRestore('${esc(b.file)}')">恢复</button></td></tr>`).join('');
+}
+
+// ===== Actions =====
+async function doSmartSwitch(){
+  if(!confirm('智能切换将关闭Windsurf并切到最优账号，确认？'))return;
+  toast('切换中...');const r=await api('/api/switch','POST',{});
+  document.getElementById('switchOut').textContent=JSON.stringify(r,null,2);
+  toast(r.ok?`切换到 ${r.target}`:r.error,!r.ok);refreshAll();
+}
+async function doSwitchEmail(email){
+  if(!confirm(`切换到 ${email}?\n将关闭Windsurf并重置指纹`))return;
+  toast('切换中...');const r=await api('/api/switch','POST',{email});
+  document.getElementById('switchOut').textContent=JSON.stringify(r,null,2);
+  toast(r.ok?`切换到 ${r.target}`:r.error,!r.ok);refreshAll();
+}
+function doSwitchTo(){const e=document.getElementById('selSwitch').value;if(e)doSwitchEmail(e)}
+async function doDryRun(){
+  const email=document.getElementById('selSwitch').value||undefined;
+  const r=await api('/api/dry-run','POST',email?{email}:{});
+  document.getElementById('switchOut').textContent=JSON.stringify(r,null,2);
+  toast(r.ok?`模拟: 将切到 ${r.target}`:'无可用账号',!r.ok);
+}
+async function doCooldown(email){
+  const r=await api('/api/cooldown','POST',{email,minutes:120});
+  toast(r.ok?`${email.substring(0,25)} 冷却2h`:'失败',!r.ok);refreshAll();
+}
+async function doResetFP(){
+  const r=await api('/api/reset-fp','POST');
+  toast(r.ok?'指纹已重置':'重置失败',!r.ok);
+}
+async function doClearAuth(){
+  if(!confirm('清除认证缓存? 需重新登录'))return;
+  const r=await api('/api/clear-auth','POST',{deep:false});
+  toast(r.ok?`已清除 ${r.cleared} 键`:'失败',!r.ok);refreshAll();
+}
+async function doBackup(){
+  const r=await api('/api/backup','POST',{});
+  toast(r.ok?`已备份: ${r.file}`:'备份失败',!r.ok);
+}
+async function doRestore(file){
+  if(!confirm(`从 ${file} 恢复认证?`))return;
+  const r=await api('/api/restore','POST',{file});
+  toast(r.ok?r.message:'恢复失败: '+(r.message||r.error),!r.ok);refreshAll();
+}
+async function doExpireFix(){
+  const r=await api('/api/expire-fix','POST');
+  toast(r.ok?`修复 ${r.fixed} 个过期冷却`:'失败',!r.ok);refreshAll();
+}
+async function doVerify(){
+  const r=await api('/api/verify','POST');
+  const auth=await api('/api/auth');
+  const g=document.getElementById('diagGrid');
+  if(r.checks){
+    g.innerHTML=r.checks.map(c=>`<div class="chk-item ${c.ok?'chk-ok':'chk-fail'}">
+      <div class="t">${c.ok?'✅':'❌'} ${esc(c.name)}</div>
+      <div class="v">${esc(c.detail)}</div></div>`).join('')
+      +`<div class="chk-item ${r.passed===r.total?'chk-ok':'chk-fail'}">
+      <div class="t">总结</div><div class="v">${r.passed}/${r.total} 通过</div></div>`;
+  }
+  document.getElementById('authRaw').textContent=JSON.stringify(auth,null,2);
+}
+function toggleAdd(){document.getElementById('addRow').classList.toggle('hid')}
+async function doAdd(){
+  const e=document.getElementById('iEmail').value,p=document.getElementById('iPwd').value,n=document.getElementById('iNotes').value;
+  if(!e||!p){toast('请填写邮箱和密码',true);return}
+  const r=await api('/api/add','POST',{email:e,password:p,notes:n});
+  toast(r.ok?`已添加 ${e}`:(r.error||'失败'),!r.ok);
+  if(r.ok){document.getElementById('iEmail').value='';document.getElementById('iPwd').value='';document.getElementById('iNotes').value=''}
+  refreshAll();loadAccounts();
+}
+async function doRemove(email){
+  if(!confirm(`删除 ${email}?`))return;
+  const r=await api('/api/remove','POST',{email});
+  toast(r.ok?'已删除':'失败',!r.ok);refreshAll();loadAccounts();
+}
+async function doUpdateStatus(email){
+  const s=prompt('输入新状态 (untested/ready/active/cooling/terminated):','untested');
+  if(!s)return;
+  const r=await api('/api/update','POST',{email,status:s});
+  toast(r.ok?'已更新':'失败',!r.ok);refreshAll();loadAccounts();
+}
+
+async function refreshAll(){await loadStatus();await loadAccountsList()}
+
+// Init
+refreshAll();
+setInterval(refreshAll,30000);
+</script>
+</body>
+</html>

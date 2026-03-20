@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>道·公网中枢</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--card:#131a2e;--border:#1e2a45;--text:#e0e6f0;--dim:#6b7a99;--green:#00e676;--red:#ff5252;--orange:#ffab40;--blue:#448aff;--purple:#b388ff;--cyan:#18ffff}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding:16px}
+.header{text-align:center;padding:20px 0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.header h1{font-size:28px;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.header .sub{color:var(--dim);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:border-color .3s}
+.card:hover{border-color:var(--blue)}
+.card h2{font-size:15px;color:var(--cyan);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2 .icon{font-size:20px}
+.stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px}
+.stat:last-child{border:none}
+.stat .label{color:var(--dim)}
+.stat .value{font-weight:600}
+.online{color:var(--green)}.offline{color:var(--red)}.warn{color:var(--orange)}
+.btn{background:linear-gradient(135deg,var(--blue),var(--purple));border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-top:8px;transition:opacity .2s}
+.btn:hover{opacity:.85}
+.btn.secondary{background:var(--border)}
+.btn.danger{background:linear-gradient(135deg,var(--red),var(--orange))}
+.code{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:'Cascadia Code',monospace;font-size:12px;color:var(--cyan);word-break:break-all;margin:8px 0;cursor:pointer;position:relative}
+.code:hover::after{content:'Click to copy';position:absolute;top:-24px;right:0;background:var(--blue);color:#fff;padding:2px 8px;border-radius:4px;font-size:11px}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge.on{background:rgba(0,230,118,.15);color:var(--green)}
+.badge.off{background:rgba(255,82,82,.15);color:var(--red)}
+.device-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
+.device{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;font-size:12px}
+.device .name{font-weight:600;margin-bottom:4px}
+.log{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:8px;font-family:monospace;font-size:11px;max-height:200px;overflow-y:auto;margin-top:8px}
+.log .entry{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.log .time{color:var(--dim)}
+.section-title{font-size:18px;color:var(--purple);margin:24px 0 12px;padding-left:8px;border-left:3px solid var(--purple)}
+#refreshTime{color:var(--dim);font-size:11px}
+.topology{text-align:center;padding:20px;font-family:monospace;font-size:12px;line-height:1.8;color:var(--cyan)}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>道·公网中枢</h1>
+<div class="sub">道生一 · 一生二 · 二生三 · 三生万物 | <span id="refreshTime">loading...</span></div>
+</div>
+
+<!-- CFW共享服务 -->
+<div class="section-title">☰ 乾 · CodeFree共享服务</div>
+<div class="grid">
+<div class="card">
+<h2><span class="icon">🔑</span>CFW中枢状态</h2>
+<div class="stat"><span class="label">代理模式</span><span class="value" id="cfwMode">--</span></div>
+<div class="stat"><span class="label">账号</span><span class="value" id="cfwEmail">--</span></div>
+<div class="stat"><span class="label">FRP隧道</span><span class="value" id="cfwProxy">--</span></div>
+<div class="stat"><span class="label">TLS证书</span><span class="value" id="cfwTls">--</span></div>
+<div class="stat"><span class="label">请求数</span><span class="value" id="cfwRequests">--</span></div>
+<div class="stat"><span class="label">Token用量</span><span class="value" id="cfwTokens">--</span></div>
+<div class="stat"><span class="label">节省费用</span><span class="value" id="cfwCost">--</span></div>
+</div>
+<div class="card">
+<h2><span class="icon">🚀</span>一键部署 (任何电脑)</h2>
+<p style="font-size:13px;color:var(--dim);margin-bottom:8px">管理员PowerShell粘贴执行，自动完成全部配置：</p>
+<div class="code" onclick="copyCmd(this)">irm https://aiotvr.xyz/hub/static/deploy.ps1 | iex</div>
+<div class="stat"><span class="label">脚本版本</span><span class="value">v7.0 (VPN兼容)</span></div>
+<div class="stat"><span class="label">连接端口</span><span class="value">标准443 (SNI路由)</span></div>
+<div class="stat"><span class="label">证书</span><span class="value">ECDSA内嵌 (零下载)</span></div>
+<div class="stat"><span class="label">环境兼容</span><span class="value online">国内/国外/VPN</span></div>
+<button class="btn" onclick="copyCmd(document.querySelector('.code'))">复制部署命令</button>
+</div>
+</div>
+
+<!-- 三机状态 -->
+<div class="section-title">☷ 坤 · 三机韧性矩阵</div>
+<div class="grid">
+<div class="card">
+<h2><span class="icon">☁️</span>阿里云 (aiotvr.xyz)</h2>
+<div class="stat"><span class="label">角色</span><span class="value">☰乾·公网门户</span></div>
+<div class="stat"><span class="label">状态</span><span class="value" id="aliyunStatus">--</span></div>
+<div class="stat"><span class="label">Nginx</span><span class="value" id="aliyunNginx">--</span></div>
+<div class="stat"><span class="label">FRP Server</span><span class="value" id="aliyunFrps">--</span></div>
+<div class="stat"><span class="label">Hub v3</span><span class="value" id="aliyunHub">--</span></div>
+<div class="stat"><span class="label">SNI路由</span><span class="value" id="aliyunSni">--</span></div>
+</div>
+<div class="card">
+<h2><span class="icon">🖥️</span>台式机 (192.168.31.141)</h2>
+<div class="stat"><span class="label">角色</span><span class="value">☷坤·服务引擎</span></div>
+<div class="stat"><span class="label">状态</span><span class="value" id="desktopStatus">--</span></div>
+<div class="stat"><span class="label">CFW</span><span class="value" id="desktopCfw">--</span></div>
+<div class="stat"><span class="label">Relay</span><span class="value" id="desktopRelay">--</span></div>
+<div class="stat"><span class="label">FRP Client</span><span class="value" id="desktopFrpc">--</span></div>
+<div class="stat"><span class="label">硬件</span><span class="value">R7-9700X / 62GB / RTX4070S</span></div>
+</div>
+<div class="card">
+<h2><span class="icon">💻</span>笔记本 (192.168.31.179)</h2>
+<div class="stat"><span class="label">角色</span><span class="value">☲离·24h代理</span></div>
+<div class="stat"><span class="label">状态</span><span class="value" id="laptopStatus">--</span></div>
+<div class="stat"><span class="label">Caddy</span><span class="value" id="laptopCaddy">--</span></div>
+<div class="stat"><span class="label">FRP Client</span><span class="value" id="laptopFrpc">--</span></div>
+<div class="stat"><span class="label">CFW模式</span><span class="value" id="laptopCfwMode">--</span></div>
+<div class="stat"><span class="label">硬件</span><span class="value">R7-7840HS / 15GB / 780M</span></div>
+</div>
+</div>
+
+<!-- 已部署客户端 -->
+<div class="section-title">☳ 震 · 已接入设备</div>
+<div class="grid">
+<div class="card" style="grid-column:1/-1">
+<h2><span class="icon">📡</span>CFW客户端列表</h2>
+<div id="clientList"><div class="stat"><span class="label">加载中...</span></div></div>
+</div>
+</div>
+
+<!-- 架构拓扑 -->
+<div class="section-title">☵ 坎 · 架构拓扑</div>
+<div class="card">
+<div class="topology">
+<pre>
+  ┌─────────────────────────────────────────────────────┐
+  │           任意公网/VPN电脑 (Windsurf Pro)             │
+  │  hosts(127.0.0.1) → portproxy(:443)                  │
+  └──────────────────────┬──────────────────────────────┘
+                         │ 标准443 (SNI路由)
+           ┌─────────────▼─────────────┐
+           │    ☰ 阿里云 aiotvr.xyz     │
+           │  Nginx stream SNI路由:     │
+           │  CFW域名 → FRP:18443       │
+           │  其他域名 → HTTPS:8444     │
+           └─────────────┬─────────────┘
+                         │ FRP隧道
+           ┌─────────────▼─────────────┐
+           │  ☷ 台式机中枢 (已激活)      │
+           │  Python Relay(:18443)      │
+           │  → CFW(:443) → Codeium    │
+           │  GG-GB5R-HTCX-A78E-4VRQ   │
+           └───────────────────────────┘
+</pre>
+</div>
+</div>
+
+<!-- 事件日志 -->
+<div class="section-title">☶ 艮 · 事件日志</div>
+<div class="card">
+<h2><span class="icon">📋</span>最近事件</h2>
+<div class="log" id="eventLog"><div class="entry">加载中...</div></div>
+</div>
+
+<div style="text-align:center;padding:20px;color:var(--dim);font-size:11px">
+道生一 · 一生二 · 二生三 · 三生万物 | 伏羲八卦 · 老子道德经 · 释迦牟尼 | 30s自动刷新
+</div>
+
+<script>
+const HUB_API = '/hub/api/health';
+
+function copyCmd(el) {
+    navigator.clipboard.writeText(el.textContent.trim());
+    el.style.borderColor = '#00e676';
+    setTimeout(() => el.style.borderColor = '', 1500);
+}
+
+function fmt(n) {
+    if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+    return n;
+}
+
+function badge(ok, yes='online', no='offline') {
+    return `<span class="badge ${ok?'on':'off'}">${ok?yes:no}</span>`;
+}
+
+async function refresh() {
+    try {
+        const r = await fetch(HUB_API, {signal: AbortSignal.timeout(8000)});
+        const d = await r.json();
+        
+        // CFW状态
+        const cfw = d.cfw_state || {};
+        document.getElementById('cfwMode').innerHTML = badge(cfw.proxy_mode==='relay', 'relay模式', '未知');
+        document.getElementById('cfwEmail').textContent = cfw.email || '--';
+        document.getElementById('cfwProxy').innerHTML = badge(d.proxy?.status==='online');
+        document.getElementById('cfwTls').innerHTML = badge(d.tls?.status==='valid', '有效', '无效');
+        document.getElementById('cfwRequests').textContent = fmt(cfw.request_count || 0);
+        document.getElementById('cfwTokens').textContent = `${fmt(cfw.input_tokens||0)} in / ${fmt(cfw.output_tokens||0)} out`;
+        document.getElementById('cfwCost').textContent = `$${(cfw.session_cost||0).toFixed(0)}`;
+        
+        // 阿里云状态
+        document.getElementById('aliyunStatus').innerHTML = badge(d.hub==='online');
+        document.getElementById('aliyunNginx').innerHTML = badge(true, '443 SNI + 8444 HTTPS');
+        document.getElementById('aliyunFrps').innerHTML = badge(true, ':7000 + :18443');
+        document.getElementById('aliyunHub').innerHTML = badge(true, `v${d.version} (${d.uptime})`);
+        document.getElementById('aliyunSni').innerHTML = badge(true, 'CFW域名→FRP | 其他→HTTPS');
+        
+        // 台式机状态 (通过proxy状态推断)
+        const desktopOn = d.proxy?.status === 'online';
+        document.getElementById('desktopStatus').innerHTML = badge(desktopOn);
+        document.getElementById('desktopCfw').innerHTML = badge(desktopOn, ':443 运行中', '离线');
+        document.getElementById('desktopRelay').innerHTML = badge(desktopOn, ':18443 转发中', '离线');
+        document.getElementById('desktopFrpc').innerHTML = badge(desktopOn, `${d.proxy?.latency_ms||'--'}ms`, '断开');
+        
+        // 笔记本状态
+        const laptopOn = d.proxy?.status === 'online'; // 间接判断
+        document.getElementById('laptopStatus').innerHTML = badge(true, '24h在线');
+        document.getElementById('laptopCaddy').innerHTML = badge(true, ':80 代理中');
+        document.getElementById('laptopFrpc').innerHTML = badge(true, 'caddy+rdp');
+        document.getElementById('laptopCfwMode').innerHTML = badge(true, '智能双模 LAN/WAN');
+        
+        // 客户端列表
+        const clients = d.clients || {};
+        const names = Object.keys(clients);
+        if (names.length > 0) {
+            document.getElementById('clientList').innerHTML = names.map(n => {
+                const c = clients[n];
+                const ago = c.last_seen ? timeSince(new Date(c.last_seen)) : '未知';
+                return `<div class="stat"><span class="label">${n} (${c.ip||'?'})</span><span class="value">${c.windsurf_version||'?'} · ${ago}</span></div>`;
+            }).join('');
+        } else {
+            document.getElementById('clientList').innerHTML = '<div class="stat"><span class="label">暂无客户端</span><span class="value">使用上方命令部署</span></div>';
+        }
+        
+        // 事件日志
+        const events = (d.events || []).slice(-10).reverse();
+        document.getElementById('eventLog').innerHTML = events.map(e => {
+            const t = new Date(e.time).toLocaleString('zh-CN');
+            const color = e.level==='error'?'var(--red)':e.level==='warn'?'var(--orange)':'var(--dim)';
+            return `<div class="entry"><span class="time">${t}</span> <span style="color:${color}">[${e.level}]</span> ${e.msg}</div>`;
+        }).join('') || '<div class="entry">暂无事件</div>';
+        
+        document.getElementById('refreshTime').textContent = `最后更新: ${new Date().toLocaleTimeString('zh-CN')}`;
+    } catch(e) {
+        document.getElementById('refreshTime').textContent = `刷新失败: ${e.message} · ${new Date().toLocaleTimeString('zh-CN')}`;
+    }
+}
+
+function timeSince(date) {
+    const s = Math.floor((new Date() - date) / 1000);
+    if (s < 60) return s + '秒前';
+    if (s < 3600) return Math.floor(s/60) + '分钟前';
+    if (s < 86400) return Math.floor(s/3600) + '小时前';
+    return Math.floor(s/86400) + '天前';
+}
+
+refresh();
+setInterval(refresh, 30000);
+</script>
+</body>
+</html>

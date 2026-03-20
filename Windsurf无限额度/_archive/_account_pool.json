@@ -1,0 +1,151 @@
+{
+  "version": "2.0",
+  "accounts": [
+    {
+      "email": "060pyjy1@2art.fun",
+      "password": "060pyjy1@2art.fun",
+      "plan": "unknown",
+      "status": "terminated",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": null,
+      "messages_used": 0,
+      "notes": "低积分 终止"
+    },
+    {
+      "email": "susan125693@yahoo.com",
+      "password": "y5b4g27i",
+      "plan": "trial",
+      "status": "invalid_credentials",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": "2026-03-18T22:30:00",
+      "messages_used": 0,
+      "notes": "INVALID_LOGIN_CREDENTIALS 2026-03-18"
+    },
+    {
+      "email": "0d4ab068@intlgalleryheritageculture.org",
+      "password": "R23W3FkbmC#",
+      "plan": "unknown",
+      "status": "domain_rejected",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": null,
+      "messages_used": 0,
+      "notes": "冷却中"
+    },
+    {
+      "email": "hollandaugustino1993@yahoo.com",
+      "password": "H#Jsl1X5AKTf",
+      "plan": "unknown",
+      "status": "low_credits",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": "2026-03-18T15:06:24.296Z",
+      "messages_used": 97,
+      "notes": "remaining:3 2026-03-18"
+    },
+    {
+      "email": "kofihawkins247714@yahoo.com",
+      "password": "pMPtW!1H!RGT",
+      "plan": "trial",
+      "status": "low_credits",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": "2026-03-18T15:06:33.116Z",
+      "messages_used": 96,
+      "notes": "remaining:4 2026-03-18"
+    },
+    {
+      "email": "cootsoc568@yahoo.com",
+      "password": "tHt4aTk#cP92CC",
+      "plan": "trial",
+      "status": "low_credits",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": "2026-03-18T15:06:39.669Z",
+      "messages_used": 97,
+      "notes": "remaining:3 2026-03-18"
+    },
+    {
+      "email": "roberthessler483239@yahoo.com",
+      "password": "2wFjFzmmtk#HR!",
+      "plan": "unknown",
+      "status": "terminated",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": null,
+      "messages_used": 0,
+      "notes": "低积分 终止"
+    },
+    {
+      "email": "andrew.kane254974@yahoo.com",
+      "password": "upC3HSs!Yvl9dJ",
+      "plan": "unknown",
+      "status": "invalid_credentials",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": null,
+      "messages_used": 0,
+      "notes": ""
+    },
+    {
+      "email": "fountainmaniyahseufty@yahoo.com",
+      "password": "bSRlqoCW83#Qp4",
+      "plan": "trial",
+      "status": "low_credits",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": "2026-03-18T15:06:44.736Z",
+      "messages_used": 96,
+      "notes": "remaining:4 2026-03-18"
+    },
+    {
+      "email": "tracy.vasquez43932@yahoo.com",
+      "password": "j32@byjMoMVhWa",
+      "plan": "trial",
+      "status": "low_credits",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": "2026-03-18T15:06:50.103Z",
+      "messages_used": 96,
+      "notes": "remaining:4 2026-03-18"
+    },
+    {
+      "email": "Uhumphreyspring2VZY1@yahoo.com",
+      "password": "37bH3RA52S8#2x",
+      "plan": "trial",
+      "status": "low_credits",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": "2026-03-18T15:06:54.452Z",
+      "messages_used": 96,
+      "notes": "remaining:4 2026-03-18"
+    },
+    {
+      "email": "davis.amy464616@yahoo.com",
+      "password": "doyl0uwi",
+      "plan": "trial",
+      "status": "low_credits",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": "2026-03-18T15:06:58.550Z",
+      "messages_used": 98,
+      "notes": "remaining:2 2026-03-18"
+    },
+    {
+      "email": "harrisstacy11651@yahoo.com",
+      "password": "W0Bv6bt!T5MEtl",
+      "plan": "unknown",
+      "status": "terminated",
+      "cooldown_until": null,
+      "last_used": null,
+      "last_tested": null,
+      "messages_used": 0,
+      "notes": "低积分 终止"
+    }
+  ],
+  "current": null,
+  "fingerprints": {},
+  "history": []
+}
