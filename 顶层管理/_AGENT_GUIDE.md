@@ -60,10 +60,10 @@ python 顶层管理/windsurf_manager.py --no-browser   # 不打开浏览器
 
 ### Zone 1 — 项目级 (`.windsurf/`)
 
-- `.windsurfrules` — 项目根规则入口(v17.2)
-- `rules/` — 2个Always-On: kernel.md + protocol.md
-- `skills/` — 32个技能(全中文命名)
-- `workflows/` — 13个工作流(/命令触发)
+- `.windsurfrules` — 项目根规则入口
+- `rules/` — Always-On: kernel.md + protocol.md
+- `skills/` — 技能库（见 skills/README.md）
+- `workflows/` — 工作流（见 workflows/README.md）
 - `hooks.json` — 2个Python钩子(conversation_capture)
 - `DASHBOARD.md` — 仪表盘
 
@@ -82,5 +82,4 @@ python 顶层管理/windsurf_manager.py --no-browser   # 不打开浏览器
 
 - v1.0 (2026-03-13): 全景概览/Rules/Skills/Workflows/Memory/MCP/Hooks/Settings
 - v2.0: 免疫系统+统一SPA
-- v3.0 (2026-03-20): 数字统一审计(32 Skills/13 Workflows)
-- v3.1 (2026-03-20): AGENT_GUIDE实测校验(60+个，随项目增长)、DASHBOARD动态发现替代静态列表
+- v3.0 (2026-03-20): 去除脆弱计数，指向源头目录

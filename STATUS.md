@@ -10,24 +10,19 @@
 | `AGENT_GUIDE.md` | DaoOne v2.0 操作指令（根级） |
 | `.windsurf/DASHBOARD.md` | 道法术器四层架构全景 |
 | `核心架构.md` → `05-文档_docs/FEATURES.md` | SS核心文档链 |
-| `.windsurf/rules/` | 2个Always-On规则（kernel.md + protocol.md） |
-| `.windsurf/skills/` | 32个项目技能 |
+| `.windsurf/rules/` | Always-On规则（kernel.md + protocol.md） |
+| `.windsurf/skills/` | 项目技能库 |
 | `凭据中心.md` + `secrets.env` | 凭据索引+实际值 |
 
 ## 1) 全景统计
 
 | 维度 | 数量 |
 |------|------|
-| 根目录 | 70个真实目录 + 1个Junction |
-| AGENT_GUIDE.md | 60+个（随项目增长） |
 | Gradle模块 | 6个（app/common/mjpeg/rtsp/webrtc/input） |
-| Python Hub服务 | 16个（道生一:8880 + 15卫星Hub） |
-| Rules | 2 Always-On（kernel.md + protocol.md） |
-| Skills | 32个 |
-| Workflows | 13个 |
-| Memory | 道法术三层自足，按需AGENT_GUIDE |
-| MCP Server | 6个（context7/github/gitee/playwright/tavily/chrome-devtools） |
-| 设备舰队 | 15台（3手机+2电脑+VR+AR+手表+3D打印机+IoT） |
+| Python Hub服务 | 道生一:8880 + 卫星Hub（见下表） |
+| Rules / Skills / Workflows | 见 `.windsurf/` 目录 |
+| AGENT_GUIDE | 各项目目录（Agent按需发现） |
+| MCP Server | context7/github/gitee/playwright/tavily/chrome-devtools |
 
 ## 2) 核心成果
 
@@ -61,11 +56,11 @@
 | Windsurf管理 | :9999 | ✅ |
 | OpenClaw | :18880 | ✅ |
 
-### 规则体系 v17.2
+### 规则体系
 
 - 道法两层全Always-On（长对话不衰退）
-- 本能层9条 + 铁律6条 + 反模式5个
 - 转法轮：观→行→验→省→改→升→涅槃门
+- 详见 `.windsurf/rules/`
 
 ## 3) 2026-03-18 清理
 
