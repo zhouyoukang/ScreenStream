@@ -6,9 +6,9 @@
     "_comment_mode": "direct=MiCloud直连(推荐), ha=Home Assistant代理"
   },
   "ha": {
-    "enabled": true,
+    "enabled": false,
     "url": "http://192.168.31.141:8123",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI1MjJmNzI0MzAxYmY0ZTYyYjI1YWRhZGM3NjE3YjkyMiIsImlhdCI6MTc3MjA0MDI4OSwiZXhwIjoyMDg3NDAwMjg5fQ.0JgzVRoh4xykRhItxEoSvpYXT8RQa1uQn8ddeprtkes",
+    "token": "",
     "_comment": "设为 true 并填入 token 可启用 HA 高级功能(历史/模板/场景)"
   },
   "micloud": {
@@ -16,7 +16,7 @@
     "user_id": "",
     "service_token": "",
     "ssecurity": "",
-    "username": "2919501953",
+    "username": "",
     "password": "",
     "server": "cn",
     "ha_config_path": "",
@@ -40,10 +40,10 @@
     "_comment": "在 https://iot.tuya.com 注册获取 client_id/secret"
   },
   "wechat": {
-    "enabled": true,
-    "token": "smarthome2026",
-    "appid": "wx5b3f8f863e6bb71a",
-    "appsecret": "d64dfb4c49ce51971958b5c0d18bb082",
-    "_comment": "测试号已配置，auto_menu启动时自动同步菜单"
+    "enabled": false,
+    "token": "",
+    "appid": "",
+    "appsecret": "",
+    "_comment": "微信公众号配置。测试号: https://mp.weixin.qq.com/debug/cgi-bin/sandbox 。token自定义(英文字母+数字), appid/appsecret从测试号页面获取。接口URL填: http://你的公网地址/wx"
   }
 }

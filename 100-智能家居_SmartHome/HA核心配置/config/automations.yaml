@@ -45,22 +45,29 @@
       entity_id: switch.sonoff_100235142b_1
   alias: 智能开启户外电源插头
   conditions:
-  - condition: and
+  - condition: or
     conditions:
-    - below: 500
-      condition: numeric_state
-      entity_id: sensor.sonoff_total_power_usage
-    - below: 200
-      condition: numeric_state
-      entity_id: sensor.de_2dian_yuan_total_in_power
-    - below: 30
-      condition: numeric_state
-      entity_id: sensor.de_2dian_yuan_battery_level
-  description: 当总功率低于500W且RIVER 2 MAX总输出功率低于200W持续30秒时，且电池电量低于30%，开启户外电源插头
-  enabled: false
+    - condition: trigger
+      id: night_timer
+    - condition: and
+      conditions:
+      - below: 500
+        condition: numeric_state
+        entity_id: sensor.sonoff_total_power_usage
+      - below: 200
+        condition: numeric_state
+        entity_id: sensor.de_2dian_yuan_total_in_power
+      - below: 30
+        condition: numeric_state
+        entity_id: sensor.de_2dian_yuan_battery_level
+  description: 夜间定时开启(23:00) + 低功率低电量条件开启。eWeLink云端定时器为主，HA为备份。
+  enabled: true
   id: '1732715640582'
   mode: single
   triggers:
+  - trigger: time
+    at: '23:00:00'
+    id: night_timer
   - below: 500
     entity_id: sensor.sonoff_total_power_usage
     for:

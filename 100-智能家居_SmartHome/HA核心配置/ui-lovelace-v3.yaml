@@ -1,0 +1,512 @@
+title: 智能家居
+views:
+  # ━━━ ☰ 首页 · 一眼掌控全局 ━━━
+  - title: 首页
+    path: home
+    icon: mdi:home
+    cards:
+      - type: custom:mushroom-title-card
+        title: "智能家居"
+        subtitle: "{{ now().strftime('%m月%d日 %A') }} · ⚡{{ states('sensor.sonoff_total_power_usage') }}W"
+
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: template
+            icon: mdi:flash
+            content: "{{ states('sensor.sonoff_total_power_usage') }}W"
+            icon_color: "{% if states('sensor.sonoff_total_power_usage')|float > 600 %}red{% elif states('sensor.sonoff_total_power_usage')|float > 300 %}orange{% else %}green{% endif %}"
+          - type: template
+            icon: mdi:desktop-tower
+            content: "{{ states('sensor.desktop_master_cpu') }}%"
+            icon_color: "{% if states('sensor.desktop_master_cpu')|int > 80 %}red{% else %}blue{% endif %}"
+          - type: template
+            icon: mdi:memory
+            content: "{{ states('sensor.desktop_master_memory') }}%"
+            icon_color: "{% if states('sensor.desktop_master_memory')|float > 85 %}red{% else %}teal{% endif %}"
+          - type: template
+            icon: mdi:docker
+            content: "{{ states('sensor.docker_containers') }}"
+            icon_color: blue
+          - type: template
+            icon: mdi:sync
+            content: "{{ states('sensor.wan_wu_sync') }}"
+            icon_color: green
+
+      # 功率趋势
+      - type: sensor
+        entity: sensor.sonoff_total_power_usage
+        graph: line
+        name: 24h功率趋势
+        hours_to_show: 24
+        detail: 2
+
+      # 各插排实时功率
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.sonoff_10022cf6a2_power
+            name: 有康床
+            icon: mdi:bed
+            primary_info: state
+            icon_color: amber
+          - type: custom:mushroom-entity-card
+            entity: sensor.sonoff_10022cf71d_power
+            name: 中央一号
+            icon: mdi:power-socket-eu
+            primary_info: state
+            icon_color: amber
+          - type: custom:mushroom-entity-card
+            entity: sensor.sonoff_10022cf570_power
+            name: 中央二号
+            icon: mdi:power-socket-eu
+            primary_info: state
+            icon_color: amber
+          - type: custom:mushroom-entity-card
+            entity: sensor.sonoff_10022cf70f_power
+            name: 俊伟床
+            icon: mdi:bed-outline
+            primary_info: state
+            icon_color: amber
+          - type: custom:mushroom-entity-card
+            entity: sensor.sonoff_10022de30e_power
+            name: 中央三号
+            icon: mdi:power-socket-eu
+            primary_info: state
+            icon_color: amber
+          - type: custom:mushroom-entity-card
+            entity: sensor.sonoff_10022cfc76_power
+            name: 显示器
+            icon: mdi:monitor
+            primary_info: state
+            icon_color: amber
+
+  # ━━━ ☲ 灯光 · 所有可控灯 ━━━
+  - title: 灯光
+    path: lights
+    icon: mdi:lightbulb-group
+    cards:
+      - type: custom:mushroom-title-card
+        title: "💡 房间灯光"
+
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.yi_hao_deng
+            name: 一号灯
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.er_hao_deng
+            name: 二号灯
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.san_hao_deng
+            name: 三号灯
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.si_hao_deng
+            name: 四号灯
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.wu_hao_deng
+            name: 五号灯
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.ding_deng_1
+            name: 顶灯1
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.ding_deng_2
+            name: 顶灯2
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.tong_deng_1
+            name: 筒灯1
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.tong_deng_2
+            name: 筒灯2
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.chuang_di_deng
+            name: 床底灯
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.philips_strip3_12ad_light
+            name: 灯带
+            use_light_color: true
+            show_brightness_control: true
+            show_color_control: true
+          - type: custom:mushroom-light-card
+            entity: light.yszn01_ys2102_08c6_light
+            name: 晾衣架灯
+            use_light_color: true
+            show_brightness_control: true
+
+      - type: custom:mushroom-title-card
+        title: "🌈 OpenRGB"
+
+      - type: custom:mushroom-light-card
+        entity: light.b650m_aorus_elite_ax_0
+        name: 主板RGB总控
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+
+  # ━━━ ☷ 开关 · 所有插排与面板 ━━━
+  - title: 开关
+    path: switches
+    icon: mdi:power-plug
+    cards:
+      - type: custom:mushroom-title-card
+        title: "🔌 Sonoff插排"
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022cf71d_1
+            name: 中央一号
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022cf570_1
+            name: 中央二号
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022de30e_1
+            name: 中央三号
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022cf6a2_1
+            name: 有康床
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022cf70f_1
+            name: 俊伟床
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022cfc76_1
+            name: 显示器
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_100235142b_1
+            name: 户外电源
+            icon: mdi:solar-power
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_1002212786
+            name: 电脑开机卡
+            icon: mdi:desktop-tower
+            tap_action:
+              action: toggle
+
+      - type: custom:mushroom-title-card
+        title: "💡 灯光开关"
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022ddc35_1
+            name: 顶灯一号
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022de63b_1
+            name: 顶灯二号
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022dede9_1
+            name: 四号开关
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.sonoff_10022dedc7_1
+            name: 五号开关
+            tap_action:
+              action: toggle
+
+      - type: custom:mushroom-title-card
+        title: "🏠 小米设备"
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: switch.giot_v6oodm_72c2_switch
+            name: 一号
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.giot_v6oodm_69eb_switch
+            name: 二号
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.giot_v6oodm_72a1_switch
+            name: 三号
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.giot_v6oodm_93b3_switch
+            name: 床底灯
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.huca_dh2_34b9_left_switch_service
+            name: 筒灯左
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.huca_dh2_34b9_right_switch_service
+            name: 筒灯右
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.giot_v6shsm_533d_switch
+            name: 手机充电器
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.dmaker_p221_5b47_horizontal_swing
+            name: 风扇摆风
+            icon: mdi:fan
+            tap_action:
+              action: toggle
+
+      - type: custom:mushroom-title-card
+        title: "📷 摄像头"
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: switch.chuangmi_021a04_d678_switch_status
+            name: 云台Pro 开关
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.chuangmi_039c01_60bf_switch_status
+            name: C400 开关
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.chuangmi_021a04_d678_motion_detection
+            name: 云台Pro 移动侦测
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: switch.chuangmi_039c01_60bf_motion_detection
+            name: C400 移动侦测
+            tap_action:
+              action: toggle
+
+  # ━━━ ☳ 能源 · 功率/电压/电流 ━━━
+  - title: 能源
+    path: energy
+    icon: mdi:lightning-bolt
+    cards:
+      - type: custom:mushroom-title-card
+        title: "⚡ 能源分析"
+
+      - type: gauge
+        entity: sensor.sonoff_total_power_usage
+        name: 当前总功率
+        min: 0
+        max: 3000
+        severity:
+          green: 0
+          yellow: 600
+          red: 1500
+
+      - type: sensor
+        entity: sensor.sonoff_total_power_usage
+        graph: line
+        name: 总功率24h
+        hours_to_show: 24
+        detail: 2
+
+      - type: glance
+        title: "各设备功率(W)"
+        columns: 3
+        entities:
+          - entity: sensor.sonoff_10022cf6a2_power
+            name: 有康床
+          - entity: sensor.sonoff_10022cf71d_power
+            name: 中央一号
+          - entity: sensor.sonoff_10022cf570_power
+            name: 中央二号
+          - entity: sensor.sonoff_10022cf70f_power
+            name: 俊伟床
+          - entity: sensor.sonoff_10022de30e_power
+            name: 中央三号
+          - entity: sensor.sonoff_10022cfc76_power
+            name: 显示器
+
+      - type: glance
+        title: "电压(V)"
+        columns: 3
+        entities:
+          - entity: sensor.sonoff_10022cf6a2_voltage
+            name: 有康床
+          - entity: sensor.sonoff_10022cf71d_voltage
+            name: 中央一号
+          - entity: sensor.sonoff_10022cf570_voltage
+            name: 中央二号
+          - entity: sensor.sonoff_10022cf70f_voltage
+            name: 俊伟床
+          - entity: sensor.sonoff_10022de30e_voltage
+            name: 中央三号
+          - entity: sensor.sonoff_10022cfc76_voltage
+            name: 显示器
+
+      - type: glance
+        title: "电流(A)"
+        columns: 3
+        entities:
+          - entity: sensor.sonoff_10022cf6a2_current
+            name: 有康床
+          - entity: sensor.sonoff_10022cf71d_current
+            name: 中央一号
+          - entity: sensor.sonoff_10022cf570_current
+            name: 中央二号
+          - entity: sensor.sonoff_10022cf70f_current
+            name: 俊伟床
+          - entity: sensor.sonoff_10022de30e_current
+            name: 中央三号
+          - entity: sensor.sonoff_10022cfc76_current
+            name: 显示器
+
+      - type: entities
+        title: "📊 能耗统计"
+        entities:
+          - entity: sensor.sonoff_energy_daily
+            name: 今日用电
+          - entity: sensor.sonoff_energy_weekly
+            name: 本周用电
+          - entity: sensor.sonoff_energy_monthly
+            name: 本月用电
+
+  # ━━━ ☵ 系统 · 三电脑+Docker+服务 ━━━
+  - title: 系统
+    path: system
+    icon: mdi:server
+    cards:
+      - type: custom:mushroom-title-card
+        title: "🖥️ 三电脑"
+
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.desktop_master_cpu
+            name: CPU
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 60
+              red: 85
+          - type: gauge
+            entity: sensor.desktop_master_memory
+            name: 内存
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 70
+              red: 90
+
+      - type: entities
+        title: "在线状态"
+        entities:
+          - entity: binary_sensor.desktop_master_online
+            name: 台式机
+          - entity: binary_sensor.laptop_zhoumac_online
+            name: 笔记本
+          - entity: binary_sensor.aliyun_server_online
+            name: 阿里云
+          - entity: sensor.aliyun_server_memory
+            name: 阿里云内存
+
+      - type: custom:mushroom-title-card
+        title: "🐳 Docker"
+
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.docker_homeassistant
+            name: HA
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.docker_mosquitto
+            name: MQTT
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.docker_nodered
+            name: NodeRED
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.docker_openwebui
+            name: WebUI
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.service_ollama
+            name: Ollama
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.service_sunshine
+            name: Sunshine
+
+      - type: entities
+        title: "📡 万物同步"
+        entities:
+          - entity: sensor.wan_wu_sync
+          - entity: sensor.adb_devices_count
+          - entity: sensor.lan_devices_count
+          - entity: sensor.docker_containers
+
+  # ━━━ ☶ 摄像头 ━━━
+  - title: 监控
+    path: cameras
+    icon: mdi:cctv
+    cards:
+      - type: custom:mushroom-title-card
+        title: "📷 摄像头监控"
+
+      - type: picture-entity
+        entity: camera.f22078f9c82516c9e8d4e563176a1ca7_main
+        name: 大华主码流
+        show_state: false
+        show_name: true
+        camera_view: auto
+
+      - type: picture-entity
+        entity: camera.ip_webcam_ffmpeg
+        name: IP Webcam
+        show_state: false
+        show_name: true
+        camera_view: auto
+
+resources: !include lovelace/resources.yaml
