@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VP99 华强北手表 · 伏羲八卦逆向中枢</title>
+<style>
+:root { --bg:#0a0a0f; --card:#13131a; --border:#2a2a35; --green:#00e676; --red:#ff5252; --yellow:#ffd740; --blue:#448aff; --purple:#b388ff; --text:#e0e0e0; --dim:#888; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px}
+.header{background:linear-gradient(135deg,#1a1a2e,#16213e);padding:16px 24px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)}
+.header h1{font-size:20px;font-weight:600} .header .sub{color:var(--dim);font-size:12px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+.dot.on{background:var(--green);box-shadow:0 0 8px var(--green)} .dot.off{background:var(--red)}
+.tabs{display:flex;background:#111118;border-bottom:1px solid var(--border);overflow-x:auto}
+.tab{padding:10px 18px;cursor:pointer;color:var(--dim);font-size:13px;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.tab:hover{color:var(--text)} .tab.active{color:var(--green);border-bottom-color:var(--green)}
+.content{padding:16px;max-width:1200px;margin:0 auto}
+.page{display:none} .page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;transition:border-color .2s}
+.card:hover{border-color:var(--green)} .card h3{font-size:13px;color:var(--dim);text-transform:uppercase;margin-bottom:8px;letter-spacing:1px}
+.card .val{font-size:18px;font-weight:600} .card .sub{color:var(--dim);font-size:12px;margin-top:4px}
+.btn{background:transparent;border:1px solid var(--green);color:var(--green);padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;transition:all .2s}
+.btn:hover{background:var(--green);color:#000} .btn.red{border-color:var(--red);color:var(--red)} .btn.red:hover{background:var(--red);color:#fff}
+.cmd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:12px}
+.log-box{background:#0d0d12;border:1px solid var(--border);border-radius:6px;padding:10px;max-height:400px;overflow-y:auto;font-family:'Cascadia Code',monospace;font-size:12px;line-height:1.6}
+.log-line{padding:1px 0} .log-line .ts{color:var(--dim)} .log-line .msg{margin-left:4px}
+table{width:100%;border-collapse:collapse;margin-top:8px} th,td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:13px}
+th{color:var(--dim);font-size:11px;text-transform:uppercase} .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;margin:2px}
+.tag.green{background:#00e67620;color:var(--green)} .tag.red{background:#ff525220;color:var(--red)} .tag.blue{background:#448aff20;color:var(--blue)} .tag.yellow{background:#ffd74020;color:var(--yellow)}
+.bagua-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px} .bagua-card{text-align:center;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.bagua-card .gua{font-size:28px;margin-bottom:4px} .bagua-card .name{font-size:11px;color:var(--dim)} .bagua-card .val{font-size:13px;margin-top:4px}
+.progress{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px} .progress .fill{height:100%;border-radius:3px;transition:width .5s}
+#toast{position:fixed;bottom:20px;right:20px;background:#333;color:#fff;padding:10px 20px;border-radius:8px;display:none;z-index:999;font-size:13px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div><span class="dot" id="statusDot"></span></div>
+  <div><h1>⌚ VP99 华强北手表</h1><div class="sub">伏羲八卦 · 全量深度逆向中枢 v1.0</div></div>
+  <div style="margin-left:auto;display:flex;gap:8px">
+    <button class="btn" onclick="refreshAll()">🔄 刷新</button>
+    <button class="btn" onclick="fullSense()">☯ 全景感知</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('overview')">☰ 全景</div>
+  <div class="tab" onclick="switchTab('control')">☳ 控制</div>
+  <div class="tab" onclick="switchTab('logs')">☵ 日志</div>
+  <div class="tab" onclick="switchTab('apps')">☷ 应用</div>
+  <div class="tab" onclick="switchTab('device')">☲ 设备</div>
+  <div class="tab" onclick="switchTab('wifi')">☴ WiFi</div>
+  <div class="tab" onclick="switchTab('breakthrough')">☶ 突破</div>
+  <div class="tab" onclick="switchTab('reverse')">☱ 逆向</div>
+</div>
+
+<div class="content">
+  <!-- ☰ 全景 -->
+  <div class="page active" id="page-overview">
+    <div class="bagua-grid" id="baguaGrid"></div>
+    <h3 style="margin:16px 0 8px;color:var(--dim)">通道状态</h3>
+    <div class="grid" id="channelCards"></div>
+    <h3 style="margin:16px 0 8px;color:var(--dim)">最近活动</h3>
+    <div class="log-box" id="recentLogs" style="max-height:200px"></div>
+  </div>
+
+  <!-- ☳ 控制 -->
+  <div class="page" id="page-control">
+    <div class="card" style="margin-bottom:12px">
+      <h3>MacroDroid 远程命令</h3>
+      <p style="color:var(--dim);font-size:12px;margin-bottom:8px">通过 HTTP :8080 /{ha}?cmd= 端点发送命令到手表</p>
+      <div class="cmd-grid" id="cmdGrid"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <h3>自定义命令</h3>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input type="text" id="customCmd" placeholder="输入命令..." style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px">
+        <button class="btn" onclick="sendCustomCmd()">发送</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>命令响应</h3>
+      <div class="log-box" id="cmdResponse" style="max-height:200px;min-height:60px"></div>
+    </div>
+  </div>
+
+  <!-- ☵ 日志 -->
+  <div class="page" id="page-logs">
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn" onclick="loadLogs(50)">最近50条</button>
+      <button class="btn" onclick="loadLogs(200)">200条</button>
+      <button class="btn" onclick="loadLogs(500)">500条</button>
+    </div>
+    <div class="log-box" id="fullLogs" style="max-height:600px"></div>
+  </div>
+
+  <!-- ☷ 应用 -->
+  <div class="page" id="page-apps">
+    <div class="grid" id="appsGrid"></div>
+  </div>
+
+  <!-- ☲ 设备 -->
+  <div class="page" id="page-device">
+    <div class="grid" id="deviceGrid"></div>
+  </div>
+
+  <!-- ☴ WiFi -->
+  <div class="page" id="page-wifi">
+    <button class="btn" onclick="loadWifi()" style="margin-bottom:12px">🔍 加载WiFi扫描</button>
+    <div id="wifiList"></div>
+  </div>
+
+  <!-- ☶ 突破 -->
+  <div class="page" id="page-breakthrough">
+    <div id="breakthroughList"></div>
+  </div>
+
+  <!-- ☱ 逆向 -->
+  <div class="page" id="page-reverse">
+    <div class="card" style="margin-bottom:12px">
+      <h3>VP99 底层架构解构</h3>
+      <table>
+        <tr><th>层</th><th>组件</th><th>状态</th></tr>
+        <tr><td>SoC</td><td>Unisoc展锐 K15平台 (SC9832E/SL8541E/W517)</td><td><span class="tag green">已确认</span></td></tr>
+        <tr><td>OS</td><td>Android 8.1 Oreo (非Wear OS)</td><td><span class="tag green">已确认</span></td></tr>
+        <tr><td>OEM</td><td>HSC厂商 · DWQ方案商 · 佰佑通配套</td><td><span class="tag green">已确认</span></td></tr>
+        <tr><td>WiFi/BT</td><td>展锐WCN子系统 (CP2, 有Assert崩溃记录)</td><td><span class="tag yellow">有缺陷</span></td></tr>
+        <tr><td>Modem</td><td>4G LTE Cat.4 (IMEI确认)</td><td><span class="tag green">已确认</span></td></tr>
+        <tr><td>存储</td><td>24.4GB (58%已用)</td><td><span class="tag green">已确认</span></td></tr>
+        <tr><td>显示</td><td>480×576 (VNC:336×401)</td><td><span class="tag green">已确认</span></td></tr>
+        <tr><td>摄像头</td><td>前置0.28MP (人脸解锁)</td><td><span class="tag green">已确认</span></td></tr>
+        <tr><td>语音</td><td>讯飞MSC + MIT TTS + Google TTS + AVA</td><td><span class="tag yellow">讯飞AppKey未配</span></td></tr>
+        <tr><td>FOTA</td><td>艾拉比abupdate (84条记录)</td><td><span class="tag green">活跃</span></td></tr>
+        <tr><td>Root</td><td>Magisk已下载 · Shizuku已安装 · 未激活</td><td><span class="tag blue">待突破</span></td></tr>
+        <tr><td>远控</td><td>MacroDroid HTTP ✅ · DroidVNC-NG(未启动) · Tasker</td><td><span class="tag green">MacroDroid活跃</span></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>展锐系统插件 (30+)</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">
+        <span class="tag blue">wakeupScreen</span><span class="tag blue">otaupdate</span><span class="tag blue">pickUpToAnswer</span>
+        <span class="tag blue">shakeToRecord</span><span class="tag blue">flipToMute</span><span class="tag blue">simlock</span>
+        <span class="tag blue">systemuidynanavbar</span><span class="tag blue">pressbrightness</span><span class="tag blue">speakerToHeadset</span>
+        <span class="tag blue">cellbroadcast</span><span class="tag blue">supportapnsettings</span><span class="tag blue">vodafonefeatures</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = '';
+let _status = {};
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', t.textContent.includes({'overview':'全景','control':'控制','logs':'日志','apps':'应用','device':'设备','wifi':'WiFi','breakthrough':'突破','reverse':'逆向'}[name]||'')));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-'+name);
+  if(el) el.classList.add('active');
+}
+
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2500); }
+
+async function api(path) {
+  try { const r=await fetch(API+path); return await r.json(); } catch(e) { return {error:e.message}; }
+}
+
+async function refreshAll() {
+  toast('刷新中...');
+  _status = await api('/api/status');
+  document.getElementById('statusDot').className = 'dot ' + (_status.macrodroid ? 'on' : 'off');
+  loadOverview();
+}
+
+async function fullSense() {
+  toast('全景感知中...');
+  const data = await api('/api/sense');
+  if(data.bagua) renderBagua(data.bagua);
+  if(data.channels) renderChannels(data.channels);
+  if(data.channels?.recent_logs) renderLogs(data.channels.recent_logs, 'recentLogs');
+  toast('感知完成');
+}
+
+function renderBagua(bagua) {
+  const guas = [
+    {g:'☰',n:'乾·MacroDroid',k:'☰乾_MacroDroid'},{g:'☷',n:'坤·端口',k:'☷坤_端口'},
+    {g:'☲',n:'离·VNC',k:'☲离_VNC'},{g:'☳',n:'震·WiFi',k:'☳震_WiFi'},
+    {g:'☴',n:'巽·宏',k:'☴巽_宏'},{g:'☵',n:'坎·日志',k:'☵坎_日志'},
+    {g:'☶',n:'艮·USB',k:'☶艮_USB'},{g:'☱',n:'兑·命令',k:'☱兑_命令'},
+  ];
+  document.getElementById('baguaGrid').innerHTML = guas.map(x => {
+    const v = bagua[x.k]||'';
+    const ok = v.includes('✅');
+    return `<div class="bagua-card" style="border-color:${ok?'var(--green)':'var(--border)'}"><div class="gua">${x.g}</div><div class="name">${x.n}</div><div class="val" style="color:${ok?'var(--green)':'var(--yellow)'}; font-size:11px">${v}</div></div>`;
+  }).join('') + `<div class="bagua-card" style="grid-column:span 4;border-color:var(--purple)"><div class="gua">☯</div><div class="name">综合评分</div><div class="val" style="color:var(--purple);font-size:20px">${bagua['综合评分']||'--'}</div></div>`;
+}
+
+function renderChannels(ch) {
+  const cards = [];
+  if(ch.macrodroid_http) cards.push({t:'MacroDroid HTTP',v:ch.macrodroid_http.alive?'✅ 在线':'❌ 离线',s:`:8080 | ${ch.macrodroid_http.endpoints?.join(', ')||''}`});
+  if(ch.tcp_ports) cards.push({t:'TCP端口',v:`${ch.tcp_ports.open?.length||0}个开放`,s:ch.tcp_ports.open?.join(', ')||'无'});
+  if(ch.vnc) cards.push({t:'VNC',v:ch.vnc.available?'✅ 可用':'❌ 未启动',s:ch.vnc.hint||ch.vnc.banner||''});
+  if(ch.usb) cards.push({t:'USB MTP',v:'✅ 已连接',s:`VID:${ch.usb.vid} PID:${ch.usb.pid}`});
+  cards.push({t:'可用命令',v:`${ch.commands?.length||0}个`,s:ch.commands?.join(', ')||''});
+  document.getElementById('channelCards').innerHTML = cards.map(c => `<div class="card"><h3>${c.t}</h3><div class="val">${c.v}</div><div class="sub">${c.s}</div></div>`).join('');
+}
+
+function renderLogs(logs, containerId) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = logs.map(l => {
+    const ts = l.text?.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/)?.[0]||'';
+    const msg = ts ? l.text.substring(ts.length+3) : l.text;
+    return `<div class="log-line"><span class="ts">${ts}</span><span class="msg" style="color:${l.color||'var(--text)'}">${msg}</span></div>`;
+  }).join('');
+}
+
+async function loadOverview() {
+  const apps = await api('/api/apps');
+  const dev = await api('/api/device');
+  if(!apps.error) loadApps(apps);
+  if(!dev.error) loadDevice(dev);
+  await fullSense();
+  loadCommands();
+}
+
+function loadCommands() {
+  const cmds = ['open_wechat','open_alipay','open_taobao','open_doubao','open_amap','open_mijia','mute','vibrate'];
+  document.getElementById('cmdGrid').innerHTML = cmds.map(c => `<button class="btn" onclick="sendCmd('${c}')">${c.replace('open_','📱 ').replace('mute','🔇 静音').replace('vibrate','📳 振动')}</button>`).join('');
+}
+
+async function sendCmd(cmd) {
+  toast(`发送: ${cmd}`);
+  const r = await api(`/api/cmd?cmd=${cmd}`);
+  const el = document.getElementById('cmdResponse');
+  el.innerHTML = `<div class="log-line" style="color:var(--green)">${new Date().toLocaleTimeString()} → ${cmd}: ${JSON.stringify(r)}</div>` + el.innerHTML;
+}
+
+function sendCustomCmd() {
+  const cmd = document.getElementById('customCmd').value.trim();
+  if(cmd) { sendCmd(cmd); document.getElementById('customCmd').value=''; }
+}
+
+async function loadLogs(n) {
+  toast(`加载${n}条日志...`);
+  const logs = await api(`/api/macrodroid/logs?n=${n}`);
+  if(Array.isArray(logs)) renderLogs(logs, 'fullLogs');
+}
+
+function loadApps(apps) {
+  document.getElementById('appsGrid').innerHTML = Object.entries(apps).map(([cat,list]) =>
+    `<div class="card"><h3>${cat}</h3>${list.map(a=>`<div style="padding:2px 0;font-size:13px">${a}</div>`).join('')}</div>`
+  ).join('');
+}
+
+function loadDevice(dev) {
+  document.getElementById('deviceGrid').innerHTML = Object.entries(dev).map(([k,v]) =>
+    `<div class="card"><h3>${k}</h3><div class="val" style="font-size:14px">${v}</div></div>`
+  ).join('');
+}
+
+async function loadWifi() {
+  toast('加载WiFi扫描...');
+  const scans = await api('/api/macrodroid/wifi');
+  if(Array.isArray(scans)) {
+    document.getElementById('wifiList').innerHTML = scans.map(s =>
+      `<div class="card" style="margin-bottom:8px"><h3>${s.timestamp}</h3>${s.networks?.map(n=>`<div style="padding:2px 0;font-size:13px"><span class="tag blue">${n.ssid}</span> <span style="color:var(--dim)">${n.bssid}</span></div>`).join('')||''}</div>`
+    ).join('');
+  }
+}
+
+async function loadBreakthrough() {
+  const data = await api('/api/breakthrough');
+  if(data.paths) {
+    document.getElementById('breakthroughList').innerHTML = data.paths.map(p => {
+      const ok = p.status?.toString().includes('✅') || p.difficulty?.includes('已完成');
+      return `<div class="card" style="margin-bottom:8px;border-color:${ok?'var(--green)':'var(--border)'}"><h3>路径${p.id}: ${p.name}</h3><div class="val" style="font-size:14px">${ok?'✅':'⏳'} ${p.difficulty}</div><div class="sub">${typeof p.status==='string'?p.status:JSON.stringify(p.status)}</div>${p.code?`<div style="margin-top:6px;font-family:monospace;color:var(--yellow)">${p.code}</div>`:''}</div>`;
+    }).join('') + (data.adb_unlock_hint ? `<div class="card" style="border-color:var(--yellow)"><h3>ADB解锁提示</h3><div class="sub">${data.adb_unlock_hint}</div></div>` : '');
+  }
+}
+
+// 初始化
+document.addEventListener('DOMContentLoaded', async () => {
+  await refreshAll();
+  loadBreakthrough();
+  setInterval(async () => {
+    _status = await api('/api/status');
+    document.getElementById('statusDot').className = 'dot ' + (_status.macrodroid ? 'on' : 'off');
+  }, 30000);
+});
+</script>
+</body>
+</html>

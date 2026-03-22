@@ -1,0 +1,72 @@
+[
+  {
+    "test": "T01 VNC connect",
+    "pass": true,
+    "detail": "VP99Watch(192.168.31.41:5900, connected, 336x401)"
+  },
+  {
+    "test": "T02 screenshot",
+    "pass": true,
+    "detail": "<PIL.Image.Image image mode=RGB size=336x401 at 0x1D2A79BFE30>"
+  },
+  {
+    "test": "T03 home key",
+    "pass": true,
+    "detail": "True"
+  },
+  {
+    "test": "T04 home verify",
+    "pass": true,
+    "detail": "<PIL.Image.Image image mode=RGB size=336x401 at 0x1D2A93FC230>"
+  },
+  {
+    "test": "T05 tap settings",
+    "pass": true,
+    "detail": "True"
+  },
+  {
+    "test": "T06 settings verify",
+    "pass": true,
+    "detail": "<PIL.Image.Image image mode=RGB size=336x401 at 0x1D2A79BF830>"
+  },
+  {
+    "test": "T07 swipe up",
+    "pass": true,
+    "detail": "True"
+  },
+  {
+    "test": "T08 swipe down",
+    "pass": true,
+    "detail": "True"
+  },
+  {
+    "test": "T09 home return",
+    "pass": true,
+    "detail": "True"
+  },
+  {
+    "test": "T10 HTTP 8080",
+    "pass": true,
+    "detail": "200"
+  },
+  {
+    "test": "T11 HTTP /{ha}",
+    "pass": true,
+    "detail": "b'\\xe5\\x91\\xbd\\xe4\\xbb\\xa4\\xe5\\xb7\\xb2\\xe6\\x8e\\xa5\\xe6\\x94\\xb6'"
+  },
+  {
+    "test": "T12 systemlog size",
+    "pass": true,
+    "detail": "1363015"
+  },
+  {
+    "test": "T13 watch status",
+    "pass": true,
+    "detail": "{'connected': True, 'ip': '192.168.31.41', 'vnc_port': 5900, 'screen': '336x401', 'name': 'VP99', 'd"
+  },
+  {
+    "test": "T14 senses",
+    "pass": true,
+    "detail": "{'vision': '336x401 screen captured', 'touch': 'VNC tap/swipe available', 'hearing': 'microphone via"
+  }
+]

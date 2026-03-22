@@ -1,0 +1,224 @@
+{
+  "分区功能": [
+    {
+      "title": "镜像快速管理",
+      "summary": "Rec/Boot备份与恢复",
+      "key": "flashImage"
+    },
+    {
+      "title": "镜像分区管理",
+      "summary": "备份与刷入设备分区",
+      "key": "partitionManage"
+    },
+    {
+      "title": "分区防篡改",
+      "summary": "通过破坏分区表映射避免分区被其他模块/软件修改",
+      "key": "partitionLock"
+    }
+  ],
+  "重置偏好设置（免刷机）": [
+    {
+      "title": "重置偏好设置(免刷机)",
+      "summary": "还原应用权限设置，还原已卸载已冻结已隐藏等软件，还原分辨率沉浸等设置，还原出厂设置",
+      "key": "factorySettingFromShell"
+    },
+    {
+      "title": "重置偏好设置(卡刷包)",
+      "summary": "还原应用权限设置，还原已卸载已冻结已隐藏等软件，还原分辨率沉浸等设置，还原出厂设置",
+      "key": "factorySettingFromRecovery",
+      "extra": "还原应用权限设置（授权）=https://wwgh.lanzouw.com/iyvOadxo4ti\n还原应用状态设置（如冻结）=https://wwgh.lanzouw.com/iswiLdxo4ji\n还原系统偏好设置（如分辨率）=https://wwgh.lanzouw.com/i7atadxo57c\n尝试清除模块缓存（乱刷模块导致）=https://wwgh.lanzouw.com/imVrbdxo41a"
+    }
+  ],
+  "资源整理": [
+    {
+      "title": "Magisk(稳定版)历史版",
+      "data": "https://github.com/topjohnwu/Magisk/releases"
+    },
+    {
+      "title": "Magisk(Delta)历史版",
+      "data": "https://github.com/HuskyDG/magisk-files/releases"
+    },
+    {
+      "title": "Twrp在线下载",
+      "summary": "第三方rec，TWRP官网在线下载",
+      "key": "twrpDownloadFromOnLine"
+    },
+    {
+      "title": "第三方Rec-TWRP官网",
+      "data": "https://twrp.me/Devices/"
+    },
+    {
+      "title": "第三方Rec-橙狐",
+      "summary": "请根据设备代号下载，设备代号在关于设备里",
+      "data": "https://orangefox.download/zh-CN"
+    },
+    {
+      "title": "OpenGapps",
+      "data": "http://opengapps.org/"
+    }
+  ],
+  "其它服务": [
+    {
+      "title": "【查询】",
+      "summary": " IP 天气 快递汇率邮编区号 号码归属地身份证号码",
+      "data": "http://m.ip138.com/mobile.html"
+    }
+  ],
+  "MIUI资源": [
+    {
+      "title": "下载小米ROM",
+      "summary": "由小米发布的任何固件，您可以轻松找到",
+      "data": "https://xiaomirom.com"
+    },
+    {
+      "title": "历史包集合下载",
+      "summary": "（中国普通版/国际版/Rec）",
+      "data": "https://roms.miuier.com"
+    },
+    {
+      "title": "国际版",
+      "data": "http://en.miui.com/download-240.html"
+    },
+    {
+      "title": "波兰版",
+      "data": "https://miuipolska.pl/download"
+    }
+  ],
+  "Flyme资源": [
+    {
+      "title": "国内版",
+      "data": "https://www.flyme.cn/firmware.html"
+    },
+    {
+      "title": "国际版",
+      "data": "http://flymeos.com/firmware.html"
+    }
+  ],
+  "其它类ROM": [
+    {
+      "title": "Nubia",
+      "data": "http://ui.nubia.cn/rom"
+    },
+    {
+      "title": "360 OS",
+      "data": "http://bbs.360.cn/forum.php?mod=romproduct"
+    },
+    {
+      "title": "乐视",
+      "data": "http://bug.le.com/cn/download/phone"
+    },
+    {
+      "title": "OPPO",
+      "summary": "Color OS",
+      "data": "https://www.coloros.com/rom"
+    },
+    {
+      "title": "Vivo",
+      "summary": "Funtouch OS",
+      "data": "https://www.vivo.com/upgrade/index"
+    },
+    {
+      "title": "三星官改",
+      "summary": "番茄",
+      "data": "http://rom.tomatolei.com/"
+    },
+    {
+      "title": "极光ROM",
+      "data": "https://m.weibo.cn/u/5272025033"
+    },
+    {
+      "title": "奇兔",
+      "data": "http://m.rom.7to.cn/"
+    },
+    {
+      "title": "吴大",
+      "data": "http://wuxianlin.com/"
+    }
+  ],
+  "原生类ROM，部分弃更,部分下载需要梯子": [
+    {
+      "title": "Lineage OS",
+      "data": "https://download.lineageos.org"
+    },
+    {
+      "title": "AICP OS",
+      "data": "https://dwnld.aicp-rom.com/"
+    },
+    {
+      "title": "AOKP OS",
+      "data": "http://aokp.co/devices/#_motz_"
+    },
+    {
+      "title": "Atomic OS",
+      "data": "https://sourceforge.net/projects/teamdarkness/files/Atomic-OS/"
+    },
+    {
+      "title": "Carbonrom ROM",
+      "data": "https://get.carbonrom.org/"
+    },
+    {
+      "title": "Cardinal ROM",
+      "data": "https://sourceforge.net/projects/cardinal-aosp/files/"
+    },
+    {
+      "title": "crDroid",
+      "data": "https://crdroid.net/dl.php"
+    },
+    {
+      "title": "Cosmic OS",
+      "data": "https://cosmic-os.github.io/devices.html"
+    },
+    {
+      "title": "dot OS",
+      "data": "https://www.droidontime.com/"
+    },
+    {
+      "title": "DarkNess OS",
+      "data": "https://sourceforge.net/projects/teamdarkness/files"
+    },
+    {
+      "title": "魔趣(Mokee) ROM",
+      "data": "https://sourceforge.net/projects/mokee/files"
+    },
+    {
+      "title": "Nitrogen OS",
+      "data": "https://sourceforge.net/projects/nitrogen-project/files"
+    },
+    {
+      "title": "Pixel Experience",
+      "data": "https://download.pixelexperience.org/"
+    },
+    {
+      "title": "Slim OS",
+      "data": "https://slimroms.org"
+    }
+  ],
+  "交流论坛": [
+    {
+      "title": "小米",
+      "data": "https://www.xiaomi.cn/"
+    },
+    {
+      "title": "魅族",
+      "data": "https://mf.meizu.cn/#/"
+    },
+    {
+      "title": "一加",
+      "data": "http://www.oneplusbbs.com/"
+    },
+    {
+      "title": "XDA",
+      "data": "https://www.xda-developers.com/"
+    },
+    {
+      "title": "TWRP",
+      "summary": "TWRP官网地址",
+      "data": "https://twrp.me/Devices/"
+    },
+    {
+      "title": "Magisk",
+      "summary": "Xda交流专区",
+      "data": "https://forum.xda-developers.com/apps/magisk"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>VP99 ADB Unlock</title>
+<style>
+body{background:#111;color:#eee;font-family:sans-serif;padding:10px;font-size:16px}
+a{display:block;background:#1a73e8;color:#fff;padding:14px;margin:8px 0;border-radius:8px;text-decoration:none;text-align:center;font-size:15px}
+a:active{background:#0d47a1}
+h2{color:#ffd740;font-size:18px;margin:12px 0 6px}
+.warn{color:#ff5252;font-size:13px}
+</style>
+</head>
+<body>
+<h1>⌚ VP99 ADB解锁</h1>
+<p class="warn">点击下面的链接尝试打开隐藏设置</p>
+
+<h2>🔧 直接打开开发者选项</h2>
+<a href="intent:#Intent;action=android.settings.APPLICATION_DEVELOPMENT_SETTINGS;end">开发者选项 (Intent)</a>
+<a href="intent:#Intent;component=com.android.settings/.DevelopmentSettingsDashboardActivity;end">开发者选项 (Component)</a>
+<a href="intent:#Intent;component=com.android.settings/.Settings$DevelopmentSettingsDashboardActivity;end">开发者选项 (Settings$)</a>
+
+<h2>📱 系统设置页面</h2>
+<a href="intent:#Intent;action=android.settings.SETTINGS;end">主设置页</a>
+<a href="intent:#Intent;action=android.settings.APPLICATION_SETTINGS;end">应用设置</a>
+<a href="intent:#Intent;action=android.settings.SECURITY_SETTINGS;end">安全设置</a>
+<a href="intent:#Intent;action=android.settings.DEVICE_INFO_SETTINGS;end">关于手表</a>
+
+<h2>🔌 展锐工程模式</h2>
+<a href="intent:#Intent;component=com.sprd.engineermode/.EngineerModeActivity;end">展锐工程模式</a>
+<a href="intent:#Intent;component=com.sprd.engineermode/.telephony.TelephonyFragment;end">展锐电话工程</a>
+<a href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=com.sprd.engineermode/.EngineerModeActivity;end">展锐工程(Launcher)</a>
+
+<h2>🔐 USB调试相关</h2>
+<a href="intent:#Intent;action=android.settings.USB_SETTINGS;end">USB设置</a>
+<a href="intent:#Intent;action=android.settings.WIRELESS_SETTINGS;end">无线设置</a>
+<a href="intent:#Intent;action=com.android.settings.APPLICATION_DEVELOPMENT_SETTINGS;end">旧版开发者</a>
+
+<h2>📲 活动管理器</h2>
+<a href="intent:#Intent;component=com.android.settings/.Settings;end">设置主页</a>
+<a href="intent:#Intent;component=com.android.settings/.SubSettings;end">子设置</a>
+
+<p style="margin-top:20px;color:#888;font-size:12px">
+提示：如果浏览器提示"未找到应用"，说明该Activity在此固件中不存在。<br>
+尝试所有链接，找到能打开的那个。
+</p>
+</body>
+</html>

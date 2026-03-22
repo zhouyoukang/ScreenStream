@@ -1,0 +1,277 @@
+{
+  "entries": [
+    {
+      "name": "AndroidManifest.xml",
+      "size": 8416
+    },
+    {
+      "name": "META-INF/CERT.RSA",
+      "size": 1099
+    },
+    {
+      "name": "META-INF/CERT.SF",
+      "size": 6747
+    },
+    {
+      "name": "META-INF/MANIFEST.MF",
+      "size": 6685
+    },
+    {
+      "name": "classes.dex",
+      "size": 361100
+    },
+    {
+      "name": "lib/arm64-v8a/libyuv-decoder.so",
+      "size": 9920
+    },
+    {
+      "name": "lib/armeabi-v7a/libyuv-decoder.so",
+      "size": 13904
+    },
+    {
+      "name": "lib/x86/libyuv-decoder.so",
+      "size": 5516
+    },
+    {
+      "name": "lib/x86_64/libyuv-decoder.so",
+      "size": 10192
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/acceleration.png",
+      "size": 1721
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/android_p3.png",
+      "size": 5259
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/barchart.png",
+      "size": 655
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/baseband.png",
+      "size": 2661
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/battery.png",
+      "size": 536
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/bit10.png",
+      "size": 78627
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/bluetooth.png",
+      "size": 2845
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/camera.png",
+      "size": 4162
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/charge.png",
+      "size": 1528
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/chip.png",
+      "size": 1529
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/failure.png",
+      "size": 1329
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/fingerprint.png",
+      "size": 2932
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/flash.png",
+      "size": 2134
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/gps.png",
+      "size": 1683
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/gravity.png",
+      "size": 1476
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/gyroscope.png",
+      "size": 3505
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/haptic.png",
+      "size": 817
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/icon.png",
+      "size": 9260
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/infrared.png",
+      "size": 3129
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/light.png",
+      "size": 1424
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/magnet.png",
+      "size": 1436
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/nfc.png",
+      "size": 738
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/others.png",
+      "size": 897
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/phone.png",
+      "size": 1048
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/platform.png",
+      "size": 1554
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/pressure.png",
+      "size": 2846
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/proximity.png",
+      "size": 2501
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/radio.png",
+      "size": 1531
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/ram.png",
+      "size": 429
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/screen.png",
+      "size": 1377
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/setting.png",
+      "size": 1399
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/sound.png",
+      "size": 3372
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/steps.png",
+      "size": 2689
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/success.png",
+      "size": 1360
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/touchscreen.png",
+      "size": 1862
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/wifi.png",
+      "size": 1628
+    },
+    {
+      "name": "res/drawable-xhdpi-v4/x.png",
+      "size": 1191
+    },
+    {
+      "name": "res/drawable/reset.xml",
+      "size": 804
+    },
+    {
+      "name": "res/layout-v22/main_list_item.xml",
+      "size": 2264
+    },
+    {
+      "name": "res/layout/activity_bluetooth.xml",
+      "size": 2540
+    },
+    {
+      "name": "res/layout/activity_camera.xml",
+      "size": 1628
+    },
+    {
+      "name": "res/layout/activity_chart.xml",
+      "size": 560
+    },
+    {
+      "name": "res/layout/activity_fm.xml",
+      "size": 1968
+    },
+    {
+      "name": "res/layout/activity_fullscreen.xml",
+      "size": 724
+    },
+    {
+      "name": "res/layout/activity_haptic.xml",
+      "size": 2292
+    },
+    {
+      "name": "res/layout/activity_infrared.xml",
+      "size": 1968
+    },
+    {
+      "name": "res/layout/activity_location.xml",
+      "size": 1992
+    },
+    {
+      "name": "res/layout/activity_main.xml",
+      "size": 512
+    },
+    {
+      "name": "res/layout/activity_nfc.xml",
+      "size": 800
+    },
+    {
+      "name": "res/layout/activity_sensor.xml",
+      "size": 2824
+    },
+    {
+      "name": "res/layout/activity_test.xml",
+      "size": 1880
+    },
+    {
+      "name": "res/layout/main_list_item.xml",
+      "size": 2164
+    },
+    {
+      "name": "res/menu/chart.xml",
+      "size": 412
+    },
+    {
+      "name": "res/menu/haptic.xml",
+      "size": 412
+    },
+    {
+      "name": "res/menu/main.xml",
+      "size": 840
+    },
+    {
+      "name": "res/raw/beep.wav",
+      "size": 618
+    },
+    {
+      "name": "res/raw/channels.mp3",
+      "size": 20522
+    },
+    {
+      "name": "res/xml/preferences.xml",
+      "size": 2756
+    },
+    {
+      "name": "resources.arsc",
+      "size": 76228
+    }
+  ],
+  "total": 68
+}

@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-03-08T13:46:33.801255",
+  "status": {
+    "connected": true,
+    "ip": "192.168.31.41",
+    "vnc_port": 5900,
+    "screen": "336x401",
+    "name": "VP99",
+    "device": "VP99",
+    "android": "8.1",
+    "ram": "3GB",
+    "cpu": "4-core Unisoc",
+    "imei": "860123401266076",
+    "serial": "10109530162925",
+    "firmware": "K15_V11B_DWQ_VP99_EN_ZX_HSC_4.4V700_20241127"
+  },
+  "senses": {
+    "vision": "336x401 screen captured",
+    "touch": "VNC tap/swipe available",
+    "hearing": "microphone via camera app (manual)",
+    "smell": "WiFi: 192.168.31.41, BT: 85:78:11:18:42:22",
+    "taste": "{'connected': True, 'ip': '192.168.31.41', 'vnc_port': 5900, 'screen': '336x401', 'name': 'VP99', 'device': 'VP99', 'android': '8.1', 'ram': '3GB', 'cpu': '4-core Unisoc', 'imei': '860123401266076', 'serial': '10109530162925', 'firmware': 'K15_V11B_DWQ_VP99_EN_ZX_HSC_4.4V700_20241127'}"
+  },
+  "integration": {
+    "watch": {
+      "ip": "192.168.31.41",
+      "vnc": "192.168.31.41:5900",
+      "control": "VNC + MacroDroid HTTP",
+      "capabilities": [
+        "screen_capture",
+        "tap",
+        "swipe",
+        "key_input",
+        "text_input",
+        "navigation",
+        "app_launch",
+        "heart_rate_view",
+        "step_count_view",
+        "gps_view",
+        "camera_capture",
+        "phone_call",
+        "sms"
+      ]
+    },
+    "phone_bridge": {
+      "module": "tools/phone-fleet/phone_lib.py",
+      "devices": [
+        "OnePlus NE2210:8084",
+        "OPPO PEAM00:8084"
+      ],
+      "relay": "watch BLE ↔ phone ↔ PC"
+    },
+    "smart_home": {
+      "module": "100-智能家居_SmartHome/",
+      "gateway": "port 8900",
+      "devices": "HA/涂鸦/美的/eWeLink",
+      "watch_role": "遥控器 + 传感器源(心率/位置)"
+    },
+    "ar_glasses": {
+      "module": "雷鸟v3开发/",
+      "device": "RayNeo XRGF50",
+      "relay": "watch ↔ phone ↔ glasses 三联道"
+    },
+    "desktop_cast": {
+      "module": "电脑公网投屏手机/",
+      "role": "手表作为PC投屏的迷你查看器"
+    }
+  }
+}
