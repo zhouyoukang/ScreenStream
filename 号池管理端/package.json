@@ -1,0 +1,138 @@
+{
+  "name": "pool-admin",
+  "publisher": "zhouyoukang",
+  "displayName": "号池管理端",
+  "description": "道之防·公网号池统管 — LAN-only管理·分知加密·热部署·多池统管·反逆向",
+  "version": "1.0.0",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./src/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "pool-admin",
+          "title": "号池管理端",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "pool-admin": [
+        {
+          "id": "pool-admin.dashboard",
+          "name": "管理面板",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "poolAdmin.overview",
+        "title": "全局总览",
+        "category": "号池管理端"
+      },
+      {
+        "command": "poolAdmin.addPool",
+        "title": "添加云池",
+        "category": "号池管理端"
+      },
+      {
+        "command": "poolAdmin.syncAll",
+        "title": "全量同步",
+        "category": "号池管理端"
+      },
+      {
+        "command": "poolAdmin.enrollDevice",
+        "title": "注册设备",
+        "category": "号池管理端"
+      },
+      {
+        "command": "poolAdmin.revokeDevice",
+        "title": "撤销设备",
+        "category": "号池管理端"
+      },
+      {
+        "command": "poolAdmin.auditLog",
+        "title": "安全审计日志",
+        "category": "号池管理端"
+      },
+      {
+        "command": "poolAdmin.hotReload",
+        "title": "热重载 (Hot Reload)",
+        "category": "号池管理端"
+      },
+      {
+        "command": "poolAdmin.hotStatus",
+        "title": "热重载状态",
+        "category": "号池管理端"
+      },
+      {
+        "command": "poolAdmin.openDashboard",
+        "title": "打开管理面板",
+        "category": "号池管理端"
+      },
+      {
+        "command": "poolAdmin.lanStatus",
+        "title": "LAN安全状态",
+        "category": "号池管理端"
+      }
+    ],
+    "configuration": {
+      "title": "号池管理端",
+      "properties": {
+        "poolAdmin.trustedSubnets": {
+          "type": "array",
+          "default": ["192.168.0.0/16", "10.0.0.0/8"],
+          "items": { "type": "string" },
+          "description": "受信任的LAN子网CIDR列表 (仅这些子网内的设备可管理)"
+        },
+        "poolAdmin.hubPort": {
+          "type": "number",
+          "default": 19881,
+          "description": "管理Hub端口 (仅绑定到LAN接口)"
+        },
+        "poolAdmin.sessionTTL": {
+          "type": "number",
+          "default": 900,
+          "description": "会话过期时间(秒), 默认15分钟"
+        },
+        "poolAdmin.maxDevices": {
+          "type": "number",
+          "default": 5,
+          "description": "最大注册设备数"
+        },
+        "poolAdmin.autoSync": {
+          "type": "boolean",
+          "default": true,
+          "description": "自动定时同步所有云池状态"
+        },
+        "poolAdmin.syncInterval": {
+          "type": "number",
+          "default": 300,
+          "description": "自动同步间隔(秒), 默认5分钟"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "package": "vsce package --no-dependencies --allow-missing-repository --skip-license",
+    "install-ext": "vsce package --no-dependencies --allow-missing-repository --skip-license -o pool-admin.vsix && \"D:\\Windsurf\\bin\\windsurf.cmd\" --install-extension pool-admin.vsix --force",
+    "hot": "node scripts/hot-deploy.js",
+    "hot:build": "node scripts/hot-deploy.js --build",
+    "hot:signal": "node scripts/hot-deploy.js --signal",
+    "hot:inject": "node scripts/hot-deploy.js --inject",
+    "hot:watch": "node scripts/hot-deploy.js --watch",
+    "fortress": "node scripts/fortress.js",
+    "fortress:dev": "node scripts/fortress.js --level dev",
+    "fortress:max": "node scripts/fortress.js --level max"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.2.0",
+    "javascript-obfuscator": "^4.1.1"
+  }
+}
