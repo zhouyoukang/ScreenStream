@@ -1,7 +1,7 @@
 # 一生二 · 状态面板（STATUS）
 
 > 道生一，一生二，二生三，三生万物。
-> 最后更新：2026-03-24（三电脑服务器全面修复6项 / MCP配置迁移C:\temp→.windsurf权威路径 / **上次：号池管理端v1.4.0 14/14+6/6 E2E PASS**）
+> 最后更新：2026-03-24（**ScreenStream 128/128全通 · 损之又损精简280行 · input模块Compose剥离 · 构建提速52%** / 上次：号池管理端v1.4.0 E2E PASS）
 ## 0) 权威入口
 
 | 文件 | 用途 |
@@ -52,9 +52,9 @@
 
 - 端口：Gateway:8080 MJPEG:8081 RTSP:8082 WebRTC:8083 Input:8084
 - 安全加固完成：XSS/路径穿越/资源泄漏/PIN全修复
-- **E2E四路径 125/128(98%)** — WiFi直连/本地网关/FRP直连三路100%
-- 修复: searchFiles depth8→4+5s超时 / windowinfo 2000节点上限 / getDeviceInfo exec 2s超时 / execShell 10s超时 / InputHttpServer Ktor 3.x API重写
-- ADB冲突陷阱: `adb -s 54ea19ff forward --remove tcp:28084` 否则网关路径被劫持
+- **E2E四路径 128/128(100%)** — Nginx/FRP/ADB直连/网关 全通
+- 损之又损: phone_gateway.py 620→381行(-39%) / input模块Compose剥离 / 构建21s→10s
+- frpc localIP: 192.168.31.40→127.0.0.1(ADB forward自适应，不依赖WiFi子网)
 
 ### 道生一 DaoOne v2.0（:8880）
 
