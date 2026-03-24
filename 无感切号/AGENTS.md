@@ -1,4 +1,4 @@
-﻿# 无感切号 · 万法归宗 v3.11.0
+﻿# 无感切号 · 万法归宗 v5.1
 
 ## 身份
 
@@ -38,7 +38,7 @@ VSIX(6源文件15命令5配置)+Hub:9870+透明代理:19443+管理端中继:1988
 7. 云端隔离: `cloudPool.js`只连`127.0.0.1:19881`，永不直连公网。路径混淆，无法推断业务。
 8. 透明代理v3.0: refreshToken每45min续命 + F30实时配额扣减 + 自适应桶校准
 9. 代理自动启动: extension.js activate → 检测:19443 → 离线则spawn → 降级到WAM
-10. 热重载v4.0: 双写归一(hot dir即时+install dir持久) · `npm run hot`=唯一命令 · 永不需要重载窗口
+10. 热重载v5.1: 双写归一(hot dir即时+install dir持久) + **--inject自动激活**(dual-write+signal+autoHeal) + 自愈到底。Cascade编辑后只需`npm run hot`或`--inject`，无需任何手动操作
 11. v13.0切后验证: _seamlessSwitch切后立即验证额度(缓存+API双检) → 耗尽则标记+紧急重轮转 · round-robin跳过已知耗尽账号
 12. v14.0 Opus防护升级: 服务端窗口缩至~10min(实测9m22s) → ALL_OPUS预算=1条即切 + 窗口12min + 冷却720s + 响应式切换budget guard联动 + 模型感知选号(findBestForModel) + 切后Opus model验证
 16. v16.0 自动重试+热链自愈: rate limit→自动retry(1.2s) + L5探测3s阈值 + hot-deploy语法防护 + IPC管道自愈
@@ -50,6 +50,8 @@ VSIX(6源文件15命令5配置)+Hub:9870+透明代理:19443+管理端中继:1988
 22. v3.10.0 道法自然·根因修复: 5处根因修复 — RC1拦截器升级为切号触发器(1s检测→切号+重试,不再仅清UI) + RC2 FAST_KEYS增加3个配额键(chatQuotaExceeded/windsurf.quotaExceeded/rateLimitExceeded) + RC3 _classifyRateLimit识别gRPC FAILED_PRECONDITION(code 9日配额耗尽) + RC4低额自适应加速(quota<20%自动boost 45s→8s轮询) + RC5 RATE_LIMIT_PATTERNS增加3个模式(Failed precondition/quota exhausted/daily usage quota)
 22.1 v3.10.1 云端修复·checkHealth后刷新面板: 4处根因全修 — [fix1] setPoolSource切换云端模式时checkHealth()是fire-and-forget导致面板渲染时_online仍为false → .then(()=>refreshPanel()) [fix2] 启动3s健康检查完成后补刷面板 [fix3] _doRefreshPool点刷新时重检云端 [fix3b] fix3的云端检查被放在early-return之后(纯云模式无本地账号时跳过) → 移至early-return之前+加_refreshPanel() | E2E测试: 72/72通过(_e2e_wam_test.js)
 23. v3.11.0 Opus 4.6底层解构·根因修复: 新实测T1M窗口22m13s(1333s) | RC-A QUOTA_FAST_KEYS增加windsurf.messageRateLimited/cascade.rateLimited/windsurf.rateLimited(per-model限流也触发切号+重试,原仅清UI) | RC-B 透明代理WINDOW_MS 12min→25min(覆盖22m13s实测值+余量) | RC-C 代理自适应校准从3次降至1次(速学首次即生效)
+24. ws_repatch.py v4.0 道法自然·GBe全静默根因修复(2026-03-24): 根因=Patch3仅替换userErrorMessage但errorCodePrefix("Permission denied:")和errorParts从未清除 → 修复: 限流时errorCodePrefix/userErrorMessage/errorParts三字段全部置空 + Patch 8/9/10三个手术级升级补丁(处理已有旧版GBe的机器) | 效果: 用户在UI层完全零感知(无感切号于无为·无不为于后台)
+25. v5.0万法归宗全链路零重启(2026-03-24): **RC-1** ws_repatch.py Patch 7: _rl regex扩展匹配`failed.precondition|quota.exhaust|daily.usage.quota`，消除日配额耗尽错误显示 | **RC-2** extension.js _scheduleAutoRetry: windsurf.cascade.resend不存在→换为windsurf.sendTextToChat(“继续”) | **RC-3** watchdog v4.0: 新增quota exhausted检测 + 写patch_info.json到~/.wam-hot供择展发现补丁脚本 | **hot-deploy v5.0** --inject升级: 双写+语法检查+信号+autoHeal全自动 | **extension v5.1**: activate时异步检测补丁，缺少则exec python ws_repatch.py + 弹出「立即重载」通知 | 万法归宗.cmd v5.0: [1]一键部署=workbench补丁+热部署
 
 ## 关联
 
@@ -72,5 +74,5 @@ VSIX(6源文件15命令5配置)+Hub:9870+透明代理:19443+管理端中继:1988
 - hot-deploy用PowerShell写JS时,模板字符串反引号被PowerShell吃掉 → 必须用字符串拼接替代模板字面量,或用Node.js脚本写入
 - hot-deploy失败→watcher死→Hub离线: 恢复路径=IPC管道`\\.\pipe\*-main-sock`发`{type:'restartExtensionHost'}`(4字节LE长度头+JSON)
 - keypool.json含敏感凭证(apiKey+refreshToken) → 已gitignore
-- **Hub:9870离线根因**: 若hot-dir中存在旧版extension.js(缺少某函数如`_detectCascadeTabs`)，activation抛异常被catch后继续运行但Hub/watcher均未初始化 → IPC重启无效(不重载磁盘) → 唯一解: Windsurf命令面板执行`wam.hotReload`或重载窗口(Ctrl+Shift+P → Reload Window)
+- **Hub:9870离线根因**: 若hot-dir中存在旧版extension.js(缺少某函数如`_detectCascadeTabs`)，activation抛异常被catch后继续运行但Hub/watcher均未初始化。**v5.0自愈**: autoHeal在hot-deploy后自动检测，Hub失败→20s后IPC管道发`{type:'restartExtensionHost'}`自动恢复。若仍无效: Windsurf命令面板`wam.hotReload`或Reload Window
 - **透明代理手动启动**: `→透明代理启动.cmd`或`node scripts/transparent_proxy.js serve`(需先`warmup`预热keypool)。HTTPS_PROXY必须在Windsurf启动前设置方可生效。

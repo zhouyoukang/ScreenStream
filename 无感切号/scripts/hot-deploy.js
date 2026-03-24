@@ -145,6 +145,7 @@ if (isInject) {
   autoHeal(10000).then(ok => {
     if (ok) console.log('  Hub OK. inject auto-activated. \u4e07\u6cd5\u5f52\u5b97\n');
     else console.log('  Hub no response. Try Reload Window.\n');
+    process.exit(0); // prevent fall-through to default deploy section
   });
 }
 

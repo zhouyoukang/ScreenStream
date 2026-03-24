@@ -162,6 +162,7 @@ class AccountViewProvider {
   }
 
   _removeEmpty() {
+    if (!this._am) return;
     const accounts = this._am.getAll();
     let removed = 0;
     for (let i = accounts.length - 1; i >= 0; i--) {
@@ -218,6 +219,7 @@ class AccountViewProvider {
   }
 
   _computeData() {
+    if (!this._am) return { poolSource: 'local', pool: { total: 0, available: 0, depleted: 0, rateLimited: 0, expired: 0, urgentCount: 0, soonCount: 0, preResetWasteCount: 0, sumDaily: null, sumWeekly: null, avgDaily: null, avgWeekly: null, avgEffective: null, weeklyBottleneckRatio: 0, nextReset: null, health: 0, avgCredits: null, sumCredits: null }, bar: { pct: 0, color: 'var(--ok)', line: '--', bottleneck: false }, active: { index: -1, label: '', planTag: '', quotaTag: '', resetInfo: '', expiryHtml: '' }, switchCount: 0, detailExpanded: true, cloud: { online: false }, accounts: [] };
     const accounts = this._am.getAll();
     const currentIndex = this._onAction ? this._onAction('getCurrentIndex') : -1;
     const cfg = vscode.workspace.getConfiguration('wam');

@@ -86,6 +86,9 @@ const MAX_EVENT_LOG = 200; // 最大日志条数
 let _routingMode = 'hybrid'; // 'local'=代理路由 | 'cloud'=WAM切号 | 'hybrid'=代理优先
 const PROXY_HEALTH_PORT = 19443;
 let _proxyOnline = false;
+let _proxyIntercepting = false; // 代理是否实际拦截LS流量(requests>0 OR 刚上线宽限期内)
+let _proxyOnlineSince = 0;      // 代理上线时间戳(宽限期计算)
+const PROXY_INTERCEPT_GRACE = 120000; // 2min宽限期: 刚上线可能HTTPS_PROXY刚生效,requests尚为0
 let _proxyLastCheck = 0;
 const PROXY_CHECK_INTERVAL = 15000;
 const PROXY_CHECK_BACKOFF = 300000; // 离线时5min检查一次(省240次/小时无用探测)
@@ -116,8 +119,16 @@ function _checkProxyHealth() {
       res.on('end', () => {
         try {
           const d = JSON.parse(buf);
+          const wasOnline = _proxyOnline;
           _proxyOnline = d.status === 'ok';
-        } catch { _proxyOnline = false; }
+          if (_proxyOnline && !wasOnline) _proxyOnlineSince = Date.now(); // 记录上线时刻
+          if (!_proxyOnline) { _proxyIntercepting = false; _proxyOnlineSince = 0; }
+          else {
+            // 判断是否真正拦截LS流量: requests>0 OR 在2min宽限期内(HTTPS_PROXY可能刚生效)
+            const grace = _proxyOnlineSince > 0 && (Date.now() - _proxyOnlineSince) < PROXY_INTERCEPT_GRACE;
+            _proxyIntercepting = (d.requests > 0) || grace;
+          }
+        } catch { _proxyOnline = false; _proxyIntercepting = false; _proxyOnlineSince = 0; }
         _proxyLastCheck = Date.now();
         if (_proxyOnline) { _proxySpawnAttempts = 0; _proxyOfflineCount = 0; }
         else { _proxyOfflineCount++; }
@@ -187,8 +198,9 @@ function _proxyApiForward(apiPath) {
 
 /** 当前是否由透明代理处理路由(local模式或hybrid+代理在线) */
 function _isProxyRouting() {
-  if (_routingMode === 'local') return _proxyOnline;
-  if (_routingMode === 'hybrid') return _proxyOnline;
+  // v3.11.1: 必须proxy真正拦截LS流量(requests>0 OR 宽限期内), 否则回退WAM切号+autoRetry
+  if (_routingMode === 'local') return _proxyOnline && _proxyIntercepting;
+  if (_routingMode === 'hybrid') return _proxyOnline && _proxyIntercepting;
   return false; // cloud模式不走代理
 }
 
@@ -2128,12 +2140,14 @@ function _activate(context) {
   }
 
   const cfg3 = vscode.workspace.getConfiguration("wam");
-  _poolSourceMode = cfg3.get("poolSource", "local");
+  if (!isHotRestart) {
+    _poolSourceMode = cfg3.get("poolSource", "local");
+  }
   cloudPool = new CloudPoolClient();
-  _logInfo("MODE", `号池来源: ${_poolSourceMode} | 路由: ${_routingMode}`);
+  _logInfo("MODE", `号池来源: ${_poolSourceMode} | 路由: ${_routingMode}${isHotRestart ? ' (hot-restored)' : ''}`);
 
-  // 后台云端健康检查 + 空池自动拉取(非阻塞)
-  if (_poolSourceMode !== 'local') {
+  // 后台云端健康检查 + 空池自动拉取(非阻塞) — 热重载时也检查(恢复云端状态)
+  if (_poolSourceMode !== 'local' || isHotRestart) {
     setTimeout(async () => {
       try {
         const h = await cloudPool.checkHealth();
@@ -2367,6 +2381,7 @@ async function _refreshOne(index) {
 /** Refresh all accounts with parallel batching. Optional progress callback(i, total).
  *  Concurrency=3 balances speed vs API rate limits. ~3x faster than sequential. */
 async function _refreshAll(progressFn) {
+  if (!am) return;
   const accounts = am.getAll();
   const CONCURRENCY = 3;
   let completed = 0;
@@ -2412,6 +2427,7 @@ function _startPoolEngine(context) {
 /** 号池心跳 — 每次tick检查活跃账号，必要时自动轮转
  *  v6.7: + 全池实时监控 + 响应式切换(额度变动即切) + 并发Tab感知 */
 async function _poolTick(context) {
+  if (!am) return;
   const accounts = am.getAll();
   if (accounts.length === 0) return;
 
@@ -3601,6 +3617,7 @@ async function _doPoolRotate(context, isPanic = false) {
     return;
   }
 
+  if (!am) return;
   const accounts = am.getAll();
   if (accounts.length === 0) {
     vscode.commands.executeCommand("wam.openPanel");
@@ -4098,6 +4115,7 @@ async function _doRefreshPool(context) {
     try { await cloudPool.checkHealth(); } catch {}
     _refreshPanel();
   }
+  if (!am) return;
   const accounts = am.getAll();
   if (accounts.length === 0) return;
   await _refreshAll((i, n) => {
