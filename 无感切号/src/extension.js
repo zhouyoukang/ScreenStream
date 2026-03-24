@@ -968,6 +968,10 @@ async function _discoverRetryCmd() {
   try {
     const allCmds = await vscode.commands.getCommands(true);
     const candidates = [
+      // v3.12: 已验证存在的Windsurf命令(workbench.js逆向扫描确认)
+      ...allCmds.filter(c => c === 'windsurf.sendTextToChat'),
+      ...allCmds.filter(c => c === 'windsurf.executeCascadeAction'),
+      ...allCmds.filter(c => c === 'windsurf.sendChatActionMessage'),
       // Windsurf Cascade 重试/重发命令
       ...allCmds.filter(c => /cascade/i.test(c) && /re(?:try|send|generat|submit|run)/i.test(c)),
       ...allCmds.filter(c => /windsurf/i.test(c) && /re(?:try|send|generat|submit|run)/i.test(c)),
@@ -1034,7 +1038,7 @@ function _scheduleAutoRetry(delayMs = 1500) {
       if (!cmd) {
         // 降级: 尝试直接发送空消息触发重新生成
         try {
-          await vscode.commands.executeCommand("windsurf.cascade.resend");
+          await vscode.commands.executeCommand("windsurf.sendTextToChat", "继续");
           _logInfo('RETRY', 'fallback: windsurf.cascade.resend executed');
           _autoRetrySuccessCount++;
           _autoRetryInFlight = false;
@@ -1046,15 +1050,19 @@ function _scheduleAutoRetry(delayMs = 1500) {
         return;
       }
 
-      // Step 3: 执行重试
-      _logInfo('RETRY', `v3.9.0 attempt ${attempt}/${MAX_ATTEMPTS}: executing ${cmd}`);
-      await vscode.commands.executeCommand(cmd);
+      // Step 3: 执行重试 (v3.12: sendTextToChat需传参数)
+      _logInfo('RETRY', `v3.12 attempt ${attempt}/${MAX_ATTEMPTS}: executing ${cmd}`);
+      if (cmd === 'windsurf.sendTextToChat') {
+        await vscode.commands.executeCommand(cmd, "继续");
+      } else {
+        await vscode.commands.executeCommand(cmd);
+      }
 
       // Step 4: 验证 — 2s后检查context key是否已清除
       setTimeout(async () => {
         let stillLimited = false;
         try {
-          stillLimited = await vscode.commands.executeCommand("getContext", "windsurf.messageRateLimited");
+          stillLimited = await vscode.commands.executeCommand("getContext", "windsurf.messageRateLimited") || await vscode.commands.executeCommand("getContext", "windsurf.quotaExceeded") || await vscode.commands.executeCommand("getContext", "chatQuotaExceeded");
         } catch {}
         if (stillLimited && attempt < MAX_ATTEMPTS) {
           _logWarn('RETRY', `attempt ${attempt} 重试后仍限流, 退避重试 ${BACKOFF[attempt]}ms`);
@@ -2020,6 +2028,36 @@ function _activate(context) {
       ? `无感号池引擎 v3.8.0 热重载恢复 (hot#${_G.reloadCount}, 状态已恢复, ${_sessionPool.size}sessions, ${_capacityMatrix.size}matrix)`
       : "无感号池引擎 v3.8.0 启动 (道法自然·万法归宗 · Session Pool · Capacity Matrix · 零延迟切换 · 状态不灭热重载)",
   );
+
+  // v5.0 道法自然: 自动检测+应用workbench.js补丁 (消除手动python ws_repatch.py)
+  if (!isHotRestart) {
+    setTimeout(() => {
+      try {
+        const wbPath = 'D:\\Windsurf\\resources\\app\\out\\vs\\workbench\\workbench.desktop.main.js';
+        if (fs.existsSync(wbPath)) {
+          const wb = fs.readFileSync(wbPath, 'utf8');
+          const needsBase = !wb.includes('globalThis.__wamRateLimit');
+          const needsP7 = !wb.includes('failed.precondition|quota.exhaust');
+          if (needsBase || needsP7) {
+            const reason = needsBase ? 'GBe interceptor missing' : 'Patch7 quota regex missing';
+            _logWarn('PATCH', 'workbench.js needs patching: ' + reason + ' — auto-applying...');
+            const patchScript = path.join(__dirname, '..', '..', 'Windsurf\u65e0\u9650\u989d\u5ea6', 'ws_repatch.py');
+            const { execSync } = require('child_process');
+            try {
+              execSync('python "' + patchScript + '" --force', { stdio: 'pipe', timeout: 30000 });
+              _logInfo('PATCH', 'workbench.js auto-patched successfully (Reload Window to activate)');
+            } catch (pe) {
+              _logWarn('PATCH', 'auto-patch failed: ' + (pe.message || '').slice(0, 100));
+            }
+          } else {
+            _logInfo('PATCH', 'workbench.js patches complete (incl. Patch7 quota exhausted)');
+          }
+        }
+      } catch (e) {
+        _logWarn('PATCH', 'auto-patch check error: ' + e.message);
+      }
+    }, 5000); // Delay 5s to not slow down activation
+  }
 
   // 指纹完整性
   if (!isHotRestart) {
