@@ -1,7 +1,7 @@
 # 一生二 · 状态面板（STATUS）
 
 > 道生一，一生二，二生三，三生万物。
-> 最后更新：2026-03-23（二手书97/97全通 / 无感切号96账号 / 安全中枢139凭据 / 远程桌面诊断完成 / **号池管理端v1.4.0 14/14+6/6 E2E PASS**）
+> 最后更新：2026-03-24（三电脑服务器全面修复6项 / MCP配置迁移C:\temp→.windsurf权威路径 / **上次：号池管理端v1.4.0 14/14+6/6 E2E PASS**）
 ## 0) 权威入口
 
 | 文件 | 用途 |
@@ -21,7 +21,7 @@
 | Python Hub服务 | 道生一:8880 + 卫星Hub（见下表） |
 | Rules / Skills / Workflows | 见 `.windsurf/` 目录 |
 | AGENT_GUIDE | 各项目目录（Agent按需发现） |
-| MCP Server | 8活跃(context7/github/gitee/playwright/tavily/chrome-devtools/dispatch/user-input) |
+| MCP Server | 4活跃(context7/github/playwright/tavily) + 4禁用(chrome-devtools/gitee/dispatch/user-input) · 路径：`.windsurf/` |
 
 ## 2) 核心成果
 
@@ -52,6 +52,9 @@
 
 - 端口：Gateway:8080 MJPEG:8081 RTSP:8082 WebRTC:8083 Input:8084
 - 安全加固完成：XSS/路径穿越/资源泄漏/PIN全修复
+- **E2E四路径 125/128(98%)** — WiFi直连/本地网关/FRP直连三路100%
+- 修复: searchFiles depth8→4+5s超时 / windowinfo 2000节点上限 / getDeviceInfo exec 2s超时 / execShell 10s超时 / InputHttpServer Ktor 3.x API重写
+- ADB冲突陷阱: `adb -s 54ea19ff forward --remove tcp:28084` 否则网关路径被劫持
 
 ### 道生一 DaoOne v2.0（:8880）
 

@@ -1,102 +1,72 @@
-# 手机操控库 (PhoneLib)
+# 手机操控库 · Agent公网全掌控
 
-> **独立项目** — 可由专属 Agent 独立开发，是 ScreenStream HTTP API 的 Python 客户端封装。
+## 身份
+phone_lib.py是唯一ADB/连接真理源。90+ SS HTTP API封装+认知系统Hub:8850+Agent服务总线26能力+**公网网关:28084**。
 
-## 项目边界
+## 边界
+- ✅ 本目录所有.py/.html/.cmd文件
+- 🚫 phone_lib.py的ADB自动检测链不可硬编码
 
-| 维度 | 值 |
-|------|-----|
-| **目录** | `手机操控库/` |
-| **语言** | Python 3.8+ (零外部依赖) |
-| **端口** | 无（纯客户端库） |
-| **入口** | `phone_lib.py` → `Phone` 类 |
+## 入口
+- **公网**: `https://aiotvr.xyz/input/<API路径>` (Nginx→FRP→手机WiFi)
+- 网关: `python phone_gateway.py` (:28084, 认证+自愈+多路径)
+- Hub: `python cognitive_system.py serve` (:8850, 15 API)
+- 库: `from phone_lib import Phone; p=Phone(url="https://aiotvr.xyz/input")` (公网)
+- 一键: `→公网掌控.cmd` (启动网关+手机frpc+验证)
 
-## 可修改文件
+## 公网架构 (四路径冗余 · 全通)
 
-```
-手机操控库/
-├── phone_lib.py           ← 核心库：Phone 类 (零依赖，纯 urllib)
-│                             支持远程连接/自动发现/心跳/负面状态恢复
-├── remote_setup.py        ← 远程操控一键启动（发现→连接→五感→Web UI）
-├── remote_assist.py       ← 远程家庭协助工具（交互式CLI+18个命令+8场景）
-├── five_senses.py         ← 五感批量采集（多APP UI/a11y/activity dump）
-├── parse_orders.py        ← 订单解析（淘宝/京东/当当 结构化提取）
-├── shopping_records.py    ← 购物记录汇总采集
-├── scan_book_orders.py    ← 二手书订单扫描
-├── collect_v3.py          ← UI采集 v3（深度滚动+增量）
-├── family_setup_guide.md  ← 家人端设置指南（发给家人的5分钟教程）
-├── family_phones.json     ← 家人手机配置（自动生成，--add 管理）
-├── FINDINGS.md            ← 实测发现 P1-P29 + 远程架构发现
-├── README.md              ← 项目文档
-├── .gitignore             ← 排除 xml/txt dump + 五感采集临时文件
-└── tests/
-    ├── standalone_test.py ← 36 项 L0/L1 原始 HTTP 验证
-    ├── agent_demo.py      ← 5 个多步 Agent 任务
-    ├── complex_scenarios.py ← 5 场景 43 步联动
-    └── remote_test.py     ← 远程五感端到端验证（8节）
-```
+| 路径 | 链路 | 延迟 | 依赖 | E2E |
+|------|------|------|------|------|
+| ① Nginx公网 | aiotvr.xyz/input → FRP:18084 → 台式机WiFi代理 → 手机:8084 | 50-200ms | 台式机+FRP | 29/32 |
+| ② 手机FRP直达 | 60.205.171.100:38084 → 手机frpc → 手机:8084 | 50-150ms | 手机frpc | **32/32** ✅ |
+| ③ 本地网关 | 127.0.0.1:28084 → WiFi → 手机:8084 | 1-5ms | 台式机同LAN | **32/32** ✅ |
+| ④ WiFi直达 | 192.168.31.40:8084 | 1-5ms | 同LAN | **32/32** ✅ |
 
-## 禁止修改
+## 铁律
+1. **phone_lib.py是唯一ADB真理源** — 所有文件通过它获取ADB能力
+2. OnePlus已Root → Root优先(L0 su -c)，UI自动化为降级
+3. 零硬编码：ADB路径/Serial/连接方式全自动适配
+4. **公网优先路径①** — Agent远程操控用 `https://aiotvr.xyz/input/`
+5. **去台式机依赖用路径②** — `http://60.205.171.100:38084/` 手机直达AI云
 
-- `反向控制/` — ScreenStream 后端（API 提供方）
-- `投屏链路/` — ScreenStream 前端
-- `智能家居/` — SmartHome 项目
-- `远程桌面/` — RemoteDesktop 项目
+## 关联
+| 方向 | 项目 | 说明 |
+|---|---|---|
+| 上游 | 反向控制 | 封装118+ SS HTTP API |
+| 消费 | 亲情远程/quest3 | Phone类被多项目复用 |
+| 数据 | _cognitive_data/ | 496 App统一数据库 |
+| FRP | 三电脑服务器 | frpc-desktop.toml: phone_ss/phone_input/phone_gateway |
+| 手机FRP | /data/local/tmp/frpc_aliyun/ | frpc.toml: 手机直连阿里云 |
 
-## 与其他项目的集成点
+## SS全能力矩阵 (120+端点 · 15组 · v33)
 
-| 集成 | 方向 | 说明 |
-|------|------|------|
-| ScreenStream API | 本项目→SS | Phone 类封装 SS 的 70+ HTTP API |
-| ADB forward | 运维 | `adb forward tcp:8086 tcp:8086` 建立 PC→手机通道 |
-| agent-phone-control | Skill | `.windsurf/skills/agent-phone-control/` 使用本库 |
+| 组 | 端点数 | 核心能力 | 公网验证 |
+|---|---|---|---|
+| 输入 | 13 | tap/swipe/key/text/home/back/lock | ✅ |
+| 系统 | 6 | wake/power/screenshot/splitscreen/brightness | ✅ |
+| 手势 | 4 | longpress/doubletap/scroll/pinch | ✅ |
+| APP | 15 | openapp/openurl/killapp/apps/foreground/clipboard | ✅ |
+| AI脑 | 7 | viewtree/windowinfo/findclick/findnodes/settext/screen/text | ✅ |
+| 媒体硬件 | 9 | media/findphone/vibrate/flashlight/dnd/volume/autorotate | ✅ |
+| 文件 | 12 | storage/list/read/download/search/mkdir/delete/rename/move/copy/upload | ✅ |
+| 宏 | 10+ | list/create/run/run-inline/stop/triggers | ✅ |
+| 智能家居 | 7 | status/devices/control/scenes/quick | ✅ |
+| 平台 | 5 | command/command/stream/intent/wait/notifications | ✅ |
+| Shell | 4 | shell/system/info/processes/properties | ✅ |
+| 包管理 | 2 | packages/packages/{pkg} | ✅ |
+| 元信息 | 4 | capabilities/digest/a11y/status | ✅ |
 
-> **API 变更协议**：ScreenStream Agent 修改 InputRoutes.kt 增删 API 时，
-> 应在根目录 `AGENTS.md` 的「跨项目变更日志」中记录，PhoneLib Agent 据此同步更新 Phone 类。
+## 开机自启
 
-## 独立开发流程
+- **frpc**: Magisk service.d `/data/adb/service.d/phone_agent_boot.sh`
+- **ScreenStream**: 同脚本 `am start` 启动SS→回桌面
+- **无障碍服务**: 系统级注册，开机自动恢复
 
-```powershell
-# 前置：ScreenStream 必须已部署到手机并运行
-adb devices                                    # 确认设备连接
-adb forward tcp:8084 tcp:8084                  # 端口转发
-curl -s http://127.0.0.1:8084/status           # 确认 API 可达
-
-# 开发
-python -c "from phone_lib import Phone; p=Phone(port=8084, auto_discover=False); print(p.status())"
-
-# 测试
-python tests/standalone_test.py --port 8084    # 36 项
-python tests/agent_demo.py --port 8084         # 5 项
-python tests/complex_scenarios.py --port 8084  # 5 场景
-```
-
-## 共享资源
-
-| 资源 | 冲突风险 | 协调方式 |
-|------|---------|---------|
-| ScreenStream API | 高 | 测试时会占用手机前台，与 SS Agent 部署冲突 |
-| ADB 设备 | 高 | 与 SS Agent 共享，测试时需协调 |
-| 端口 8084 | 低 | 可用 --port 参数切换 |
-
-## 架构要点
-
-- **零依赖**：纯 `urllib` + `json`，不引入 requests/httpx
-- **远程弹性**：USB/WiFi/Tailscale/公网穿透四层连接，自动发现+心跳+重试+负面状态恢复
-- **纯HTTP模式**：所有功能（含APP启动/搜索）均有HTTP替代，无ADB亦可全功能操控
-- **五感架构**：vision/hearing/touch/smell/taste，`p.senses()` 一次采集
-- **负面状态矩阵**：7种故障自动检测+恢复，支持多故障叠加按优先级链处理
-- **四层金字塔**：L0 原子 API(70%) → L1 组合(20%) → L2 LLM(8%) → L3 Agent(2%)
-- **findByText 同时搜索 text + contentDescription**，100% 成功率
-
-## 对话结束选项
-
-> 任务完成后调用 `ask_user_question`，从下表选 4 个最贴合的：
-
-| label | description |
-|-------|-------------|
-| 跑测试看结果 | 执行36项+5场景测试验证效果 |
-| 扩展操控能力 | 添加新API封装或优化现有方法 |
-| 同步上游变更 | 跟进后端新增API的封装 |
-| 跑复杂场景 | 5场景43步联动验证 |
-| 收工提交 | 记录成果 + git commit |
+## 陷阱
+- 微信等反无障碍App: observe()返回blind=true时降级ADB坐标点击
+- QQ NT数据库: SQLCipher加密，key=`wy65ioGG`，需Root提取
+- apps列表/文件搜索公网可能超时(数据量大)，本地无此问题
+- 四路径E2E: `python _e2e_supreme.py --all` → **125/128通过(98%)** 2026-03-24
+- ADB冲突陷阱: 确保 `adb -s 54ea19ff forward --remove tcp:28084` 否则网关路径被劫持
+- Nginx路径SSL握手偶发超时(网络层)，属正常范围，非代码问题

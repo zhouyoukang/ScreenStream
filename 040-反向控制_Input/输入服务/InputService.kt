@@ -1200,12 +1200,14 @@ public class InputService : AccessibilityService() {
                         if (ssid == "<unknown ssid>" || ssid.isBlank()) {
                             try {
                                 val proc = Runtime.getRuntime().exec(arrayOf("cmd", "wifi", "status"))
-                                val output = proc.inputStream.bufferedReader().readText()
-                                proc.waitFor()
-                                // Format: Wifi is connected to "SSID_NAME"
-                                val connMatch = Regex("""connected to "(.+?)"""").find(output)
-                                if (connMatch != null) {
-                                    ssid = connMatch.groupValues[1]
+                                val completed = proc.waitFor(2, java.util.concurrent.TimeUnit.SECONDS)
+                                if (completed) {
+                                    val output = proc.inputStream.bufferedReader().readText()
+                                    // Format: Wifi is connected to "SSID_NAME"
+                                    val connMatch = Regex("""connected to "(.+?)"""").find(output)
+                                    if (connMatch != null) ssid = connMatch.groupValues[1]
+                                } else {
+                                    proc.destroyForcibly()
                                 }
                             } catch (_: Exception) {}
                         }
@@ -1930,11 +1932,12 @@ public class InputService : AccessibilityService() {
             val results = JSONArray()
             var count = 0
             val lowerQuery = query.lowercase()
+            val deadline = System.currentTimeMillis() + 5000L
             fun walk(dir: java.io.File, depth: Int) {
-                if (depth > 8 || count >= maxResults) return
+                if (depth > 4 || count >= maxResults || System.currentTimeMillis() > deadline) return
                 val children = dir.listFiles() ?: return
                 for (child in children) {
-                    if (count >= maxResults) return
+                    if (count >= maxResults || System.currentTimeMillis() > deadline) return
                     if (child.name.lowercase().contains(lowerQuery)) {
                         results.put(fileToJson(child))
                         count++
@@ -1945,7 +1948,9 @@ public class InputService : AccessibilityService() {
                 }
             }
             walk(base, 0)
-            JSONObject().put("ok", true).put("query", query).put("count", count).put("results", results)
+            val partial = System.currentTimeMillis() > deadline
+            val r = JSONObject().put("ok", true).put("query", query).put("count", count).put("results", results)
+            if (partial) r.put("partial", true) else r
         } catch (e: Exception) {
             JSONObject().put("ok", false).put("error", e.message ?: "unknown")
         }
@@ -3728,11 +3733,14 @@ public class InputService : AccessibilityService() {
             json.put("package", root.packageName?.toString() ?: "")
             json.put("class", root.className?.toString() ?: "")
             json.put("childCount", root.childCount)
-            // Count total visible nodes
+            // Count total visible nodes (capped to prevent timeout on complex screens)
             var totalNodes = 0
+            val MAX_NODES = 2000
             fun countNodes(node: AccessibilityNodeInfo) {
+                if (totalNodes >= MAX_NODES) return
                 totalNodes++
                 for (i in 0 until node.childCount) {
+                    if (totalNodes >= MAX_NODES) break
                     val child = node.getChild(i) ?: continue
                     try { if (child.isVisibleToUser) countNodes(child) }
                     finally { try { child.recycle() } catch (_: Exception) {} }
@@ -3740,6 +3748,7 @@ public class InputService : AccessibilityService() {
             }
             countNodes(root)
             json.put("totalNodes", totalNodes)
+            if (totalNodes >= MAX_NODES) json.put("truncated", true)
             return json
         } catch (e: Exception) {
             return JSONObject().put("error", e.message ?: "unknown")

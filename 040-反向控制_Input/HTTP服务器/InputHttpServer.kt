@@ -7,6 +7,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
+import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.request.header
@@ -15,9 +16,6 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.File
 
 /**
@@ -56,8 +54,8 @@ public class InputHttpServer(
         } catch (_: Exception) {}
         return cachedToken
     }
+
     private var server: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>? = null
-    private val scope = CoroutineScope(Dispatchers.IO)
 
     // ==================== Server Lifecycle ====================
 
@@ -66,49 +64,24 @@ public class InputHttpServer(
             XLog.w(getLog("InputHttpServer", "Server already running"))
             return
         }
-
-        scope.launch {
-            try {
-                server = embeddedServer(CIO, port = port) {
-                    install(WebSockets)
-                    install(CORS) {
-                        anyHost()
-                        allowHeader(HttpHeaders.ContentType)
-                        allowHeader(HttpHeaders.Accept)
-                        allowHeader(HttpHeaders.Authorization)
-                        allowHeader(HttpHeaders.Origin)
-                        allowHeader(HttpHeaders.AccessControlRequestMethod)
-                        allowHeader(HttpHeaders.AccessControlRequestHeaders)
-                        allowMethod(HttpMethod.Post)
-                        allowMethod(HttpMethod.Get)
-                        allowMethod(HttpMethod.Options)
-                        allowNonSimpleContentTypes = true
+        try {
+            server = embeddedServer(
+                factory = CIO,
+                rootConfig = serverConfig {
+                    module { appModule() }
+                },
+                configure = {
+                    connectionIdleTimeoutSeconds = 45
+                    connector {
+                        host = "0.0.0.0"
+                        port = this@InputHttpServer.port
                     }
-                    install(ForwardedHeaders)
-                    val server = this@InputHttpServer
-                    intercept(ApplicationCallPipeline.Plugins) {
-                        val token = server.getAuthToken()
-                        if (token.isEmpty()) return@intercept
-                        if (call.request.httpMethod == HttpMethod.Options) return@intercept
-                        val path = call.request.path()
-                        if (path == "/status" || path == "/health") return@intercept
-                        val bearer = call.request.header("Authorization")?.removePrefix("Bearer ")?.trim()
-                        val queryToken = call.request.queryParameters["token"]
-                        if ((bearer ?: queryToken) != token) {
-                            call.respondText(
-                                """{"error":"unauthorized"}""",
-                                ContentType.Application.Json, HttpStatusCode.Unauthorized
-                            )
-                            finish()
-                        }
-                    }
-                    configureRouting()
-                }.start(wait = false)
-
-                XLog.i(getLog("InputHttpServer", "Started on port $port"))
-            } catch (e: Exception) {
-                XLog.e(getLog("InputHttpServer", "Failed to start: ${e.message}"))
-            }
+                }
+            )
+            server!!.start(wait = false)
+            XLog.i(getLog("InputHttpServer", "Started on port $port"))
+        } catch (e: Exception) {
+            XLog.e(getLog("InputHttpServer", "Failed to start: ${e.message}"))
         }
     }
 
@@ -120,9 +93,56 @@ public class InputHttpServer(
 
     public fun isRunning(): Boolean = server != null
 
-    // ==================== Routing ====================
+    // ==================== Application Module ====================
 
-    private fun Application.configureRouting() {
+    private fun Application.appModule() {
+        install(Compression) {
+            gzip {
+                priority = 1.0
+                minimumSize(256)
+            }
+            deflate {
+                priority = 0.9
+                minimumSize(256)
+            }
+        }
+        install(WebSockets) {
+            pingPeriodMillis = 45000
+            timeoutMillis = 45000
+        }
+        install(CORS) {
+            anyHost()
+            allowHeader(HttpHeaders.ContentType)
+            allowHeader(HttpHeaders.Accept)
+            allowHeader(HttpHeaders.Authorization)
+            allowHeader(HttpHeaders.Origin)
+            allowHeader(HttpHeaders.AccessControlRequestMethod)
+            allowHeader(HttpHeaders.AccessControlRequestHeaders)
+            allowMethod(HttpMethod.Post)
+            allowMethod(HttpMethod.Get)
+            allowMethod(HttpMethod.Put)
+            allowMethod(HttpMethod.Delete)
+            allowMethod(HttpMethod.Options)
+            allowNonSimpleContentTypes = true
+        }
+        install(ForwardedHeaders)
+        val srv = this@InputHttpServer
+        intercept(ApplicationCallPipeline.Plugins) {
+            val token = srv.getAuthToken()
+            if (token.isEmpty()) return@intercept
+            if (call.request.httpMethod == HttpMethod.Options) return@intercept
+            val path = call.request.path()
+            if (path == "/status" || path == "/health" || path == "/capabilities") return@intercept
+            val bearer = call.request.header("Authorization")?.removePrefix("Bearer ")?.trim()
+            val queryToken = call.request.queryParameters["token"]
+            if ((bearer ?: queryToken) != token) {
+                call.respondText(
+                    """{"error":"unauthorized"}""",
+                    ContentType.Application.Json, HttpStatusCode.Unauthorized
+                )
+                finish()
+            }
+        }
         routing { installInputRoutes() }
     }
 }
