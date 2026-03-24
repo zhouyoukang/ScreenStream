@@ -101,10 +101,6 @@ public class InputHttpServer(
                 priority = 1.0
                 minimumSize(256)
             }
-            deflate {
-                priority = 0.9
-                minimumSize(256)
-            }
         }
         install(WebSockets) {
             pingPeriodMillis = 45000

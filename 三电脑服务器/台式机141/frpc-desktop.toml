@@ -24,19 +24,19 @@ localIP = "127.0.0.1"
 localPort = 3389
 remotePort = 13389
 
-# ScreenStream投屏 — WiFi直连手机(无需USB)
+# ScreenStream投屏 — ADB forward(手机USB)
 [[proxies]]
 name = "phone_ss"
 type = "tcp"
-localIP = "192.168.31.40"
+localIP = "127.0.0.1"
 localPort = 8080
 remotePort = 18086
 
-# ScreenStream控制API — WiFi直连手机(无需USB)
+# ScreenStream控制API — ADB forward(手机USB)
 [[proxies]]
 name = "phone_input"
 type = "tcp"
-localIP = "192.168.31.40"
+localIP = "127.0.0.1"
 localPort = 8084
 remotePort = 18084
 

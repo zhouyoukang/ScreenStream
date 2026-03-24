@@ -688,20 +688,6 @@ public fun Route.installInputRoutes() {
         call.respondText(svc.uploadFile(path, bytes).toString(), ContentType.Application.Json)
     }}
 
-    // ==================== Semantic Automation Demo ====================
-
-    // Proof-of-concept: open calculator → find button via View tree → click it
-    post("/demo/semantic") { requireInputService { svc ->
-        val json = runCatching { JSONObject(call.receiveText()) }.getOrElse { JSONObject() }
-        val target = json.optString("target", "5")
-        call.respondText(svc.runSemanticDemo(target).toString(), ContentType.Application.Json)
-    }}
-
-    // Cross-screen demo: Settings → WiFi → Toggle switch
-    post("/demo/wifi") { requireInputService { svc ->
-        call.respondText(svc.runWifiToggleDemo().toString(), ContentType.Application.Json)
-    }}
-
     // Natural language command: user describes intent, system executes
     post("/command") { requireInputService { svc ->
         val json = runCatching { JSONObject(call.receiveText()) }.getOrElse { JSONObject() }

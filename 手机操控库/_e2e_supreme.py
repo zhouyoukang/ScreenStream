@@ -217,11 +217,11 @@ def main():
         paths = [
             ("https://aiotvr.xyz/input", "公网Nginx", 15),
             ("http://60.205.171.100:38084", "手机FRP直连", 15),
-            ("http://192.168.31.40:8084", "WiFi直连", 10),
+            ("http://127.0.0.1:8084", "ADB直连", 10),
             ("http://127.0.0.1:28084", "本地网关", 10),
         ]
     elif args.local:
-        paths = [("http://192.168.31.40:8084", "WiFi直连", 10)]
+        paths = [("http://127.0.0.1:8084", "ADB直连", 10)]
     elif args.gateway:
         paths = [("http://127.0.0.1:28084", "本地网关", 10)]
     else:

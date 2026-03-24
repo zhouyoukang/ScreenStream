@@ -29,16 +29,13 @@ from datetime import datetime
 # ============================================================
 
 PORT = 28084
-PHONE_WIFI_IP = "192.168.31.40"
 PHONE_SS_PORT = 8084
 PHONE_GW_PORT = 8080
 PHONE_SERIAL = "158377ff"
 
-# 多路径探测顺序 (上善若水，水到渠成)
+# 路径探测顺序 (水到渠成)
 PATHS = [
-    {"name": "WiFi直连",   "base": f"http://{PHONE_WIFI_IP}:{PHONE_SS_PORT}"},
     {"name": "USB转发",    "base": f"http://127.0.0.1:{PHONE_SS_PORT}"},
-    {"name": "USB高端口",  "base": f"http://127.0.0.1:18084"},
 ]
 
 # Token认证 (从环境变量或命令行获取)
@@ -139,35 +136,10 @@ class PhoneConnector:
         return None
 
     def recover(self):
-        """自动恢复 — 尝试所有手段让手机重新可达"""
+        """自动恢复 — ADB forward + 重新发现"""
         log.info("🔄 开始自动恢复...")
         self.stats["recoveries"] += 1
-
-        # 1. 先重试WiFi
-        ok, _ = self.probe_path(PATHS[0]["base"], timeout=5)
-        if ok:
-            self.active_base = PATHS[0]["base"]
-            self.active_name = PATHS[0]["name"]
-            self.last_ok = datetime.now().isoformat()
-            log.info("✅ WiFi恢复成功")
-            return True
-
-        # 2. 尝试ADB唤醒
         self.ensure_adb_forward()
-        try:
-            adb = self._find_adb()
-            if adb:
-                import subprocess
-                # 唤醒屏幕
-                subprocess.run(
-                    [adb, "-s", PHONE_SERIAL, "shell", "input", "keyevent", "KEYCODE_WAKEUP"],
-                    capture_output=True, timeout=5
-                )
-                time.sleep(1)
-        except Exception:
-            pass
-
-        # 3. 重新发现
         return self.discover()
 
     def proxy(self, method, path, body=None, headers=None, timeout=15):
@@ -336,9 +308,6 @@ class GatewayHandler(BaseHTTPRequestHandler):
         if path == "/gw/stats":
             self._json(200, connector.stats)
             return
-        if path == "/gw/token":
-            self._json(200, {"token": GATEWAY_TOKEN})
-            return
 
         # 代理到手机 — 去掉 /gw 前缀如果有
         phone_path = path
@@ -368,173 +337,6 @@ class ThreadedServer(ThreadingMixIn, HTTPServer):
 
 
 # ============================================================
-# 手机端FRP配置与部署
-# ============================================================
-
-def setup_phone_frpc():
-    """在手机上配置并启动frpc直连阿里云"""
-    import subprocess
-
-    adb = connector._find_adb()
-    if not adb:
-        print("❌ ADB不可用")
-        return False
-
-    # 检查设备
-    r = subprocess.run([adb, "devices"], capture_output=True, text=True, timeout=5)
-    if PHONE_SERIAL not in r.stdout:
-        print(f"❌ 设备 {PHONE_SERIAL} 未连接")
-        return False
-
-    print("📱 配置手机端FRP直连阿里云...")
-
-    # frpc配置
-    frpc_config = """serverAddr = "60.205.171.100"
-serverPort = 7000
-auth.method = "token"
-auth.token = "NKLQyCrSavf1MmYOGtkFzbh0"
-user = "oneplus"
-loginFailExit = false
-
-# ScreenStream Input API (8084)
-[[proxies]]
-name = "phone_input"
-type = "tcp"
-localIP = "127.0.0.1"
-localPort = 8084
-remotePort = 28084
-
-# ScreenStream Gateway (8080)
-[[proxies]]
-name = "phone_stream"
-type = "tcp"
-localIP = "127.0.0.1"
-localPort = 8080
-remotePort = 28080
-"""
-
-    # 写入临时配置文件
-    import tempfile
-    config_path = os.path.join(tempfile.gettempdir(), "frpc_phone.toml")
-    with open(config_path, "w") as f:
-        f.write(frpc_config)
-
-    # 推送到手机
-    phone_config_dir = "/data/local/tmp/frpc"
-    subprocess.run([adb, "-s", PHONE_SERIAL, "shell", f"su -c 'mkdir -p {phone_config_dir}'"],
-                   capture_output=True, timeout=5)
-    subprocess.run([adb, "-s", PHONE_SERIAL, "push", config_path, f"{phone_config_dir}/frpc.toml"],
-                   capture_output=True, timeout=5)
-    print(f"  ✅ 配置已推送: {phone_config_dir}/frpc.toml")
-
-    # 检查手机上是否有frpc二进制
-    r = subprocess.run(
-        [adb, "-s", PHONE_SERIAL, "shell", "su -c 'which frpc 2>/dev/null || ls /data/local/tmp/frpc/frpc 2>/dev/null'"],
-        capture_output=True, text=True, timeout=5
-    )
-    has_frpc = bool(r.stdout.strip())
-
-    if not has_frpc:
-        print("  ⚠️ 手机上未找到frpc二进制文件")
-        print("  📋 需要手动安装:")
-        print(f"     1. 下载 frpc ARM64: https://github.com/fatedier/frp/releases")
-        print(f"     2. adb push frpc {phone_config_dir}/frpc")
-        print(f"     3. adb shell \"su -c 'chmod +x {phone_config_dir}/frpc'\"")
-        print(f"  📋 或者使用手机上的FRP应用(com.tools.frp)导入配置:")
-        print(f"     配置文件: {phone_config_dir}/frpc.toml")
-
-        # 尝试通过手机FRP应用 — 写入其配置目录
-        frp_app_dir = "/data/data/com.tools.frp/files"
-        subprocess.run(
-            [adb, "-s", PHONE_SERIAL, "shell",
-             f"su -c 'cp {phone_config_dir}/frpc.toml {frp_app_dir}/frpc.toml 2>/dev/null'"],
-            capture_output=True, timeout=5
-        )
-        print(f"  📋 也已尝试复制到FRP App目录: {frp_app_dir}/")
-        return False
-
-    # 启动frpc
-    print("  🚀 启动手机端frpc...")
-    subprocess.run(
-        [adb, "-s", PHONE_SERIAL, "shell",
-         f"su -c 'nohup {phone_config_dir}/frpc -c {phone_config_dir}/frpc.toml > /dev/null 2>&1 &'"],
-        capture_output=True, timeout=5
-    )
-    time.sleep(2)
-
-    # 验证
-    r = subprocess.run(
-        [adb, "-s", PHONE_SERIAL, "shell", "su -c 'ps -A | grep frpc'"],
-        capture_output=True, text=True, timeout=5
-    )
-    if "frpc" in r.stdout:
-        print("  ✅ 手机frpc已启动")
-        return True
-    else:
-        print("  ⚠️ frpc未能启动，请检查日志")
-        return False
-
-
-# ============================================================
-# 探测与诊断
-# ============================================================
-
-def probe_all():
-    """全路径探测"""
-    print("\n" + "=" * 60)
-    print("  📡 手机公网网关 · 全路径探测")
-    print("=" * 60)
-
-    results = []
-    for p in PATHS:
-        ok, data = connector.probe_path(p["base"])
-        status = "✅" if ok else "❌"
-        detail = f"connected={data.get('connected')}, input={data.get('inputEnabled')}" if data else "不可达"
-        results.append((p["name"], p["base"], ok, detail))
-        print(f"  {status} {p['name']:12s} {p['base']:35s} {detail}")
-
-    # 测试阿里云公网路径
-    public_paths = [
-        ("阿里云/input", "https://aiotvr.xyz/input"),
-        ("阿里云/phone", f"http://60.205.171.100:28084"),
-    ]
-    print()
-    for name, base in public_paths:
-        try:
-            req = Request(f"{base}/status", method="GET")
-            with urlopen(req, timeout=5) as resp:
-                data = json.loads(resp.read().decode())
-                ok = data.get("connected", False)
-                print(f"  {'✅' if ok else '⚠️'} {name:20s} {base}")
-        except Exception as e:
-            print(f"  ❌ {name:20s} {base:35s} {str(e)[:40]}")
-
-    # 五感快速验证
-    print(f"\n  🧠 五感快速验证 (via {connector.active_name or '未连接'}):")
-    if connector.active_base:
-        endpoints = [
-            ("👁 视觉", "/screen/text", lambda d: f"texts={d.get('textCount',0)}"),
-            ("👂 听觉", "/deviceinfo", lambda d: f"vol={d.get('volumeMusic','?')}"),
-            ("🖐 触觉", "/status", lambda d: f"input={d.get('inputEnabled')}"),
-            ("👃 嗅觉", "/notifications/read?limit=3", lambda d: f"total={d.get('total','?')}"),
-            ("👅 味觉", "/deviceinfo", lambda d: f"bat={d.get('batteryLevel','?')}% net={d.get('networkType','?')}"),
-        ]
-        for icon_name, ep, fmt in endpoints:
-            try:
-                code, data = connector.proxy("GET", ep)
-                ok = code == 200 and "_error" not in data
-                detail = fmt(data) if ok else str(data)[:40]
-                print(f"     {'✅' if ok else '❌'} {icon_name}: {detail}")
-            except Exception as e:
-                print(f"     ❌ {icon_name}: {e}")
-    else:
-        print("     ❌ 手机未连接")
-
-    print("=" * 60)
-    return results
-
-
-# ============================================================
 # 主入口
 # ============================================================
 
@@ -542,13 +344,11 @@ def main():
     global GATEWAY_TOKEN
 
     import argparse
-    parser = argparse.ArgumentParser(description="手机公网网关 · 道法自然")
+    parser = argparse.ArgumentParser(description="手机公网网关")
     parser.add_argument("--port", type=int, default=PORT, help=f"网关端口 (默认{PORT})")
-    parser.add_argument("--token", default=None, help="认证Token (默认自动生成)")
-    parser.add_argument("--probe", action="store_true", help="仅探测不启动")
-    parser.add_argument("--setup-phone-frpc", action="store_true", help="配置手机端FRP直连")
+    parser.add_argument("--token", default=None, help="认证Token")
     parser.add_argument("--heartbeat", type=int, default=30, help="心跳间隔秒 (0=关闭)")
-    parser.add_argument("--no-auth", action="store_true", help="关闭认证 (仅调试)")
+    parser.add_argument("--no-auth", action="store_true", help="关闭认证")
     args = parser.parse_args()
 
     if args.token:
@@ -559,60 +359,21 @@ def main():
     if args.no_auth:
         GATEWAY_TOKEN = ""
 
-    # 配置手机FRP
-    if args.setup_phone_frpc:
-        setup_phone_frpc()
-        return
-
-    # 发现手机
     connector.discover()
 
-    # 探测模式
-    if args.probe:
-        probe_all()
-        return
-
-    # 启动心跳
     if args.heartbeat > 0:
         connector.start_heartbeat(args.heartbeat)
 
-    # 启动服务
     server = ThreadedServer(("0.0.0.0", args.port), GatewayHandler)
-    print("\n" + "=" * 60)
-    print("  📱 手机公网网关 · 已启动")
-    print("=" * 60)
-    print(f"  本地: http://127.0.0.1:{args.port}")
-    print(f"  LAN:  http://192.168.31.141:{args.port}")
-    print(f"  公网: https://aiotvr.xyz/phone/ (需配置FRP+Nginx)")
-    print(f"\n  手机: {connector.active_name} → {connector.active_base}")
-    print(f"  认证: {'关闭' if not GATEWAY_TOKEN else f'Token={GATEWAY_TOKEN[:8]}...'}")
-    print(f"  心跳: {'关闭' if args.heartbeat <= 0 else f'每{args.heartbeat}秒'}")
-    print(f"\n  使用:")
-    print(f"     curl -H 'X-Gateway-Token: {GATEWAY_TOKEN}' http://127.0.0.1:{args.port}/status")
-    print(f"     curl http://127.0.0.1:{args.port}/gw/health")
-    print("=" * 60)
+    log.info(f"📱 网关启动 :{args.port} | 手机: {connector.active_name} → {connector.active_base}")
 
     try:
-        while True:
-            try:
-                server.serve_forever()
-                break  # clean shutdown
-            except KeyboardInterrupt:
-                break
-            except Exception as e:
-                log.error(f"💥 serve_forever异常，3s后重启: {e}")
-                try:
-                    server.server_close()
-                except Exception:
-                    pass
-                time.sleep(3)
-                server = ThreadedServer(("0.0.0.0", args.port), GatewayHandler)
-                log.info("🔄 服务已重启")
+        server.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:
         connector.stop()
-        print("\n  👋 网关已停止")
+        log.info("网关已停止")
 
 
 if __name__ == "__main__":
