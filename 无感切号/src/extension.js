@@ -900,18 +900,8 @@ async function _handlePerModelRateLimit(context, modelUid, resetSeconds) {
     }, 2000);
   }
 
-  // 直接进入L2账号切换(不同apiKey = 不同桶 = 立即可用)
-  if (_isOpusModel(modelUid)) {
-    _logInfo('MODEL_RL', `${logPrefix} [OPUS_FAST] 跳过L1变体轮转(共享桶) → 直接L2账号切换`);
-  } else {
-    // === L1: 非Opus模型变体轮转(可能有效) ===
-    const availableVariant = am.findAvailableModelVariant(_activeIndex, OPUS_VARIANTS);
-    if (availableVariant && availableVariant !== modelUid) {
-      _logInfo('MODEL_RL', `${logPrefix} L1: 同账号切换变体 ${modelUid} → ${availableVariant}`);
-      await _switchModelUid(availableVariant);
-      return { action: 'variant_switch', from: modelUid, to: availableVariant };
-    }
-  }
+  // === L1 跳过: 锚定本源模型不变 · 直接L2账号切换 (v17.1 热修复) ===
+  // 道法自然: 变体切换 = 模型变化 = 偏离本源需求, 不可为
 
   // === L2: 换账号继续用同模型 (核心: 不同apiKey = 不同rate limit桶) ===
   const bestForModel = am.findBestForModel(modelUid, _activeIndex, PREEMPTIVE_THRESHOLD);
