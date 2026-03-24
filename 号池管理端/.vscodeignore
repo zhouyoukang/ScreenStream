@@ -1,0 +1,10 @@
+.gitignore
+.git/**
+node_modules/**
+scripts/**
+_*.py
+_*.txt
+*.md
+!README.md
+build.cmd
+*.vsix
