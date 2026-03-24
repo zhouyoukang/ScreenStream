@@ -51,6 +51,8 @@
     _mode = mode;
     _subTab = '';
     delete _cache._paymentsLoaded;
+    delete _cache._statsLoaded;
+    delete _cache._paymentStatsData;
     delete _cache._cloudDevLoaded;
     delete _cache._pushLoaded;
     delete _cache._threatsLoaded;
@@ -73,7 +75,7 @@
   window.refresh = function () { loadMode(); };
 
   window.switchSubTab = function (tab) {
-    if (tab === 'payments') delete _cache._paymentsLoaded;
+    if (tab === 'payments') { delete _cache._paymentsLoaded; delete _cache._statsLoaded; delete _cache._paymentStatsData; }
     if (tab === 'devices') delete _cache._cloudDevLoaded;
     _subTab = tab;
     render();
