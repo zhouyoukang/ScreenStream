@@ -1,5 +1,5 @@
 ﻿/**
- * 无感号池引擎 v1.0.0
+ * 无感号池引擎 v3.11.0
  */
 const vscode = require("vscode");
 const { AccountManager } = require("./accountManager");
@@ -34,6 +34,9 @@ const _G = global.__wamHot = global.__wamHot || {
 };
 _G.vscode = _G.vscode || vscode; // 首次加载时持久化, 热重载不覆盖
 _G.snapshot = _G.snapshot || null;       // 状态快照 (热重载跨模块传递)
+// v3.11.0: 版本守卫 — 版本升级时强制重建服务器以刷新handler
+if (_G.hubVersion !== '3.11.0') { _G.hubServerRef = null; }
+_G.hubVersion = '3.11.0';
 _G.hubServerRef = _G.hubServerRef || null; // Hub server引用 (跨reload复用, 无端口冲突)
 _G.isHotReloading = false;               // 热重载进行中标志 (deactivate软模式)
 
@@ -1193,7 +1196,7 @@ function _hubRequestHandler(req, res) {
       if (p === "/health")
         return json({
           status: "ok",
-          version: "3.8.0",
+          version: "3.11.0",
           port: HUB_PORT,
           accounts: am ? am.getAll().length : 0,
           activeIndex: _activeIndex,
@@ -2025,38 +2028,58 @@ function _activate(context) {
   _logInfo(
     "BOOT",
     isHotRestart
-      ? `无感号池引擎 v3.8.0 热重载恢复 (hot#${_G.reloadCount}, 状态已恢复, ${_sessionPool.size}sessions, ${_capacityMatrix.size}matrix)`
-      : "无感号池引擎 v3.8.0 启动 (道法自然·万法归宗 · Session Pool · Capacity Matrix · 零延迟切换 · 状态不灭热重载)",
+      ? `无感号池引擎 v3.11.0 热重载恢复 (hot#${_G.reloadCount}, 状态已恢复, ${_sessionPool.size}sessions, ${_capacityMatrix.size}matrix)`
+      : "无感号池引擎 v3.11.0 启动 (道法自然·万法归宗 · Session Pool · Capacity Matrix · 零延迟切换 · 状态不灭热重载)",
   );
 
-  // v5.0 道法自然: 自动检测+应用workbench.js补丁 (消除手动python ws_repatch.py)
+  // v5.1 道法自然: 自动检测 workbench.js 补丁，异步应用 (消除手动 python ws_repatch.py)
+  // RC-FIX: config file 自发现路径 + exec异步不阻塞activation
   if (!isHotRestart) {
     setTimeout(() => {
       try {
         const wbPath = 'D:\\Windsurf\\resources\\app\\out\\vs\\workbench\\workbench.desktop.main.js';
-        if (fs.existsSync(wbPath)) {
-          const wb = fs.readFileSync(wbPath, 'utf8');
-          const needsBase = !wb.includes('globalThis.__wamRateLimit');
-          const needsP7 = !wb.includes('failed.precondition|quota.exhaust');
-          if (needsBase || needsP7) {
-            const reason = needsBase ? 'GBe interceptor missing' : 'Patch7 quota regex missing';
-            _logWarn('PATCH', 'workbench.js needs patching: ' + reason + ' — auto-applying...');
-            const patchScript = path.join(__dirname, '..', '..', 'Windsurf\u65e0\u9650\u989d\u5ea6', 'ws_repatch.py');
-            const { execSync } = require('child_process');
-            try {
-              execSync('python "' + patchScript + '" --force', { stdio: 'pipe', timeout: 30000 });
-              _logInfo('PATCH', 'workbench.js auto-patched successfully (Reload Window to activate)');
-            } catch (pe) {
-              _logWarn('PATCH', 'auto-patch failed: ' + (pe.message || '').slice(0, 100));
-            }
-          } else {
-            _logInfo('PATCH', 'workbench.js patches complete (incl. Patch7 quota exhausted)');
-          }
+        if (!fs.existsSync(wbPath)) return;
+        const wb = fs.readFileSync(wbPath, 'utf8');
+        const needsBase = !wb.includes('globalThis.__wamRateLimit');
+        const needsP7 = !wb.includes('failed.precondition|quota.exhaust');
+        if (!needsBase && !needsP7) {
+          _logInfo('PATCH', 'workbench.js patches OK (incl. Patch7 quota exhausted)');
+          return;
         }
+        const reason = needsBase ? 'GBe interceptor' : 'Patch7(quota regex)';
+        _logWarn('PATCH', 'workbench.js needs: ' + reason + ' — locating ws_repatch.py...');
+        // 路径自发现: 1)看门狗写入的config file 2)常用候选路径
+        const cfgPath = path.join(os.homedir(), '.wam-hot', 'patch_info.json');
+        let patchPy = null;
+        if (fs.existsSync(cfgPath)) {
+          try { patchPy = JSON.parse(fs.readFileSync(cfgPath, 'utf8')).patchScript; } catch (_e) {}
+        }
+        if (!patchPy || !fs.existsSync(patchPy)) {
+          // 确定路径候选 (本机绝对路径 + homedir fallback)
+          const fixed = 'e:\\' + '\u9053\\\u9053\u751f\u4e00\\\u4e00\u751f\u4e8c\\Windsurf\u65e0\u9650\u989d\u5ea6\\ws_repatch.py';
+          const candidates = [fixed, path.join(os.homedir(), '.wam-hot', 'ws_repatch.py')];
+          patchPy = candidates.find(p => fs.existsSync(p)) || null;
+        }
+        if (!patchPy) {
+          _logWarn('PATCH', 'ws_repatch.py not found — run manually: python ws_repatch.py --force');
+          return;
+        }
+        _logInfo('PATCH', 'auto-patching via ' + patchPy);
+        const { exec } = require('child_process');
+        exec('python "' + patchPy + '" --force', { timeout: 60000 }, (err) => {
+          if (err) _logWarn('PATCH', 'auto-patch failed: ' + String(err.message).slice(0, 80));
+          else {
+            _logInfo('PATCH', 'workbench.js auto-patched. Showing reload notification...');
+            vscode.window.showInformationMessage(
+              'WAM: workbench.js 补丁已应用。需要重载WindowReload生效。',
+              '立即重载'
+            ).then(sel => { if (sel) vscode.commands.executeCommand('workbench.action.reloadWindow'); });
+          }
+        });
       } catch (e) {
         _logWarn('PATCH', 'auto-patch check error: ' + e.message);
       }
-    }, 5000); // Delay 5s to not slow down activation
+    }, 5000);
   }
 
   // 指纹完整性
@@ -2261,7 +2284,7 @@ function _activate(context) {
   const accounts = am.getAll();
   _logInfo(
     "BOOT",
-    `号池引擎就绪 v3.8.0 — ${accounts.length}账号, poolSrc=${_poolSourceMode}, proxy=${auth.getProxyStatus().mode}, route=${_routingMode}, win=${_getActiveWindowCount()}, tabs=${_cascadeTabCount}${_burstMode ? " BURST" : ""}, hub=:${HUB_PORT}, gates=4, hot=${_G.reloadCount}, ${isHotRestart ? '状态已恢复·'+_sessionPool.size+'sessions' : '全新启动'}`,
+    `号池引擎就绪 v3.11.0 — ${accounts.length}账号, poolSrc=${_poolSourceMode}, proxy=${auth.getProxyStatus().mode}, route=${_routingMode}, win=${_getActiveWindowCount()}, tabs=${_cascadeTabCount}${_burstMode ? " BURST" : ""}, hub=:${HUB_PORT}, gates=4, hot=${_G.reloadCount}, ${isHotRestart ? '状态已恢复·'+_sessionPool.size+'sessions' : '全新启动'}`,
   );
 }
 
@@ -3507,7 +3530,7 @@ async function _seamlessSwitch(context, targetIndex) {
     _cumulativeDropSinceActivation = 0; // v14.0: 新账号重置累积降幅
     _hourlyMsgLog = []; // v2.0: 新账号重置小时计数
     _resetModelMsgLog(prevIndex); // v2.0: 重置旧账号Opus计数
-    _resetModelMsgLog(prevIndex); // v3.8.0: 重置旧账号Sonnet T1M计数
+    _resetModelMsgLog(prevIndex); // v3.11.0: 重置旧账号Sonnet T1M计数
     _heartbeatWindow();
 
     // Post-switch quota verification — 切后立即验证，防止落入耗尽账号
