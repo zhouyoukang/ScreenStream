@@ -1,0 +1,173 @@
+{
+  "name": "windsurf-assistant",
+  "publisher": "zhouyoukang",
+  "displayName": "Windsurf小助手",
+  "description": "v3.8 锚定本源模型 · 去除L3降级偏离 · 防连锁限流 · 纯账号轮转",
+  "version": "3.8.0",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/zhouyoukang/windsurf-assistant" },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./src/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "windsurf-assistant",
+          "title": "Windsurf小助手",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "windsurf-assistant": [
+        {
+          "id": "windsurf-assistant.assistantView",
+          "name": "助手",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "wam.switchAccount",
+        "title": "切换账号",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.refreshCredits",
+        "title": "刷新积分",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.openPanel",
+        "title": "打开管理面板",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.switchMode",
+        "title": "切换模式 (本地/中转)",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.reprobeProxy",
+        "title": "重新探测代理",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.resetFingerprint",
+        "title": "重置设备指纹",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.panicSwitch",
+        "title": "紧急切换 (限流应急)",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.batchAdd",
+        "title": "批量添加账号",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.refreshAllCredits",
+        "title": "刷新全部积分并轮转",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.smartRotate",
+        "title": "智能轮转 (查全部·切最优)",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.importAccounts",
+        "title": "导入账号",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.initWorkspace",
+        "title": "工作区配置 (智慧部署+源启动)",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.hotReload",
+        "title": "热重载 (Hot Reload)",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.hotStatus",
+        "title": "热重载状态",
+        "category": "Windsurf小助手"
+      },
+      {
+        "command": "wam.poolSource",
+        "title": "号池来源 (本地/云端/混合)",
+        "category": "Windsurf小助手"
+      }
+    ],
+    "configuration": {
+      "title": "Windsurf小助手",
+      "properties": {
+        "wam.autoRotate": {
+          "type": "boolean",
+          "default": true,
+          "description": "积分不足时自动切换到最高积分账号"
+        },
+        "wam.rotateFingerprint": {
+          "type": "boolean",
+          "default": true,
+          "description": "切号时自动轮转设备指纹 (防止服务端关联多账号到同一设备)"
+        },
+        "wam.poolSource": {
+          "type": "string",
+          "enum": ["local", "cloud", "hybrid"],
+          "default": "local",
+          "enumDescriptions": [
+            "本地号池 — 仅使用本地账号文件",
+            "云端号池 — 仅从阿里云号池拉取账号",
+            "混合模式 — 本地优先，云端补充(推荐)"
+          ],
+          "description": "号池来源模式: local=本地文件 | cloud=阿里云号池 | hybrid=混合(推荐)"
+        },
+        "wam.creditThreshold": {
+          "type": "number",
+          "default": 5,
+          "description": "预防性切换阈值: 有效额度(min(D%,W%))低于此值时自动切号 (默认5%)"
+        },
+        "wam.adminHubPort": {
+          "type": "number",
+          "default": 19881,
+          "description": "管理端Hub端口 (默认19881)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "package": "vsce package --no-dependencies --allow-missing-repository",
+    "install-ext": "vsce package --no-dependencies --allow-missing-repository -o windsurf-assistant.vsix && code --install-extension windsurf-assistant.vsix",
+    "fortress": "node scripts/fortress.js",
+    "fortress:dev": "node scripts/fortress.js --level dev",
+    "fortress:low": "node scripts/fortress.js --level low",
+    "fortress:max": "node scripts/fortress.js --level max",
+    "fortress:analyze": "node scripts/fortress.js --analyze",
+    "fortress:noinstall": "node scripts/fortress.js --no-install",
+    "hot": "node scripts/hot-deploy.js",
+    "hot:build": "node scripts/hot-deploy.js --build",
+    "hot:signal": "node scripts/hot-deploy.js --signal",
+    "hot:inject": "node scripts/hot-deploy.js --inject",
+    "hot:watch": "node scripts/hot-deploy.js --watch"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.2.0",
+    "webpack": "^5.97.0",
+    "webpack-cli": "^6.0.0",
+    "javascript-obfuscator": "^4.1.1"
+  }
+}
