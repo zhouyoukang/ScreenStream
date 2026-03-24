@@ -1,7 +1,7 @@
 # 一生二 · 状态面板（STATUS）
 
 > 道生一，一生二，二生三，三生万物。
-> 最后更新：2026-03-24（**ScreenStream 128/128全通 · 损之又损精简280行 · input模块Compose剥离 · 构建提速52%** / 上次：号池管理端v1.4.0 E2E PASS）
+> 最后更新：2026-03-24（**ScreenStream 四项根因修复 · /key keycode · /stream/start AgentBridge · /settings去假 · 网关幂等 · 128/128全通**）
 ## 0) 权威入口
 
 | 文件 | 用途 |

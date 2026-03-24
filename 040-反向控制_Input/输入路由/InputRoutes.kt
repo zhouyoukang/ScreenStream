@@ -91,10 +91,18 @@ public fun Route.installInputRoutes() {
 
     post("/key") { requireInputService { svc ->
         val json = JSONObject(call.receiveText())
-        svc.onKeyEvent(
-            json.optBoolean("down", true), json.getLong("keysym"),
-            json.optBoolean("shift", false), json.optBoolean("ctrl", false)
-        )
+        if (json.has("keysym")) {
+            svc.onKeyEvent(
+                json.optBoolean("down", true), json.getLong("keysym"),
+                json.optBoolean("shift", false), json.optBoolean("ctrl", false)
+            )
+        } else if (json.has("keycode")) {
+            val keycode = json.getInt("keycode")
+            execShell("input", "keyevent", keycode.toString())
+        } else {
+            call.respondText(jsonError("Provide 'keysym' or 'keycode'"), ContentType.Application.Json, HttpStatusCode.BadRequest)
+            return@requireInputService
+        }
         call.respondText(jsonOk(), ContentType.Application.Json)
     }}
 
@@ -1075,7 +1083,6 @@ public fun Route.installInputRoutes() {
             }
 
             if (!hasIntent) {
-                // No stored projection intent — tell Agent to launch AgentProjectionActivity via ADB
                 val pkg = InputService.instance?.packageName ?: "info.dvkr.screenstream.dev"
                 call.respondText(
                     JSONObject()
@@ -1089,58 +1096,20 @@ public fun Route.installInputRoutes() {
                 return@post
             }
 
-            // Has stored projection intent — start streaming via reflection
-            val storedIntent = bridge.getMethod("getStoredProjectionIntent").invoke(null) as? android.content.Intent
-            if (storedIntent != null) {
-                // Use AgentBridge.startModule to ensure module is active, then send projection
-                val startModule = bridge.getMethod("startModule", android.content.Context::class.java, Function2::class.java)
-                val ctx: android.content.Context? = InputService.instance
-                if (ctx != null) {
-                    startModule.invoke(null, ctx, null)
-                }
-                // Brief delay for module startup
-                kotlinx.coroutines.delay(500)
-                // Send StartProjection via reflection to avoid mjpeg module dependency
-                try {
-                    val eventClass = Class.forName("info.dvkr.screenstream.mjpeg.internal.MjpegEvent\$StartProjection")
-                    val eventConstructor = eventClass.getConstructor(android.content.Intent::class.java)
-                    val event = eventConstructor.newInstance(storedIntent)
-
-                    val koin = org.koin.core.context.GlobalContext.getOrNull()
-                    if (koin != null) {
-                        val manager = koin.get<info.dvkr.screenstream.common.module.StreamingModuleManager>()
-                        val activeModule = manager.activeModuleStateFlow.value
-                        if (activeModule != null) {
-                            val sendEvent = activeModule.javaClass.getMethod("sendEvent", Class.forName("info.dvkr.screenstream.common.ModuleEvent"))
-                            sendEvent.invoke(activeModule, event)
-                            call.respondText(
-                                JSONObject().put("ok", true).put("action", "stream_started").toString(),
-                                ContentType.Application.Json
-                            )
-                        } else {
-                            call.respondText(
-                                JSONObject().put("ok", false).put("error", "No active streaming module").toString(),
-                                ContentType.Application.Json, HttpStatusCode.ServiceUnavailable
-                            )
-                        }
-                    } else {
-                        call.respondText(
-                            JSONObject().put("ok", false).put("error", "Koin not initialized").toString(),
-                            ContentType.Application.Json, HttpStatusCode.InternalServerError
-                        )
-                    }
-                } catch (refErr: Exception) {
-                    call.respondText(
-                        JSONObject().put("ok", false).put("error", "Reflection error: ${refErr.message}").toString(),
-                        ContentType.Application.Json, HttpStatusCode.InternalServerError
-                    )
-                }
-            } else {
-                call.respondText(
-                    JSONObject().put("ok", false).put("error", "Stored intent is null").toString(),
-                    ContentType.Application.Json, HttpStatusCode.InternalServerError
-                )
+            // Use AgentBridge.startStream — handles main-thread dispatch + reflection internally
+            val latch = java.util.concurrent.CountDownLatch(1)
+            var resultOk = false
+            var resultMsg = ""
+            val startStream = bridge.getMethod("startStream", Function2::class.java)
+            val callback = { ok: Boolean, msg: String ->
+                resultOk = ok; resultMsg = msg; latch.countDown()
             }
+            startStream.invoke(null, callback)
+            latch.await(10, java.util.concurrent.TimeUnit.SECONDS)
+            call.respondText(
+                JSONObject().put("ok", resultOk).put("action", if (resultOk) "stream_started" else "failed").put("message", resultMsg).toString(),
+                ContentType.Application.Json, if (resultOk) HttpStatusCode.OK else HttpStatusCode.InternalServerError
+            )
         } catch (e: Exception) {
             call.respondText(jsonError("Start stream failed: ${e.message}"), ContentType.Application.Json, HttpStatusCode.InternalServerError)
         }
@@ -1247,13 +1216,7 @@ public fun Route.installInputRoutes() {
     post("/settings") {
         try {
             val json = JSONObject(call.receiveText())
-            val koin = org.koin.core.context.GlobalContext.getOrNull()
-            if (koin == null) {
-                call.respondText(jsonError("Koin not initialized"), ContentType.Application.Json, HttpStatusCode.InternalServerError)
-                return@post
-            }
             val updated = mutableListOf<String>()
-            // Input settings
             if (json.has("inputEnabled")) {
                 InputService.isInputEnabled = json.getBoolean("inputEnabled")
                 updated.add("inputEnabled")
@@ -1262,53 +1225,8 @@ public fun Route.installInputRoutes() {
                 InputService.scaling = json.getDouble("scaling").toFloat()
                 updated.add("scaling")
             }
-            // MJPEG/Streaming settings via reflection (avoids circular module dependency)
-            val streamingKeys = setOf("streamCodec", "vrMode", "vrIpd", "jpegQuality", "resizeFactor",
-                "maxFPS", "rotation", "keepAwake", "stopOnSleep", "resolutionWidth", "resolutionHeight",
-                "resolutionStretch", "imageCrop", "imageGrayscale", "htmlEnableButtons", "htmlFitWindow")
-            val hasStreamingKey = streamingKeys.any { json.has(it) }
-            if (hasStreamingKey) {
-                try {
-                    val settingsClass = Class.forName("info.dvkr.screenstream.mjpeg.settings.MjpegSettings")
-                    val settingsObj = koin.get<Any>(settingsClass.kotlin)
-                    // Call updateData via reflection: updateData { copy(...) }
-                    // Since we can't call copy() via reflection easily, use individual DataStore preference writes
-                    val dataFlow = settingsClass.getMethod("getData").invoke(settingsObj)
-                    val currentData = dataFlow.javaClass.getMethod("getValue").invoke(dataFlow)
-                    val dataClass = currentData.javaClass
-                    // Build kwargs map of changed fields
-                    val changes = mutableMapOf<String, Any>()
-                    for (key in streamingKeys) {
-                        if (!json.has(key)) continue
-                        try {
-                            val value: Any = when {
-                                key in setOf("keepAwake", "stopOnSleep", "resolutionStretch", "imageCrop", "imageGrayscale", "htmlEnableButtons", "htmlFitWindow") -> json.getBoolean(key)
-                                else -> json.getInt(key)
-                            }
-                            changes[key] = value
-                        } catch (_: Exception) {}
-                    }
-                    if (changes.isNotEmpty()) {
-                        // Use copy() via Kotlin reflection
-                        val copyMethod = dataClass.declaredMethods.firstOrNull { it.name == "copy" }
-                        if (copyMethod != null) {
-                            // Fallback: write settings one by one via DataStore preferences
-                            // This is safer than trying to call copy() with 30+ params via reflection
-                            val keyClass = Class.forName("info.dvkr.screenstream.mjpeg.settings.MjpegSettings\$Key")
-                            val dsField = settingsClass.kotlin.members.find { it.name == "data" }
-                            // Simple approach: report what would be updated (read-only for now)
-                            updated.addAll(changes.keys)
-                        } else {
-                            updated.addAll(changes.keys)
-                        }
-                    }
-                } catch (e: Exception) {
-                    call.respondText(jsonError("Streaming settings update error: ${e.message}"), ContentType.Application.Json, HttpStatusCode.InternalServerError)
-                    return@post
-                }
-            }
             call.respondText(
-                JSONObject().put("ok", true).put("updated", org.json.JSONArray(updated)).put("note", "Some changes require stream restart to take effect").toString(),
+                JSONObject().put("ok", true).put("updated", org.json.JSONArray(updated)).toString(),
                 ContentType.Application.Json
             )
         } catch (e: Exception) {

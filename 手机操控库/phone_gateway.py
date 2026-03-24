@@ -340,6 +340,42 @@ class ThreadedServer(ThreadingMixIn, HTTPServer):
 # 主入口
 # ============================================================
 
+def _kill_port(port: int):
+    """清理占用指定端口的进程，确保幂等启动"""
+    import subprocess, signal
+    try:
+        if os.name == "nt":
+            out = subprocess.check_output(
+                f"netstat -ano | findstr \"LISTENING\" | findstr \":{port} \"",
+                shell=True, text=True, stderr=subprocess.DEVNULL
+            )
+            pids = set()
+            for line in out.strip().splitlines():
+                parts = line.split()
+                if parts:
+                    pids.add(parts[-1])
+            for pid in pids:
+                try:
+                    subprocess.run(["taskkill", "/F", "/PID", pid], capture_output=True)
+                    log.info(f"🔪 终止占用 :{port} 的进程 PID={pid}")
+                except Exception:
+                    pass
+        else:
+            out = subprocess.check_output(
+                ["lsof", "-ti", f"tcp:{port}"], text=True, stderr=subprocess.DEVNULL
+            )
+            for pid in out.strip().splitlines():
+                try:
+                    os.kill(int(pid), signal.SIGTERM)
+                    log.info(f"🔪 终止占用 :{port} 的进程 PID={pid}")
+                except Exception:
+                    pass
+        if pids if os.name == "nt" else out.strip():
+            time.sleep(1)
+    except Exception:
+        pass
+
+
 def main():
     global GATEWAY_TOKEN
 
@@ -359,6 +395,7 @@ def main():
     if args.no_auth:
         GATEWAY_TOKEN = ""
 
+    _kill_port(args.port)
     connector.discover()
 
     if args.heartbeat > 0:
