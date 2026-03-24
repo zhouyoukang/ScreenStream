@@ -1,6 +1,5 @@
 package info.dvkr.screenstream.input.settings
 
-import androidx.compose.runtime.Immutable
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
@@ -30,7 +29,6 @@ public interface InputSettings {
         public const val PIN: Int = 0
     }
 
-    @Immutable
     public data class Data(
         public val inputEnabled: Boolean = Default.INPUT_ENABLED,
         public val apiPort: Int = 8084,
