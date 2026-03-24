@@ -23,6 +23,8 @@ phone_lib.py是唯一ADB/连接真理源。90+ SS HTTP API封装+认知系统Hub
 | ③ 本地网关 | 127.0.0.1:28084 → WiFi → 手机:8084 | 1-5ms | 台式机同LAN | **32/32** ✅ |
 | ④ WiFi直达 | 192.168.31.40:8084 | 1-5ms | 同LAN | **32/32** ✅ |
 
+> 四路径全通: **128/128 (100%)** 2026-03-24
+
 ## 铁律
 1. **phone_lib.py是唯一ADB真理源** — 所有文件通过它获取ADB能力
 2. OnePlus已Root → Root优先(L0 su -c)，UI自动化为降级
@@ -63,10 +65,31 @@ phone_lib.py是唯一ADB/连接真理源。90+ SS HTTP API封装+认知系统Hub
 - **ScreenStream**: 同脚本 `am start` 启动SS→回桌面
 - **无障碍服务**: 系统级注册，开机自动恢复
 
+## 查找手机 (find_my_phone.py · 万法归宗)
+
+六大能力 — `from find_my_phone import FindMyPhone; fmp = FindMyPhone()`
+
+| 能力 | 方法 | 底层机制 |
+|------|------|----------|
+| 定位 | `fmp.locate()` | `dumpsys location` → GPS/Fused/Network + WiFi BSSID + 基站CellID |
+| 告警 | `fmp.alert()` | `findphone()` + `flashlight()` + `vibrate()` + 最大音量 + 亮屏 |
+| 锁护 | `fmp.lock(msg)` / `fmp.wipe("YES_WIPE_NOW")` | `settings put secure lock_screen_owner_info` + `lock()` |
+| 追踪 | `fmp.track_start()` / `fmp.track_once(server_url)` | Traccar/OsmAnd协议 HTTP GET + 本地 `_track_log.jsonl` |
+| 反制 | `fmp.sim_check()` / `fmp.sim_watch_start()` / `fmp.stealth_photo()` | `getprop gsm.sim.*` + `screencap` |
+| 存活 | `fmp.deploy_boot_script()` | Magisk `/data/adb/service.d/find_my_phone_boot.sh` |
+| 综合 | `fmp.status()` / `fmp.emergency()` | 一键全状态 / 丢失时一键全执行 |
+
+- **一键**: `→查找手机.cmd` (交互菜单)
+- **CLI**: `python find_my_phone.py emergency` (公网: `--url https://aiotvr.xyz/input`)
+- **开机日志**: `/sdcard/.find_my_phone_log.txt`
+
 ## 陷阱
 - 微信等反无障碍App: observe()返回blind=true时降级ADB坐标点击
 - QQ NT数据库: SQLCipher加密，key=`wy65ioGG`，需Root提取
 - apps列表/文件搜索公网可能超时(数据量大)，本地无此问题
-- 四路径E2E: `python _e2e_supreme.py --all` → **125/128通过(98%)** 2026-03-24
-- ADB冲突陷阱: 确保 `adb -s 54ea19ff forward --remove tcp:28084` 否则网关路径被劫持
-- Nginx路径SSL握手偶发超时(网络层)，属正常范围，非代码问题
+- 四路径E2E: `python _e2e_supreme.py --all` → **128/128通过(100%)** 2026-03-24
+- ADB冲突陷阱: `adb -s 54ea19ff forward --remove tcp:28084`否则网关被劫持
+- Nginx修复: `proxy_http_version 1.1; proxy_set_header Connection "";` 减延11s到2.6s
+- E2E修复: requests.Session() SSL复用 + proxies={”no_proxy”:”*”}绕过Clash winreg代理
+- 网关修复: allow_reuse_address + serve_forever自愈復重启 + _ensure_gateway()前置检测
+- frpc两端心跳: heartbeatInterval=30 heartbeatTimeout=90 poolCount=2/3

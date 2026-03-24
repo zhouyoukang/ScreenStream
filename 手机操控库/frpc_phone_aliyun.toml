@@ -1,0 +1,27 @@
+serverAddr = "60.205.171.100"
+serverPort = 7000
+auth.method = "token"
+auth.token = "NKLQyCrSavf1MmYOGtkFzbh0"
+user = "oneplus"
+loginFailExit = false
+
+[transport]
+heartbeatInterval = 30
+heartbeatTimeout = 90
+poolCount = 2
+
+# ScreenStream控制API — 手机直连阿里云(无需台式机)
+[[proxies]]
+name = "phone_input_direct"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 8084
+remotePort = 38084
+
+# ScreenStream投屏 — 手机直连阿里云
+[[proxies]]
+name = "phone_stream_direct"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 8080
+remotePort = 38080

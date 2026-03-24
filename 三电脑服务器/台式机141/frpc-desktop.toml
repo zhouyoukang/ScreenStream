@@ -1,0 +1,108 @@
+serverAddr = "60.205.171.100"
+serverPort = 7000
+auth.method = "token"
+auth.token = "NKLQyCrSavf1MmYOGtkFzbh0"
+user = "desktop-main"
+loginFailExit = false
+
+[transport]
+heartbeatInterval = 30
+heartbeatTimeout = 90
+poolCount = 3
+
+[[proxies]]
+name = "remote-agent"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 9903
+remotePort = 19903
+
+[[proxies]]
+name = "rdp"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 3389
+remotePort = 13389
+
+# ScreenStream投屏 — WiFi直连手机(无需USB)
+[[proxies]]
+name = "phone_ss"
+type = "tcp"
+localIP = "192.168.31.40"
+localPort = 8080
+remotePort = 18086
+
+# ScreenStream控制API — WiFi直连手机(无需USB)
+[[proxies]]
+name = "phone_input"
+type = "tcp"
+localIP = "192.168.31.40"
+localPort = 8084
+remotePort = 18084
+
+# 手机公网网关 — Agent全掌控入口(认证+自愈+多路径)
+[[proxies]]
+name = "phone_gateway"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 28084
+remotePort = 28084
+# ☳ CFW代理隧道 — 已迁移到笔记本179（24h在线）
+# 台式机不再提供CFW，改为客户端模式→笔记本179:18443
+# [[proxies]]
+# name = "cfw_proxy"
+# type = "tcp"
+# localIP = "127.0.0.1"
+# localPort = 443
+# remotePort = 18443
+
+# 道·远程中枢 (remote-hub server.js)
+[[proxies]]
+name = "remote_hub"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 3002
+remotePort = 13002
+
+# ── 笔记本服务器复制 (新增) ──
+
+# 7. 二手书API (FastAPI)
+[[proxies]]
+name = "bookshop_api"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 8088
+remotePort = 18088
+
+# 8. 微信公众号+智能家居网关
+[[proxies]]
+name = "gateway"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 8900
+remotePort = 18900
+
+# 9. 公网投屏WebSocket中继
+[[proxies]]
+name = "relay"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 9800
+remotePort = 19800
+
+# 10. 亲情远程中枢 (HTTP+WebSocket, 公网投屏+反控)
+[[proxies]]
+name = "family_remote"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 9860
+remotePort = 19860
+
+# 11. Quest 3 Hub (空间感知+9通道操控)
+[[proxies]]
+name = "quest3_hub"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 8863
+remotePort = 19863
+

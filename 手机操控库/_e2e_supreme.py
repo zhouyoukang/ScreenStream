@@ -10,28 +10,23 @@
   python _e2e_supreme.py --gateway          # 本地网关
   python _e2e_supreme.py --all              # 三路径全测
 """
-import urllib.request, json, ssl, sys, time, argparse
-
-ctx = ssl.create_default_context()
-ctx.check_hostname = False
-ctx.verify_mode = ssl.CERT_NONE
-opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx))
+import json, sys, time, argparse
+import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 R = {"pass": 0, "fail": 0, "skip": 0, "details": []}
+_sess = None  # per-suite session (reuses SSL connections)
 
 def GET(base, path, timeout=8):
-    url = base + path
-    req = urllib.request.Request(url, method="GET")
-    r = opener.open(req, timeout=timeout)
-    return json.loads(r.read().decode())
+    r = _sess.get(base + path, timeout=timeout)
+    r.raise_for_status()
+    return r.json()
 
 def POST(base, path, body=None, timeout=8):
-    url = base + path
-    data = json.dumps(body).encode() if body else None
-    headers = {"Content-Type": "application/json"} if data else {}
-    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-    r = opener.open(req, timeout=timeout)
-    return json.loads(r.read().decode())
+    r = _sess.post(base + path, json=body, timeout=timeout)
+    r.raise_for_status()
+    return r.json()
 
 _timeout = 8  # default per-suite timeout
 
@@ -49,9 +44,32 @@ def t(group, name, fn):
         R["details"].append({"g": group, "n": name, "ok": False, "d": str(e)[:80]})
         return False, None
 
+def _ensure_gateway():
+    """确保本地网关在线，否则重启"""
+    import urllib.request as _u, subprocess as _sp, time as _t, os as _os
+    for _ in range(2):
+        try:
+            _u.urlopen("http://127.0.0.1:28084/gw/health", timeout=2)
+            return
+        except Exception:
+            pass
+    print("  ⚠️  网关离线，自动重启中...")
+    _gw_dir = _os.path.dirname(_os.path.abspath(__file__))
+    _sp.Popen(
+        ["python", "-u", "phone_gateway.py", "--no-auth", "--heartbeat", "30"],
+        stdout=_sp.DEVNULL, stderr=_sp.DEVNULL, cwd=_gw_dir
+    )
+    _t.sleep(4)
+
 def run_suite(base, label, timeout=8):
-    global _timeout
+    global _timeout, _sess
     _timeout = timeout
+    if "28084" in base:
+        _ensure_gateway()
+    _sess = requests.Session()
+    _sess.verify = False
+    _sess.trust_env = False
+    _sess.proxies = {"http": "", "https": "", "no_proxy": "*"}  # 强制绕过Clash(winreg系统代理)
     print(f"\n{'='*65}")
     print(f"  📱 ScreenStream 全能力验证 · {label}")
     print(f"  🔗 {base}  ⏱ timeout={timeout}s")
