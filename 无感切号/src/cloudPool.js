@@ -219,6 +219,21 @@ class CloudPoolClient {
     } catch (e) { return { ok: false, error: e.message }; }
   }
 
+
+  async payInit(amount, note) {
+    try {
+      const r = await this._request('POST', '/api/v1/pay-init', { amount, note: note || '' });
+      return r.ok ? r.data : { ok: false, error: r.data?.error || 'pay-init failed' };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  async payStatus(orderId) {
+    try {
+      const r = await this._request('GET', '/api/v1/pay-status', null, 'orderId=' + encodeURIComponent(orderId));
+      return r.ok ? r.data : { ok: false, error: r.data?.error || 'pay-status failed' };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
   getStatus() {
     const enh = this._enhancedCache;
     return {

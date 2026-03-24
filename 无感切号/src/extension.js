@@ -34,9 +34,16 @@ const _G = global.__wamHot = global.__wamHot || {
 };
 _G.vscode = _G.vscode || vscode; // 首次加载时持久化, 热重载不覆盖
 _G.snapshot = _G.snapshot || null;       // 状态快照 (热重载跨模块传递)
-// v3.11.0: 版本守卫 — 版本升级时强制重建服务器以刷新handler
-if (_G.hubVersion !== '3.11.0') { _G.hubServerRef = null; }
+// v3.11.3: 版本守卫 — 升级时关闭旧服务器(防端口泄漏), 然后让_startHubServer重建
+if (_G.hubHandlerVersion !== '3.11.3') {
+  if (_G.hubServerRef) { try { _G.hubServerRef.close(); } catch {} }
+  _G.hubServerRef = null;
+  _G.hubHandlerVersion = '3.11.3';
+}
 _G.hubVersion = '3.11.0';
+// v3.11.2: always update mutable handler on every load
+_G.hubHandlerFn = _hubRequestHandler;
+
 _G.hubServerRef = _G.hubServerRef || null; // Hub server引用 (跨reload复用, 无端口冲突)
 _G.isHotReloading = false;               // 热重载进行中标志 (deactivate软模式)
 
@@ -1174,11 +1181,13 @@ function _tokenCost(model, inTok, outTok) {
 }
 
 function _startHubServer() {
+  // v3.11.2: hot-reload架构 — 每次加载更新可变handler引用，复用服务器时替换监听器
+  _G.hubHandlerFn = _hubRequestHandler;
   if (_G.hubServerRef) {
     _hubServer = _G.hubServerRef;
     _G.hubServerRef = null;
     _hubServer.removeAllListeners('request');
-    _hubServer.on('request', _hubRequestHandler);
+    _hubServer.on('request', (req, res) => (_G.hubHandlerFn || _hubRequestHandler)(req, res));
     _logInfo('HUB', `Hub server reused (hot-reload) — :${HUB_PORT}`);
     return;
   }
@@ -1580,6 +1589,21 @@ function _hubRequestHandler(req, res) {
       if (p === "/api/hot/reload") {
         try { _hotReload(); return json({ ok: true, reloadCount: _G.reloadCount }); }
         catch (e) { return json({ ok: false, error: e.message }, 500); }
+      }
+      if (req.method === "POST" && p === "/api/v1/pay-init") {
+        _pb().then(async d => {
+          if (!d || !cloudPool) return json({ ok: false, error: "pool not ready" });
+          const r = await cloudPool.payInit(d.amount, d.note);
+          return json(r);
+        }).catch(e => json({ ok: false, error: e.message }));
+        return;
+      }
+      if (p === "/api/v1/pay-status") {
+        const qs2 = new URLSearchParams(url.search);
+        const orderId = qs2.get("orderId") || "";
+        if (!cloudPool) return json({ ok: false, error: "pool not ready" });
+        cloudPool.payStatus(orderId).then(r => json(r)).catch(e => json({ ok: false, error: e.message }));
+        return;
       }
       if (p === "/api/hot/snapshot") {
         return json({

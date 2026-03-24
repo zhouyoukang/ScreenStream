@@ -3,7 +3,7 @@
   "publisher": "zhouyoukang",
   "displayName": "Windsurf小助手",
   "description": "v3.11.0 云端修复·checkHealth后刷新面板 道法自然·根因修复 · 拦截器切号触发 · Failed precondition识别 · 低额自适应加速",
-  "version": "3.11.0",
+  "version": "3.11.1",
   "license": "MIT",
   "repository": {
     "type": "git",
