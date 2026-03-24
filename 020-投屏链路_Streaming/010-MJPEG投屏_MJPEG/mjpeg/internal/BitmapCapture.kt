@@ -311,6 +311,7 @@ internal class BitmapCapture(
 
         reusableBitmap = null
         outputBitmap = null
+        transformMatrixDirty = true
 
         XLog.d(getLog("resize", "End"))
     }

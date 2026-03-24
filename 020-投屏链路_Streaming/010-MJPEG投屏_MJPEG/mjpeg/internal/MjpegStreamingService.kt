@@ -421,10 +421,11 @@ internal class MjpegStreamingService(
                         else
                             MediaFormat.MIMETYPE_VIDEO_AVC
 
-                        // Resolution-adaptive bitrate: ~8 bits/pixel @ target fps for sharp LAN quality
+                        // Resolution-adaptive bitrate: raw pixels × 8bits × 30fps ÷ 50 (H264 ~50:1 compression)
                         // 1080x2400@30fps → ~12Mbps, 720x1600@30fps → ~6Mbps, 540x1200@30fps → ~3Mbps
+                        // Oppo A11x 720x1520 → ~5.25Mbps
                         val pixels = width.toLong() * height.toLong()
-                        val adaptiveBitRate = (pixels * 8 * 30 / 1000000).toInt().coerceIn(3000000, 20000000)
+                        val adaptiveBitRate = (pixels * 8 * 30 / 50).toInt().coerceIn(3000000, 20000000)
                         XLog.i(getLog("H264", "Adaptive bitrate: ${adaptiveBitRate/1000}kbps for ${width}x${height}"))
 
                         val encoder = H264Encoder(
