@@ -800,8 +800,10 @@ function _classifyRateLimit(errorText, contextKey) {
   if (contextKey && (contextKey.includes('modelRateLimited') || contextKey.includes('messageRateLimited'))) {
     return 'per_model';
   }
+  // Gate 0: "Failed precondition" — 日配额耗尽 (gRPC code 9, 非code 8的rate limit)
+  if (/failed\s*precondition/i.test(text)) return 'quota';
   // Gate 1/2 特征: "quota" 相关
-  if (/quota/i.test(text) && /exhaust|exceed/i.test(text)) return 'quota';
+  if (/quota/i.test(text) && /exhaust|exceed|exhausted/i.test(text)) return 'quota';
   if (contextKey && contextKey.includes('quota')) return 'quota';
   // 高概率为per-model rate limit(Opus桶容量最小,最容易触发)
   // 防止这些通用key落入'unknown'导致Gate 3 handler被跳过
@@ -847,6 +849,7 @@ async function _handleTierRateLimit(context, resetSeconds) {
   // 直接账号轮转(跳过模型变体轮转 — 对Gate 4无效)
   _activateBoost();
   await _doPoolRotate(context, true);
+  _scheduleAutoRetry(); // v3.9.0: Gate 4切号后自动重试(根因修复)
   // 重置小时计数器(新账号从0开始)
   _hourlyMsgLog = [];
   return { action: 'tier_account_switch', cooldown };
@@ -955,42 +958,151 @@ async function _switchModelUid(targetUid) {
   }
 }
 
-// 修复: 切号完成后自动发现并执行Windsurf的重试命令, 用户无感
+// v3.9.0: 增强命令发现 + 缓存刷新(首次失败后重新扫描)
+let _retryCmdDiscoveredAt = 0;
 async function _discoverRetryCmd() {
-  if (_retryCmd !== undefined) return _retryCmd;
+  // 缓存有效期5min — 命令列表可能因扩展加载而变化
+  if (_retryCmd !== undefined && _retryCmd !== null && (Date.now() - _retryCmdDiscoveredAt < 300000)) return _retryCmd;
+  // 首次发现null → 强制重新扫描(命令可能延迟注册)
+  if (_retryCmd === null && (Date.now() - _retryCmdDiscoveredAt < 10000)) return _retryCmd;
   try {
     const allCmds = await vscode.commands.getCommands(true);
     const candidates = [
-      ...allCmds.filter(c => /cascade/i.test(c) && /re(?:try|send|generat|submit)/i.test(c)),
-      ...allCmds.filter(c => /windsurf/i.test(c) && /re(?:try|send|generat|submit)/i.test(c)),
-      ...allCmds.filter(c => /chat/i.test(c) && /re(?:try|send|generat|submit)/i.test(c)),
+      // Windsurf Cascade 重试/重发命令
+      ...allCmds.filter(c => /cascade/i.test(c) && /re(?:try|send|generat|submit|run)/i.test(c)),
+      ...allCmds.filter(c => /windsurf/i.test(c) && /re(?:try|send|generat|submit|run)/i.test(c)),
+      ...allCmds.filter(c => /chat/i.test(c) && /re(?:try|send|generat|submit|run)/i.test(c)),
+      // 更宽松: 任何含retry的命令
+      ...allCmds.filter(c => /retry/i.test(c)),
     ];
     const seen = new Set();
     const unique = candidates.filter(c => { if (seen.has(c)) return false; seen.add(c); return true; });
     _retryCmd = unique[0] || null;
-    _logInfo('RETRY', 'v16.0 retry cmd: found=' + _retryCmd + ' (all=' + unique.join(',') + ')');
+    _retryCmdDiscoveredAt = Date.now();
+    _logInfo('RETRY', 'v3.9.0 retry cmd: found=' + _retryCmd + ' (all=' + unique.join(',') + ')');
   } catch (e) {
     _retryCmd = null;
+    _retryCmdDiscoveredAt = Date.now();
     _logWarn('RETRY', 'retry command discovery failed', e.message);
   }
   return _retryCmd;
 }
 
-function _scheduleAutoRetry(delayMs = 1200) {
-  setTimeout(async () => {
+// v3.9.0 无感续传引擎 — 多重重试 + UI错误清除 + 验证闭环
+let _autoRetryInFlight = false; // 防重入
+let _autoRetrySuccessCount = 0; // 本会话成功重试次数
+let _autoRetryFailCount = 0; // 本会话失败重试次数
+let _lastSwitchTs = 0; // 最近一次切号时间戳(用于无感续传时间窗口)
+
+/** v3.9.0 清除UI层rate limit错误残留
+ *  道: 用户于无为 → 错误痕迹不应存留于五感
+ *  解构: Windsurf对话框错误通过context key+Zustand状态双通道展现
+ *    - context key: windsurf.messageRateLimited → Cascade面板内联错误横幅
+ *    - Zustand: quota_exhausted → 面板底部配额警告条
+ *    - 清除方式: setContext(key, false) + 触发UI刷新 */
+async function _clearRateLimitUI() {
+  const CLEAR_KEYS = [
+    'chatQuotaExceeded', 'rateLimitExceeded', 'windsurf.quotaExceeded',
+    'windsurf.rateLimited', 'cascade.rateLimited', 'windsurf.messageRateLimited',
+    'windsurf.modelRateLimited', 'windsurf.permissionDenied',
+  ];
+  for (const key of CLEAR_KEYS) {
+    try { await vscode.commands.executeCommand("setContext", key, false); } catch {}
+  }
+  // 尝试清除通知栏残留
+  try { await vscode.commands.executeCommand("notifications.clearAll"); } catch {}
+  _logInfo('RETRY', 'UI rate limit indicators cleared');
+}
+
+/** v3.9.0 多重重试引擎
+ *  策略: 3次退避重试(1.5s→3s→6s) + 每次重试前清除UI错误 + 验证闭环
+ *  道: 水遇石则绕 → 第一次不通则换路再试 */
+function _scheduleAutoRetry(delayMs = 1500) {
+  if (_autoRetryInFlight) { _logInfo("RETRY", "重试已在进行中, 跳过"); return; }
+  _autoRetryInFlight = true;
+  _lastSwitchTs = Date.now();
+  const MAX_ATTEMPTS = 3;
+  const BACKOFF = [delayMs, delayMs * 2, delayMs * 4];
+
+  const attemptRetry = async (attempt) => {
     try {
+      // Step 1: 清除UI层错误残留(让用户看不到错误)
+      await _clearRateLimitUI();
+
+      // Step 2: 发现重试命令
       const cmd = await _discoverRetryCmd();
-      if (!cmd) { _logInfo('RETRY', 'no retry command found, user must retry manually'); return; }
-      _logInfo('RETRY', 'v16.0 auto-retry: executing ' + cmd + ' after rate limit switch');
+      if (!cmd) {
+        // 降级: 尝试直接发送空消息触发重新生成
+        try {
+          await vscode.commands.executeCommand("windsurf.cascade.resend");
+          _logInfo('RETRY', 'fallback: windsurf.cascade.resend executed');
+          _autoRetrySuccessCount++;
+          _autoRetryInFlight = false;
+          return;
+        } catch {}
+        _logInfo('RETRY', 'no retry command found after ' + attempt + ' attempts');
+        _autoRetryInFlight = false;
+        _autoRetryFailCount++;
+        return;
+      }
+
+      // Step 3: 执行重试
+      _logInfo('RETRY', `v3.9.0 attempt ${attempt}/${MAX_ATTEMPTS}: executing ${cmd}`);
       await vscode.commands.executeCommand(cmd);
-      _logInfo('RETRY', 'auto-retry command executed successfully');
+
+      // Step 4: 验证 — 2s后检查context key是否已清除
+      setTimeout(async () => {
+        let stillLimited = false;
+        try {
+          stillLimited = await vscode.commands.executeCommand("getContext", "windsurf.messageRateLimited");
+        } catch {}
+        if (stillLimited && attempt < MAX_ATTEMPTS) {
+          _logWarn('RETRY', `attempt ${attempt} 重试后仍限流, 退避重试 ${BACKOFF[attempt]}ms`);
+          setTimeout(() => attemptRetry(attempt + 1), BACKOFF[attempt]);
+        } else {
+          _autoRetryInFlight = false;
+          if (!stillLimited) {
+            _autoRetrySuccessCount++;
+            _logInfo('RETRY', `✅ 无感续传成功! attempt=${attempt} total_success=${_autoRetrySuccessCount}`);
+          } else {
+            _autoRetryFailCount++;
+            _logWarn('RETRY', `❌ ${MAX_ATTEMPTS}次重试后仍限流, fail_count=${_autoRetryFailCount}`);
+          }
+        }
+      }, 2000);
+
     } catch (e) {
-      _logInfo('RETRY', 'auto-retry failed (non-fatal): ' + e.message);
+      if (attempt < MAX_ATTEMPTS) {
+        _logInfo('RETRY', `attempt ${attempt} failed: ${e.message}, retrying in ${BACKOFF[attempt]}ms`);
+        setTimeout(() => attemptRetry(attempt + 1), BACKOFF[attempt]);
+      } else {
+        _autoRetryInFlight = false;
+        _autoRetryFailCount++;
+        _logInfo('RETRY', `all ${MAX_ATTEMPTS} attempts failed: ${e.message}`);
+      }
     }
-  }, delayMs);
+  };
+
+  setTimeout(() => attemptRetry(1), BACKOFF[0]);
 }
 const HUB_PORT = 9870;
 let _hubServer = null;
+
+// v3.9.0 无感续传状态(暴露给Hub API /api/seamless-stats)
+function _getSeamlessStats() {
+  return {
+    autoRetrySuccess: _autoRetrySuccessCount,
+    autoRetryFail: _autoRetryFailCount,
+    autoRetryInFlight: _autoRetryInFlight,
+    lastSwitchTs: _lastSwitchTs,
+    lastSwitchAgo: _lastSwitchTs ? Math.round((Date.now() - _lastSwitchTs) / 1000) + 's' : null,
+    retryCmd: _retryCmd || 'not_discovered',
+    tierRateLimitCount: _tierRateLimitCount,
+    modelRateLimitCount: _modelRateLimitCount,
+    zerodelaySwitchCount: _zerodelaySwitchCount,
+    fullLoginSwitchCount: _fullLoginSwitchCount,
+  };
+}
 const _ANTHROPIC = {
   "Claude Opus 4.6": { i: 5, o: 25 },
   "Claude Opus 4.6 1M": { i: 10, o: 37.5 },
@@ -1073,7 +1185,7 @@ function _hubRequestHandler(req, res) {
       if (p === "/health")
         return json({
           status: "ok",
-          version: "3.6.0",
+          version: "3.8.0",
           port: HUB_PORT,
           accounts: am ? am.getAll().length : 0,
           activeIndex: _activeIndex,
@@ -1083,6 +1195,10 @@ function _hubRequestHandler(req, res) {
           proxyRouting: _isProxyRouting(),
           cloudPool: cloudPool ? cloudPool.getStatus() : null,
         });
+
+      // v3.9.0
+      if (p === "/api/seamless-stats") return json(_getSeamlessStats());
+      if (p === "/api/conversation-map") return json(_getConversationMap());
 
       if (p === '/api/pool/clear-rate-limits') {
         if (am) {
@@ -1781,6 +1897,7 @@ function _startWindowCoordinator(context) {
 
 /** 探测当前窗口活跃Cascade对话数
  *  策略: 多层探测，取最高值
+ */
 function _detectCascadeTabs() {
   const now = Date.now();
   if (now - _lastTabCheck < TAB_CHECK_INTERVAL) return _cascadeTabCount;
@@ -1900,8 +2017,8 @@ function _activate(context) {
   _logInfo(
     "BOOT",
     isHotRestart
-      ? `无感号池引擎 v3.6.0 热重载恢复 (hot#${_G.reloadCount}, 状态已恢复, ${_sessionPool.size}sessions, ${_capacityMatrix.size}matrix)`
-      : "无感号池引擎 v3.6.0 启动 (道法自然·万法归宗 · Session Pool · Capacity Matrix · 零延迟切换 · 状态不灭热重载)",
+      ? `无感号池引擎 v3.8.0 热重载恢复 (hot#${_G.reloadCount}, 状态已恢复, ${_sessionPool.size}sessions, ${_capacityMatrix.size}matrix)`
+      : "无感号池引擎 v3.8.0 启动 (道法自然·万法归宗 · Session Pool · Capacity Matrix · 零延迟切换 · 状态不灭热重载)",
   );
 
   // 指纹完整性
@@ -1960,6 +2077,7 @@ function _activate(context) {
       try {
         const h = await cloudPool.checkHealth();
         _logInfo("CLOUD", `云端号池: ${h.online ? '✅在线' : '⚠离线'} ${h.online ? `(${h.available}/${h.accounts}可用)` : (h.error || '')}`);
+        _updatePoolBar(); _refreshPanel();
         // cloud/hybrid模式 + 本地号池为空 → 自动从云端拉取账号
         if (h.online && am && am.count() === 0) {
           _logInfo("CLOUD", "本地号池为空，自动从云端拉取账号...");
@@ -2105,7 +2223,7 @@ function _activate(context) {
   const accounts = am.getAll();
   _logInfo(
     "BOOT",
-    `号池引擎就绪 v3.6.0 — ${accounts.length}账号, poolSrc=${_poolSourceMode}, proxy=${auth.getProxyStatus().mode}, route=${_routingMode}, win=${_getActiveWindowCount()}, tabs=${_cascadeTabCount}${_burstMode ? " BURST" : ""}, hub=:${HUB_PORT}, gates=4, hot=${_G.reloadCount}, ${isHotRestart ? '状态已恢复·'+_sessionPool.size+'sessions' : '全新启动'}`,
+    `号池引擎就绪 v3.8.0 — ${accounts.length}账号, poolSrc=${_poolSourceMode}, proxy=${auth.getProxyStatus().mode}, route=${_routingMode}, win=${_getActiveWindowCount()}, tabs=${_cascadeTabCount}${_burstMode ? " BURST" : ""}, hub=:${HUB_PORT}, gates=4, hot=${_G.reloadCount}, ${isHotRestart ? '状态已恢复·'+_sessionPool.size+'sessions' : '全新启动'}`,
   );
 }
 
@@ -2226,6 +2344,8 @@ function _startPoolEngine(context) {
   }, 3000);
   // 同时启动限流检测
   _startQuotaWatcher(context);
+  // v3.9.0 无感续传拦截器 — 在context key轮询之外建立第二感知通道
+  _startSeamlessInterceptor(context);
 }
 
 /** 号池心跳 — 每次tick检查活跃账号，必要时自动轮转
@@ -2272,6 +2392,13 @@ async function _poolTick(context) {
   const curQuota = am.effectiveRemaining(_activeIndex);
   _lastQuota = curQuota;
   _lastCheckTs = Date.now();
+
+  // v3.10 RC4根因修复: 低额自适应加速 — 配额<20%时自动激活boost缩短轮询间隔(45s→8s)
+  // 根因: 正常轮询45s，在两次检查之间配额从低到0，用户先于系统看到错误
+  if (curQuota !== null && curQuota > 0 && curQuota <= 20 && !_isBoost()) {
+    _activateBoost();
+    _logInfo("POOL", "v3.10 低额加速: quota=" + curQuota + "% → boost模式(8s轮询)");
+  }
 
   // 记录斜率历史
   if (curQuota !== null && curQuota !== undefined) {
@@ -2745,6 +2872,7 @@ function _startQuotaWatcher(context) {
           });
           _activateBoost();
           await _doPoolRotate(context, true);
+          _scheduleAutoRetry(); // v3.9.0: G1/G2切号后自动重试
           return;
         }
       } catch (e) {
@@ -2785,6 +2913,9 @@ function _startQuotaWatcher(context) {
     /model\s*provider\s*unreachable/i, // model availability error
     /provider.*(?:error|unavailable|unreachable)/i, // provider errors
     /incomplete\s*envelope/i, // gRPC framing error (broken session)
+    /failed\s*precondition/i, // v3.10: gRPC FAILED_PRECONDITION (daily quota exhausted)
+    /quota.*exhausted/i,      // v3.10: "daily usage quota has been exhausted"
+    /daily.*usage.*quota/i,   // v3.10: "Your daily usage quota has been exhausted"
   ];
   const RESETS_IN_RE = /resets?\s*in:?\s*(\d+)m(?:(\d+)s)?/i;
   const PER_MODEL_RL_RE = /reached.*message.*rate.*limit.*for this model/i;
@@ -2822,6 +2953,7 @@ function _startQuotaWatcher(context) {
         });
         _activateBoost();
         await _doPoolRotate(context, true);
+        _scheduleAutoRetry(); // v3.9.0: cachedPlanInfo切号后自动重试
       }
     } catch (e) {
       _logWarn("QUOTA", "cachedPlanInfo检查异常", e.message);
@@ -3013,6 +3145,7 @@ async function _handleCapacityExhausted(context, capacityResult) {
     _invalidateApiKeyCache(); // 切号后apiKey变化
     _activateBoost();
     await _doPoolRotate(context, true);
+    _scheduleAutoRetry(); // v3.9.0: L5 G4切号后自动重试
     return { action: 'capacity_account_switch', cooldown };
   }
 
@@ -3026,6 +3159,7 @@ async function _handleCapacityExhausted(context, capacityResult) {
   _invalidateApiKeyCache();
   _activateBoost();
   await _doPoolRotate(context, true);
+  _scheduleAutoRetry(); // v3.9.0: 默认容量切号后自动重试
   return { action: 'capacity_rotate', cooldown };
 }
 
@@ -3335,7 +3469,7 @@ async function _seamlessSwitch(context, targetIndex) {
     _cumulativeDropSinceActivation = 0; // v14.0: 新账号重置累积降幅
     _hourlyMsgLog = []; // v2.0: 新账号重置小时计数
     _resetModelMsgLog(prevIndex); // v2.0: 重置旧账号Opus计数
-    _resetModelMsgLog(prevIndex); // v3.6.0: 重置旧账号Sonnet T1M计数
+    _resetModelMsgLog(prevIndex); // v3.8.0: 重置旧账号Sonnet T1M计数
     _heartbeatWindow();
 
     // Post-switch quota verification — 切后立即验证，防止落入耗尽账号
@@ -3898,9 +4032,13 @@ function _writeAuthFilesCompat(authToken) {
 
 /** 刷新号池 — 全部账号额度 + 自动轮转 */
 async function _doRefreshPool(context) {
+  // 云端/混合模式: 优先重检云端健康(必须在early return前，否则纯云模式无本地账号时会跳过)
+  if (_poolSourceMode !== 'local' && cloudPool) {
+    try { await cloudPool.checkHealth(); } catch {}
+    _refreshPanel();
+  }
   const accounts = am.getAll();
   if (accounts.length === 0) return;
-  statusBar.text = "$(sync~spin) 刷新号池...";
   await _refreshAll((i, n) => {
     statusBar.text = `$(sync~spin) ${i + 1}/${n}...`;
   });
@@ -4022,7 +4160,7 @@ async function _handleAction(context, action, arg) {
         vscode.workspace.getConfiguration("wam").update("poolSource", arg, true);
         _logInfo("POOL_SRC", `号池来源面板切换: ${arg}`);
         if (arg !== 'local' && cloudPool) {
-          cloudPool.checkHealth().catch(() => {});
+          cloudPool.checkHealth().then(() => { _updatePoolBar(); _refreshPanel(); }).catch(() => { _refreshPanel(); });
           if (!_cloudSyncTimer) {
             _cloudSyncTimer = setInterval(() => _cloudSyncHealth().catch(() => {}), CLOUD_SYNC_INTERVAL);
           }
@@ -4214,6 +4352,10 @@ async function _cloudSyncHealth() {
     const r = await cloudPool.pushHealth(healthData);
     if (r.ok) {
       _logInfo("CLOUD", `健康数据已同步: ${r.synced || healthData.length}账号`);
+      // v3.10.1: checkHealth后刷新面板 — 拉取最新云端状态(W积分/设备激活)并更新UI
+      try { await cloudPool.checkHealth(); } catch {}
+      _updatePoolBar();
+      _refreshPanel();
     }
   } catch (e) {
     _logWarn("CLOUD", `同步失败: ${e.message}`);
@@ -4228,6 +4370,9 @@ async function _cloudPullFallback() {
     // 尝试重新检查健康
     const h = await cloudPool.checkHealth();
     if (!h.online) return { ok: false, reason: 'cloud_offline' };
+    // v3.10.1: 重连成功后刷新面板
+    _updatePoolBar();
+    _refreshPanel();
   }
   try {
     const r = await cloudPool.pullAccount();
@@ -5073,6 +5218,64 @@ function _hotReload() {
       }
     }
   }
+}
+
+// v3.9.0 seamless interceptor
+let _seamlessOutputChannel = null;
+let _conversationMap = new Map();
+let _seamlessInterceptorTimer = null;
+
+function _startSeamlessInterceptor(context) {
+  _seamlessOutputChannel = vscode.window.createOutputChannel("WAM Seamless");
+  context.subscriptions.push(_seamlessOutputChannel);
+  // v3.10: 扩展FAST_KEYS — 增加配额耗尽键(RC2根因修复)
+  const FAST_KEYS = [
+    "windsurf.messageRateLimited", "windsurf.permissionDenied",
+    "cascade.rateLimited", "windsurf.rateLimited",
+    "chatQuotaExceeded", "windsurf.quotaExceeded", "rateLimitExceeded", // v3.10: 配额键
+  ];
+  // v3.10: 配额键集合 — 命中时直接触发切号(RC1根因修复)
+  const QUOTA_FAST_KEYS = new Set(["chatQuotaExceeded", "windsurf.quotaExceeded", "rateLimitExceeded", "windsurf.permissionDenied", "windsurf.messageRateLimited", "cascade.rateLimited", "windsurf.rateLimited"]); // v3.11 RC-A: per-model rate limit keys也触发切号+重试
+  let _lastFast = 0;
+  let _interceptSwitchCount = 0;
+  _seamlessInterceptorTimer = setInterval(async () => {
+    if (_switching || _autoRetryInFlight) return;
+    for (const key of FAST_KEYS) {
+      try {
+        const hit = await vscode.commands.executeCommand("getContext", key);
+        if (hit && Date.now() - _lastFast > 3000) {
+          _lastFast = Date.now();
+          if (_seamlessOutputChannel) _seamlessOutputChannel.appendLine(new Date().toISOString() + " INTERCEPT: " + key);
+          // v3.10 RC1根因修复: 拦截器不仅清UI，还触发切号
+          if (QUOTA_FAST_KEYS.has(key) && _activeIndex >= 0 && am && !_switching) {
+            _interceptSwitchCount++;
+            _logWarn('SEAMLESS', "[v3.10] 拦截器触发切号: " + key + " (#" + _interceptSwitchCount + ")");
+            am.markRateLimited(_activeIndex, 3600, { model: 'current', trigger: 'seamless_intercept_' + key, type: 'quota' });
+            _activateBoost();
+            await _doPoolRotate(context, true);
+            _scheduleAutoRetry();
+          }
+          await _clearRateLimitUI();
+        }
+      } catch {}
+    }
+  }, 1000);
+  context.subscriptions.push({ dispose: () => { if (_seamlessInterceptorTimer) { clearInterval(_seamlessInterceptorTimer); _seamlessInterceptorTimer = null; } }});
+  const trackConv = () => {
+    const email = am && am.get(_activeIndex) ? am.get(_activeIndex).email.split("@")[0] : "?";
+    const convId = (_windowId || "w0") + "_" + _activeIndex;
+    if (!_conversationMap.has(convId)) _conversationMap.set(convId, { accountIndex: _activeIndex, email: email, startedAt: Date.now(), messageCount: 0 });
+    const c = _conversationMap.get(convId);
+    c.accountIndex = _activeIndex; c.email = email; c.lastActiveAt = Date.now();
+  };
+  setInterval(trackConv, 10000);
+  _logInfo("SEAMLESS", "v3.10.0 seamless interceptor started (升级: 配额键+切号触发)");
+}
+
+function _getConversationMap() {
+  const r = [];
+  for (const [id, info] of _conversationMap) r.push({ id: id, accountIndex: info.accountIndex, email: info.email, startedAt: info.startedAt, age: Math.round((Date.now() - info.startedAt) / 1000) + "s" });
+  return r;
 }
 
 function deactivate() {

@@ -167,6 +167,25 @@ function _hubHandle(req, res) {
   // Local relay (machine-HMAC auth, no LAN session needed)
   if (url.startsWith('/api/v1/')) return _relayRoute(req, res, url);
 
+  // ── Localhost-trusted endpoints (Hub binds 127.0.0.1 only, no external access possible) ──
+  // Activation & remote-connect: accessible without session for backward compat with pre-v15.0 clients
+  if (url === '/api/activate-device' && req.method === 'POST') {
+    return _readBody(req, async b => {
+      if (!poolManager) return _json(res, { ok: false, error: 'not ready' }, 503);
+      const { getMachineIdentity } = require('./lanGuard');
+      const os = require('os');
+      const mid = b.machineCode || getMachineIdentity();
+      const pid = poolManager.getActivePoolId();
+      if (!pid) return _json(res, { ok: false, error: 'no cloud pools configured' });
+      try {
+        const r = await poolManager._request(pid, 'POST', '/api/device/activate',
+          { hwid: mid, name: os.hostname() }, true);
+        if (lanGuard) lanGuard.audit('ACTIVATE_OPEN', auth.ip, '', 'activate: ' + mid.slice(0, 12));
+        _json(res, r.ok ? { ok: true, activated: true, ...r.data } : { ok: false, error: r.data?.error || 'activation failed' });
+      } catch (e) { _json(res, { ok: false, error: e.message }); }
+    });
+  }
+
   // Authenticated endpoints
   if (!auth.ok) return _json(res, { ok: false, error: auth.error }, auth.code || 403);
   _route(req, res, url, auth);
@@ -291,6 +310,32 @@ async function _poolAction(req, res, pid, act, auth) {
         _json(res, r);
       });
     }
+    if (act === 'p2p-confirm' && req.method === 'POST') {
+      return _readBody(req, async b => {
+        const r = await poolManager.confirmP2POrder(pid, b.orderId || b.paymentId);
+        lanGuard.audit('P2P_CONFIRM', auth.ip, auth.deviceFp, b.orderId || b.paymentId || '');
+        _json(res, r);
+      });
+    }
+    if (act === 'p2p-reject' && req.method === 'POST') {
+      return _readBody(req, async b => {
+        const r = await poolManager.rejectP2POrder(pid, b.orderId || b.paymentId, b.note);
+        lanGuard.audit('P2P_REJECT', auth.ip, auth.deviceFp, b.orderId || b.paymentId || '');
+        _json(res, r);
+      });
+    }
+    if (act === 'p2p-create' && req.method === 'POST') {
+      return _readBody(req, async b => {
+        const r = await poolManager.createP2POrder(pid, b);
+        lanGuard.audit('P2P_CREATE', auth.ip, auth.deviceFp, (b.device_id || '') + ':' + (b.w_credits || ''));
+        _json(res, r);
+      });
+    }
+    if (act === 'payment-stats') {
+      return poolManager.getPaymentStats(pid)
+        .then(d => _json(res, d))
+        .catch(e => _json(res, { ok: false, error: e.message }, 500));
+    }
     _json(res, { ok: false, error: 'unknown: ' + act }, 404);
   } catch (e) { _json(res, { ok: false, error: e.message }, 500); }
 }
@@ -384,6 +429,50 @@ async function _relayRoute(req, res, url) {
     return poolManager.extPoolEnhanced(devId)
       .then(d => _json(res, d))
       .catch(e => _json(res, { ok: false, error: e.message }, 500));
+  }
+  if (url === '/api/v1/activate' && req.method === 'POST') {
+    return _readBody(req, async b => {
+      const d = await poolManager.extActivateDevice(devId, b).catch(e => ({ ok: false, error: e.message }));
+      _json(res, d);
+    });
+  }
+  if (url === '/api/v1/remote-pending') {
+    return poolManager.extRemotePending(devId)
+      .then(d => _json(res, d))
+      .catch(e => _json(res, { ok: false, error: e.message }, 500));
+  }
+  if (url === '/api/v1/remote-respond' && req.method === 'POST') {
+    return _readBody(req, async b => {
+      const d = await poolManager.extRemoteRespond(devId, b).catch(e => ({ ok: false, error: e.message }));
+      _json(res, d);
+    });
+  }
+  if (url === '/api/v1/me-status') {
+    return poolManager.extDeviceStatus(devId)
+      .then(d => _json(res, d))
+      .catch(e => _json(res, { ok: false, device_activated: false, error: e.message }, 500));
+  }
+  // ── Payment: client creates/checks payment orders ──
+  if (url === '/api/v1/pay-init' && req.method === 'POST') {
+    return _readBody(req, async b => {
+      const d = await poolManager.extPayInit(devId, b).catch(e => ({ ok: false, error: e.message }));
+      if (lanGuard) lanGuard.audit('PAY_INIT', '127.0.0.1', devId, (d.order_id || '') + ' ' + (b.w_credits || ''));
+      _json(res, d);
+    });
+  }
+  if (url === '/api/v1/pay-status') {
+    const oid = params.get('oid') || params.get('order_id') || '';
+    return poolManager.extPayStatus(devId, oid)
+      .then(d => _json(res, d))
+      .catch(e => _json(res, { ok: false, error: e.message }, 500));
+  }
+  // ── Rate Limit Guard: client reports rate limit hit ──
+  if (url === '/api/v1/rate-limit-report' && req.method === 'POST') {
+    return _readBody(req, async b => {
+      const d = await poolManager.reportRateLimit(devId, b).catch(e => ({ ok: false, error: e.message }));
+      if (lanGuard) lanGuard.audit('RATE_LIMIT', '127.0.0.1', devId, (b.email || '') + ' → ' + (d.action || ''));
+      _json(res, d);
+    });
   }
   return _json(res, { ok: false, error: 'not found' }, 404);
 }

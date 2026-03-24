@@ -24,13 +24,21 @@
       if (key === 'removePool') { toast(d && d.ok ? '✅ 已删除' : ('❌ 删除失败: ' + ((d && d.error) || '')), !(d && d.ok)); send('pools'); send('overview'); }
       if (key === 'syncAccounts') { toast(d && d.ok ? '✅ 同步完成' : ('❌ 同步失败: ' + ((d && d.error) || '')), !(d && d.ok)); send('overview'); }
       if (key === 'revokeDevice') { toast(d && d.ok ? '✅ 设备已撤销' : ('❌ 撤销失败: ' + ((d && d.error) || '')), !(d && d.ok)); send('devices'); }
-      if (key === 'confirmPayment') { toast(d && d.ok ? '✅ 支付已确认' : ('❌ 确认失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._paymentsLoaded; }
-      if (key === 'rejectPayment') { toast(d && d.ok ? '✅ 已拒绝订单' : ('❌ 拒绝失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._paymentsLoaded; }
+      if (key === 'confirmPayment') { toast(d && d.ok ? '✅ 支付已确认' : ('❌ 确认失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._paymentsLoaded; delete _cache._cloudDevLoaded; send('overview'); }
+      if (key === 'rejectPayment') { toast(d && d.ok ? '✅ 已拒绝订单' : ('❌ 拒绝失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._paymentsLoaded; send('overview'); }
+      if (key === 'confirmP2P') { toast(d && d.ok ? '✅ P2P订单已确认 +' + (d.w_credits_added || 0) + 'W' : ('❌ 确认失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._paymentsLoaded; delete _cache._cloudDevLoaded; delete _cache._statsLoaded; send('overview'); }
+      if (key === 'rejectP2P') { toast(d && d.ok ? '✅ P2P订单已拒绝' : ('❌ 拒绝失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._paymentsLoaded; delete _cache._statsLoaded; send('overview'); }
+      if (key === 'createP2P') { toast(d && d.ok ? '✅ 订单已创建: ' + (d.order_id || '') + ' ' + (d.w_credits || 0) + 'W' : ('❌ 创建失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._paymentsLoaded; delete _cache._statsLoaded; send('overview'); }
+      if (key === 'paymentStats') { if (d && d.ok) { _cache._paymentStatsData = d; render(); } }
       if (key === 'activateDevice') { toast(d && d.ok ? '✅ 激活成功' : ('❌ 激活失败: ' + ((d && d.error) || '')), !(d && d.ok)); send('cloudStatus'); }
       if (key === 'poolDetail') { if (d && d.ok) { _cache._poolDetailData = d; render(); } else { toast('加载失败: ' + ((d && d.error) || ''), true); } }
       if (key === 'poolAccounts') { if (d && d.ok) { _cache._poolAccountsData = d; render(); } }
       if (key === 'poolUsers') { if (d && d.ok) { _cache._poolUsersData = d; render(); } }
       if (key === 'poolPayments') { if (d && d.ok) { _cache._poolPaymentsData = d; render(); } }
+      if (key === 'rateLimitStatus') { _cache.rateLimitStatus = d; render(); }
+      if (key === 'rateLimitConfig') { toast(d && d.ok ? '✅ 配置已保存' : ('❌ 保存失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._rlLoaded; send('rateLimitStatus'); }
+      if (key === 'rateLimitClear') { toast(d && d.ok ? '✅ 冷却已清除' : ('❌ 清除失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._rlLoaded; send('rateLimitStatus'); }
+      if (key === 'rateLimitTrigger') { toast(d && d.ok ? '✅ 切换触发: ' + (d.action || '') : ('❌ 切换失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._rlLoaded; send('rateLimitStatus'); }
       if (key === 'pushCreate') { toast(d && d.ok ? '✅ 推送已发送: ' + (d.directive_id || '') : ('❌ 推送失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._pushLoaded; send('pushList'); }
       if (key === 'pushRevoke') { toast(d && d.ok ? '✅ 已撤销' : ('❌ 撤销失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._pushLoaded; send('pushList'); }
       if (key === 'securityBlock') { toast(d && d.ok ? '✅ ' + (d.action || '') + ': ' + (d.ip || '') : ('❌ 操作失败: ' + ((d && d.error) || '')), !(d && d.ok)); delete _cache._threatsLoaded; send('securityEvents'); }
@@ -47,6 +55,9 @@
     delete _cache._pushLoaded;
     delete _cache._threatsLoaded;
     delete _cache._usersLoaded;
+    delete _cache._remoteDevLoaded;
+    delete _cache._rlLoaded;
+    delete _cache.rateLimitStatus;
     delete _cache._poolDetailView;
     delete _cache._poolDetailData;
     delete _cache._poolAccountsData;
@@ -177,7 +188,7 @@
     var colorCls = 'st-' + _mode;
     switch (_mode) {
       case 'cloud':
-        tabs = [['accounts', '账号'], ['users', '用户'], ['payments', '支付'], ['devices', '云设备'], ['push', '推送'], ['pools', '云池']];
+        tabs = [['accounts', '账号'], ['users', '用户'], ['payments', '支付'], ['devices', '云设备'], ['remote', '远程管理'], ['push', '推送'], ['ratelimit', '限流防护'], ['pools', '云池']];
         break;
       case 'local':
         tabs = [['landevices', 'LAN设备'], ['pools', '云池配置']];
@@ -307,7 +318,9 @@
       case 'users': return renderCloudUsers();
       case 'payments': return renderCloudPayments();
       case 'devices': return renderCloudDevices();
+      case 'remote': return renderRemoteManagement();
       case 'push': return renderPushManagement();
+      case 'ratelimit': return renderRateLimitGuard();
       case 'pools': return renderLocalPools();
       default: return renderCloudAccounts();
     }
@@ -479,20 +492,59 @@
       _cache._paymentsLoaded = true;
       send('cloudP2P', { poolId: firstPoolId });
     }
+    if (firstPoolId && !_cache._statsLoaded) {
+      _cache._statsLoaded = true;
+      send('paymentStats', { poolId: firstPoolId });
+    }
+    var html = '';
+
+    // Payment Stats Card
+    var stats = _cache._paymentStatsData;
+    if (stats && stats.ok) {
+      var p = stats.p2p || {};
+      var w = stats.w_pool || {};
+      html += '<div class="card card-glow-cloud" style="border-left:3px solid var(--p)">';
+      html += '<div class="card-title"><span class="icon">&#x1F4CA;</span> 支付统计</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">';
+      html += '<div><div style="font-size:20px;font-weight:700;color:var(--ok2)">' + (p.confirmed || 0) + '</div><div style="color:var(--m);font-size:11px">已确认</div></div>';
+      html += '<div><div style="font-size:20px;font-weight:700;color:var(--w2)">' + (p.pending || 0) + '</div><div style="color:var(--m);font-size:11px">待处理</div></div>';
+      html += '<div><div style="font-size:20px;font-weight:700;color:var(--p2)">&yen;' + ((p.revenue_yuan || 0)).toFixed(2) + '</div><div style="color:var(--m);font-size:11px">总收入</div></div>';
+      html += '<div><div style="font-size:20px;font-weight:700;color:var(--blue,#60a5fa)">' + (w.available || 0) + 'W</div><div style="color:var(--m);font-size:11px">W可用/' + (w.total || 0) + '</div></div>';
+      html += '</div></div>';
+    }
+
+    // Create Order Card
+    html += '<div class="card card-glow-cloud" style="border-left:3px solid var(--ok)">';
+    html += '<div class="card-title"><span class="icon">&#x2795;</span> 创建订单</div>';
+    html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
+    html += '<input id="p2p-device-id" type="text" placeholder="设备ID或HWID" style="flex:1;min-width:120px;padding:6px 10px;border-radius:6px;border:1px solid var(--b);background:var(--bg);color:var(--t);font-size:12px">';
+    html += '<input id="p2p-w-credits" type="number" value="100" min="1" style="width:80px;padding:6px 10px;border-radius:6px;border:1px solid var(--b);background:var(--bg);color:var(--t);font-size:12px" placeholder="W积分">';
+    html += '<select id="p2p-method" style="padding:6px 10px;border-radius:6px;border:1px solid var(--b);background:var(--bg);color:var(--t);font-size:12px"><option value="admin">管理员发放</option><option value="alipay">支付宝</option><option value="wechat">微信</option><option value="gift">赠送</option></select>';
+    html += '<label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--m)"><input id="p2p-auto-confirm" type="checkbox" checked>自动确认</label>';
+    html += '<button class="btn btn-success btn-sm" onclick="createP2POrder()">创建</button>';
+    html += '</div></div>';
+
+    // Orders Table
     var p2p = _cache.cloudP2P;
-    var html = '<div class="card card-glow-cloud"><div class="card-title"><span class="icon">&#x1F4B2;</span> 支付管理</div>';
+    html += '<div class="card card-glow-cloud"><div class="card-title"><span class="icon">&#x1F4B2;</span> 支付订单</div>';
     if (p2p && p2p.ok && p2p.orders && p2p.orders.length) {
-      html += '<table><tr><th>金额</th><th>W</th><th>方式</th><th>状态</th><th>操作</th></tr>';
+      html += '<table><tr><th>订单号</th><th>金额</th><th>W</th><th>方式</th><th>设备</th><th>状态</th><th>时间</th><th>操作</th></tr>';
       p2p.orders.forEach(function (o) {
-        var sc = o.status === 'confirmed' ? 'var(--ok2)' : o.status === 'pending' ? 'var(--w2)' : 'var(--m)';
-        html += '<tr><td>&yen;' + ((o.amount_cents || 0) / 100).toFixed(2) + '</td>';
+        var sc = o.status === 'confirmed' ? 'var(--ok2)' : o.status === 'pending' ? 'var(--w2)' : o.status === 'rejected' ? 'var(--d)' : 'var(--m)';
+        var statusLabel = o.status === 'confirmed' ? '已确认' : o.status === 'pending' ? '待确认' : o.status === 'rejected' ? '已拒绝' : esc(o.status);
+        html += '<tr><td style="font-size:10px;font-family:monospace">' + esc(o.id || '') + '</td>';
+        html += '<td>&yen;' + ((o.amount_cents || 0) / 100).toFixed(2) + '</td>';
         html += '<td style="color:var(--p2);font-weight:700">' + (o.w_credits || 0) + 'W</td>';
-        html += '<td>' + esc(o.method) + '</td>';
-        html += '<td style="color:' + sc + ';font-weight:600">' + esc(o.status) + '</td>';
+        html += '<td>' + esc(o.method || '') + '</td>';
+        html += '<td style="font-size:10px;font-family:monospace">' + esc((o.device_id || '').slice(0, 12)) + '</td>';
+        html += '<td style="color:' + sc + ';font-weight:600">' + statusLabel + '</td>';
+        html += '<td style="font-size:10px;color:var(--m)">' + esc((o.created_at || '').slice(0, 16)) + '</td>';
         html += '<td>';
         if (o.status === 'pending') {
-          html += '<button class="btn btn-success btn-sm" data-action="confirmPayment" data-param="' + esc(o.id) + '" data-param2="' + esc(firstPoolId || '') + '">确认</button> ';
-          html += '<button class="btn btn-danger btn-sm" data-action="rejectPayment" data-param="' + esc(o.id) + '" data-param2="' + esc(firstPoolId || '') + '">拒绝</button>';
+          html += '<button class="btn btn-success btn-sm" onclick="confirmP2POrder(\'' + esc(o.id) + '\',\'' + esc(firstPoolId || '') + '\')">确认</button> ';
+          html += '<button class="btn btn-danger btn-sm" onclick="rejectP2POrder(\'' + esc(o.id) + '\',\'' + esc(firstPoolId || '') + '\')">拒绝</button>';
+        } else if (o.status === 'confirmed') {
+          html += '<span style="color:var(--ok2);font-size:11px">&#x2705;</span>';
         }
         html += '</td></tr>';
       });
@@ -850,6 +902,123 @@
   }
 
   // ══════════════════════════════════════
+  //  REMOTE MANAGEMENT — 道之安全·远程管理
+  // ══════════════════════════════════════
+  function renderRemoteManagement() {
+    if (!_cache._remoteDevLoaded) {
+      _cache._remoteDevLoaded = true;
+      send('remoteDevices');
+    }
+    var rd = _cache.remoteDevices;
+    var mi = _cache.machineInfo;
+    var html = '';
+
+    // Header card
+    html += '<div class="card card-glow-cloud">';
+    html += '<div class="card-title"><span class="icon">&#x1F310;</span> 远程设备管理 · 道之安全</div>';
+    html += '<div style="font-size:11px;color:var(--m);margin-bottom:10px">';
+    html += '通过机器码远程管理使用此插件的电脑。<b style="color:var(--w2)">所有操作需客户端用户确认授权</b>，防止一切恶意访问。</div>';
+
+    // Admin machine code
+    var adminCode = (mi && mi.ok && mi.fullMachineId) ? mi.fullMachineId : (_machineCode || '--');
+    html += '<div style="background:var(--bg);border-radius:8px;padding:8px;margin-bottom:10px">';
+    html += '<div style="font-size:10px;color:var(--m);margin-bottom:2px">管理端机器码</div>';
+    html += '<div style="font-family:monospace;font-size:11px;color:var(--cyan2);cursor:pointer" data-action="copyMachineCode">' + esc(adminCode) + '</div>';
+    html += '</div>';
+
+    // Security notice
+    html += '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px;margin-bottom:10px">';
+    html += '<div style="font-size:11px;color:var(--w2);font-weight:600;margin-bottom:4px">&#x1F6E1; 安全机制</div>';
+    html += '<div style="font-size:10px;color:var(--m);line-height:1.6">';
+    html += '&#x2022; 远程请求发送后，目标设备用户会收到<b>弹窗通知</b><br>';
+    html += '&#x2022; 用户必须<b>明确点击允许</b>才会执行操作<br>';
+    html += '&#x2022; 请求<b>5分钟</b>内未响应自动过期<br>';
+    html += '&#x2022; 所有操作记入<b>审计日志</b>，不可篡改</div>';
+    html += '</div></div>';
+
+    // Remote request form
+    html += '<div class="card card-glow-cloud">';
+    html += '<div class="card-title"><span class="icon">&#x1F517;</span> 发起远程请求</div>';
+    html += '<input id="remote-target-id" placeholder="输入目标设备机器码 (HWID)" style="margin-bottom:6px" />';
+    html += '<select id="remote-action" style="margin-bottom:6px">';
+    html += '<option value="diagnose">&#x1F50D; 诊断 — 检查Windsurf配置状态</option>';
+    html += '<option value="config_check">&#x2699; 配置检查 — 查看配置文件</option>';
+    html += '<option value="plugin_status">&#x1F4E6; 插件状态 — 检查安装版本</option>';
+    html += '<option value="cache_clear">&#x1F9F9; 清理缓存 — 清除临时文件</option>';
+    html += '<option value="network_test">&#x1F310; 网络测试 — 检查连通性</option>';
+    html += '<option value="reset_binding">&#x1F504; 重置绑定 — 清除账号绑定</option>';
+    html += '<option value="custom">&#x1F4DD; 自定义操作</option>';
+    html += '</select>';
+    html += '<textarea id="remote-payload" rows="2" placeholder=\'自定义数据 (JSON, 可选)\' style="display:none"></textarea>';
+    html += '<div class="btn-group">';
+    html += '<button class="btn btn-blue" data-action="sendRemoteRequest">&#x1F680; 发送请求</button>';
+    html += '<button class="btn btn-ghost" data-action="refreshRemote">&#x1F504; 刷新</button>';
+    html += '</div></div>';
+
+    // Pending request status
+    if (_cache._lastRemoteRequestId) {
+      var rs = _cache.remoteStatus;
+      html += '<div class="card card-glow-cloud">';
+      html += '<div class="card-title"><span class="icon">&#x23F3;</span> 请求状态</div>';
+      if (rs && rs.ok && rs.request) {
+        var r = rs.request;
+        var stColor = r.status === 'approved' ? 'var(--ok2)' : r.status === 'denied' ? 'var(--d2)' : 'var(--w2)';
+        var stText = r.status === 'approved' ? '✅ 已授权' : r.status === 'denied' ? '❌ 已拒绝' : '⏳ 等待用户确认...';
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border-radius:8px">';
+        html += '<div style="color:' + stColor + ';font-weight:700;font-size:14px">' + stText + '</div>';
+        html += '</div>';
+        if (r.status === 'pending') {
+          html += '<div style="font-size:10px;color:var(--m);margin-top:6px">请求ID: ' + esc(r.id) + ' · 等待客户端用户授权中...</div>';
+          html += '<div style="font-size:10px;color:var(--w2);margin-top:2px">提示: 目标设备的Windsurf会弹出授权对话框，用户需点击"允许"</div>';
+        }
+        if (r.response) {
+          html += '<div style="font-size:10px;color:var(--m);margin-top:6px">';
+          html += '响应时间: ' + new Date(r.response.respondedAt).toLocaleTimeString();
+          if (r.response.reason) html += ' · 原因: ' + esc(r.response.reason);
+          html += '</div>';
+        }
+      } else {
+        html += '<div class="empty">查询中...</div>';
+      }
+      html += '</div>';
+    }
+
+    // Device list
+    html += '<div class="card card-glow-cloud"><div class="card-title"><span class="icon">&#x1F4F1;</span> 可管理设备</div>';
+    if (rd && rd.ok && rd.devices && rd.devices.length) {
+      html += '<table><tr><th>名称</th><th>HWID</th><th>W可用</th><th>待审</th><th>操作</th></tr>';
+      rd.devices.forEach(function (dv) {
+        var hwid = dv.hwid || '';
+        html += '<tr><td>' + esc(dv.name || '--') + '</td>';
+        html += '<td style="font-family:monospace;font-size:9px;cursor:pointer" data-action="fillRemoteTarget" data-param="' + esc(hwid) + '">' + esc(hwid.slice(0, 12)) + '...</td>';
+        html += '<td style="color:var(--ok2);font-weight:700">' + (dv.w_available || 0) + '%</td>';
+        html += '<td>' + (dv.remotePending || 0) + '</td>';
+        html += '<td><button class="btn btn-blue btn-sm" data-action="quickRemote" data-param="' + esc(hwid) + '">管理</button></td></tr>';
+      });
+      html += '</table>';
+    } else if (rd && rd.ok) {
+      html += '<div class="empty">暂无已激活设备</div>';
+    } else {
+      html += loading(rd);
+    }
+    html += '</div>';
+
+    // Capabilities reference
+    html += '<div class="card card-glow-cloud">';
+    html += '<div class="card-title"><span class="icon">&#x1F4D6;</span> 远程操作说明</div>';
+    html += '<div style="font-size:11px;color:var(--m);line-height:1.8">';
+    html += '<b style="color:var(--t)">诊断</b> — 采集Windsurf版本、配置、插件状态等诊断信息<br>';
+    html += '<b style="color:var(--t)">配置检查</b> — 读取并返回关键配置文件内容<br>';
+    html += '<b style="color:var(--t)">插件状态</b> — 列出已安装插件及版本信息<br>';
+    html += '<b style="color:var(--t)">清理缓存</b> — 清除临时文件和过期缓存<br>';
+    html += '<b style="color:var(--t)">网络测试</b> — 测试到关键服务器的连通性<br>';
+    html += '<b style="color:var(--t)">重置绑定</b> — 清除设备上的账号绑定状态<br>';
+    html += '</div></div>';
+
+    return html;
+  }
+
+  // ══════════════════════════════════════
   //  PUSH MANAGEMENT — 道之推·万法归宗
   // ══════════════════════════════════════
   function renderPushManagement() {
@@ -943,6 +1112,99 @@
     html += '推送通过心跳机制自动分发 · 所有用户下次心跳即收到指令</div>';
     html += '</div>';
 
+    return html;
+  }
+
+
+
+  // ══════════════════════════════════════
+  //  RATE LIMIT GUARD — 道之防·限流防护
+  // ══════════════════════════════════════
+  function renderRateLimitGuard() {
+    if (!_cache._rlLoaded) {
+      _cache._rlLoaded = true;
+      send('rateLimitStatus');
+    }
+    var rl = _cache.rateLimitStatus;
+    var cfg = rl && rl.config ? rl.config : {};
+    var stats = rl && rl.stats ? rl.stats : {};
+    var cooling = rl && rl.cooling ? rl.cooling : [];
+    var events = rl && rl.events ? rl.events : [];
+    var html = '';
+
+    html += '<div class="card card-glow-cloud">';
+    html += '<div class="card-title"><span class="icon">&#x26A1;</span> \u9650\u6d41\u9632\u62a4 \u00b7 \u9053\u6cd5\u81ea\u7136</div>';
+    html += '<div style="font-size:11px;color:var(--m);margin-bottom:10px">Rate Limit\u51fa\u73b0\u65f6\u81ea\u52a8\u5207\u6362\u8d26\u53f7\uff0c\u4ece\u6839\u672c\u4e0a\u6d88\u9664\u7b49\u5f85</div>';
+    if (rl && rl.ok) {
+      html += '<div class="grid">';
+      html += stat(stats.total24h || 0, '24h\u9650\u6d41', 'c-d');
+      html += stat(stats.autoSwitched || 0, '\u81ea\u52a8\u5207\u6362', 'c-ok');
+      html += stat(stats.switchFailed || 0, '\u5207\u6362\u5931\u8d25', 'c-w');
+      html += stat(cooling.length || 0, '\u51b7\u5374\u4e2d', 'c-p');
+      html += '</div>';
+    }
+    var guardOn = cfg.autoSwitch !== false;
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg);border-radius:8px;margin-top:8px">';
+    html += '<div style="flex:1"><div style="font-weight:600;font-size:12px">\u81ea\u52a8\u5207\u6362\u9632\u62a4</div>';
+    html += '<div style="font-size:10px;color:var(--m)">\u68c0\u6d4b\u5230Rate Limit\u7acb\u5373\u5207\u6362\u65b0\u8d26\u53f7\uff0c\u62d2\u7edd\u7b49\u5f851\u5c0f\u65f6</div></div>';
+    html += '<button class="btn btn-' + (guardOn ? 'danger' : 'success') + ' btn-sm" data-action="rlToggleAutoSwitch" data-param="' + (guardOn ? '0' : '1') + '">';
+    html += guardOn ? '&#x2705; \u5df2\u5f00\u542f' : '&#x25B6; \u5df2\u5173\u95ed';
+    html += '</button></div></div>';
+
+    html += '<div class="card card-glow-cloud">';
+    html += '<div class="card-title"><span class="icon">&#x2699;</span> \u9632\u62a4\u914d\u7f6e</div>';
+    html += '<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">';
+    html += '<div style="flex:1;min-width:120px"><div style="font-size:10px;color:var(--m);margin-bottom:3px">\u51b7\u5374\u65f6\u957f (\u5206\u949f)</div>';
+    html += '<input id="rl-cooldown" type="number" value="' + (cfg.cooldownMinutes || 65) + '" min="10" max="1440" /></div>';
+    html += '<div style="flex:1;min-width:120px"><div style="font-size:10px;color:var(--m);margin-bottom:3px">\u9884\u8b66\u9608\u503c (D%\u5269\u4f59\u4f4e\u4e8e\u6b64\u5207\u6362)</div>';
+    html += '<input id="rl-threshold" type="number" value="' + (cfg.preemptThreshold || 85) + '" min="10" max="100" /></div>';
+    html += '<button class="btn btn-primary btn-sm" data-action="rlSaveConfig">\u4fdd\u5b58</button>';
+    html += '</div></div>';
+
+    if (cooling.length > 0) {
+      html += '<div class="card card-glow-cloud">';
+      html += '<div class="card-title"><span class="icon">&#x2744;</span> \u51b7\u5374\u4e2d\u8d26\u53f7 (' + cooling.length + ')</div>';
+      html += '<table><tr><th>\u90ae\u7b71</th><th>\u89e6\u53d1</th><th>\u5269\u4f59</th><th>\u6b21\u6570</th><th></th></tr>';
+      cooling.forEach(function (ac) {
+        html += '<tr><td style="font-family:monospace;font-size:10px">' + esc(ac.email || '--') + '</td>';
+        html += '<td style="font-size:9px">' + esc((ac.hitAt || '').slice(11, 19)) + '</td>';
+        html += '<td style="color:var(--w2);font-weight:700">' + ac.remainingMin + 'min</td>';
+        html += '<td style="color:var(--d2)">\xd7' + (ac.hitCount || 1) + '</td>';
+        html += '<td><button class="btn btn-ghost btn-sm" data-action="rlClearCooldown" data-param="' + esc(ac.email) + '">\u89e3\u9664</button></td></tr>';
+      });
+      html += '</table>';
+      html += '<div class="btn-group" style="margin-top:6px">';
+      html += '<button class="btn btn-danger btn-sm" data-action="rlClearCooldown" data-param="all">\u6e05\u9664\u5168\u90e8\u51b7\u5374</button></div></div>';
+    }
+
+    html += '<div class="card card-glow-cloud">';
+    html += '<div class="card-title"><span class="icon">&#x1F504;</span> \u624b\u52a8\u89e6\u53d1\u5207\u6362</div>';
+    html += '<div style="font-size:11px;color:var(--m);margin-bottom:8px">\u5f53\u524d\u8d26\u53f7\u89e6\u53d1\u9650\u6d41\u4f46\u672a\u81ea\u52a8\u4e0a\u62a5\u65f6\uff0c\u624b\u52a8\u5f3a\u5236\u5207\u6362</div>';
+    html += '<input id="rl-email" placeholder="\u89e6\u53d1\u9650\u6d41\u7684\u8d26\u53f7\u90ae\u7b71 (\u53ef\u7559\u7a7a)" />';
+    html += '<div class="btn-group" style="margin-top:6px">';
+    html += '<button class="btn btn-gold" data-action="rlManualSwitch">&#x26A1; \u7acb\u5373\u5207\u6362\u8d26\u53f7</button>';
+    html += '<button class="btn btn-ghost btn-sm" data-action="rlRefresh">&#x1F504; \u5237\u65b0\u72b6\u6001</button></div></div>';
+
+    html += '<div class="card card-glow-cloud">';
+    html += '<div class="card-title"><span class="icon">&#x1F4DC;</span> \u9650\u6d41\u4e8b\u4ef6\u65e5\u5fd7</div>';
+    if (events.length > 0) {
+      html += '<table><tr><th>\u65f6\u95f4</th><th>\u8d26\u53f7</th><th>\u8bbe\u5907</th><th>\u7ed3\u679c</th><th>D%</th></tr>';
+      events.slice(0, 30).forEach(function (ev) {
+        var ac = ev.action === 'auto_switched' ? 'var(--ok2)' : ev.action === 'switch_failed' ? 'var(--d2)' : 'var(--m)';
+        var label = ev.action === 'auto_switched' ? '&#x2705;\u5df2\u5207\u6362' : ev.action === 'switch_failed' ? '&#x274C;\u5207\u6362\u5931\u8d25' : '&#x23FA;\u8bb0\u5f55';
+        html += '<tr><td style="font-size:9px;white-space:nowrap">' + esc((ev.ts || '').slice(11, 19)) + '</td>';
+        html += '<td style="font-family:monospace;font-size:9px">' + esc((ev.email || '').slice(0, 20)) + '</td>';
+        html += '<td style="font-family:monospace;font-size:9px">' + esc((ev.deviceId || '').slice(0, 10)) + '</td>';
+        html += '<td style="color:' + ac + ';font-weight:600;font-size:10px">' + label + '</td>';
+        html += '<td style="color:var(--ok2)">' + (ev.dPercent || 0) + '%</td></tr>';
+      });
+      html += '</table>';
+    } else if (!rl) {
+      html += loading(rl);
+    } else {
+      html += '<div class="empty">\u6682\u65e0\u9650\u6d41\u4e8b\u4ef6 \u2014 \u9632\u62a4\u6b63\u5e38\u8fd0\u884c\u4e2d</div>';
+    }
+    html += '</div>';
     return html;
   }
 
@@ -1077,6 +1339,27 @@
   };
   window.confirmPayment = function (id, poolId) { send('confirmPayment', { paymentId: id, poolId: poolId || '' }); toast('确认中...'); };
   window.rejectPayment = function (id, poolId) { send('rejectPayment', { paymentId: id, poolId: poolId || '' }); toast('拒绝中...'); };
+  window.confirmP2POrder = function (id, poolId) {
+    if (!confirm('确认此P2P订单？将自动充值W积分到对应设备。')) return;
+    send('confirmP2P', { orderId: id, poolId: poolId || '' }); toast('确认中...');
+  };
+  window.rejectP2POrder = function (id, poolId) {
+    if (!confirm('拒绝此P2P订单？')) return;
+    send('rejectP2P', { orderId: id, poolId: poolId || '' }); toast('拒绝中...');
+  };
+  window.createP2POrder = function () {
+    var deviceId = (document.getElementById('p2p-device-id') || {}).value || '';
+    var wCredits = parseInt((document.getElementById('p2p-w-credits') || {}).value || '100', 10);
+    var method = (document.getElementById('p2p-method') || {}).value || 'admin';
+    var autoConfirm = (document.getElementById('p2p-auto-confirm') || {}).checked;
+    if (!deviceId) { toast('请输入设备ID', true); return; }
+    if (wCredits < 1) { toast('W积分必须大于0', true); return; }
+    var ov = _cache.overview;
+    var poolId = '';
+    if (ov && ov.ok && ov.pools) { ov.pools.forEach(function (p) { if (!poolId && p.id) poolId = p.id; }); }
+    send('createP2P', { device_id: deviceId, w_credits: wCredits, method: method, auto_confirm: autoConfirm, poolId: poolId });
+    toast('创建中...');
+  };
 
   window.activateDevice = function () {
     send('activateDevice', { machineCode: _machineCode });
@@ -1112,6 +1395,37 @@
   window.setStrategy = function (name) {
     send('setStrategy', { strategy: name });
     toast('策略已设置: ' + name);
+  };
+
+  // ── Remote Management Actions ──
+  window.sendRemoteRequest = function () {
+    var target = (document.getElementById('remote-target-id') || {}).value || '';
+    var action = (document.getElementById('remote-action') || {}).value || 'diagnose';
+    if (!target.trim()) { toast('请输入目标设备机器码', true); return; }
+    var payloadStr = (document.getElementById('remote-payload') || {}).value || '{}';
+    var payload;
+    try { payload = payloadStr.trim() ? JSON.parse(payloadStr) : {}; } catch (e) { payload = {}; }
+    send('remoteRequest', { targetDeviceId: target.trim(), action: action, payload: payload });
+    toast('正在发送远程请求...');
+  };
+  window.refreshRemote = function () {
+    delete _cache._remoteDevLoaded;
+    delete _cache.remoteDevices;
+    send('remoteDevices');
+    if (_cache._lastRemoteRequestId) {
+      send('remoteStatus', { requestId: _cache._lastRemoteRequestId });
+    }
+    render();
+  };
+  window.fillRemoteTarget = function (hwid) {
+    var el = document.getElementById('remote-target-id');
+    if (el) el.value = hwid;
+    toast('已填入机器码');
+  };
+  window.quickRemote = function (hwid) {
+    var el = document.getElementById('remote-target-id');
+    if (el) el.value = hwid;
+    toast('已选择设备, 选择操作后点击发送');
   };
 
   // ── Push Actions ──
@@ -1160,6 +1474,36 @@
     send('pushRevoke', { directiveId: id });
     toast('撤销中...');
     delete _cache._pushLoaded;
+  };
+
+
+
+  window.rlToggleAutoSwitch = function (val) {
+    send('rateLimitConfig', { autoSwitch: val === '1' });
+    delete _cache._rlLoaded; delete _cache.rateLimitStatus;
+    toast(val === '1' ? '\u5f00\u542f\u81ea\u52a8\u5207\u6362' : '\u5df2\u5173\u95ed\u81ea\u52a8\u5207\u6362');
+  };
+  window.rlSaveConfig = function () {
+    var cooldown = parseInt((document.getElementById('rl-cooldown') || {}).value || '65', 10);
+    var threshold = parseInt((document.getElementById('rl-threshold') || {}).value || '85', 10);
+    send('rateLimitConfig', { cooldownMinutes: cooldown, preemptThreshold: threshold });
+    delete _cache._rlLoaded;
+    toast('\u4fdd\u5b58\u4e2d...');
+  };
+  window.rlClearCooldown = function (email) {
+    if (email === 'all' && !confirm('\u786e\u8ba4\u6e05\u9664\u5168\u90e8\u8d26\u53f7\u51b7\u5374\uff1f')) return;
+    send('rateLimitClear', { email: email });
+    delete _cache._rlLoaded;
+  };
+  window.rlManualSwitch = function () {
+    var email = (document.getElementById('rl-email') || {}).value || '';
+    send('rateLimitTrigger', { email: email.trim(), deviceId: 'admin-manual', dPercent: 0 });
+    toast('\u6b63\u5728\u89e6\u53d1\u5207\u6362...');
+    delete _cache._rlLoaded;
+  };
+  window.rlRefresh = function () {
+    delete _cache._rlLoaded; delete _cache.rateLimitStatus;
+    send('rateLimitStatus'); render();
   };
 
   // ── Security Actions ──
@@ -1212,6 +1556,14 @@
       '<div class="quota-bar"><div class="quota-fill ' + fillCls + '" style="width:' + pct + '%"></div></div></div>';
   }
 
+  // ── Remote action select change (show/hide custom payload) ──
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.id === 'remote-action') {
+      var payload = document.getElementById('remote-payload');
+      if (payload) payload.style.display = e.target.value === 'custom' ? 'block' : 'none';
+    }
+  });
+
   // ── Event Delegation (CSP-safe · 替代所有inline onclick) ──
   document.addEventListener('click', function (e) {
     var el = e.target;
@@ -1244,3 +1596,4 @@
   // ── Init ──
   loadMode();
 })();
+

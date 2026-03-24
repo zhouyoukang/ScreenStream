@@ -2,10 +2,13 @@
   "name": "windsurf-assistant",
   "publisher": "zhouyoukang",
   "displayName": "Windsurf小助手",
-  "description": "v3.8 锚定本源模型 · 去除L3降级偏离 · 防连锁限流 · 纯账号轮转",
-  "version": "3.8.0",
+  "description": "v3.10.1 云端修复·checkHealth后刷新面板 道法自然·根因修复 · 拦截器切号触发 · Failed precondition识别 · 低额自适应加速",
+  "version": "3.10.1",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/zhouyoukang/windsurf-assistant" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zhouyoukang/windsurf-assistant"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -127,7 +130,11 @@
         },
         "wam.poolSource": {
           "type": "string",
-          "enum": ["local", "cloud", "hybrid"],
+          "enum": [
+            "local",
+            "cloud",
+            "hybrid"
+          ],
           "default": "local",
           "enumDescriptions": [
             "本地号池 — 仅使用本地账号文件",

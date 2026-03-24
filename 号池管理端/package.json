@@ -2,14 +2,18 @@
   "name": "pool-admin",
   "publisher": "zhouyoukang",
   "displayName": "号池管理端",
-  "description": "道之防·公网号池统管 — LAN-only管理·分知加密·热部署·多池统管·反逆向",
-  "version": "1.0.0",
+  "description": "v1.6 P2P支付管线·管理端完整实现 — LAN-only管理·分知加密·热部署·多池统管·反逆向",
+  "version": "1.6.0",
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Other"],
-  "activationEvents": ["onStartupFinished"],
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./src/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -87,8 +91,13 @@
       "properties": {
         "poolAdmin.trustedSubnets": {
           "type": "array",
-          "default": ["192.168.0.0/16", "10.0.0.0/8"],
-          "items": { "type": "string" },
+          "default": [
+            "192.168.0.0/16",
+            "10.0.0.0/8"
+          ],
+          "items": {
+            "type": "string"
+          },
           "description": "受信任的LAN子网CIDR列表 (仅这些子网内的设备可管理)"
         },
         "poolAdmin.hubPort": {

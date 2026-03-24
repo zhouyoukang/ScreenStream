@@ -69,7 +69,9 @@ class AdminPanelProvider {
       const isPost = ['addPool', 'removePool', 'syncAccounts',
         'confirmPayment', 'rejectPayment', 'enrollDevice', 'revokeDevice',
         'activateDevice', 'remoteConnect', 'remoteProbe', 'setStrategy',
-        'pushCreate', 'pushRevoke', 'securityBlock'
+        'pushCreate', 'pushRevoke', 'securityBlock', 'remoteRequest',
+        'rateLimitConfig', 'rateLimitClear', 'rateLimitTrigger',
+        'confirmP2P', 'rejectP2P', 'createP2P'
       ].includes(action);
       const pid = (data && data.poolId) || '';
       const pathMap = {
@@ -86,6 +88,10 @@ class AdminPanelProvider {
         syncAccounts: '/api/pools/' + pid + '/sync',
         confirmPayment: '/api/pools/' + pid + '/confirm',
         rejectPayment: '/api/pools/' + pid + '/reject',
+        confirmP2P: '/api/p2p/confirm',
+        rejectP2P: '/api/p2p/reject',
+        createP2P: '/api/p2p/create',
+        paymentStats: '/api/payment-stats',
         devices: '/api/devices',
         enrollDevice: '/api/enroll',
         revokeDevice: '/api/devices/revoke',
@@ -105,6 +111,13 @@ class AdminPanelProvider {
         pushRevoke: '/api/push/revoke',
         securityEvents: '/api/security/events',
         securityBlock: '/api/security/block',
+        remoteRequest: '/api/remote/request',
+        remoteStatus: '/api/remote/status' + (data && data.requestId ? '?requestId=' + data.requestId : ''),
+        remoteDevices: '/api/remote/devices',
+        rateLimitStatus: '/api/ratelimit/status',
+        rateLimitConfig: '/api/ratelimit/config',
+        rateLimitClear: '/api/ratelimit/clear',
+        rateLimitTrigger: '/api/ratelimit/trigger-switch',
       };
       const apiPath = pathMap[action] || '/api/health';
       const bodyStr = isPost && data ? JSON.stringify(data) : null;
@@ -256,7 +269,151 @@ class AdminPanelProvider {
       });
       return true;
     }
+    // ── Remote Management (道之安全 · 客户端必须授权) ──
+    if (url === '/api/remote/request' && req.method === 'POST') {
+      readBody(req, b => {
+        if (!b.targetDeviceId || !b.action) return json(res, { ok: false, error: 'targetDeviceId and action required' });
+        const allowed = ['diagnose', 'config_check', 'cache_clear', 'plugin_status', 'network_test', 'reset_binding', 'custom'];
+        if (!allowed.includes(b.action)) return json(res, { ok: false, error: 'invalid action: ' + b.action + '. allowed: ' + allowed.join(',') });
+        const mid = getMachineIdentity();
+        const r = pm.createRemoteRequest(b.targetDeviceId, mid.slice(0, 16), b.action, b.payload || {});
+        lg.audit('REMOTE_REQUEST', auth.ip, auth.deviceFp, 'target:' + b.targetDeviceId.slice(0, 12) + ' action:' + b.action);
+        json(res, r);
+      });
+      return true;
+    }
+    if (url === '/api/remote/status') {
+      const reqId = (req.url || '').split('requestId=')[1] || '';
+      if (!reqId) return json(res, { ok: false, error: 'requestId required' }), true;
+      const r = pm.getRemoteRequestStatus(reqId);
+      json(res, r);
+      return true;
+    }
+    if (url === '/api/remote/devices') {
+      // Aggregate cloud devices + their remote access status
+      this._getRemoteDevices(res, json);
+      return true;
+    }
+    // ── Rate Limit Guard (道之防·限流防护) ──
+    if (url === '/api/ratelimit/status') {
+      const r = pm.getRateLimitStatus();
+      json(res, r);
+      return true;
+    }
+    if (url === '/api/ratelimit/config' && req.method === 'POST') {
+      readBody(req, b => {
+        const r = pm.setRateLimitConfig(b);
+        lg.audit('RL_CONFIG', auth.ip, auth.deviceFp, JSON.stringify(b).slice(0, 80));
+        json(res, r);
+      });
+      return true;
+    }
+    if (url === '/api/ratelimit/clear' && req.method === 'POST') {
+      readBody(req, b => {
+        const r = pm.clearCooldown(b.email || 'all');
+        lg.audit('RL_CLEAR', auth.ip, auth.deviceFp, b.email || 'all');
+        json(res, r);
+      });
+      return true;
+    }
+    if (url === '/api/ratelimit/trigger-switch' && req.method === 'POST') {
+      readBody(req, async b => {
+        const r = await pm.reportRateLimit(b.deviceId || 'admin', {
+          email: b.email || '', traceId: 'manual-' + Date.now(),
+          dPercent: b.dPercent || 0, wPercent: b.wPercent || 0,
+        }).catch(e => ({ ok: false, error: e.message }));
+        lg.audit('RL_MANUAL_SWITCH', auth.ip, auth.deviceFp, (b.email || '') + ' → ' + (r.action || ''));
+        json(res, r);
+      });
+      return true;
+    }
+    // ── P2P Payment admin routes (hot-reloadable via handleExtRoute) ──
+    if (url === '/api/p2p/confirm' && req.method === 'POST') {
+      readBody(req, async b => {
+        const pid2 = b.poolId || (pm.listPools()[0] || {}).id || '';
+        if (!pid2) return json(res, { ok: false, error: 'no pool' });
+        const r = await pm.confirmP2POrder(pid2, b.orderId || b.paymentId).catch(e => ({ ok: false, error: e.message }));
+        lg.audit('P2P_CONFIRM', auth.ip, auth.deviceFp, b.orderId || b.paymentId || '');
+        json(res, r);
+      });
+      return true;
+    }
+    if (url === '/api/p2p/reject' && req.method === 'POST') {
+      readBody(req, async b => {
+        const pid2 = b.poolId || (pm.listPools()[0] || {}).id || '';
+        if (!pid2) return json(res, { ok: false, error: 'no pool' });
+        const r = await pm.rejectP2POrder(pid2, b.orderId || b.paymentId, b.note).catch(e => ({ ok: false, error: e.message }));
+        lg.audit('P2P_REJECT', auth.ip, auth.deviceFp, b.orderId || b.paymentId || '');
+        json(res, r);
+      });
+      return true;
+    }
+    if (url === '/api/p2p/create' && req.method === 'POST') {
+      readBody(req, async b => {
+        const pid2 = b.poolId || (pm.listPools()[0] || {}).id || '';
+        if (!pid2) return json(res, { ok: false, error: 'no pool' });
+        const r = await pm.createP2POrder(pid2, b).catch(e => ({ ok: false, error: e.message }));
+        lg.audit('P2P_CREATE', auth.ip, auth.deviceFp, (b.device_id || '') + ':' + (b.w_credits || ''));
+        json(res, r);
+      });
+      return true;
+    }
+    if (url === '/api/payment-stats') {
+      (async () => {
+        const pid2 = (pm.listPools()[0] || {}).id || '';
+        if (!pid2) return json(res, { ok: false, error: 'no pool' });
+        const r = await pm.getPaymentStats(pid2).catch(e => ({ ok: false, error: e.message }));
+        json(res, r);
+      })();
+      return true;
+    }
+    // ── Client payment relay (session-auth, localhost-only) ──
+    if (url === '/api/relay/pay-init' && req.method === 'POST') {
+      readBody(req, async b => {
+        const devId = b.device_id || '';
+        const r = await pm.extPayInit(devId, b).catch(e => ({ ok: false, error: e.message }));
+        lg.audit('PAY_INIT', auth.ip, auth.deviceFp, (r.order_id || '') + ' ' + (b.w_credits || ''));
+        json(res, r);
+      });
+      return true;
+    }
+    if (url.startsWith('/api/relay/pay-status')) {
+      const oid = (req.url || '').split('oid=')[1]?.split('&')[0] || '';
+      const devId = (req.url || '').split('device_id=')[1]?.split('&')[0] || '';
+      pm.extPayStatus(devId, oid)
+        .then(r => json(res, r))
+        .catch(e => json(res, { ok: false, error: e.message }));
+      return true;
+    }
     return false; // not handled
+  }
+
+  async _getRemoteDevices(res, json) {
+    const pm = this._poolManager;
+    try {
+      const pools = pm ? pm.listPools() : [];
+      if (pools.length === 0) return json(res, { ok: false, error: 'no cloud pools' });
+      const allDevices = [];
+      for (const p of pools) {
+        try {
+          const devs = await pm.getCloudDevices(p.id);
+          if (devs && devs.ok && devs.devices) {
+            devs.devices.forEach(d => {
+              const store = pm._getRemoteStore();
+              const queue = store.get(d.hwid) || [];
+              const pending = queue.filter(r => r.status === 'pending').length;
+              const lastApproved = queue.filter(r => r.status === 'approved').sort((a, b) => (b.response?.respondedAt || 0) - (a.response?.respondedAt || 0))[0];
+              allDevices.push({
+                ...d, poolName: p.name, poolId: p.id,
+                remotePending: pending,
+                lastRemoteApproved: lastApproved ? lastApproved.response.respondedAt : null,
+              });
+            });
+          }
+        } catch { /* pool offline */ }
+      }
+      json(res, { ok: true, devices: allDevices });
+    } catch (e) { json(res, { ok: false, error: e.message }, 500); }
   }
 
   async _getCloudStatus(res, json) {
@@ -296,7 +453,8 @@ class AdminPanelProvider {
       json(res, { ok: true, d_percent: dPercent || 100, w_percent: totalW || availW || 100, w_available: availW || 100,
         total_devices: totalDevices, total_users: totalUsers, active_users: activeUsers, today_calls: todayCalls,
         device_activated: deviceActivated, my_w: myW, my_w_used: myWUsed, urgent, expiring,
-        pools_count: pools.length, strategy: (global.__poolAdminHot || {}).consumptionStrategy || 'local-first' });
+        pools_count: pools.length, strategy: (global.__poolAdminHot || {}).consumptionStrategy || 'local-first',
+        machine_code: mid, machine_code_short: mid.slice(0, 16) });
     } catch (e) { json(res, { ok: false, error: e.message }, 500); }
   }
 

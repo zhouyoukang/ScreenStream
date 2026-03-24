@@ -261,6 +261,52 @@ class PoolManager {
     } catch (e) { return { ok: false, error: e.message }; }
   }
 
+  async confirmP2POrder(poolId, orderId) {
+    try {
+      const r = await this._request(poolId, 'POST', '/api/admin/p2p/confirm', { order_id: orderId }, true);
+      return r.ok ? r.data : { ok: false, error: r.data?.error || 'failed' };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  async rejectP2POrder(poolId, orderId, note) {
+    try {
+      const r = await this._request(poolId, 'POST', '/api/admin/p2p/reject', { order_id: orderId, note: note || '' }, true);
+      return r.ok ? r.data : { ok: false, error: r.data?.error || 'failed' };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  async createP2POrder(poolId, data) {
+    try {
+      const r = await this._request(poolId, 'POST', '/api/admin/p2p/create', data, true);
+      return r.ok ? r.data : { ok: false, error: r.data?.error || 'failed' };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  async getPaymentStats(poolId) {
+    try {
+      const r = await this._request(poolId, 'GET', '/api/admin/payment-stats', null, true);
+      return r.ok ? r.data : { ok: false, error: r.data?.error || 'forbidden' };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  async extPayInit(deviceId, data) {
+    const pid = this.getActivePoolId();
+    if (!pid) return { ok: false, error: 'no pool configured' };
+    try {
+      const r = await this._request(pid, 'POST', '/api/p2p/init', { ...data, device_id: deviceId }, false, deviceId);
+      return r.ok ? r.data : { ok: false, error: r.data?.error || 'failed' };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  async extPayStatus(deviceId, orderId) {
+    const pid = this.getActivePoolId();
+    if (!pid) return { ok: false, error: 'no pool configured' };
+    try {
+      const r = await this._request(pid, 'GET', '/api/p2p/status?order_id=' + encodeURIComponent(orderId), null, false, deviceId);
+      return r.ok ? r.data : { ok: false, error: r.data?.error || 'failed' };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
   // ── Active Pool Selection (auto-pick first available pool) ──
   getActivePoolId() {
     const ids = Array.from(this._pools.keys());
@@ -480,6 +526,16 @@ class PoolManager {
       minSwitchInterval: 3000,   // v17.0: 最短切号间隔3秒(防连锁触发)
       rateLimitRetryDelay: 5000, // v17.0: 限流后5秒再切号(避免新账号立即触发)
       maxEventsKept: 200,
+      proactiveRotate: true,     // v18.0: 预防性轮转 — 每N条消息主动切号
+      proactiveBudget: 2,        // v18.0: 每账号最多发N条高ACU消息后预防性切号
+      proactiveWindow: 1200000,  // v18.0: 预算窗口20min(匹配服务端桶)
+      modelCooldowns: {          // v18.0: 模型级冷却时间(秒)
+        'opus-thinking-1m': 2400,
+        'sonnet-thinking-1m': 2400,
+        'opus-thinking': 1500,
+        'opus': 1200,
+        'default': 3900,         // 65分钟 general rate limit
+      },
     };
     return this._rlConfig;
   }
@@ -503,11 +559,34 @@ class PoolManager {
     const now = Date.now();
     const email = data.email || data.account || 'unknown';
     const traceId = data.traceId || '';
-    const cooldownMs = cfg.cooldownMinutes * 60 * 1000;
+    const model = data.model || '';
+
+    // v18.0: Model-aware cooldown — 不同模型不同冷却时间
+    let cooldownSec = cfg.cooldownMinutes * 60;
+    if (cfg.modelCooldowns && model) {
+      const ml = model.toLowerCase();
+      if (ml.includes('thinking') && ml.includes('1m')) cooldownSec = cfg.modelCooldowns['opus-thinking-1m'] || cooldownSec;
+      else if (ml.includes('thinking')) cooldownSec = cfg.modelCooldowns['opus-thinking'] || cooldownSec;
+      else if (ml.includes('opus')) cooldownSec = cfg.modelCooldowns['opus'] || cooldownSec;
+      else cooldownSec = cfg.modelCooldowns['default'] || cooldownSec;
+    }
+    const cooldownMs = cooldownSec * 1000;
 
     // v17.0: 防连锁 — 两次切号间隔不能太短
     if (this._lastSwitchAt && (now - this._lastSwitchAt) < (cfg.minSwitchInterval || 3000)) {
       return { ok: true, action: 'throttled', reason: 'min_switch_interval', waitMs: (cfg.minSwitchInterval || 3000) - (now - this._lastSwitchAt) };
+    }
+
+    // v19.0: _resetAt精确冷却 — 优先使用渲染器注入的精确重置时间戳
+    // globalThis.__wamRateLimit._resetAt 由 ws_repatch.py Patch5 注入
+    let cooldownUntil = now + cooldownMs;
+    let resetAtSource = 'model_estimate';
+    if (data.resetAt && data.resetAt > now) {
+      cooldownUntil = data.resetAt + 5000; // 精确时间戳 + 5s缓冲
+      resetAtSource = 'precise_timestamp';
+    } else if (data.resetMs && data.resetMs > 0) {
+      cooldownUntil = now + data.resetMs + 5000;
+      resetAtSource = 'reset_ms';
     }
 
     // Record the rate limit hit
@@ -516,9 +595,11 @@ class PoolManager {
       email,
       deviceId,
       hitAt: now,
-      cooldownUntil: now + cooldownMs,
+      cooldownUntil,
+      resetAtSource,
       hitCount: existing.hitCount + 1,
       traceId,
+      model,
       dPercent: data.dPercent || 0,
       wPercent: data.wPercent || 0,
     };
@@ -531,6 +612,9 @@ class PoolManager {
       email,
       deviceId,
       traceId,
+      model,
+      resetAtSource,
+      cooldownUntil,
       dPercent: data.dPercent || 0,
       wPercent: data.wPercent || 0,
       action: 'none',

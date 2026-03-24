@@ -311,7 +311,7 @@ class LANGuard {
 
     // Special: self-enrollment endpoint allows unauthenticated LAN access
     const url = req.url?.split('?')[0]?.replace(/\/+$/, '') || '';
-    if (url === '/api/enroll' || url === '/api/health' || url === '/dashboard') {
+    if (url === '/api/enroll' || url === '/api/health' || url === '/dashboard' || url === '/api/activate-device') {
       return { ok: true, ip, level: 'public' };
     }
 
