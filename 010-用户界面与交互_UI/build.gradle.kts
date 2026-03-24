@@ -18,7 +18,7 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            storeFile = file("../构建部署/07-构建与脚本_build/debug-key.jks")
+            storeFile = file("../gradle/debug-key.jks")
             storePassword = "debug_key_password"
             keyAlias = "debug_key_alias"
             keyPassword = "debug_key_password"
@@ -52,6 +52,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -65,7 +69,7 @@ android {
                 "030-通知系统_Notifications",
                 "040-瓦片服务_Tiles",
                 "050-通用组件_CommonUI",
-                "../基础设施/040-日志系统_Logging"
+                "../070-基础设施_Infrastructure/040-日志系统_Logging"
             ))
             manifest.srcFile("010-主界面_MainUI/AndroidManifest.xml")
             res.setSrcDirs(listOf("010-主界面_MainUI/res"))

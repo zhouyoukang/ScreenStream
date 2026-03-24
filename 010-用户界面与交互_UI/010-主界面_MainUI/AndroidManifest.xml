@@ -49,6 +49,14 @@
             android:exported="false" />
 
         <activity
+            android:name=".AgentProjectionActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:taskAffinity="" />
+
+        <activity
             android:name="info.dvkr.screenstream.SingleActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">

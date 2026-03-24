@@ -26,6 +26,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -66,4 +70,5 @@ dependencies {
     implementation(libs.ktor.server.default.headers)
     implementation(libs.ktor.server.forwarded.header)
     implementation(libs.ktor.server.websockets)
+    implementation(libs.okhttp)
 }

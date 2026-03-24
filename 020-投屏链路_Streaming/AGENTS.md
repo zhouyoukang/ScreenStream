@@ -1,25 +1,30 @@
-# 投屏链路模块 (Streaming)
+# 投屏链路 · MJPEG/RTSP/WebRTC三协议投屏引擎
 
-包含三种投屏协议实现，平级隔离，互不依赖。
+## 身份
+ScreenStream投屏核心。三子模块平级隔离：MJPEG(:8081)+RTSP(:8082)+WebRTC(:8083)。MJPEG是主力，InputRoutes共享挂载于此。
 
-## 子模块
-- `MJPEG投屏/` — MJPEG over HTTP，主力协议，InputRoutes 共享挂载于此
-- `RTSP投屏/` — RTSP 实时传输协议
-- `WebRTC投屏/` — WebRTC 浏览器直连
+## 边界
+- ✅ 三个子模块目录及其所有文件
+- 🚫 三子模块互相隔离，禁止互相依赖
+- 🚫 前台服务必须startForegroundService()+立即startForeground()
 
-## 关键约束
-- 三个子模块平级隔离，禁止互相依赖
-- 都依赖 `:common`（070-基础设施）
-- 前台服务必须 ContextCompat.startForegroundService() + 立即 startForeground()
-- 修改任一子模块时，评估是否需要同步修改其他两个
+## 入口
+- MJPEG核心: `010-MJPEG投屏_MJPEG/mjpeg/HttpServer.kt`(Ktor服务器+路由挂载)
+- 前端: `010-MJPEG投屏_MJPEG/assets/index.html`(6400行，PC/手机/VR三端)
+- 代码地图: `05-文档_docs/MJPEG_CORE_MAP.md`
 
-## 对话结束选项
+## 铁律
+1. 修改任一子模块时评估其他两个是否需同步
+2. 都依赖`:common`(070-基础设施)，禁止引入跨协议依赖
+3. index.html修改需同步测试PC/手机/VR三端
 
-> 任务完成后调用 `ask_user_question`，从下表选 4 个最贴合的：
+## 关联
+| 方向 | 项目 | 说明 |
+|---|---|---|
+| 挂载 | 反向控制 | InputRoutes.kt挂载在MJPEG HttpServer上 |
+| 依赖 | 基础设施 | `:common`模块 |
+| 上游 | 公网投屏 | H264编码供公网中继 |
 
-| label | description |
-|-------|-------------|
-| 装手机看画面 | 编译安装，打开浏览器验证投屏效果 |
-| 三协议对齐 | 检查其他投屏协议是否需要同步 |
-| 优化画面体验 | 继续改进帧率/延迟/画质 |
-| 收工提交 | 记录成果 + git commit |
+## 陷阱
+- WebRTC需HTTPS环境(HTTP下navigator.mediaDevices为null)
+- MJPEG带宽5-15Mbps仅适合局域网，公网用WebRTC
