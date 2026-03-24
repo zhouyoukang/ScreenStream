@@ -25,7 +25,7 @@
 
 ## 2) 核心成果
 
-### 无感切号 v6.3.0 全感知号池引擎 (VSIX + Agent Hub)
+### 无感切号 v3.10.1 全感知号池引擎 (VSIX + Agent Hub)
 
 - **范式转换**: 用户是号池不是单个账号 — 统一额度·自动轮转·实时监控·无感切换
 - VSIX: 6文件(src/5+media/panel.js) | 12命令 | 6配置项 | 54账号号池
@@ -37,13 +37,15 @@
 - 4层注入: S0=idToken直传 → S1=OTAT → S2=apiKey → S3=DB直写(state.vscdb)
 - 全感知监测: 8+context key + cachedPlanInfo监测(30s) + 15s延迟 + OutputChannel日志化
 - 多窗口协调: 窗口注册+30s心跳+90s死亡检测+账号隔离
+- v3.10.1: _cloudSyncHealth pushHealth后checkHealth+刷新面板 — W积分/设备状态每5分钟自动同步
 - 参考: `无感切号/FIRST_PRINCIPLES.md`
 
-### 号池管理端 v1.4.0（:19881 Hub + VSIX）
+### 号池管理端 v1.6.0（:19881 Hub + VSIX）
 
 - **纯管理员端VSIX**: LAN-only Hub(:19881) + 分知加密 + 多池统管 + 热部署
 - 4源文件(src/) + 2前端(media/) | 云端96账号 + 设备+W资源+P2P
-- E2E: 14/14本地PASS + 6/6云端PASS（overview/accounts/users/devices/payments/audit）
+- E2E: 25/25全链路PASS（支付管线: pay-init/status/confirm/reject/create + stats）
+- v1.6.0 P2P支付管线: cloudPool confirm/reject/create/stats API + Hub handleExtRoute路由 + Admin UI支付面板
 - v1.4.0安全加固: timing-safe HMAC + XFF禁信 + 64KB体限 + localhost速率豁免 + Nonce清理
 - v1.4.0修复: 移除_patchHubHandler监听器泄漏 + 热重载dispose + enroll格式修复
 - v1.4.0功能: 真实用户列表 + 池详情子视图 + 危险操作确认框 + toast分色
