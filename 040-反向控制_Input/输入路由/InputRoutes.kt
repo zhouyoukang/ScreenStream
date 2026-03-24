@@ -1105,7 +1105,8 @@ public fun Route.installInputRoutes() {
                 resultOk = ok; resultMsg = msg; latch.countDown()
             }
             startStream.invoke(null, callback)
-            latch.await(10, java.util.concurrent.TimeUnit.SECONDS)
+            latch.await(11, java.util.concurrent.TimeUnit.SECONDS)
+            if (resultMsg.isEmpty()) resultMsg = "Timeout: no response from startStream after 11s"
             call.respondText(
                 JSONObject().put("ok", resultOk).put("action", if (resultOk) "stream_started" else "failed").put("message", resultMsg).toString(),
                 ContentType.Application.Json, if (resultOk) HttpStatusCode.OK else HttpStatusCode.InternalServerError
