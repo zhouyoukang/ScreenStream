@@ -25,7 +25,7 @@
 
 ## 2) 核心成果
 
-### 无感切号 v3.10.1 全感知号池引擎 (VSIX + Agent Hub)
+### 无感切号 v3.11.0 全感知号池引擎 (VSIX + Agent Hub)
 
 - **范式转换**: 用户是号池不是单个账号 — 统一额度·自动轮转·实时监控·无感切换
 - VSIX: 6文件(src/5+media/panel.js) | 12命令 | 6配置项 | 54账号号池
@@ -38,6 +38,7 @@
 - 全感知监测: 8+context key + cachedPlanInfo监测(30s) + 15s延迟 + OutputChannel日志化
 - 多窗口协调: 窗口注册+30s心跳+90s死亡检测+账号隔离
 - v3.10.1: _cloudSyncHealth pushHealth后checkHealth+刷新面板 — W积分/设备状态每5分钟自动同步
+- v3.11.0: Opus 4.6底层解构·3处根因 — RC-A per-model限流触发切号+重试 | RC-B WINDOW_MS→25min | RC-C 校准速学(1次生效)
 - 参考: `无感切号/FIRST_PRINCIPLES.md`
 
 ### 号池管理端 v1.6.0（:19881 Hub + VSIX）
