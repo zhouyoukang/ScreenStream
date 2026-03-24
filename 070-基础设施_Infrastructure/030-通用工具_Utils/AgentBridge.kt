@@ -130,21 +130,29 @@ public object AgentBridge {
                 }
                 sendEvent.isAccessible = true
                 sendEvent.invoke(activeModule, event)
-                // Poll up to 8s for isStreaming to become true
-                var waited = 0
-                while (waited < 16) {
-                    Thread.sleep(500)
-                    val nowStreaming = runBlocking { activeModule.isStreaming.first() }
-                    if (nowStreaming) {
-                        callback?.invoke(true, "Stream started")
-                        return@post
+                // Poll on background thread — MUST NOT block main thread with Thread.sleep
+                Thread {
+                    try {
+                        var waited = 0
+                        while (waited < 16) {
+                            Thread.sleep(500)
+                            val nowStreaming = runBlocking { activeModule.isStreaming.first() }
+                            if (nowStreaming) {
+                                callback?.invoke(true, "Stream started")
+                                return@Thread
+                            }
+                            waited++
+                        }
+                        val stillRunning = runBlocking { activeModule.isRunning.first() }
+                        val msg = if (stillRunning)
+                            "Start event sent but isStreaming never became true. Check serverPort conflict or BindException."
+                        else
+                            "Module stopped during stream start."
+                        callback?.invoke(false, msg)
+                    } catch (e: Exception) {
+                        callback?.invoke(false, "Polling error: ${e.message}")
                     }
-                    waited++
-                }
-                // Check if module is still running after timeout
-                val stillRunning = runBlocking { activeModule.isRunning.first() }
-                val msg = if (stillRunning) "Start event sent but isStreaming never became true. Check serverPort conflict or BindException in app logs." else "Module stopped during stream start."
-                callback?.invoke(false, msg)
+                }.start()
             } catch (e: Exception) {
                 Log.e(TAG, "startStream failed", e)
                 callback?.invoke(false, "startStream error: ${e.message}")
