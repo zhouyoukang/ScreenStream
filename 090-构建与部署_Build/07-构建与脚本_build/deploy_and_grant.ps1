@@ -1,15 +1,16 @@
 
 # ADB Path
-$adb = "C:\Users\Administrator\AppData\Local\Android\Sdk\platform-tools\adb.exe"
+$adb = "D:\platform-tools\adb.exe"
+if (-not (Test-Path $adb)) { $adb = "C:\Users\Administrator\AppData\Local\Android\Sdk\platform-tools\adb.exe" }
 
 # Get list of connected devices
 $devices = & $adb devices -l | Select-String -Pattern "device " | ForEach-Object { $_.ToString().Split(" ")[0] }
 
-# Attempt to find APK
+# Attempt to find APK (current repo structure)
+$repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $potentialPaths = @(
-    "F:\github\AIOT\ScreenStream_v2\mjpeg\build\outputs\apk\playStore\debug\mjpeg-playStore-debug.apk",
-    "F:\github\AIOT\ScreenStream_v2\app\build\outputs\apk\debug\app-debug.apk",
-    "F:\github\AIOT\ScreenStream_v2\mjpeg\build\outputs\apk\debug\mjpeg-debug.apk"
+    "$repoRoot\010-用户界面与交互_UI\build\outputs\apk\FDroid\debug\app-FDroid-debug.apk",
+    "$repoRoot\010-用户界面与交互_UI\build\outputs\apk\debug\app-debug.apk"
 )
 
 $apkPath = $null
@@ -22,9 +23,10 @@ foreach ($path in $potentialPaths) {
 
 # If exact path fails, search recursively
 if (-not $apkPath) {
-    Write-Host "Searching for debug APK..."
-    $apkPath = Get-ChildItem -Path "F:\github\AIOT\ScreenStream_v2" -Filter "*debug.apk" -Recurse -ErrorAction SilentlyContinue | 
-    Sort-Object LastWriteTime -Descending | 
+    Write-Host "Searching for debug APK in repo..."
+    $apkPath = Get-ChildItem -Path $repoRoot -Filter "*debug.apk" -Recurse -ErrorAction SilentlyContinue |
+    Where-Object { $_.FullName -match "010-用户界面" } |
+    Sort-Object LastWriteTime -Descending |
     Select-Object -First 1 -ExpandProperty FullName
 }
 
@@ -50,10 +52,21 @@ foreach ($device in $devices) {
     Write-Host "  Granting permissions..."
     & $adb -s $device shell pm grant $pkgName android.permission.POST_NOTIFICATIONS
     & $adb -s $device shell pm grant $pkgName android.permission.RECORD_AUDIO
-    
+
     # Launch App
     Write-Host "  Launching App..."
     & $adb -s $device shell monkey -p $pkgName -c android.intent.category.LAUNCHER 1
-    
-    Write-Host "  Device $device ready." -ForegroundColor Green
+    Start-Sleep -Milliseconds 2000
+
+    # Agent: start streaming module
+    Write-Host "  Starting streaming module via Agent..."
+    & $adb -s $device shell am broadcast -a com.screenstream.DEV_CONTROL --es command start_module -n "${pkgName}/${pkgName}.DevControlReceiver"
+    Start-Sleep -Milliseconds 1500
+
+    # Agent: launch AgentProjectionActivity for MediaProjection grant (user taps "Start now" once)
+    Write-Host "  Launching AgentProjectionActivity for MediaProjection grant..."
+    & $adb -s $device shell am start -n "${pkgName}/${pkgName}.AgentProjectionActivity"
+
+    Write-Host "  Device $device ready. Tap 'Start now' in the dialog." -ForegroundColor Green
+    Write-Host "  After grant, start stream: adb shell am broadcast -a com.screenstream.DEV_CONTROL --es command start_stream -n `"${pkgName}/${pkgName}.DevControlReceiver`"" -ForegroundColor Yellow
 }
